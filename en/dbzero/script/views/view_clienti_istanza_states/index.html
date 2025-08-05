@@ -16,7 +16,7 @@
     
     
       
-        <title>🔍 View view_clienti_istanza_states - Zero ERP Documentation</title>
+        <title>View clienti istanza states - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#view-view_clienti_istanza_states" class="md-skip">
+        <a href="#documentazione-concettuale-view-scriptview_clienti_istanza_states" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              🔍 View view_clienti_istanza_states
+              View clienti istanza states
             
           </span>
         </div>
@@ -1561,8 +1561,83 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-concettuale-view-scriptview_clienti_istanza_states" class="md-nav__link">
+    <span class="md-ellipsis">
+      📘 Documentazione Concettuale – View script.view_clienti_istanza_states
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – View script.view_clienti_istanza_states">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Scopo Principale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#definizione-della-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔗 Definizione della View
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#colonne-esposte" class="md-nav__link">
+    <span class="md-ellipsis">
+      📋 Colonne Esposte
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#funzionamento-interno" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔍 Funzionamento Interno
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#considerazioni-e-best-practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚙️ Considerazioni e Best Practice
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#view-view_clienti_istanza_states" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔍 View view_clienti_istanza_states
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1581,6 +1656,134 @@
   
 
 
+<h2 id="documentazione-concettuale-view-scriptview_clienti_istanza_states">📘 Documentazione Concettuale – View <code>script.view_clienti_istanza_states</code><a class="headerlink" href="#documentazione-concettuale-view-scriptview_clienti_istanza_states" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimento tabelle:</p>
+<ul>
+<li><a href="../../../../dbzero/anagrafiche/tabelle/istanze_utilities">anagrafiche.istanze_utilities</a></li>
+<li><a href="../../../../dbzero/config/tabelle/stati_cliente">config.stati_cliente</a></li>
+<li><a href="../../../../dbzero/script/funzioni/fn_get_stato_cliente_by_istanza">script.fn_get_stato_cliente_by_istanza</a></li>
+</ul>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>La view <code>script.view_clienti_istanza_states</code> fornisce una <strong>unificazione</strong> delle informazioni di stato di un’istanza di servizio, arricchita con tutti i campi descrittivi della tabella <code>config.stati_cliente</code>. Permette di ottenere rapidamente, per ogni record di <code>istanze_utilities</code>, lo stato cliente attuale (o predefinito "Istanza") e i relativi dettagli, senza dover eseguire join o fallback manuali.</p>
+<hr />
+<h3 id="definizione-della-view">🔗 Definizione della View<a class="headerlink" href="#definizione-della-view" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">view_clienti_istanza_states</span><span class="w"> </span><span class="k">AS</span>
+<span class="k">SELECT</span>
+<span class="w">  </span><span class="n">i</span><span class="p">.</span><span class="n">id</span><span class="w">                        </span><span class="k">AS</span><span class="w"> </span><span class="n">istanza_id</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">id</span><span class="w">                       </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_id</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">cod_int_stato_cliente</span><span class="w">    </span><span class="k">AS</span><span class="w"> </span><span class="n">cod_int_stato_cliente</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">desc_stato_cliente</span><span class="w">       </span><span class="k">AS</span><span class="w"> </span><span class="n">desc_stato_cliente</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">desc_breve_stato</span><span class="w">         </span><span class="k">AS</span><span class="w"> </span><span class="n">desc_breve_stato</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">check_lettura</span><span class="w">            </span><span class="k">AS</span><span class="w"> </span><span class="n">check_lettura</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">abilita_fattura</span><span class="w">          </span><span class="k">AS</span><span class="w"> </span><span class="n">abilita_fattura</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">stato_cliente</span><span class="w">            </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_cliente</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">stato_cliente_ia</span><span class="w">         </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_cliente_ia</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">data_insert</span><span class="w">              </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_data_insert</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">user_insert</span><span class="w">              </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_user_insert</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">data_update</span><span class="w">              </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_data_update</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">user_update</span><span class="w">              </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_user_update</span>
+<span class="k">FROM</span>
+<span class="w">  </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">istanze_utilities</span><span class="w"> </span><span class="n">i</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_cliente</span><span class="w"> </span><span class="n">sc</span>
+<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_stato_cliente_by_istanza</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">id</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<h3 id="colonne-esposte">📋 Colonne Esposte<a class="headerlink" href="#colonne-esposte" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>istanza_id</code></td>
+<td>INTEGER</td>
+<td>Identificativo dell’istanza di servizio.</td>
+</tr>
+<tr>
+<td><code>stato_id</code></td>
+<td>INTEGER</td>
+<td>ID dello stato cliente dal catalogo.</td>
+</tr>
+<tr>
+<td><code>cod_int_stato_cliente</code></td>
+<td>CHAR(5)</td>
+<td>Codice interno dello stato (<code>AT</code>, <code>IS</code>, <code>CH</code>, ...).</td>
+</tr>
+<tr>
+<td><code>desc_stato_cliente</code></td>
+<td>VARCHAR(80)</td>
+<td>Descrizione estesa dello stato.</td>
+</tr>
+<tr>
+<td><code>desc_breve_stato</code></td>
+<td>VARCHAR(20)</td>
+<td>Descrizione breve (20 caratteri).</td>
+</tr>
+<tr>
+<td><code>check_lettura</code></td>
+<td>CHAR(1)</td>
+<td>Flag abilitazione lettura consumi (<code>S</code>/<code>N</code>).</td>
+</tr>
+<tr>
+<td><code>abilita_fattura</code></td>
+<td>CHAR(1)</td>
+<td>Flag abilitazione fattura (<code>S</code>/<code>N</code>).</td>
+</tr>
+<tr>
+<td><code>stato_cliente</code></td>
+<td>CHAR(2)</td>
+<td>Valore interno non modificabile del tipo stato.</td>
+</tr>
+<tr>
+<td><code>stato_cliente_ia</code></td>
+<td>CHAR(1)</td>
+<td>Stato cliente primario: <code>I</code>=Istanza, <code>A</code>=Altro.</td>
+</tr>
+<tr>
+<td><code>stato_data_insert</code></td>
+<td>TIMESTAMPTZ</td>
+<td>Data di inserimento del record di stato.</td>
+</tr>
+<tr>
+<td><code>stato_user_insert</code></td>
+<td>TEXT</td>
+<td>Utente di inserimento del record di stato.</td>
+</tr>
+<tr>
+<td><code>stato_data_update</code></td>
+<td>TIMESTAMPTZ</td>
+<td>Data di ultima modifica del record di stato.</td>
+</tr>
+<tr>
+<td><code>stato_user_update</code></td>
+<td>TEXT</td>
+<td>Utente di ultima modifica del record di stato.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="funzionamento-interno">🔍 Funzionamento Interno<a class="headerlink" href="#funzionamento-interno" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Calcolo dello stato</strong>: utilizza <code>script.fn_get_stato_cliente_by_istanza(i.id)</code> per gestire il fallback tra stato cliente effettivo e stato "Istanza".</li>
+<li><strong>Join diretto</strong> con <code>config.stati_cliente</code> per recuperare tutti i metadata (descrizioni e flag).</li>
+</ul>
+<hr />
+<h3 id="considerazioni-e-best-practice">⚙️ Considerazioni e Best Practice<a class="headerlink" href="#considerazioni-e-best-practice" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Performance</strong>: è fondamentale avere indici su <code>anagrafiche.clienti.istanza_utility_id</code> e su <code>config.stati_cliente.cod_int_stato_cliente</code> per ottimizzare sia la funzione che il join.</li>
+<li><strong>Consistenza</strong>: la logica di fallback è centralizzata nella funzione, quindi qualsiasi modifica al codice interno dello stato "Istanza" avrà effetto anche sulla view.</li>
+<li><strong>Uso in reportistica</strong>: la view è pronta per essere utilizzata in strumenti BI o dashboard, evitando logica condizionale nel front-end.</li>
+</ul>
+<hr />
+<p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 <h1 id="view-view_clienti_istanza_states">🔍 View <code>view_clienti_istanza_states</code><a class="headerlink" href="#view-view_clienti_istanza_states" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">view_clienti_istanza_states</span><span class="w"> </span><span class="k">AS</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">istanza_id</span><span class="p">,</span>
