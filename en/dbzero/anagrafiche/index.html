@@ -1602,6 +1602,29 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/gestione-degli-indirizzi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Gestione degli indirizzi
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1708,6 +1731,7 @@
 <h2 id="funzioni">⚙️ Funzioni<a class="headerlink" href="#funzioni" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="funzioni/trgfn_billing_account_ins_upd_clean_fields/">trgfn_billing_account_ins_upd_clean_fields</a> — Il trigger <code>anagrafiche.trgfn_billing_account_ins_upd_clean_fields</code> assicura che ogni record di <strong><code>billing_account</code></strong> abbia un <strong><code>account_code</code></strong> valido, generandolo automaticamente quando non viene specificato in fase di INSERT o UPDATE.</li>
+<li><a href="funzioni/trgfn_billing_account_upd_protect_account_code/">trgfn_billing_account_upd_protect_account_code</a> — Il trigger <code>anagrafiche.trgfn_billing_account_upd_protect_account_code</code>, invocato <strong>prima di ogni UPDATE</strong> su <code>anagrafiche.billing_account</code>, impedisce modifiche improprie al campo <strong><code>account_code</code></strong> una volta assegnato.</li>
 <li><a href="funzioni/trgfn_contatti_ins_upd_set_default_contatto/">trgfn_contatti_ins_upd_set_default_contatto</a> — * <strong>Impostare il contatto default</strong>   Garantire che il primo contatto (o quello marcato explicitamente) diventi predefinito all’interno del suo contesto.</li>
 <li><a href="funzioni/trgfn_dati_societari_ins_upd_check_tipo_soggetto/">trgfn_dati_societari_ins_upd_check_tipo_soggetto</a> — Verificare che il soggetto associato ai dati societari ( <code>new.soggetto_id</code> in <code>anagrafiche.dati_societari</code> ) abbia un <code>cod_int_tipo_soggetto</code> ammesso (solo <strong><code>SC</code></strong> o <strong><code>SP</code></strong>). In caso contrario, viene lanciato un errore tramite <code>script.fn_log_and_raise_error</code>.</li>
 <li><a href="funzioni/trgfn_gestori_ins_upd_check_ruolo_gestore/">trgfn_gestori_ins_upd_check_ruolo_gestore</a> — - <strong>Centralizzare l’assegnazione del ruolo “Gestore”</strong>     Delegare a <code>script.fn_check_ins_soggetto_ruolo</code> la logica di inserimento o verifica del linking table, evitando duplicazioni di codice.</li>
@@ -1715,14 +1739,13 @@
 <li><a href="funzioni/trgfn_indirizzi_ins_upd_clean_fields/">trgfn_indirizzi_ins_upd_clean_fields</a> — Assicura che, in modalità <strong>indirizzo normalizzato</strong>, tutti i campi alternativi utilizzati per gli <strong>indirizzi liberi</strong> siano resettati a <code>NULL</code>. In questo modo si evita la coesistenza di dati incongruenti tra indirizzo normalizzato e indirizzo libero.</li>
 <li><a href="funzioni/trgfn_indirizzi_ins_upd_sync_geoloc/">trgfn_indirizzi_ins_upd_sync_geoloc</a> — Ogni volta che viene inserito o aggiornato un record in <code>anagrafiche.indirizzi</code>, se è impostato <code>indirizzo_dettaglio_id</code>, la funzione recupera dal dettaglio civico la coordinata geografica (<code>civic_geoloc</code>) e la copia in <code>NEW.geoloc</code>. In questo modo il dato di geolocalizzazione rimane sempre allineato con la fonte di verità civica.</li>
 <li><a href="funzioni/trgfn_istanze_utilities_ins_set_istanza_codice/">trgfn_istanze_utilities_ins_set_istanza_codice</a> — Il trigger <code>anagrafiche.trgfn_istanze_utilities_ins_set_istanza_codice</code>, eseguito <strong>prima di ogni INSERT</strong> su <code>istanze_utilities</code>, genera automaticamente un <strong>codice univoco</strong> per la colonna <code>codice_istanza</code> se non è stato già fornito, basandosi sulle regole definite in <code>config.sistema_codici</code>.</li>
-<li><a href="funzioni/trgfn_istanze_utilities_ins_upd_clean_fields/">trgfn_istanze_utilities_ins_upd_clean_fields</a></li>
+<li><a href="funzioni/trgfn_istanze_utilities_ins_upd_clean_fields/">trgfn_istanze_utilities_ins_upd_clean_fields</a> — Il trigger <code>anagrafiche.trgfn_istanze_utilities_ins_upd_clean_fields</code> è invocato <strong>prima di ogni INSERT o UPDATE</strong> su <code>anagrafiche.istanze_utilities</code> e ha i seguenti obiettivi:</li>
+<li><a href="funzioni/trgfn_istanze_utilities_upd_protect_codice_istanza/">trgfn_istanze_utilities_upd_protect_codice_istanza</a> — Il trigger <code>anagrafiche.trgfn_istanze_utilities_upd_protect_codice_istanza</code>, eseguito <strong>prima di ogni UPDATE</strong> su <code>anagrafiche.istanze_utilities</code>, impedisce modifiche non autorizzate al campo <strong><code>codice_istanza</code></strong> una volta impostato.</li>
 <li><a href="funzioni/trgfn_soggetti_ins_upd_check_soggetto_contatti/">trgfn_soggetti_ins_upd_check_soggetto_contatti</a> — * <strong>Validazione di integrità</strong>   Garantire che ogni soggetto disponga di almeno un contatto predefinito o dotato di un canale attivo.</li>
 <li><a href="funzioni/trgfn_soggetti_ins_upd_clean_fields/">trgfn_soggetti_ins_upd_clean_fields</a> — * <strong>Impostare valori di default</strong> per campi mancanti in <code>anagrafiche.soggetti</code> (ad esempio, assegnare <code>stato_id</code> da <code>config.stati</code> se <code>NEW.stato_id</code> è <code>NULL</code>). * <strong>Pulire e normalizzare</strong> ulteriori campi (es. trimming, uppercasing) seguendo le regole di business.</li>
-<li><a href="funzioni/trgfn_soggetti_ins_upd_genera_cdsoggetto/">trgfn_soggetti_ins_upd_genera_cdsoggetto</a></li>
+<li><a href="funzioni/trgfn_soggetti_ins_upd_genera_cdsoggetto/">trgfn_soggetti_ins_upd_genera_cdsoggetto</a> — Il trigger <code>anagrafiche.trgfn_soggetti_ins_upd_genera_cdsoggetto</code>, eseguito <strong>prima di ogni INSERT o UPDATE</strong> sulla tabella <code>anagrafiche.soggetti</code>, assicura la <strong>generazione automatica</strong> del campo <code>codice_soggetto</code> quando non viene fornito, utilizzando la configurazione presente in <code>config.sistema_codici</code> per il tipo <code>soggetto</code>.</li>
+<li><a href="funzioni/trgfn_soggetti_upd_protect_codice_soggetto/">trgfn_soggetti_upd_protect_codice_soggetto</a> — Il trigger <code>anagrafiche.trgfn_soggetti_upd_protect_codice_soggetto</code>, esploso <strong>prima di ogni UPDATE</strong> sulla tabella <code>anagrafiche.soggetti</code>, garantisce che il campo <strong><code>codice_soggetto</code></strong> non possa essere modificato una volta assegnato.</li>
 <li><a href="funzioni/trgfn_soggetti_valida_cf_piva_dispatch/">trgfn_soggetti_valida_cf_piva_dispatch</a> — La trigger function <strong><code>anagrafiche.trgfn_soggetti_valida_cf_piva_dispatch()</code></strong> viene eseguita <strong><code>BEFORE INSERT OR UPDATE</code></strong> sulla tabella <strong><code>anagrafiche.soggetti</code></strong> e instrada la validazione di codice fiscale e partita IVA in base allo Stato e al dettaglio di soggetto.</li>
-<li><a href="funzioni/trgfn_upd_billing_account_protect_account_code/">trgfn_upd_billing_account_protect_account_code</a></li>
-<li><a href="funzioni/trgfn_upd_istanze_utilities_protect_codice_istanza/">trgfn_upd_istanze_utilities_protect_codice_istanza</a></li>
-<li><a href="funzioni/trgfn_upd_soggetti_protect_codice_soggetto/">trgfn_upd_soggetti_protect_codice_soggetto</a></li>
 </ul>
 <h2 id="views">🔍 Views<a class="headerlink" href="#views" title="Permanent link">&para;</a></h2>
 

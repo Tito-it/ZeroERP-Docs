@@ -1529,6 +1529,29 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-degli-indirizzi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Gestione degli indirizzi
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1624,9 +1647,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#implementazioni-aggiuntive" class="md-nav__link">
+  <a href="#gerarchia-e-periodo-di-validita" class="md-nav__link">
     <span class="md-ellipsis">
-      ⚙️ Implementazioni Aggiuntive
+      🔑 Gerarchia e Periodo di Validità
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trigger-e-funzioni-coinvolte" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚙️ Trigger e Funzioni Coinvolte
     </span>
   </a>
   
@@ -1756,14 +1788,7 @@
 <li><strong>Generazione anticipata</strong> del <code>account_code</code> in fase precontrattuale.</li>
 <li><strong>Unicità di <code>account_code</code></strong> grazie al vincolo <code>uq_billing_account_code</code>.</li>
 <li><strong>Unicità per istanza+utility</strong>: non possono esistere due record con la stessa coppia (<code>istanza_utility_id</code>, <code>utility_id</code>).</li>
-<li>
-<p><strong>Strutture gerarchiche</strong> dei codici tramite <code>parent_account_id</code>, utile per Modellare:</p>
-</li>
-<li>
-<p>Holding e consociate (stesso soggetto con codici distinti).</p>
-</li>
-<li>Suddivisioni interne (dipartimenti, filiali).</li>
-<li>Codici sostitutivi o di aggiornamento, mantenendo la tracciabilità storica.</li>
+<li><strong>Strutture gerarchiche</strong> dei codici tramite <code>parent_account_id</code>, utile per Modellare:</li>
 </ul>
 <hr />
 <p>La tabella <code>anagrafiche.billing_account</code> mantiene lo <strong>storico dei codici cliente</strong> per ciascuna <code>utility</code>, consentendo:</p>
@@ -1824,7 +1849,7 @@
 <p><strong>Range di validità</strong></p>
 </li>
 <li>
-<p><code>valid_from</code> obbligatorio, <code>valid_to</code> opzionale, permette definire periodi di validità distinti.</p>
+<p>Periodi di validità: valid_from è obbligatorio se parent_account_id non è NULL; valid_to, se presente, deve essere ≥    valid_from</p>
 </li>
 </ol>
 <hr />
@@ -1837,26 +1862,76 @@
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Fatturazione precontrattuale</strong>: abilita la generazione di codici cliente anche prima della definizione formale del cliente.</li>
-<li><strong>Storico codici</strong>: gestisce cambi di codifica via <code>parent_account_id</code>, mantenendo tracciamento.</li>
-<li><strong>Integrità</strong>: vincoli e indici garantiscono univocità e coerenza referenziale.</li>
+<li><strong>Fatturazione precontrattuale</strong>: codice disponibile anche prima del customer finale.</li>
+<li><strong>Storico completo</strong>: tracciamento di versioni e sub-account.</li>
+<li><strong>Integrità fiscale</strong>: raggruppamento sullo stesso <code>id_fiscale_univoco_cf_piva</code> del soggetto.</li>
 </ul>
 <hr />
-<h3 id="implementazioni-aggiuntive">⚙️ Implementazioni Aggiuntive<a class="headerlink" href="#implementazioni-aggiuntive" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>trg_billing_account_ins_upd_gen_account_code</code> genera automaticamente <code>account_code</code> se non specificato.</li>
-<li><code>trg_upd_billing_account_audit_data_user</code> tiene traccia delle modifiche audit.</li>
-</ul>
+<h3 id="gerarchia-e-periodo-di-validita">🔑 Gerarchia e Periodo di Validità<a class="headerlink" href="#gerarchia-e-periodo-di-validita" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong><code>parent_account_id</code></strong></p>
+</li>
+<li>
+<p>Definisce relazioni padre-figlio tra account.</p>
+</li>
+<li>Se <code>parent_account_id IS NULL</code>, la fattura è emessa per l’account stesso.</li>
+<li>
+<p>Se non NULL, la fattura somma i consumi di tutti i figli e li addebita al padre.</p>
+</li>
+<li>
+<p><strong><code>valid_from</code> / <code>valid_to</code></strong></p>
+</li>
+<li>
+<p><code>valid_from</code>: data inizio validità dell’associazione al parent (obbligatoria se <code>parent_account_id</code> è presente).</p>
+</li>
+<li>
+<p><code>valid_to</code>: data fine validità, se NULL l’associazione è ancora in corso.</p>
+</li>
+<li>
+<p><strong>Coerenza fiscale</strong></p>
+</li>
+<li>
+<p>L’<code>account_code</code> del padre e dei figli deve condividere lo stesso <code>id_fiscale_univoco_cf_piva</code> del soggetto.</p>
+</li>
+</ol>
+<hr />
+<h3 id="trigger-e-funzioni-coinvolte">⚙️ Trigger e Funzioni Coinvolte<a class="headerlink" href="#trigger-e-funzioni-coinvolte" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Evento</th>
+<th>Funzione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>trg_billing_account_ins_upd_clean_fields</code></td>
+<td>BEFORE INSERT OR UPDATE</td>
+<td><code>anagrafiche.trgfn_billing_account_ins_upd_clean_fields()</code></td>
+</tr>
+<tr>
+<td><code>trg_billing_account_ins_upd_gen_account_code</code></td>
+<td>BEFORE INSERT OR UPDATE</td>
+<td><code>script.fn_generate_codice('billing_account')</code></td>
+</tr>
+<tr>
+<td><code>trg_upd_billing_account_audit_data_user</code></td>
+<td>BEFORE UPDATE</td>
+<td><code>script.trgfn_upd_audit_data_user_generic()</code></td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h3 id="controlli-di-coerenza">✅ Controlli di Coerenza<a class="headerlink" href="#controlli-di-coerenza" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>istanza_utility_id</code> e <code>utility_id</code> non possono essere duplicati per lo stesso billing account.</li>
-<li><code>account_code</code> generato via trigger evita collisioni manuali.</li>
-<li><code>parent_account_id</code> consente strutture di sub-account, ma evita loop grazie al vincolo di PK.</li>
+<li>FK e vincoli CHECK assicurano la validità dei periodi (<code>valid_from</code>, <code>valid_to</code>) e delle gerarchie.</li>
+<li>Il trigger <code>clean_fields</code> genera <code>account_code</code> se mancante.</li>
 </ul>
 <hr />
 <h3 id="note-finali">🧾 Note Finali<a class="headerlink" href="#note-finali" title="Permanent link">&para;</a></h3>
-<p>La tabella <code>billing_account</code> è cruciale per separare il <strong>codice di fatturazione</strong> dal cliente contrattuale, offrendo flessibilità e storicità nei rapporti con le diverse utilities.</p>
+<p>Questa tabella è la base per la gestione avanzata dei codici di fatturazione, con meccanismi di storicizzazione e aggregazione utili in scenari di multi-utenza e subentri tipici del settore utilities.</p>
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 <h1 id="tabella-billing_account">📚 Tabella <code>billing_account</code><a class="headerlink" href="#tabella-billing_account" title="Permanent link">&para;</a></h1>
 <h2 id="campi-principali">🗂️ Campi principali<a class="headerlink" href="#campi-principali" title="Permanent link">&para;</a></h2>
@@ -1909,7 +1984,7 @@
 <tr>
 <td>valid_from</td>
 <td>date</td>
-<td>NO</td>
+<td>YES</td>
 <td>CURRENT_DATE</td>
 </tr>
 <tr>
@@ -2078,16 +2153,16 @@
 <td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
 </tr>
 <tr>
+<td>trg_billing_account_upd_protect_account_code</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION anagrafiche.trgfn_billing_account_upd_protect_account_code()</code></td>
+</tr>
+<tr>
 <td>trg_upd_billing_account_audit_data_user</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
 <td><code>EXECUTE FUNCTION script.trgfn_upd_audit_data_user_generic()</code></td>
-</tr>
-<tr>
-<td>trg_upd_billing_account_protect_account_code</td>
-<td>BEFORE</td>
-<td>UPDATE</td>
-<td><code>EXECUTE FUNCTION anagrafiche.trgfn_upd_billing_account_protect_account_code()</code></td>
 </tr>
 <tr>
 <td>---</td>
