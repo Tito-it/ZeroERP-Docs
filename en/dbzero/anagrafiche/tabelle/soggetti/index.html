@@ -656,7 +656,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../postgresql-intro/" class="md-nav__link">
+      <a href="../../../../postgresql/intro/" class="md-nav__link">
         
   
   
@@ -679,7 +679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../parametri-personalizzati-%28GUC%29/" class="md-nav__link">
+      <a href="../../../../postgresql/parametri-personalizzati-%28GUC%29/" class="md-nav__link">
         
   
   
@@ -744,7 +744,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../postgresql-estensioni-utilizzate/" class="md-nav__link">
+      <a href="../../../../postgresql/estensioni-utilizzate/" class="md-nav__link">
         
   
   
@@ -767,12 +767,58 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../dblink/" class="md-nav__link">
+      <a href="../../../../postgresql/dblink/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     dblink
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../postgresql/pgAgent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    pgAgent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../postgresql/pgcrypto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    pgcrypto
     
   </span>
   
@@ -1029,6 +1075,29 @@
   
   <span class="md-ellipsis">
     Storico
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../maintenance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Maintenance
     
   </span>
   
@@ -1915,25 +1984,25 @@
 <td>data_insert</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
-<td>now()</td>
+<td>CURRENT_TIMESTAMP</td>
 </tr>
 <tr>
 <td>user_insert</td>
 <td>text</td>
 <td>NO</td>
-<td>'CURRENT_USER'::text</td>
+<td>CURRENT_USER</td>
 </tr>
 <tr>
 <td>data_update</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
-<td>now()</td>
+<td>CURRENT_TIMESTAMP</td>
 </tr>
 <tr>
 <td>user_update</td>
 <td>text</td>
 <td>NO</td>
-<td>'CURRENT_USER'::text</td>
+<td>CURRENT_USER</td>
 </tr>
 <tr>
 <td>titolo_cortesia_id</td>
@@ -1996,6 +2065,11 @@
 </thead>
 <tbody>
 <tr>
+<td>CHECK</td>
+<td>chk_soggetto_soggetto_sesso</td>
+<td></td>
+</tr>
+<tr>
 <td>FOREIGN KEY</td>
 <td>fk_comuni_config</td>
 <td>comune_id, comune_id</td>
@@ -2047,20 +2121,28 @@
 </thead>
 <tbody>
 <tr>
-<td>ix_anagrafiche_soggetti_comune_id</td>
-<td><code>CREATE INDEX ix_anagrafiche_soggetti_comune_id ON anagrafiche.soggetti USING btree (comune_id)</code></td>
-</tr>
-<tr>
-<td>ix_anagrafiche_soggetti_contatto_ruolo_id</td>
-<td><code>CREATE INDEX ix_anagrafiche_soggetti_contatto_ruolo_id ON anagrafiche.soggetti USING btree (titolo_cortesia_id)</code></td>
-</tr>
-<tr>
 <td>ix_anagrafiche_soggetti_ragione_sociale_completa</td>
 <td><code>CREATE INDEX ix_anagrafiche_soggetti_ragione_sociale_completa ON anagrafiche.soggetti USING btree (ragione_sociale_completa)</code></td>
 </tr>
 <tr>
-<td>ix_anagrafiche_soggetti_stato_id</td>
-<td><code>CREATE INDEX ix_anagrafiche_soggetti_stato_id ON anagrafiche.soggetti USING btree (stato_id)</code></td>
+<td>ix_soggetti_comune_id</td>
+<td><code>CREATE INDEX ix_soggetti_comune_id ON anagrafiche.soggetti USING btree (comune_id)</code></td>
+</tr>
+<tr>
+<td>ix_soggetti_default_contatto_id</td>
+<td><code>CREATE INDEX ix_soggetti_default_contatto_id ON anagrafiche.soggetti USING btree (default_contatto_id)</code></td>
+</tr>
+<tr>
+<td>ix_soggetti_stato_id</td>
+<td><code>CREATE INDEX ix_soggetti_stato_id ON anagrafiche.soggetti USING btree (stato_id)</code></td>
+</tr>
+<tr>
+<td>ix_soggetti_tipo_soggetto_dettaglio_id</td>
+<td><code>CREATE INDEX ix_soggetti_tipo_soggetto_dettaglio_id ON anagrafiche.soggetti USING btree (tipo_soggetto_dettaglio_id)</code></td>
+</tr>
+<tr>
+<td>ix_soggetti_titolo_cortesia_id</td>
+<td><code>CREATE INDEX ix_soggetti_titolo_cortesia_id ON anagrafiche.soggetti USING btree (titolo_cortesia_id)</code></td>
 </tr>
 <tr>
 <td>pk_soggetto</td>
@@ -2089,13 +2171,13 @@
 <tbody>
 <tr>
 <td>trg_soggetti_ins_upd_check_soggetto_contatti</td>
-<td>BEFORE</td>
+<td>AFTER</td>
 <td>INSERT</td>
 <td><code>EXECUTE FUNCTION anagrafiche.trgfn_soggetti_ins_upd_check_soggetto_contatti()</code></td>
 </tr>
 <tr>
 <td>trg_soggetti_ins_upd_check_soggetto_contatti</td>
-<td>BEFORE</td>
+<td>AFTER</td>
 <td>UPDATE</td>
 <td><code>EXECUTE FUNCTION anagrafiche.trgfn_soggetti_ins_upd_check_soggetto_contatti()</code></td>
 </tr>
@@ -2126,13 +2208,13 @@
 <tr>
 <td>trg_soggetti_ins_upd_gen_tx_id</td>
 <td>BEFORE</td>
-<td>INSERT</td>
+<td>UPDATE</td>
 <td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
 </tr>
 <tr>
 <td>trg_soggetti_ins_upd_gen_tx_id</td>
 <td>BEFORE</td>
-<td>UPDATE</td>
+<td>INSERT</td>
 <td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
 </tr>
 <tr>
