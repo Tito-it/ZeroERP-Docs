@@ -1914,9 +1914,9 @@
 <p><strong>Documento di Avvio e Struttura di Liquibase</strong></p>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong>  <br />
-Approfondimento SQL<br />
-Tutte le attività SQL generate tramite Liquibase devono rispettare le convenzioni definite nel documento:<br />
-<a href="../linee-guida-sql/">Linee Guida SQL</a>.</p>
+Approfondimento SQL     </p>
+<p>Tutte le attività SQL generate tramite Liquibase devono rispettare le convenzioni definite nel documento:   <br />
+* <a href="../linee-guida-sql/">Linee Guida SQL</a>.</p>
 </blockquote>
 <hr />
 <blockquote>
@@ -1964,7 +1964,8 @@ In questo modo le trigger e le trigger function verranno applicate <strong>dopo<
     │   └─ sql/&lt;schema&gt;/…        
     ├─ 50_dbops/                # evoluzioni DBOps
     │   └─ sql/&lt;schema&gt;/…        
-    └─ …
+    ├─ 55_maintenance/          # evoluzioni per schedule job
+    │   
     ├─ 80_data/                 # import dati schema config
     │   ├─ sql/
     │   │  └─ config/
@@ -1973,15 +1974,17 @@ In questo modo le trigger e le trigger function verranno applicate <strong>dopo<
     │   └─ changelogs/
     │       ├─ YYYYMMDD-01-upsert-stati.yaml
     │       └─ YYYYMMDD-02-upsert-utilities.yaml
+    ├─ 85_pgagent/              # evoluzioni pgagent (job schedule)
     └─ 90_end/                  # script finali da eseguire sempre per ultimi
         └─ apply-fk-index-policy.yaml
 </code></pre></div>
 <ul>
 <li><strong>Baseline</strong>: snapshot iniziale; <code>changelogSync</code> li marca eseguiti e non saranno riapplicati automaticamente.</li>
-<li><strong>Migrations</strong>: file numerati definiscono le modifiche incrementalmente. Ogni folder numerato (00–50…) contiene YAML e script SQL.</li>
+<li><strong>Migrations</strong>: file numerati definiscono le modifiche incrementalmente. Ogni folder numerato "10–55…" contiene YAML e script SQL. I nomi fanno riferimento ad uno schema specifico.</li>
 <li><strong>80_data</strong>: dedicata all’importazione dei dati di configurazione (test e funzionali). Contiene CSV prodotti dal CI e changelog YAML con <code>loadUpdateData</code>.</li>
+<li><strong>85_pgagent</strong>: dedicata ai changeSet che definiscono Job per pgAgent.</li>
 <li>
-<p><strong>Cartella <em>90_end</em></strong>: dedicata ai changeSet che devono <strong>sempre</strong> essere eseguiti <strong>per ultimi</strong>, indipendentemente dalle date. Qui si collocano:</p>
+<p><strong>90_end</strong><em>: dedicata ai changeSet che devono </em><em>sempre</em><em> essere eseguiti </em><em>per ultimi</em>*, indipendentemente dalle date. Qui si collocano:</p>
 </li>
 <li>
 <p>changeSet con <code>runAlways: true</code> o <code>runAlways: false</code> per operazioni di chiusura</p>
@@ -1991,7 +1994,7 @@ In questo modo le trigger e le trigger function verranno applicate <strong>dopo<
 </ul>
 <blockquote>
 <p>🔔 <em>Consiglio</em>: <br />
-Nomina il file con prefisso la data iniziale seguito da descrizione, es. <code>20250630-01-end-apply-fk-policy.yaml</code>. In questo modo l’ordine alfabetico di Liquibase garantisce la priorità d’esecuzione. Nel caso sia necessario far eseguire un changelog prima di uno esistente immettere la data precedente.</p>
+Nomina il file con prefisso la data iniziale seguito da descrizione, es. <code>20250630-01-end-apply-fk-policy.yaml</code>. In questo modo l’ordine alfabetico di Liquibase garantisce la priorità d’esecuzione. Nel caso sia necessario far eseguire un changelog prima di uno esistente immettere la data precedente. Possibilmente far coincidere la parte descrittiva con il nome della funzione, tabella ecc.. (utilizzando gli stessi prefissi  fn, table, etc.)</p>
 </blockquote>
 <hr />
 <h4 id="4-master-changelog-changelog-masteryaml">4. Master Changelog (<code>changelog-master.yaml</code>)<a class="headerlink" href="#4-master-changelog-changelog-masteryaml" title="Permanent link">&para;</a></h4>
@@ -2147,7 +2150,7 @@ Nomina il file con prefisso la data iniziale seguito da descrizione, es. <code>2
 <hr />
 <h4 id="11-convenzioni-e-best-practice">11. Convenzioni e Best Practice<a class="headerlink" href="#11-convenzioni-e-best-practice" title="Permanent link">&para;</a></h4>
 <ul>
-<li>Utilizzo cartella <code>00_boostrab</code> (esempio generazione tabelle)</li>
+<li>Utilizzo cartella <code>00_bootstrap</code> (esempio generazione tabelle)</li>
 <li>Numerazione progressiva</li>
 <li>ID univoci con autore</li>
 <li>Contexts/Labels</li>
@@ -2155,7 +2158,6 @@ Nomina il file con prefisso la data iniziale seguito da descrizione, es. <code>2
 <li>Versioning: excl. credenziali</li>
 </ul>
 <hr />
-<p><em>Documento redatto e condiviso con il team ZeroErp.</em></p>
 <h4 id="7-workflow-iniziale_1">7. Workflow Iniziale<a class="headerlink" href="#7-workflow-iniziale_1" title="Permanent link">&para;</a></h4>
 <ol>
 <li><code>liquibase validate</code></li>
@@ -2196,7 +2198,6 @@ Nomina il file con prefisso la data iniziale seguito da descrizione, es. <code>2
 </ul>
 <hr />
 <p><em>Documento redatto e condiviso con il team ZeroErp.</em></p>
-<hr />
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
