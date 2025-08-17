@@ -1703,16 +1703,16 @@
 </ul>
 </li>
 <li>
-<p>Il campo <code>cd_int_ruolo</code> è un codice interno univoco (<code>UNIQUE</code>) per ogni riga di <code>tipi_ruoli</code>, utilizzato come riferimento stabile nelle logiche applicative.</p>
+<p>Il campo <code>codice_interno</code> è un codice interno univoco (<code>UNIQUE</code>) per ogni riga di <code>tipi_ruoli</code>, utilizzato come riferimento stabile nelle logiche applicative.</p>
 </li>
-<li>Il campo <code>cod_ruolo</code> identifica il ruolo in modo testuale/abanndonabile (es. "CLIE" per cliente, "FORN" per fornitore), anch’esso unico.</li>
+<li>Il campo <code>codice</code> identifica il ruolo in modo testuale/abanndonabile (es. "CLIE" per cliente, "FORN" per fornitore), anch’esso unico.</li>
 </ul>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
 <p><strong>Invarianza del codice interno</strong>
-  Grazie al trigger di lock, il <code>cd_int_ruolo</code> rimane stabile, semplificando tutte le logiche applicative che fanno riferimento al codice ruolo (es. permessi, reportistica, workflow).</p>
+  Grazie al trigger di lock, il <code>codice_interno</code> rimane stabile, semplificando tutte le logiche applicative che fanno riferimento al codice ruolo (es. permessi, reportistica, workflow).</p>
 </li>
 <li>
 <p><strong>Audit automatico</strong>
@@ -1750,7 +1750,7 @@
 <td>nextval('config.tipi_ruoli_id_seq'::regclass)</td>
 </tr>
 <tr>
-<td>cod_ruolo</td>
+<td>codice</td>
 <td>character varying</td>
 <td>NO</td>
 <td></td>
@@ -1762,7 +1762,7 @@
 <td></td>
 </tr>
 <tr>
-<td>cd_int_ruolo</td>
+<td>codice_interno</td>
 <td>character varying</td>
 <td>NO</td>
 <td></td>
@@ -1810,13 +1810,13 @@
 </tr>
 <tr>
 <td>UNIQUE</td>
-<td>uq_tipi_ruoli_cd_int_ruolo</td>
-<td>cd_int_ruolo</td>
+<td>uq_tipi_ruoli_codice</td>
+<td>codice</td>
 </tr>
 <tr>
 <td>UNIQUE</td>
-<td>uq_tipi_ruoli_cod_ruolo</td>
-<td>cod_ruolo</td>
+<td>uq_tipi_ruoli_codice_interno</td>
+<td>codice_interno</td>
 </tr>
 </tbody>
 </table>
@@ -1834,12 +1834,12 @@
 <td><code>CREATE UNIQUE INDEX pk_tipi_ruoli ON config.tipi_ruoli USING btree (id)</code></td>
 </tr>
 <tr>
-<td>uq_tipi_ruoli_cd_int_ruolo</td>
-<td><code>CREATE UNIQUE INDEX uq_tipi_ruoli_cd_int_ruolo ON config.tipi_ruoli USING btree (cd_int_ruolo)</code></td>
+<td>uq_tipi_ruoli_codice</td>
+<td><code>CREATE UNIQUE INDEX uq_tipi_ruoli_codice ON config.tipi_ruoli USING btree (codice)</code></td>
 </tr>
 <tr>
-<td>uq_tipi_ruoli_cod_ruolo</td>
-<td><code>CREATE UNIQUE INDEX uq_tipi_ruoli_cod_ruolo ON config.tipi_ruoli USING btree (cod_ruolo)</code></td>
+<td>uq_tipi_ruoli_codice_interno</td>
+<td><code>CREATE UNIQUE INDEX uq_tipi_ruoli_codice_interno ON config.tipi_ruoli USING btree (codice_interno)</code></td>
 </tr>
 </tbody>
 </table>
@@ -1858,7 +1858,7 @@
 <td>trg_tipi_ruoli_upd_lock_codiceinterno</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
-<td><code>EXECUTE FUNCTION script.trgfn_lock_columns('cd_int_ruolo', 'CODICE_NON_MODIFICABILE')</code></td>
+<td><code>EXECUTE FUNCTION script.trgfn_lock_columns('codice_interno', 'CODICE_NON_MODIFICABILE')</code></td>
 </tr>
 <tr>
 <td>trg_upd_tipi_ruoli_audit_data_user</td>

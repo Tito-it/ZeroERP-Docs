@@ -1698,13 +1698,13 @@
 <h3 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>PRIMARY KEY</strong>: <code>pk_tipi_indirizzi</code> su <code>id</code></li>
-<li><strong>UNIQUE</strong>: <code>uq_tipi_indirizzi_cod_int_tipo_indirizzo</code> su <code>cod_int_tipo_indirizzo</code></li>
+<li><strong>UNIQUE</strong>: <code>uq_tipi_indirizzi_codice_interno</code> su <code>codice_interno</code></li>
 <li><strong>CHECK</strong>: <code>chk_cod_int_tipo_indirizzo</code> per garantire che il codice interno non sia vuoto</li>
 </ul>
 <hr />
 <h3 id="trigger">🚨 Trigger<a class="headerlink" href="#trigger" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong><code>trg_tipi_indirizzi_upd_lock_cod_interno</code></strong> (BEFORE UPDATE): blocca la modifica di <code>cod_int_tipo_indirizzo</code> tramite <code>script.trgfn_lock_columns</code>.</li>
+<li><strong><code>trg_tipi_indirizzi_upd_lock_cod_interno</code></strong> (BEFORE UPDATE): blocca la modifica di <code>codice_interno</code> tramite <code>script.trgfn_lock_columns</code>.</li>
 <li><strong><code>trg_upd_tipi_indirizzi_audit_data_user</code></strong> (BEFORE UPDATE): aggiorna <code>data_update</code> e <code>user_update</code> con <code>script.trgfn_upd_audit_data_user_generic()</code>.</li>
 </ul>
 <hr />
@@ -1745,7 +1745,7 @@
 </tbody>
 </table>
 <blockquote>
-<p>ℹ️ Il codice interno (<code>cod_int_tipo_indirizzo</code>) è utilizzato in logica applicativa e non può essere modificato una volta inserito.</p>
+<p>ℹ️ Il codice interno (<code>codice_interno</code>) è utilizzato in logica applicativa e non può essere modificato una volta inserito.</p>
 </blockquote>
 <hr />
 <h3 id="uso-e-casi-doro">⚙️ Uso e Casi d’Oro<a class="headerlink" href="#uso-e-casi-doro" title="Permanent link">&para;</a></h3>
@@ -1778,7 +1778,7 @@
 <td>nextval('config.tipi_indirizzi_id_seq'::regclass)</td>
 </tr>
 <tr>
-<td>cod_int_tipo_indirizzo</td>
+<td>codice_interno</td>
 <td>character varying</td>
 <td>NO</td>
 <td></td>
@@ -1843,8 +1843,8 @@
 </tr>
 <tr>
 <td>UNIQUE</td>
-<td>uq_tipi_indirizzi_cod_int_tipo_indirizzo</td>
-<td>cod_int_tipo_indirizzo</td>
+<td>uq_tipi_indirizzi_codice_interno</td>
+<td>codice_interno</td>
 </tr>
 </tbody>
 </table>
@@ -1862,8 +1862,8 @@
 <td><code>CREATE UNIQUE INDEX pk_tipi_indirizzi ON config.tipi_indirizzi USING btree (id)</code></td>
 </tr>
 <tr>
-<td>uq_tipi_indirizzi_cod_int_tipo_indirizzo</td>
-<td><code>CREATE UNIQUE INDEX uq_tipi_indirizzi_cod_int_tipo_indirizzo ON config.tipi_indirizzi USING btree (cod_int_tipo_indirizzo)</code></td>
+<td>uq_tipi_indirizzi_codice_interno</td>
+<td><code>CREATE UNIQUE INDEX uq_tipi_indirizzi_codice_interno ON config.tipi_indirizzi USING btree (codice_interno)</code></td>
 </tr>
 </tbody>
 </table>
@@ -1880,6 +1880,12 @@
 <tbody>
 <tr>
 <td>trg_tipi_indirizzi_upd_lock_cod_interno</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION script.trgfn_lock_columns('codice_interno', 'CODICE_NON_MODIFICABILE')</code></td>
+</tr>
+<tr>
+<td>trg_tipi_indirizzi_upd_lock_codice_interno</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
 <td><code>EXECUTE FUNCTION script.trgfn_lock_columns('cod_int_tipo_indirizzo', 'CODICE_NON_MODIFICABILE')</code></td>
