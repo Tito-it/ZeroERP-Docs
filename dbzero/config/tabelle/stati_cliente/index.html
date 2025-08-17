@@ -1759,20 +1759,20 @@
 <hr />
 <h3 id="regole-di-validazione-condizionale">🚩 Regole di Validazione Condizionale<a class="headerlink" href="#regole-di-validazione-condizionale" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Codice Non Modificabile</strong>: <code>cod_int_stato_cliente</code> è unico (<code>uq_stati_cli_cod_unq</code>) e bloccato da trigger su update.</li>
+<li><strong>Codice Non Modificabile</strong>: <code>codice_interno</code> è unico (<code>uq_stati_cli_cod_unq</code>) e bloccato da trigger su update.</li>
 <li><strong>Flag Booleani</strong>: <code>check_lettura</code>, <code>abilita_fattura</code> accettano solo <code>S</code> o <code>N</code>.</li>
 <li>
 <p><strong>Tipologia Stato</strong>:</p>
 </li>
 <li>
-<p><code>stato_cliente</code> accetta solo valori <code>AT</code>, <code>IS</code>, <code>CH</code>, <code>AN</code>, <code>SM</code>, <code>CE</code>, <code>LE</code>.</p>
+<p><code>codice</code> accetta solo valori <code>AT</code>, <code>IS</code>, <code>CH</code>, <code>AN</code>, <code>SM</code>, <code>CE</code>, <code>LE</code>.</p>
 </li>
 <li><code>stato_cliente_ia</code> ammette solo <code>A</code> (Altro) o <code>I</code> (Istanza).</li>
 </ul>
 <hr />
 <h3 id="indicizzazione">🔍 Indicizzazione<a class="headerlink" href="#indicizzazione" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong><code>ix_config_stati_cli_desc</code></strong>: supporta ricerche per descrizione estesa (<code>desc_stato_cliente</code>).</li>
+<li><strong><code>ix_config_stati_cli_desc</code></strong>: supporta ricerche per descrizione estesa (<code>descrizione</code>).</li>
 </ul>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
@@ -1795,7 +1795,7 @@
 <tr>
 <td><code>trg_stati_cliente_upd_lock_codiceinterno</code></td>
 <td>BEFORE UPDATE</td>
-<td><code>script.trgfn_lock_columns('cod_int_stato_cliente', 'CODICE_NON_MODIFICABILE')</code></td>
+<td><code>script.trgfn_lock_columns('codice_interno', 'CODICE_NON_MODIFICABILE')</code></td>
 </tr>
 <tr>
 <td><code>trg_upd_stati_cliente_audit_data_user</code></td>
@@ -1807,13 +1807,13 @@
 <hr />
 <h3 id="controlli-di-coerenza">✅ Controlli di Coerenza<a class="headerlink" href="#controlli-di-coerenza" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>cod_int_stato_cliente</code> è <strong>unico</strong> e non può essere modificato.</li>
+<li><code>codice_interno</code> è <strong>unico</strong> e non può essere modificato.</li>
 <li>I check sui caratteri <code>S/N</code> e sui valori di stato evitano inserimenti fuori standard.</li>
 <li>Tutte le colonne di audit (<code>data_insert</code>, <code>user_insert</code>, <code>data_update</code>, <code>user_update</code>) vengono automaticamente popolate e aggiornate.</li>
 </ul>
 <hr />
 <h3 id="note-finali">🧾 Note Finali<a class="headerlink" href="#note-finali" title="Permanent link">&para;</a></h3>
-<p>I codici interni <code>cod_int_stato_cliente</code> permettono l’internazionalizzazione e i test automatici, mentre i flag <code>check_lettura</code> e <code>abilita_fattura</code> abilitano o meno le funzionalità di lettura consumi e fatturazione per ciascuno stato. Questa tabella è fondamentale per governare l’intero workflow cliente.</p>
+<p>I codici interni <code>codice_interno</code> permettono l’internazionalizzazione e i test automatici, mentre i flag <code>check_lettura</code> e <code>abilita_fattura</code> abilitano o meno le funzionalità di lettura consumi e fatturazione per ciascuno stato. Questa tabella è fondamentale per governare l’intero workflow cliente.</p>
 <h1 id="tabella-stati_cliente">📚 Tabella <code>stati_cliente</code><a class="headerlink" href="#tabella-stati_cliente" title="Permanent link">&para;</a></h1>
 <h2 id="campi-principali">🗂️ Campi principali<a class="headerlink" href="#campi-principali" title="Permanent link">&para;</a></h2>
 <table>
@@ -1833,7 +1833,7 @@
 <td>nextval('config.stati_cliente_id_seq'::regclass)</td>
 </tr>
 <tr>
-<td>cod_int_stato_cliente</td>
+<td>codice_interno</td>
 <td>character</td>
 <td>NO</td>
 <td></td>
@@ -1863,7 +1863,7 @@
 <td>'S'::bpchar</td>
 </tr>
 <tr>
-<td>stato_cliente</td>
+<td>codice</td>
 <td>character</td>
 <td>NO</td>
 <td>'IS'::bpchar</td>
@@ -1937,8 +1937,8 @@
 </tr>
 <tr>
 <td>UNIQUE</td>
-<td>uq_stati_cli_cod_unq</td>
-<td>cod_int_stato_cliente</td>
+<td>uq_stati_cli_codice_interno</td>
+<td>codice_interno</td>
 </tr>
 </tbody>
 </table>
@@ -1960,8 +1960,8 @@
 <td><code>CREATE UNIQUE INDEX pk_stati_cliente ON config.stati_cliente USING btree (id)</code></td>
 </tr>
 <tr>
-<td>uq_stati_cli_cod_unq</td>
-<td><code>CREATE UNIQUE INDEX uq_stati_cli_cod_unq ON config.stati_cliente USING btree (cod_int_stato_cliente)</code></td>
+<td>uq_stati_cli_codice_interno</td>
+<td><code>CREATE UNIQUE INDEX uq_stati_cli_codice_interno ON config.stati_cliente USING btree (codice_interno)</code></td>
 </tr>
 </tbody>
 </table>
@@ -1980,7 +1980,7 @@
 <td>trg_stati_cliente_upd_lock_codiceinterno</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
-<td><code>EXECUTE FUNCTION script.trgfn_lock_columns('cod_int_stato_cliente', 'CODICE_NON_MODIFICABILE')</code></td>
+<td><code>EXECUTE FUNCTION script.trgfn_lock_columns('codice_interno', 'CODICE_NON_MODIFICABILE')</code></td>
 </tr>
 <tr>
 <td>trg_upd_stati_cliente_audit_data_user</td>

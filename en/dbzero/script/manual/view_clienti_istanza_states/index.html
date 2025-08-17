@@ -1660,12 +1660,12 @@
 <span class="k">SELECT</span>
 <span class="w">  </span><span class="n">i</span><span class="p">.</span><span class="n">id</span><span class="w">                        </span><span class="k">AS</span><span class="w"> </span><span class="n">istanza_id</span><span class="p">,</span>
 <span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">id</span><span class="w">                       </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_id</span><span class="p">,</span>
-<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">cod_int_stato_cliente</span><span class="w">    </span><span class="k">AS</span><span class="w"> </span><span class="n">cod_int_stato_cliente</span><span class="p">,</span>
-<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">desc_stato_cliente</span><span class="w">       </span><span class="k">AS</span><span class="w"> </span><span class="n">desc_stato_cliente</span><span class="p">,</span>
-<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">desc_breve_stato</span><span class="w">         </span><span class="k">AS</span><span class="w"> </span><span class="n">desc_breve_stato</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">codice_interno</span><span class="w">          </span><span class="k">AS</span><span class="w"> </span><span class="n">cod_int_stato_cliente</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">descrizione</span><span class="w">             </span><span class="k">AS</span><span class="w"> </span><span class="n">desc_stato_cliente</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">descrizione_breve</span><span class="w">         </span><span class="k">AS</span><span class="w"> </span><span class="n">desc_breve_stato</span><span class="p">,</span>
 <span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">check_lettura</span><span class="w">            </span><span class="k">AS</span><span class="w"> </span><span class="n">check_lettura</span><span class="p">,</span>
 <span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">abilita_fattura</span><span class="w">          </span><span class="k">AS</span><span class="w"> </span><span class="n">abilita_fattura</span><span class="p">,</span>
-<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">stato_cliente</span><span class="w">            </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_cliente</span><span class="p">,</span>
+<span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">codice</span><span class="w">            </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_cliente</span><span class="p">,</span>
 <span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">stato_cliente_ia</span><span class="w">         </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_cliente_ia</span><span class="p">,</span>
 <span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">data_insert</span><span class="w">              </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_data_insert</span><span class="p">,</span>
 <span class="w">  </span><span class="n">sc</span><span class="p">.</span><span class="n">user_insert</span><span class="w">              </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_user_insert</span><span class="p">,</span>
@@ -1698,17 +1698,17 @@
 <td>ID dello stato cliente dal catalogo.</td>
 </tr>
 <tr>
-<td><code>cod_int_stato_cliente</code></td>
+<td><code>codice_interno</code></td>
 <td>CHAR(5)</td>
 <td>Codice interno dello stato (<code>AT</code>, <code>IS</code>, <code>CH</code>, ...).</td>
 </tr>
 <tr>
-<td><code>desc_stato_cliente</code></td>
+<td>`descrizione</td>
 <td>VARCHAR(80)</td>
 <td>Descrizione estesa dello stato.</td>
 </tr>
 <tr>
-<td><code>desc_breve_stato</code></td>
+<td><code>descrizione_breve</code></td>
 <td>VARCHAR(20)</td>
 <td>Descrizione breve (20 caratteri).</td>
 </tr>
@@ -1723,7 +1723,7 @@
 <td>Flag abilitazione fattura (<code>S</code>/<code>N</code>).</td>
 </tr>
 <tr>
-<td><code>stato_cliente</code></td>
+<td><code>codice</code></td>
 <td>CHAR(2)</td>
 <td>Valore interno non modificabile del tipo stato.</td>
 </tr>
@@ -1757,13 +1757,13 @@
 <hr />
 <h3 id="funzionamento-interno">🔍 Funzionamento Interno<a class="headerlink" href="#funzionamento-interno" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Calcolo dello stato</strong>: utilizza <code>script.fn_get_stato_cliente_by_istanza(i.id)</code> per gestire il fallback tra stato cliente effettivo e stato "Istanza".</li>
+<li><strong>Calcolo dello stato</strong>: utilizza <code>script.fn_get_codice_by_istanza(i.id)</code> per gestire il fallback tra stato cliente effettivo e stato "Istanza".</li>
 <li><strong>Join diretto</strong> con <code>config.stati_cliente</code> per recuperare tutti i metadata (descrizioni e flag).</li>
 </ul>
 <hr />
 <h3 id="considerazioni-e-best-practice">⚙️ Considerazioni e Best Practice<a class="headerlink" href="#considerazioni-e-best-practice" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Performance</strong>: è fondamentale avere indici su <code>anagrafiche.clienti.istanza_utility_id</code> e su <code>config.stati_cliente.cod_int_stato_cliente</code> per ottimizzare sia la funzione che il join.</li>
+<li><strong>Performance</strong>: è fondamentale avere indici su <code>anagrafiche.clienti.istanza_utility_id</code> e su <code>config.stati_cliente.codice_interno</code> per ottimizzare sia la funzione che il join.</li>
 <li><strong>Consistenza</strong>: la logica di fallback è centralizzata nella funzione, quindi qualsiasi modifica al codice interno dello stato "Istanza" avrà effetto anche sulla view.</li>
 <li><strong>Uso in reportistica</strong>: la view è pronta per essere utilizzata in strumenti BI o dashboard, evitando logica condizionale nel front-end.</li>
 </ul>
