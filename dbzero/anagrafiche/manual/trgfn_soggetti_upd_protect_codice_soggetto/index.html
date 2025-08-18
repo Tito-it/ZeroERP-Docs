@@ -1653,18 +1653,18 @@
 <h2 id="documentazione-concettuale-funzione-trigger-anagrafichetrgfn_soggetti_upd_protect_codice_soggetto">📘 Documentazione Concettuale – Funzione Trigger <code>anagrafiche.trgfn_soggetti_upd_protect_codice_soggetto</code><a class="headerlink" href="#documentazione-concettuale-funzione-trigger-anagrafichetrgfn_soggetti_upd_protect_codice_soggetto" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p>Approdondmenti tabelle: </p>
+<p>Approfondimenti tabelle: </p>
 <ul>
 <li><a href="../../../../dbzero/anagrafiche/tabelle/soggetti">anagrafiche.soggetti</a></li>
 </ul>
-<p>Approdondmenti funzioni: </p>
+<p>Approfondimenti funzioni: </p>
 <ul>
-<li>Funzione errori: <a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a></li>
+<li><a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a></li>
 </ul>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Il trigger <code>anagrafiche.trgfn_soggetti_upd_protect_codice_soggetto</code>, esploso <strong>prima di ogni UPDATE</strong> sulla tabella <code>anagrafiche.soggetti</code>, garantisce che il campo <strong><code>codice_soggetto</code></strong> non possa essere modificato una volta assegnato.</p>
+<p>Il trigger <code>anagrafiche.trgfn_soggetti_upd_protect_codice_soggetto</code>, esploso <strong>prima di ogni UPDATE</strong> sulla tabella <code>anagrafiche.soggetti</code>, garantisce che il campo <strong><code>codice(soggetto)</code></strong> non possa essere modificato una volta assegnato.</p>
 <hr />
 <h3 id="contesto-di-esecuzione">🔄 Contesto di Esecuzione<a class="headerlink" href="#contesto-di-esecuzione" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1675,8 +1675,8 @@
 <li>
 <p><code>TG_OP = 'UPDATE'</code></p>
 </li>
-<li><code>OLD.codice_soggetto</code> <strong>non</strong> è <code>NULL</code></li>
-<li><code>NEW.codice_soggetto</code> <strong>diverso</strong> da <code>OLD.codice_soggetto</code></li>
+<li><code>OLD.codice</code> <strong>non</strong> è <code>NULL</code></li>
+<li><code>NEW.codice</code> <strong>diverso</strong> da <code>OLD.codice</code></li>
 <li><strong>Risultato</strong>: blocco dell’UPDATE con eccezione loggata.</li>
 </ul>
 <hr />
@@ -1687,7 +1687,7 @@
 <p><strong>Protezione campo</strong>:</p>
 </li>
 <li>
-<p>Blocca l’update solo se <code>OLD.codice_soggetto</code> era già valorizzato.</p>
+<p>Blocca l’update solo se <code>OLD.codice</code> era già valorizzato.</p>
 </li>
 <li>Confronta i valori <code>OLD</code> e <code>NEW</code> per identificare eventuali modifiche.</li>
 <li><strong>Eccezione</strong>: in caso di modifica non consentita, invoca <code>script.fn_log_and_raise_error</code> con il codice <code>E_COLONNA_NON_MODIFICABILE</code> e termina l’operazione.</li>
@@ -1705,7 +1705,7 @@
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Integrità della chiave</strong>: <code>codice_soggetto</code> rimane immutabile dopo la prima assegnazione.</li>
+<li><strong>Integrità della chiave</strong>: <code>codice(soggetto)</code> rimane immutabile dopo la prima assegnazione.</li>
 <li><strong>Logging standardizzato</strong>: tutte le eccezioni passano per il catalogo <code>config.messaggi_errore</code> e <code>dbops.error_log</code>.</li>
 <li><strong>Indipendenza</strong>: il controllo è a livello database, non richiede logica in applicazione.</li>
 </ul>
@@ -1713,7 +1713,7 @@
 <h3 id="best-practice">📌 Best Practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Inserire il messaggio di errore <code>E_COLONNA_NON_MODIFICABILE</code> in <code>config.messaggi_errore</code> con dettagli appropriati.</li>
-<li>Testare gli update sul campo <code>codice_soggetto</code> per garantire il blocco corretto.</li>
+<li>Testare gli update sul campo <code>codice</code> per garantire il blocco corretto.</li>
 <li>Mantenere la funzione focalizzata solo sulla protezione della colonna.</li>
 </ul>
 <hr />
