@@ -1664,12 +1664,12 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Il trigger <code>anagrafiche.trgfn_billing_account_upd_protect_account_code</code>, invocato <strong>prima di ogni UPDATE</strong> su <code>anagrafiche.billing_account</code>, impedisce modifiche improprie al campo <strong><code>account_code</code></strong> una volta assegnato.</p>
+<p>Il trigger <code>anagrafiche.trgfn_billing_account_upd_protect_account_code</code>, invocato <strong>prima di ogni UPDATE</strong> su <code>anagrafiche.billing_account</code>, impedisce modifiche improprie al campo <strong><code>codice (account)</code></strong> una volta assegnato.</p>
 <hr />
 <h3 id="contesto-di-esecuzione">🔄 Contesto di Esecuzione<a class="headerlink" href="#contesto-di-esecuzione" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Evento</strong>: <code>BEFORE UPDATE</code> su <code>anagrafiche.billing_account</code></li>
-<li><strong>Condizione</strong>: scatta solo se <code>OLD.account_code IS NOT NULL</code> e <code>NEW.account_code IS DISTINCT FROM OLD.account_code</code></li>
+<li><strong>Condizione</strong>: scatta solo se <code>OLD.codice IS NOT NULL</code> e <code>NEW.codice IS DISTINCT FROM OLD.codice</code></li>
 <li><strong>Reazione</strong>: solleva eccezione tramite <code>script.fn_log_and_raise_error</code>, bloccando l’update</li>
 </ul>
 <hr />
@@ -1680,9 +1680,9 @@
 <p><strong>Protezione del codice</strong>: controlla che:</p>
 </li>
 <li>
-<p>il vecchio <code>account_code</code> non sia <code>NULL</code>,</p>
+<p>il vecchio <code>codice</code> non sia <code>NULL</code>,</p>
 </li>
-<li>il nuovo <code>account_code</code> sia diverso dal vecchio.</li>
+<li>il nuovo <code>codice</code> sia diverso dal vecchio.</li>
 <li><strong>Errore</strong>: in caso di modifica non consentita, invoca <code>script.fn_log_and_raise_error</code> con codice <code>E_COLONNA_NON_MODIFICABILE</code>, indicando la colonna e l’id del record.</li>
 <li><strong>Blocco</strong>: il <code>RAISE EXCEPTION</code> interno impedisce il completamento dell’UPDATE.</li>
 </ol>
@@ -1706,7 +1706,7 @@
 <hr />
 <h3 id="best-practice">📌 Best Practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Non applicare logica di business aggiuntiva nel trigger; mantenerlo focalizzato sulla protezione di <code>account_code</code>.</li>
+<li>Non applicare logica di business aggiuntiva nel trigger; mantenerlo focalizzato sulla protezione di <code>codice (account)</code>.</li>
 <li>Aggiornare il codice di errore e il messaggio in <code>config.messaggi_errore</code> (<code>E_COLONNA_NON_MODIFICABILE</code>) se necessario.</li>
 <li>Testare sempre il comportamento di UPDATE sul campo per garantire compatibilità con eventuali operazioni di migrazione.</li>
 </ul>

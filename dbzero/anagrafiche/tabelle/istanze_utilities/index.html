@@ -1858,7 +1858,7 @@ Guide generali:</p>
 <td>false</td>
 </tr>
 <tr>
-<td>codice_istanza</td>
+<td>codice</td>
 <td>character varying</td>
 <td>NO</td>
 <td></td>
@@ -1902,7 +1902,7 @@ Guide generali:</p>
 <tr>
 <td>indirizzo_dettaglio_id</td>
 <td>integer</td>
-<td>YES</td>
+<td>NO</td>
 <td></td>
 </tr>
 <tr>
@@ -1915,6 +1915,12 @@ Guide generali:</p>
 <td>parent_istanza_id</td>
 <td>integer</td>
 <td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td>pdp_id</td>
+<td>bigint</td>
+<td>YES</td>
 <td></td>
 </tr>
 </tbody>
@@ -1940,6 +1946,11 @@ Guide generali:</p>
 <td></td>
 </tr>
 <tr>
+<td>CHECK</td>
+<td>chk_iu_pdp_requires_address</td>
+<td></td>
+</tr>
+<tr>
 <td>FOREIGN KEY</td>
 <td>fk_istanze_utilities_indirizzo_dettaglio</td>
 <td>indirizzo_dettaglio_id</td>
@@ -1955,14 +1966,19 @@ Guide generali:</p>
 <td>soggetto_id</td>
 </tr>
 <tr>
+<td>FOREIGN KEY</td>
+<td>fk_iu_pdp_id_addr</td>
+<td>pdp_id, indirizzo_dettaglio_id</td>
+</tr>
+<tr>
 <td>PRIMARY KEY</td>
 <td>pk_istanze_utilities</td>
 <td>id</td>
 </tr>
 <tr>
 <td>UNIQUE</td>
-<td>uq_istanze_utilities_codice_istanza</td>
-<td>codice_istanza</td>
+<td>uq_istanze_utilities_codice</td>
+<td>codice</td>
 </tr>
 </tbody>
 </table>
@@ -1976,6 +1992,10 @@ Guide generali:</p>
 </thead>
 <tbody>
 <tr>
+<td>idx_iu_pdp_id_addr</td>
+<td><code>CREATE INDEX idx_iu_pdp_id_addr ON anagrafiche.istanze_utilities USING btree (pdp_id, indirizzo_dettaglio_id)</code></td>
+</tr>
+<tr>
 <td>ix_istanze_utilities_indirizzo_dettaglio_id</td>
 <td><code>CREATE INDEX ix_istanze_utilities_indirizzo_dettaglio_id ON anagrafiche.istanze_utilities USING btree (indirizzo_dettaglio_id)</code></td>
 </tr>
@@ -1988,8 +2008,8 @@ Guide generali:</p>
 <td><code>CREATE UNIQUE INDEX pk_istanze_utilities ON anagrafiche.istanze_utilities USING btree (id)</code></td>
 </tr>
 <tr>
-<td>uq_istanze_utilities_codice_istanza</td>
-<td><code>CREATE UNIQUE INDEX uq_istanze_utilities_codice_istanza ON anagrafiche.istanze_utilities USING btree (codice_istanza)</code></td>
+<td>uq_istanze_utilities_codice</td>
+<td><code>CREATE UNIQUE INDEX uq_istanze_utilities_codice ON anagrafiche.istanze_utilities USING btree (codice)</code></td>
 </tr>
 </tbody>
 </table>
@@ -2029,10 +2049,10 @@ Guide generali:</p>
 <td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
 </tr>
 <tr>
-<td>trg_istanze_utilities_upd_protect_codice_istanza</td>
+<td>trg_istanze_utilities_upd_protect_codice</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
-<td><code>EXECUTE FUNCTION anagrafiche.trgfn_istanze_utilities_upd_protect_codice_istanza()</code></td>
+<td><code>EXECUTE FUNCTION anagrafiche.trgfn_istanze_utilities_upd_protect_codice()</code></td>
 </tr>
 <tr>
 <td>trg_upd_istanze_utilities_audit_data_user</td>
