@@ -1597,6 +1597,24 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#diagramma-er-relazioni" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagramma ER relazioni
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagramma-er-attributi" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagramma ER attributi
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1675,8 +1693,10 @@
 <h2 id="documentazione-concettuale-tabella-anagraficheindirizzi">📘 Documentazione Concettuale – Tabella <code>anagrafiche.indirizzi</code><a class="headerlink" href="#documentazione-concettuale-tabella-anagraficheindirizzi" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong>    </p>
-<p>Guide: <br />
-* <a href="../../../../guide/gestione-degli-indirizzi">Gestione degli indirizzi</a>       </p>
+<p>Guide:   </p>
+<ul>
+<li><a href="../../../../guide/gestione-degli-indirizzi">Gestione degli indirizzi</a>       </li>
+</ul>
 <p>Approfondimento Tabelle:   </p>
 <ul>
 <li><a href="../../../../dbzero/anagrafiche/tabelle/soggetti">anagrafiche.soggetti</a>       </li>
@@ -1782,6 +1802,46 @@
 <blockquote>
 <p>🧠 <strong>“Una tabella ponte tra struttura e flessibilità: <code>anagrafiche.indirizzi</code> consente di mappare ogni possibile indirizzo di un soggetto, conservando coerenza, precisione geografica e tracciabilità delle modifiche.”</strong></p>
 </blockquote>
+<hr />
+<h3 id="diagramma-er-relazioni">Diagramma ER relazioni<a class="headerlink" href="#diagramma-er-relazioni" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>%%{init: {'er': {'layoutDirection': 'TB'}}}%%
+erDiagram
+    soggetti_ruoli   ||--o{ indirizzi : has
+    tipi_indirizzi   ||--o{ indirizzi : typed_as
+    indirizzi_dettaglio ||--o{ indirizzi : normalized_by
+    comuni           ||--o{ indirizzi : uses
+    codici_postali   ||--o{ indirizzi : uses
+    stati            ||--o{ indirizzi : uses
+    indirizzi               ||--o{ storico_indirizzi : history
+</code></pre>
+<hr />
+<h3 id="diagramma-er-attributi">Diagramma ER attributi<a class="headerlink" href="#diagramma-er-attributi" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>%%{init: {'er': {'layoutDirection': 'TB'}}}%%
+erDiagram
+    indirizzi {
+        int        id PK
+        int        soggetto_ruolo_id FK
+        int        tipo_indirizzo_id FK
+        int        indirizzo_dettaglio_id FK
+        text       indirizzo_libero
+        int        stato_id FK
+        varchar    administrative_area
+        varchar    locality
+        varchar    sublocality
+        varchar    postal_box
+        point4326  geoloc
+        int        comune_id FK
+        int        codice_postale_id FK
+        uuid       tx_id
+        bool       storicizza
+        datetime   data_insert
+        varchar    user_insert
+        datetime   data_update
+        varchar    user_update
+    }
+</code></pre>
+<hr />
+<p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 <h1 id="tabella-indirizzi">📚 Tabella <code>indirizzi</code><a class="headerlink" href="#tabella-indirizzi" title="Permanent link">&para;</a></h1>
 <h2 id="campi-principali">🗂️ Campi principali<a class="headerlink" href="#campi-principali" title="Permanent link">&para;</a></h2>
 <table>
