@@ -1642,6 +1642,24 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#diagramma-er-relazioni" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagramma ER relazioni
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagramma-er-attributi" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagramma ER attributi
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1720,22 +1738,14 @@
 <h2 id="documentazione-concettuale-tabella-anagrafichedati_catastali">📘 Documentazione Concettuale – Tabella <code>anagrafiche.dati_catastali</code><a class="headerlink" href="#documentazione-concettuale-tabella-anagrafichedati_catastali" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimento tabelle:   </p>
 <ul>
-<li>
-<p>Approfodnimento tabelle:</p>
-</li>
-<li>
-<p><a href="../../../../dbzero/anagrafiche/tabelle/istanze_utilities">anagrafiche.istanze_utilities</a></p>
-</li>
-<li>
-<p><a href="../../../../dbzero/anagrafiche/tabelle/indirizzi_dettaglio">anagrafiche.indirizzi_dettaglio</a></p>
-</li>
-<li>
-<p>Approfodnimento funzioni:</p>
-</li>
-<li>
-<p><a href="../../../../dbzero/dbops/funzioni/trgfn_tx_id_managed">dbops.trgfn_tx_id_managed</a></p>
-</li>
+<li><a href="../../../../dbzero/anagrafiche/tabelle/istanze_utilities">anagrafiche.istanze_utilities</a></li>
+<li><a href="../../../../dbzero/anagrafiche/tabelle/indirizzi_dettaglio">anagrafiche.indirizzi_dettaglio</a></li>
+</ul>
+<p>Approfondimento funzioni:   </p>
+<ul>
+<li><a href="../../../../dbzero/dbops/funzioni/trgfn_tx_id_managed">dbops.trgfn_tx_id_managed</a></li>
 <li><a href="../../../../dbzero/script/funzioni/trgfn_upd_dlt_storico_generic">script.trgfn_upd_dlt_storico_generic</a></li>
 </ul>
 </blockquote>
@@ -1844,7 +1854,49 @@
 <hr />
 <h3 id="note-finali">🧾 Note Finali<a class="headerlink" href="#note-finali" title="Permanent link">&para;</a></h3>
 <p>Questa tabella è fondamentale per gestire in modo <strong>flessibile</strong> e <strong>storicizzato</strong> i dati catastali, garantendo integrità e riducendo duplicazioni tra più attivazioni sullo stesso indirizzo.</p>
+<hr />
+<h3 id="diagramma-er-relazioni">Diagramma ER relazioni<a class="headerlink" href="#diagramma-er-relazioni" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>%%{init: {'er': {'layoutDirection': 'TB'}}}%%
+erDiagram
+    indirizzi_dettaglio ||--o{ dati_catastali : has
+    istanze_utilities   ||--o{ dati_catastali : linked_by
+
+    indirizzi_dettaglio { int id PK }
+    istanze_utilities   { int id PK }
+    dati_catastali      { bigint id PK }
+</code></pre>
+<hr />
+<h3 id="diagramma-er-attributi">Diagramma ER attributi<a class="headerlink" href="#diagramma-er-attributi" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>%%{init: {'er': {'layoutDirection': 'TB'}}}%%
+erDiagram
+    dati_catastali {
+        bigint    id PK
+        int       indirizzo_dettaglio_id FK
+        int       istanza_utility_id FK
+        char      sezione_catastale
+        char      foglio_catastale
+        char      particella
+        char      subalterno
+        varchar   categoria_catastale
+        varchar   classe_catastale
+        numeric   rendita_catastale
+        int       consistenza
+        char      tipo_accatastamento
+        bool      immobile_rurale
+        char      destinazione_immobile
+        int       anno_protocollo
+        int       superficie
+        datetime  data_insert
+        varchar   user_insert
+        datetime  data_update
+        varchar   user_update
+        uuid      tx_id
+        bool      storicizza
+    }
+</code></pre>
+<hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+<hr />
 <h1 id="tabella-dati_catastali">📚 Tabella <code>dati_catastali</code><a class="headerlink" href="#tabella-dati_catastali" title="Permanent link">&para;</a></h1>
 <h2 id="campi-principali">🗂️ Campi principali<a class="headerlink" href="#campi-principali" title="Permanent link">&para;</a></h2>
 <table>
@@ -2091,14 +2143,9 @@
 <td>UPDATE</td>
 <td><code>EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic('dato_catastale_id')</code></td>
 </tr>
-<tr>
-<td>---</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
 </tbody>
 </table>
+<hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
 
