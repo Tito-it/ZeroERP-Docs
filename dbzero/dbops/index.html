@@ -1578,6 +1578,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../guide/automazione-db/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Automazione DB
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../guide/Messaggi-di-Errore-e-Generazione-Log/" class="md-nav__link">
         
   
@@ -1731,10 +1754,10 @@
 <h2 id="tabelle">📚 Tabelle<a class="headerlink" href="#tabelle" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="tabelle/audit_log/">audit_log</a> — * Monitorare e storicizzare ogni chiamata a funzioni, job e API interne. * Fornire dettagli su utente, parametri e performance di esecuzione. * Collegare gli eventi di audit agli errori e ad altri log tramite <code>tx_id</code> gestito dal trigger.</li>
-<li><a href="tabelle/automation_fk_exclusions/">automation_fk_exclusions</a></li>
-<li><a href="tabelle/automation_overrides_cols/">automation_overrides_cols</a></li>
-<li><a href="tabelle/automation_rules_tbl/">automation_rules_tbl</a></li>
-<li><a href="tabelle/automation_scope/">automation_scope</a></li>
+<li><a href="tabelle/automation_fk_exclusions/">automation_fk_exclusions</a> — <code>dbops.automation_fk_exclusions</code> elenca le <strong>coppie Padre/Figlio</strong> (schema/tabella) da <strong>escludere</strong> dalla regola automatica <strong>ATTIVO</strong> (soft-delete):</li>
+<li><a href="tabelle/automation_overrides_cols/">automation_overrides_cols</a> — Centralizzare le <strong>eccezioni di naming delle colonne</strong> usate dagli automatismi (audit, soft‑delete, storico, ecc.). Quando il tuo schema usa nomi diversi dagli standard (es. <code>attivo</code> → <code>is_enabled</code>, <code>data_update</code> → <code>modified_at</code>), qui definisci l’override <strong>per tabella</strong>.</li>
+<li><a href="tabelle/automation_rules_tbl/">automation_rules_tbl</a> — Configurare <strong>regole di automazione</strong> per generare/applicare trigger e vincoli in modo dichiarativo. Ogni riga descrive <strong>cosa</strong> applicare (<em>rule_type</em>), <strong>dove</strong> (<em>target_schema/target_table</em>), <strong>quando</strong> (<em>exec_mode</em>), <strong>come chiamarlo</strong> (<em>name_template</em>), <strong>come verificare l'esistenza</strong> (<em>existence_strategy</em>), e <strong>con quali parametri</strong> (<em>params</em>).</li>
+<li><a href="tabelle/automation_scope/">automation_scope</a> — Definire <strong>l’elenco degli schemi</strong> su cui gli orchestratori di automazione devono operare. Funziona come una <strong>allow‑list</strong>: se presente e popolata, limita l’esecuzione alle sole voci elencate.</li>
 <li><a href="tabelle/error_log/">error_log</a> — * Raccogliere in un unico punto gli errori generati da funzioni, trigger o applicazioni, permettendo analisi e allineamento con il catalogo di messaggi di errore. * Consentire il <strong>collegamento transazionale</strong> tramite <code>tx_id</code>, per ricostruire l’intero flusso di operazioni (ad esempio un job batch) incrociando tabelle come <code>dbops.audit_log</code>.</li>
 <li><a href="tabelle/fk_index_policy/">fk_index_policy</a> — La tabella <strong><code>dbops.fk_index_policy</code></strong> definisce una <strong>policy centralizzata</strong> per la gestione degli index sulle foreign key, consentendo di abilitare o disabilitare la creazione/uso di indici per specifici vincoli referenziali.</li>
 <li><a href="tabelle/transaction_ids/">transaction_ids</a> — La tabella <strong><code>dbops.transaction_ids</code></strong> funge da <strong>registro centrale</strong> di tutti gli identificativi di transazione (UUID) utilizzati in Zero ERP: ogni volta che viene avviata un’operazione di modifica dati (inserimento, aggiornamento o cancellazione) che coinvolge più tabelle, si genera un nuovo <strong><code>tx_id</code></strong> in questa tabella e lo si propaga a tutte le righe interessate, garantendo la <strong>tracciabilità</strong> e il <strong>raggruppamento</strong> coerente delle modifiche.</li>
@@ -1766,6 +1789,8 @@
 <li><a href="funzioni/fn_run_automations_audit_update/">fn_run_automations_audit_update</a></li>
 <li><a href="funzioni/fn_run_automations_storico/">fn_run_automations_storico</a></li>
 <li><a href="funzioni/fn_run_automations_tx_id/">fn_run_automations_tx_id</a></li>
+<li><a href="funzioni/fn_schema_in_scope/">fn_schema_in_scope</a></li>
+<li><a href="funzioni/fn_schema_match/">fn_schema_match</a></li>
 <li><a href="funzioni/fn_search_column_usage/">fn_search_column_usage</a> — * Individuare rapidamente tutte le occorrenze di un campo in definizioni SQL presenti nel database. * Facilitare attività di refactoring, pulizia del codice, e verifica di dipendenze tra oggetti del database.</li>
 <li><a href="funzioni/fn_seed_fk_index_policy/">fn_seed_fk_index_policy</a> — * <strong>Sincronizzazione iniziale</strong>   Aggiunge in <code>fk_index_policy</code> tutte le FK con indice esistente rilevate in <code>vw_fk_con_indice_missing_policy</code>. * <strong>Automazione</strong>   Evita inserimenti manuali per policy già coperte da indice. * <strong>Flag di origine</strong>   Imposta <code>generated_by_script = true</code> per distinguere le righe create automaticamente.</li>
 <li><a href="funzioni/fn_trigger_exists_by_function/">fn_trigger_exists_by_function</a></li>
