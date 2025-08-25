@@ -1649,15 +1649,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dettagli-di-implementazione" class="md-nav__link">
-    <span class="md-ellipsis">
-      🔍 Dettagli di Implementazione
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#comportamenti-e-side-effects" class="md-nav__link">
     <span class="md-ellipsis">
       🔒 Comportamenti e Side Effects
@@ -1723,6 +1714,7 @@
 <p>Approfondimenti funzioni:   </p>
 <ul>
 <li><a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a>     </li>
+<li><a href="../../../../dbzero/script/funzioni/fn_log_error_only">script.fn_log_error_only</a>     </li>
 </ul>
 <p>Estensioni PostgreSQL:   </p>
 <ul>
@@ -1738,23 +1730,6 @@
 <li><strong>Supporto al logging remoto</strong>: utilizzata da funzioni come <code>script.fn_log_and_raise_error</code> per eseguire INSERT in un contesto transazionale separato.</li>
 </ul>
 <hr />
-<h3 id="dettagli-di-implementazione">🔍 Dettagli di Implementazione<a class="headerlink" href="#dettagli-di-implementazione" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_ensure_logconn</span><span class="p">()</span>
-<span class="w">  </span><span class="k">RETURNS</span><span class="w"> </span><span class="nb">void</span>
-<span class="w">  </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="s">$$</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="c1">-- Prova ad aprire la connessione dblink &#39;logconn&#39; usando la GUC</span>
-<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">dblink_connect_u</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;logconn&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;dblink.log_connection&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)</span>
-<span class="w">  </span><span class="p">);</span>
-<span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">duplicate_object</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="c1">-- Se la connessione &#39;logconn&#39; è già definita, ignora l’eccezione</span>
-<span class="w">  </span><span class="k">NULL</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="s">$$</span><span class="p">;</span>
-</code></pre></div>
 <ul>
 <li><strong><code>dblink_connect_u(connection_name, conninfo)</code></strong>: apre una connessione con nome <code>connection_name</code> sulla stringa <code>conninfo</code> (in formato URI o DSN).</li>
 <li><strong>GUC <code>dblink.log_connection</code></strong>: parametro di configurazione (custom) contenente la stringa di connessione.</li>

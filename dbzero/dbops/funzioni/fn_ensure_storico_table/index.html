@@ -16,7 +16,7 @@
     
     
       
-        <title>Fn ensure logconn - Zero ERP Documentation</title>
+        <title>⚙️ Funzione fn_ensure_storico_table - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#documentazione-concettuale-function-scriptfn_ensure_logconn" class="md-skip">
+        <a href="#funzione-fn_ensure_storico_table" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Fn ensure logconn
+              ⚙️ Funzione fn_ensure_storico_table
             
           </span>
         </div>
@@ -121,7 +121,7 @@
           </li>
         
           <li class="md-select__item">
-            <a href="../../../../en/dbzero/script/funzioni/fn_ensure_logconn/" hreflang="en" class="md-select__link">
+            <a href="../../../../en/dbzero/dbops/funzioni/fn_ensure_storico_table/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
@@ -1046,7 +1046,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../dbops/" class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   
@@ -1092,7 +1092,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../" class="md-nav__link">
+      <a href="../../../script/" class="md-nav__link">
         
   
   
@@ -1622,74 +1622,8 @@
   
   
   
+    
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Indice
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#documentazione-concettuale-function-scriptfn_ensure_logconn" class="md-nav__link">
-    <span class="md-ellipsis">
-      📘 Documentazione Concettuale – Function script.fn_ensure_logconn()
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Function script.fn_ensure_logconn()">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#scopo-principale" class="md-nav__link">
-    <span class="md-ellipsis">
-      🎯 Scopo Principale
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#comportamenti-e-side-effects" class="md-nav__link">
-    <span class="md-ellipsis">
-      🔒 Comportamenti e Side Effects
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#esempi-di-utilizzo" class="md-nav__link">
-    <span class="md-ellipsis">
-      ⚙️ Esempi di Utilizzo
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vantaggi-operativi" class="md-nav__link">
-    <span class="md-ellipsis">
-      💡 Vantaggi Operativi
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#funzione-fn_ensure_logconn" class="md-nav__link">
-    <span class="md-ellipsis">
-      ⚙️ Funzione fn_ensure_logconn
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
   
 </nav>
                   </div>
@@ -1708,98 +1642,108 @@
   
 
 
-<h2 id="documentazione-concettuale-function-scriptfn_ensure_logconn">📘 Documentazione Concettuale – Function <code>script.fn_ensure_logconn()</code><a class="headerlink" href="#documentazione-concettuale-function-scriptfn_ensure_logconn" title="Permanent link">&para;</a></h2>
-<blockquote>
-<p>👀 <strong>Vedi anche</strong></p>
-<p>Approfondimenti funzioni:   </p>
-<ul>
-<li><a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a>     </li>
-<li><a href="../../../../dbzero/script/funzioni/fn_log_error_only">script.fn_log_error_only</a>     </li>
-</ul>
-<p>Estensioni PostgreSQL:   </p>
-<ul>
-<li>GUC <code>dblink.log_connection</code></li>
-<li>Extension PostgreSQL <code>dblink</code></li>
-</ul>
-</blockquote>
-<p>La funzione <strong><code>script.fn_ensure_logconn()</code></strong> garantisce l’apertura di una connessione <strong>dblink</strong> permanente denominata <strong><code>logconn</code></strong>, utilizzando la stringa di connessione definita nella GUC <code>dblink.log_connection</code>. Se la connessione esiste già, l’eccezione <code>duplicate_object</code> viene catturata e ignorata.</p>
-<hr />
-<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Stabilire una connessione persistente</strong> a un database remoto o a se stesso attraverso l’estensione <code>dblink</code>, evitando overhead di creazione/removal di connessioni multiple.</li>
-<li><strong>Supporto al logging remoto</strong>: utilizzata da funzioni come <code>script.fn_log_and_raise_error</code> per eseguire INSERT in un contesto transazionale separato.</li>
-</ul>
-<hr />
-<ul>
-<li><strong><code>dblink_connect_u(connection_name, conninfo)</code></strong>: apre una connessione con nome <code>connection_name</code> sulla stringa <code>conninfo</code> (in formato URI o DSN).</li>
-<li><strong>GUC <code>dblink.log_connection</code></strong>: parametro di configurazione (custom) contenente la stringa di connessione.</li>
-<li><strong>Eccezione <code>duplicate_object</code></strong>: intercettata per evitare errori se <code>logconn</code> è già presente.</li>
-</ul>
-<hr />
-<h3 id="comportamenti-e-side-effects">🔒 Comportamenti e Side Effects<a class="headerlink" href="#comportamenti-e-side-effects" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Persistenza della connessione</strong>: rimane attiva fino alla fine della sessione o fino a <code>dblink_disconnect('logconn')</code>.</li>
-<li><strong>Idempotenza</strong>: chiamate multiple non ricreano la connessione e non causano errori.</li>
-<li><strong>Assenza di rollback</strong>: l’operazione di connessione non influisce sulle transazioni correnti.</li>
-</ul>
-<hr />
-<h3 id="esempi-di-utilizzo">⚙️ Esempi di Utilizzo<a class="headerlink" href="#esempi-di-utilizzo" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>Nel flusso di error handling</strong></li>
-</ol>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Prima di loggare errori in remoto</span>
-<span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_ensure_logconn</span><span class="p">();</span>
-<span class="k">PERFORM</span><span class="w"> </span><span class="n">dblink_exec</span><span class="p">(</span><span class="s1">&#39;logconn&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;INSERT INTO dbops.error_log ...&#39;</span><span class="p">);</span>
-</code></pre></div>
-<ol>
-<li><strong>Chiamata manuale</strong></li>
-</ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_ensure_logconn</span><span class="p">();</span>
-</code></pre></div>
-<hr />
-<h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Efficienza</strong>: riduce la latenza di apertura connessioni ripetute.</li>
-<li><strong>Semplicità d’uso</strong>: un’unica funzione per garantire la connessione.</li>
-<li><strong>Affidabilità</strong>: ignora silenziosamente eccezioni di duplicato, evitando interruzioni.</li>
-</ul>
-<hr />
-<blockquote>
-<p>🧠 <strong>“Un’utility leggera per gestire connessioni dblink persistenti, essenziale per pattern di logging remoto e task di integrazione tra database.”</strong></p>
-</blockquote>
-<h1 id="funzione-fn_ensure_logconn">⚙️ Funzione <code>fn_ensure_logconn</code><a class="headerlink" href="#funzione-fn_ensure_logconn" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_ensure_logconn</span><span class="p">()</span>
+<h1 id="funzione-fn_ensure_storico_table">⚙️ Funzione <code>fn_ensure_storico_table</code><a class="headerlink" href="#funzione-fn_ensure_storico_table" title="Permanent link">&para;</a></h1>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_ensure_storico_table</span><span class="p">(</span><span class="n">p_schema_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_fk_col</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_create_gin_index</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_ensure_logconn</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span><span class="n">p_schema_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_fk_col</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_create_gin_index</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="p">)</span>
 <span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">search_path</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="s1">&#39;public&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pg_temp&#39;</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">DECLARE</span><span class="w"> </span><span class="n">v_conn</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.dblink_log_connection&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">);</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="c1">-- spegni via GUC di sessione</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.log_with_dblink&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;on&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;on&#39;</span><span class="w"> </span><span class="k">THEN</span>
+<span class="k">DECLARE</span>
+<span class="w">  </span><span class="n">v_exists</span><span class="w">   </span><span class="nb">boolean</span><span class="p">;</span>
+<span class="w">  </span><span class="n">v_sql</span><span class="w">      </span><span class="nb">text</span><span class="p">;</span>
+<span class="w">  </span><span class="n">v_tbl_sto</span><span class="w">  </span><span class="nb">text</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;%I_storico&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span><span class="p">);</span>
+<span class="w">  </span><span class="n">v_full_base</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;%I.%I&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_schema_base</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span><span class="p">);</span>
+<span class="w">  </span><span class="n">v_full_sto</span><span class="w">  </span><span class="nb">text</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;storico.%I&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_tbl_sto</span><span class="p">);</span>
+<span class="k">BEGIN</span><span class="w"> </span>
+<span class="w">  </span><span class="c1">-- Helper: crea (se manca) storico.&lt;table&gt;_storico con struttura standard</span>
+<span class="w">  </span><span class="c1">-- esiste già?</span>
+<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="k">c</span>
+<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="o">=</span><span class="k">c</span><span class="p">.</span><span class="n">relnamespace</span>
+<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="o">=</span><span class="s1">&#39;storico&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="o">=</span><span class="n">v_tbl_sto</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relkind</span><span class="o">=</span><span class="s1">&#39;r&#39;</span>
+<span class="w">  </span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_exists</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_exists</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">    </span><span class="k">RETURN</span><span class="p">;</span>
 <span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="c1">-- -- niente connstring -&gt; esci </span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_conn</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">length</span><span class="p">(</span><span class="k">trim</span><span class="p">(</span><span class="n">v_conn</span><span class="p">))</span><span class="o">=</span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="k">RETURN</span><span class="p">;</span><span class="w"> </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
-<span class="w">  </span><span class="c1">-- se &#39;logconn&#39; è già aperta, non riconnettere</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="s1">&#39;logconn&#39;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="w"> </span><span class="p">(</span><span class="k">coalesce</span><span class="p">(</span><span class="k">public</span><span class="p">.</span><span class="n">dblink_get_connections</span><span class="p">(),</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[]::</span><span class="nb">text</span><span class="p">[]))</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">  </span><span class="c1">-- build DDL</span>
+<span class="w">  </span><span class="n">v_sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="err">$</span><span class="n">ddl$</span>
+<span class="w">    </span><span class="k">CREATE</span><span class="w"> </span><span class="k">SCHEMA</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">storico</span><span class="p">;</span>
+<span class="w">    </span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="o">%</span><span class="n">s</span><span class="w"> </span><span class="p">(</span>
+<span class="w">      </span><span class="n">id</span><span class="w">              </span><span class="n">BIGSERIAL</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">      </span><span class="o">%</span><span class="n">I</span><span class="w">              </span><span class="nb">bigint</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">      </span><span class="n">op</span><span class="w">              </span><span class="nb">text</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">                      </span><span class="c1">-- &#39;UPD&#39; | &#39;DLT&#39; | altro</span>
+<span class="w">      </span><span class="n">ts</span><span class="w">              </span><span class="n">timestamptz</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="n">now</span><span class="p">(),</span><span class="w"> </span><span class="c1">-- timestamp evento</span>
+<span class="w">      </span><span class="n">snapshot</span><span class="w">        </span><span class="n">jsonb</span><span class="p">,</span><span class="w">                              </span><span class="c1">-- contenuto riga (NEW/OLD)</span>
+<span class="w">      </span><span class="n">user_update</span><span class="w">     </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">      </span><span class="n">data_update</span><span class="w">     </span><span class="n">timestamptz</span><span class="p">,</span>
+<span class="w">      </span><span class="n">tx_id</span><span class="w">           </span><span class="n">uuid</span><span class="p">,</span>
+<span class="w">      </span><span class="n">valid_from</span><span class="w">      </span><span class="n">timestamptz</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="n">now</span><span class="p">(),</span>
+<span class="w">      </span><span class="n">valid_to</span><span class="w">        </span><span class="n">timestamptz</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="w">    </span><span class="c1">-- FK opzionale sulla base (commentata se non desideri vincolo)</span>
+<span class="w">    </span><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="o">%</span><span class="n">s</span>
+<span class="w">      </span><span class="k">ADD</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">fk_</span><span class="o">%</span><span class="n">I</span><span class="w"> </span><span class="k">FOREIGN</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="p">(</span><span class="o">%</span><span class="n">I</span><span class="p">)</span><span class="w"> </span><span class="k">REFERENCES</span><span class="w"> </span><span class="o">%</span><span class="n">s</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
+<span class="w">    </span><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">ix_</span><span class="o">%</span><span class="n">s_</span><span class="o">%</span><span class="n">I_ts</span><span class="w">      </span><span class="k">ON</span><span class="w"> </span><span class="o">%</span><span class="n">s</span><span class="w"> </span><span class="p">(</span><span class="n">ts</span><span class="p">);</span>
+<span class="w">    </span><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">ix_</span><span class="o">%</span><span class="n">s_</span><span class="o">%</span><span class="n">I_fk</span><span class="w">      </span><span class="k">ON</span><span class="w"> </span><span class="o">%</span><span class="n">s</span><span class="w"> </span><span class="p">(</span><span class="o">%</span><span class="n">I</span><span class="p">);</span>
+<span class="w">  </span><span class="err">$</span><span class="n">ddl$</span><span class="p">,</span>
+<span class="w">    </span><span class="n">v_full_sto</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_fk_col</span><span class="p">,</span>
+<span class="w">    </span><span class="c1">-- FK (commentata)</span>
+<span class="w">    </span><span class="n">v_full_sto</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span><span class="p">,</span><span class="w"> </span><span class="n">p_fk_col</span><span class="p">,</span><span class="w"> </span><span class="n">v_full_base</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_table_base</span><span class="p">,</span><span class="w"> </span><span class="n">p_fk_col</span><span class="p">,</span><span class="w"> </span><span class="n">v_full_sto</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_table_base</span><span class="p">,</span><span class="w"> </span><span class="n">p_fk_col</span><span class="p">,</span><span class="w"> </span><span class="n">v_full_sto</span><span class="p">,</span><span class="w"> </span><span class="n">p_fk_col</span>
+<span class="w">  </span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">p_create_gin_index</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="n">v_sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_sql</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="n">E</span><span class="s1">&#39;\nCREATE INDEX IF NOT EXISTS ix_%s_snapshot_gin ON %s USING GIN (snapshot);\n&#39;</span><span class="p">,</span>
+<span class="w">                            </span><span class="n">p_table_base</span><span class="p">,</span><span class="w"> </span><span class="n">v_full_sto</span><span class="p">);</span>
+<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
+<span class="w">      </span><span class="n">p_function_name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;fn_run_automations_storico&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="n">p_status</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;DRYRUN&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;STORICO&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="n">p_dry_run</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">true</span><span class="p">,</span>
+<span class="w">      </span><span class="n">p_params</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_full_sto</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;action&#39;</span><span class="p">,</span><span class="s1">&#39;CREATE_STORICO_TABLE&#39;</span><span class="p">),</span>
+<span class="w">      </span><span class="n">p_message</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;Storico table would be created&#39;</span>
+<span class="w">    </span><span class="p">);</span>
 <span class="w">    </span><span class="k">RETURN</span><span class="p">;</span>
 <span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
-<span class="w">  </span><span class="c1">-- tenta la connessione e gestisci eccezioni locali</span>
 <span class="w">  </span><span class="k">BEGIN</span>
-<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">dblink_connect</span><span class="p">(</span><span class="s1">&#39;logconn&#39;</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">v_conn</span><span class="p">::</span><span class="nb">text</span><span class="p">);</span>
-<span class="w">  </span><span class="k">EXCEPTION</span>
-<span class="w">    </span><span class="k">WHEN</span><span class="w"> </span><span class="n">duplicate_object</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="k">NULL</span><span class="p">;</span><span class="w">             </span><span class="c1">-- già aperta (race)</span>
-<span class="w">    </span><span class="k">WHEN</span><span class="w"> </span><span class="k">SQLSTATE</span><span class="w"> </span><span class="s1">&#39;53300&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="k">RETURN</span><span class="p">;</span><span class="w">           </span><span class="c1">-- too_many_connections: non bloccare il chiamante</span>
+<span class="w">    </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">v_sql</span><span class="p">;</span>
+<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
+<span class="w">      </span><span class="n">p_function_name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;fn_run_automations_storico&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="n">p_status</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;OK&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;STORICO&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="n">p_params</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_full_sto</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;action&#39;</span><span class="p">,</span><span class="s1">&#39;CREATE_STORICO_TABLE&#39;</span><span class="p">),</span>
+<span class="w">      </span><span class="n">p_message</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;Storico table created&#39;</span>
+<span class="w">    </span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">      </span><span class="s1">&#39;dbops&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="s1">&#39;fn_run_automations_storico&#39;</span><span class="p">,</span><span class="w">          </span><span class="c1">-- function_name / contesto</span>
+<span class="w">      </span><span class="s1">&#39;E_STORICO_PROVISION&#39;</span><span class="p">,</span><span class="w">              </span><span class="c1">-- codice breve dell’errore</span>
+<span class="w">      </span><span class="n">jsonb_build_object</span><span class="p">(</span>
+<span class="w">        </span><span class="s1">&#39;action&#39;</span><span class="p">,</span><span class="s1">&#39;CREATE_STORICO_TABLE&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_schema_base</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="w">  </span><span class="n">p_table_base</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;target&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;storico.%s_storico&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span><span class="p">),</span>
+<span class="w">        </span><span class="s1">&#39;fk&#39;</span><span class="p">,</span><span class="w">     </span><span class="n">p_fk_col</span>
+<span class="w">      </span><span class="p">),</span>
+<span class="w">      </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
+<span class="w">      </span><span class="n">SQLERRM</span>
+<span class="w">    </span><span class="p">);</span>
+
 <span class="w">  </span><span class="k">END</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span><span class="w"> </span>
+<span class="k">END</span><span class="p">;</span>
 <span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>
 <hr />
