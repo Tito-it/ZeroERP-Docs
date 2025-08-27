@@ -1651,6 +1651,7 @@
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
 <span class="w">    </span><span class="k">DECLARE</span>
+<span class="w">      </span><span class="n">v_schemas</span><span class="w"> </span><span class="nb">text</span><span class="p">[];</span>
 <span class="w">      </span><span class="n">rtab</span><span class="w"> </span><span class="n">record</span><span class="p">;</span>
 <span class="w">      </span><span class="n">rrule</span><span class="w"> </span><span class="n">record</span><span class="p">;</span>
 <span class="w">      </span><span class="n">rel</span><span class="w">  </span><span class="n">regclass</span><span class="p">;</span>
@@ -1662,6 +1663,7 @@
 <span class="w">      </span><span class="n">trg_name</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
 <span class="w">      </span><span class="n">exist_strat</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
 <span class="w">    </span><span class="k">BEGIN</span>
+<span class="w">      </span><span class="n">v_schemas</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_resolve_scope</span><span class="p">(</span><span class="n">p_schemas</span><span class="p">);</span>
 <span class="w">      </span><span class="k">FOR</span><span class="w"> </span><span class="n">rtab</span><span class="w"> </span><span class="k">IN</span>
 <span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
 <span class="w">              </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span>
@@ -1669,7 +1671,8 @@
 <span class="w">        </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="k">c</span>
 <span class="w">        </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="o">=</span><span class="k">c</span><span class="p">.</span><span class="n">relnamespace</span>
 <span class="w">        </span><span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relkind</span><span class="o">=</span><span class="s1">&#39;r&#39;</span>
-<span class="w">          </span><span class="k">AND</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="p">(</span><span class="n">p_schemas</span><span class="p">)</span>
+<span class="w">          </span><span class="k">AND</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="p">(</span><span class="n">v_schemas</span><span class="p">)</span>
+<span class="w">          </span><span class="k">AND</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_table_in_scope</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="p">)</span>
 <span class="w">      </span><span class="n">LOOP</span>
 <span class="w">        </span><span class="n">rel</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="n">rel</span><span class="p">;</span>
 

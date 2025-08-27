@@ -1649,18 +1649,63 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#parametri-di-input" class="md-nav__link">
+  <a href="#comportamento-contratto" class="md-nav__link">
     <span class="md-ellipsis">
-      🔍 Parametri di Input
+      Comportamento (contratto)
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#flusso-di-esecuzione" class="md-nav__link">
+  <a href="#firma-consigliata" class="md-nav__link">
     <span class="md-ellipsis">
-      ⚙️ Flusso di Esecuzione
+      Firma consigliata
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flusso-interno-riassunto" class="md-nav__link">
+    <span class="md-ellipsis">
+      Flusso interno (riassunto)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prerequisiti" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisiti
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sicurezza-permessi" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sicurezza &amp; Permessi
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-duso-plpgsql" class="md-nav__link">
+    <span class="md-ellipsis">
+      Esempio d’uso (PL/pgSQL)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
     </span>
   </a>
   
@@ -1704,10 +1749,13 @@
 <h2 id="documentazione-concettuale-funzione-scriptfn_log_error_only">📘 Documentazione Concettuale – Funzione <code>script.fn_log_error_only</code><a class="headerlink" href="#documentazione-concettuale-funzione-scriptfn_log_error_only" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimento funzioni:</p>
 <ul>
 <li><a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a> <em>(log + abort)</em></li>
+<li><a href="../../../../dbzero/script/funzioni/.fn_ensure_logconn">script.fn_ensure_logconn</a></li>
 </ul>
 </blockquote>
+<p>Ultimo aggiornamento: <strong>26/08/2025</strong></p>
 <p>La funzione <strong><code>script.fn_log_error_only</code></strong> registra <strong>solo</strong> un messaggio in <code>dbops.error_log</code> <strong>senza</strong> interrompere l’esecuzione. È ideale per:</p>
 <ul>
 <li>Tracciare attività, eventi o warning che non devono bloccare il flusso applicativo.</li>
@@ -1720,62 +1768,80 @@
 <li><strong>Separazione delle responsabilità</strong>: differenzia chiaramente i casi di <strong>solo tracciamento</strong> da quelli di <strong>error handling critico</strong> (per cui usare <code>fn_log_and_raise_error</code>).</li>
 </ul>
 <hr />
-<h3 id="parametri-di-input">🔍 Parametri di Input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Nome</th>
-<th>Tipo</th>
-<th>Descrizione</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>p_area</code></td>
-<td><code>TEXT</code></td>
-<td>Area di applicazione (es. <code>'database'</code>, <code>'service'</code>, ecc.)</td>
-</tr>
-<tr>
-<td><code>p_function_name</code></td>
-<td><code>TEXT</code></td>
-<td>Nome della funzione o del contesto chiamante</td>
-</tr>
-<tr>
-<td><code>p_error_code</code></td>
-<td><code>TEXT</code></td>
-<td>Codice di riferimento del messaggio in <code>config.messaggi_errore</code> (es. <code>'E_STORICO_MANCANTE'</code>)</td>
-</tr>
-<tr>
-<td><code>p_context</code></td>
-<td><code>JSONB</code></td>
-<td>Oggetto JSON con informazioni di contesto (es. tabella, record, parametri)</td>
-</tr>
-<tr>
-<td><code>p_tx_id</code></td>
-<td><code>UUID</code></td>
-<td>ID della transazione corrente (se <code>NULL</code>, viene generato automaticamente)</td>
-</tr>
-<tr>
-<td><code>VARIADIC p_valori</code></td>
-<td><code>TEXT[]</code></td>
-<td>Valori da sostituire nei placeholder del messaggio (uso <code>format</code>)</td>
-</tr>
-</tbody>
-</table>
+<h3 id="comportamento-contratto">Comportamento (contratto)<a class="headerlink" href="#comportamento-contratto" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Never-throw:</strong> eventuali errori del canale di log vengono <strong>assorbiti</strong> (il chiamante non viene interrotto).</li>
+<li><strong>Connessione separata:</strong> il log avviene tramite <strong><code>dblink</code> dedicato</strong> (<code>logconn</code>) per <strong>isolare</strong> il logging dalla transazione corrente.</li>
+<li><strong>Contesto ricco:</strong> salva area, funzione, codice messaggio, <code>tx_id</code> e <code>context</code> JSONB.</li>
+<li>
+<p><strong>Resilienza:</strong></p>
+</li>
+<li>
+<p>se il codice non è in <code>config.messaggi_errore</code>, usa fallback (<code>'MESSAGGIO_NON_DEFINITO'</code>).</p>
+</li>
+<li>se <code>tx_id</code> non è passato, viene <strong>recuperato/creato</strong> (es. <code>dbops.fn_get_or_create_session_tx_id()</code>).</li>
+<li><strong>Idempotenza logica:</strong> ogni chiamata genera una riga (nessun upsert necessario).</li>
+</ul>
 <hr />
-<h3 id="flusso-di-esecuzione">⚙️ Flusso di Esecuzione<a class="headerlink" href="#flusso-di-esecuzione" title="Permanent link">&para;</a></h3>
+<h3 id="firma-consigliata">Firma consigliata<a class="headerlink" href="#firma-consigliata" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Schema suggerito: script.*  </span>
+<span class="c1">-- SECURITY DEFINER opzionale se serve accedere a risorse non concesse ai caller</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_error_only</span><span class="p">(</span>
+<span class="w">    </span><span class="n">p_area</span><span class="w">          </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_error_code</span><span class="w">    </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_context</span><span class="w">       </span><span class="n">jsonb</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="s1">&#39;{}&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_tx_id</span><span class="w">         </span><span class="n">uuid</span><span class="w">  </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="w"> </span><span class="nb">text</span><span class="p">[]</span>
+<span class="p">)</span><span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span><span class="p">;</span>
+</code></pre></div>
+<hr />
+<h3 id="flusso-interno-riassunto">Flusso interno (riassunto)<a class="headerlink" href="#flusso-interno-riassunto" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Recupero <code>tx_id</code></strong>: se <code>p_tx_id</code> è <code>NULL</code>, invoca <code>dbops.fn_get_or_create_session_tx_id()</code>.</li>
-<li>
-<p><strong>Lookup del messaggio</strong>: cerca in <code>config.messaggi_errore</code> il record corrispondente a <code>p_error_code</code> e lingua (GUC <code>myapp.user_language</code>).</p>
-</li>
-<li>
-<p>Se non trovato, usa il codice <code>'MESSAGGIO_NON_DEFINITO'</code>.</p>
-</li>
-<li><strong>Sostituzione placeholder</strong>: applica <code>format(v_msg, VARIADIC p_valori)</code> se presenti.</li>
-<li><strong>Insert su <code>dbops.error_log</code></strong>: costruisce dinamicamente l’<code>INSERT</code> con <code>dblink_exec</code> in connessione separata.</li>
-<li><strong>Fine</strong>: termina senza sollevare nulla, proseguendo il normale flusso PL/pgSQL.</li>
+<li><strong>Assicura connessione di log</strong>: <code>PERFORM script.fn_ensure_logconn();</code></li>
+<li><strong>Tx id</strong>: se <code>p_tx_id IS NULL</code> → <code>SELECT dbops.fn_get_or_create_session_tx_id();</code></li>
+<li><strong>Lookup messaggio</strong>: legge <code>config.messaggi_errore</code> per lingua (GUC es. <code>myapp.user_language</code>). Fallback a <code>'MESSAGGIO_NON_DEFINITO'</code>.</li>
+<li><strong>Formatting</strong>: <code>format(v_msg, VARIADIC p_valori)</code> (se forniti).</li>
+<li><strong>Insert via dblink</strong>: <code>SELECT dblink_exec('logconn', $$INSERT ...$$);</code></li>
+<li><strong>Cattura errori</strong>: qualsiasi eccezione viene intercettata e <strong>non rilanciata</strong>.</li>
 </ol>
+<hr />
+<h3 id="prerequisiti">Prerequisiti<a class="headerlink" href="#prerequisiti" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Estensione <strong><code>dblink</code></strong> installata nel DB dell’applicazione.</li>
+<li>GUC <strong><code>dblink.log_connection</code></strong> valorizzata con la conninfo del DB di logging (può coincidere con quello applicativo), es.:
+  <code>postgresql://log_user:log_pwd@host:5432/appdb?sslmode=disable</code></li>
+<li>Tabella <strong><code>dbops.error_log</code></strong> esistente.</li>
+</ul>
+<hr />
+<h3 id="sicurezza-permessi">Sicurezza &amp; Permessi<a class="headerlink" href="#sicurezza-permessi" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Se si usa <code>dblink_connect_u</code>, richiede superuser o configurazioni ad hoc; preferibile <code>dblink_connect</code> con utente dedicato ai log.</li>
+<li>Valutare <code>SECURITY DEFINER</code> <strong>solo se necessario</strong> (es. log verso DB di servizio con credenziali dedicate). In tal caso impostare owner, <code>search_path</code> e GRANT con attenzione.</li>
+<li>Il <strong>caller</strong> necessita solo di <code>EXECUTE</code> sulla funzione; i permessi sulla tabella di log sono gestiti sul lato remoto via <code>dblink</code>.</li>
+</ul>
+<hr />
+<h3 id="esempio-duso-plpgsql">Esempio d’uso (PL/pgSQL)<a class="headerlink" href="#esempio-duso-plpgsql" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">BEGIN</span>
+<span class="w">  </span><span class="c1">-- ... logica applicativa ...</span>
+<span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_error_only</span><span class="p">(</span>
+<span class="w">    </span><span class="n">p_area</span><span class="w">           </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;service&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_function_name</span><span class="w">  </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;sync_customer&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_error_code</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;E_SYNC_WARN&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_context</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;customer_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_id</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;note&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;retry scheduled&#39;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">p_tx_id</span><span class="w">          </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="k">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">ARRAY</span><span class="p">[</span><span class="k">coalesce</span><span class="p">(</span><span class="n">SQLERRM</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;n/a&#39;</span><span class="p">)]</span>
+<span class="w">  </span><span class="p">);</span>
+<span class="w">  </span><span class="c1">-- prosegue senza RAISE</span>
+<span class="k">END</span><span class="p">;</span>
+</code></pre></div>
+<hr />
+<h3 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>dblink</code> non configurato</strong> → la funzione continua “a vuoto” (non lancia). Verificare la GUC <code>dblink.log_connection</code> e l’operatività di <code>script.fn_ensure_logconn()</code>.</li>
+<li><strong>Messaggio non trovato</strong> → verificare <code>config.messaggi_errore</code> o la lingua corrente; con fallback non si blocca.</li>
+</ul>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1788,7 +1854,6 @@
 <blockquote>
 <p>🧠 <strong>“Usa <code>fn_log_error_only</code> per il logging passivo—per casi in cui vuoi solo registrare, mai bloccare.”</strong></p>
 </blockquote>
-<hr />
 
 
 

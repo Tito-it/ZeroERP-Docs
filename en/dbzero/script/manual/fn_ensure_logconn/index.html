@@ -1666,6 +1666,21 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#allegati-best-practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      Allegati / Best practice
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Allegati / Best practice">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
@@ -1720,11 +1735,11 @@
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Stabilire una connessione persistente</strong> a un database remoto o a se stesso attraverso l’estensione <code>dblink</code>, evitando overhead di creazione/removal di connessioni multiple.</li>
-<li><strong>Supporto al logging remoto</strong>: utilizzata da funzioni come <code>script.fn_log_and_raise_error</code> per eseguire INSERT in un contesto transazionale separato.</li>
+<li><strong>Supporto al logging remoto</strong>: utilizzata da funzioni come <code>script.fn_log_error_only</code> per eseguire INSERT in un contesto transazionale separato.</li>
 </ul>
 <hr />
 <ul>
-<li><strong><code>dblink_connect_u(connection_name, conninfo)</code></strong>: apre una connessione con nome <code>connection_name</code> sulla stringa <code>conninfo</code> (in formato URI o DSN).</li>
+<li><strong><code>dblink_connect(connection_name, conninfo)</code></strong>: apre una connessione con nome <code>connection_name</code> sulla stringa <code>conninfo</code> (in formato URI o DSN).</li>
 <li><strong>GUC <code>dblink.log_connection</code></strong>: parametro di configurazione (custom) contenente la stringa di connessione.</li>
 <li><strong>Eccezione <code>duplicate_object</code></strong>: intercettata per evitare errori se <code>logconn</code> è già presente.</li>
 </ul>
@@ -1749,6 +1764,14 @@
 </ol>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_ensure_logconn</span><span class="p">();</span>
 </code></pre></div>
+<hr />
+<h2 id="allegati-best-practice">Allegati / Best practice<a class="headerlink" href="#allegati-best-practice" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Never-throw</strong>: il logging non deve mai interrompere il flusso applicativo.</li>
+<li><strong>Isolamento</strong>: usare canale <code>dblink</code> separato (<code>logconn</code>).</li>
+<li><strong>Context first</strong>: includere nel log contesto utile (<code>tx_id</code>, chi/che-cosa/parametri).</li>
+<li><strong>Sicurezza</strong>: ruoli dedicati ai log, <code>SECURITY DEFINER</code> solo quando serve, <code>search_path</code> esplicito.</li>
+</ul>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
