@@ -16,7 +16,7 @@
     
     
       
-        <title>⚙️ Funzione fn_ensure_storico_table - Zero ERP Documentation</title>
+        <title>Fn ensure storico table - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#funzione-fn_ensure_storico_table" class="md-skip">
+        <a href="#documentazione-funzione-dbopsfn_ensure_storico_table" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione fn_ensure_storico_table
+              Fn ensure storico table
             
           </span>
         </div>
@@ -1668,8 +1668,83 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-funzione-dbopsfn_ensure_storico_table" class="md-nav__link">
+    <span class="md-ellipsis">
+      📘 Documentazione Funzione – dbops.fn_ensure_storico_table
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Funzione – dbops.fn_ensure_storico_table">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Scopo Principale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dettagli" class="md-nav__link">
+    <span class="md-ellipsis">
+      📝 Dettagli
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utilizzo-tipico" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 Utilizzo tipico
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collegamento-con-automazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Collegamento con automazione
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-pratico" class="md-nav__link">
+    <span class="md-ellipsis">
+      💡 Esempio pratico
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#funzione-fn_ensure_storico_table" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚙️ Funzione fn_ensure_storico_table
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1688,6 +1763,97 @@
   
 
 
+<h2 id="documentazione-funzione-dbopsfn_ensure_storico_table">📘 Documentazione Funzione –  <code>dbops.fn_ensure_storico_table</code><a class="headerlink" href="#documentazione-funzione-dbopsfn_ensure_storico_table" title="Permanent link">&para;</a></h2>
+<hr />
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimento tabelle:</p>
+<ul>
+<li><a href="../../../../dbzero/dbops/tabelle/audit_log"><code>dbops.audit_log</code></a></li>
+<li><a href="../../../../dbzero/dbops/tabelle/error_log"><code>dbops.error_log</code></a></li>
+</ul>
+<p>Approfondimento funzioni:</p>
+<ul>
+<li><a href="../../../../dbzero/dbops/funzioni/fn_run_automations_storico_provision"><code>dbops.fn_run_automations_storico_provision</code></a></li>
+<li><a href="../../../../dbzero/dbops/funzioni/fn_audit_log_once"><code>dbops.fn_audit_log_once</code></a></li>
+<li><a href="../../../../dbzero/dbops/funzioni/fn_log_and_raise_error"><code>script.fn_log_and_raise_error</code></a></li>
+</ul>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>La funzione <strong><code>fn_ensure_storico_table</code></strong> si occupa di <strong>creare</strong> (se non esiste) la <strong>tabella di storico</strong> nello schema <code>storico</code> corrispondente ad una tabella base (<code>p_schema_base.p_table_base</code>), con <strong>colonna FK</strong> coerente al <strong>tipo</strong> della PK della tabella padre, <strong>indici</strong> necessari e <strong>logging</strong> integrato. Supporta modalità <strong>dry‑run</strong> e la creazione opzionale di un <strong>indice GIN</strong> sullo <code>snapshot</code>.</p>
+<hr />
+<h3 id="dettagli">📝 Dettagli<a class="headerlink" href="#dettagli" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Firma</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span>
+<span class="w">  </span><span class="n">p_schema_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_table_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_fk_col</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_create_gin_index</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span>
+<span class="p">)</span><span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
+</code></pre></div>
+<ul>
+<li>
+<p><strong>Comportamento</strong></p>
+</li>
+<li>
+<p>Verifica l’esistenza di <code>storico.&lt;p_table_base&gt;</code>; se <strong>esiste</strong> → <strong>RETURN</strong>.</p>
+</li>
+<li>Ricava <strong>PK</strong> (assunta <strong>mono‑colonna</strong>; fallback su <code>id</code>) e <strong>tipo</strong> della tabella padre.</li>
+<li>Genera DDL per creare la tabella storico con colonne: <code>id BIGSERIAL</code> (PK), <code>p_fk_col &lt;tipo padre&gt; NOT NULL</code>, <code>change_type char(1)</code>, <code>tipo_operazione smallint</code>, <code>snapshot jsonb</code>, metadati (<code>user_insert</code>, <code>data_insert</code>, <code>tx_id</code>, <code>valid_from</code>, <code>valid_to</code>).</li>
+<li><strong>Non</strong> crea la <strong>FK</strong> verso la tabella base (commentata nel DDL) per evitare blocchi in cancellazione; crea invece <strong>indice</strong> su <code>p_fk_col</code> (<code>ix_&lt;table&gt;_&lt;fk&gt;_fk</code>).</li>
+<li>Se <code>p_create_gin_index = true</code>, crea indice <strong>GIN</strong> su <code>snapshot</code> (<code>ix_&lt;table&gt;_snapshot_gin</code>).</li>
+<li>Se <code>p_dry_run = true</code>, <strong>non esegue</strong> il DDL; registra un evento <strong>DRYRUN</strong> tramite <code>dbops.fn_audit_log_once</code> e termina.</li>
+<li>
+<p>Se avviene un errore, invoca <code>script.fn_log_and_raise_error</code> con codice ed oggetti di contesto.</p>
+</li>
+<li>
+<p><strong>Naming vincoli/indici</strong></p>
+</li>
+<li>
+<p>PK storico: <code>pk_storico_&lt;table&gt;</code></p>
+</li>
+<li>FK (commentata): <code>fk_&lt;table&gt;</code></li>
+<li>Indice FK: <code>ix_&lt;table&gt;_&lt;fk_col&gt;_fk</code></li>
+<li>Indice GIN snapshot: <code>ix_&lt;table&gt;_snapshot_gin</code></li>
+</ul>
+<hr />
+<h3 id="utilizzo-tipico">🔧 Utilizzo tipico<a class="headerlink" href="#utilizzo-tipico" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Provisioning dello storico</strong> per una tabella nuova: chiamata con <code>p_create_gin_index=true</code>, <code>p_dry_run=false</code>.</li>
+<li><strong>Automazione</strong> in <code>fn_run_automations_storico_provision</code>: creazione on‑demand della tabella storico durante un ciclo di regole.</li>
+<li><strong>Simulazione</strong> di impatto (CI/CD): stessa chiamata con <code>p_dry_run=true</code> per audit non invasivo.</li>
+</ol>
+<hr />
+<h3 id="collegamento-con-automazione">📊 Collegamento con automazione<a class="headerlink" href="#collegamento-con-automazione" title="Permanent link">&para;</a></h3>
+<p>La funzione è progettata per integrarsi nei flussi <code>STORICO_PROVISION</code> di <code>fn_run_automations_storico_provision</code>, emettendo log <strong>OK/DRYRUN</strong> tramite <code>fn_audit_log_once</code> e instradando errori coerenti su <code>error_log</code> con <code>fn_log_and_raise_error</code>.</p>
+<hr />
+<h3 id="esempio-pratico">💡 Esempio pratico<a class="headerlink" href="#esempio-pratico" title="Permanent link">&para;</a></h3>
+<p>Creare (se manca) la tabella storico per <code>anagrafiche.soggetti</code>, con FK <code>soggetto_id</code>, indice GIN su <code>snapshot</code>, <strong>senza</strong> dry‑run:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span>
+<span class="w">  </span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;soggetti&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;soggetto_id&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="k">true</span><span class="p">,</span><span class="w">   </span><span class="c1">-- crea indice GIN su snapshot</span>
+<span class="w">  </span><span class="k">false</span><span class="w">   </span><span class="c1">-- esecuzione reale (no dry‑run)</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>Esecuzione in <strong>dry‑run</strong> (solo log, nessun DDL):</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span>
+<span class="w">  </span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;soggetti&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;soggetto_id&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="k">false</span><span class="p">,</span><span class="w">  </span><span class="c1">-- niente GIN</span>
+<span class="w">  </span><span class="k">true</span><span class="w">    </span><span class="c1">-- DRYRUN: non crea la tabella</span>
+<span class="p">);</span>
+</code></pre></div>
+<hr />
+<blockquote>
+<p>🧠 <strong>In sintesi</strong>: <code>fn_ensure_storico_table</code> standardizza la creazione delle tabelle di storico, garantendo coerenza di tipi, indici utili alla consultazione e integrazione con il framework di <strong>audit</strong>/<strong>error handling</strong> dell’automazione.</p>
+</blockquote>
 <h1 id="funzione-fn_ensure_storico_table">⚙️ Funzione <code>fn_ensure_storico_table</code><a class="headerlink" href="#funzione-fn_ensure_storico_table" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_ensure_storico_table</span><span class="p">(</span><span class="n">p_schema_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_fk_col</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_create_gin_index</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="p">)</span>
 </code></pre></div>

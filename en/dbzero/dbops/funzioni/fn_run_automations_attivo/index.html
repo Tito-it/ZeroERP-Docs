@@ -2090,6 +2090,29 @@
 <span class="w">          </span><span class="k">OR</span><span class="w"> </span><span class="p">(</span><span class="n">exist_strat</span><span class="o">=</span><span class="s1">&#39;BOTH&#39;</span><span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="p">(</span><span class="n">exists_by_name</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">exists_by_args</span><span class="p">))</span><span class="w"> </span>
 
 <span class="w">        </span><span class="k">THEN</span>
+
+<span class="w">          </span><span class="c1">-- se prima avevamo il BLOCK sul padre, droppalo</span>
+<span class="w">                  </span><span class="k">IF</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">((</span><span class="n">rrule</span><span class="p">.</span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;reconcile_on_change&#39;</span><span class="p">)::</span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">                    </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">                      </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
+<span class="w">                        </span><span class="n">p_function_name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;fn_run_automations_attivo&#39;</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">p_status</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;DRYRUN&#39;</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;ATTIVO&#39;</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">p_params</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">jsonb_build_object</span><span class="p">(</span>
+<span class="w">                                            </span><span class="s1">&#39;action&#39;</span><span class="p">,</span><span class="s1">&#39;DROP_BLOCK&#39;</span><span class="p">,</span>
+<span class="w">                                            </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span>
+<span class="w">                                            </span><span class="s1">&#39;fk&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">fk_col</span>
+<span class="w">                                          </span><span class="p">),</span>
+<span class="w">                        </span><span class="n">p_message</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;Would drop BLOCK trigger (child gained attivo)&#39;</span>
+<span class="w">                      </span><span class="p">);</span>
+<span class="w">                    </span><span class="k">ELSE</span>
+<span class="w">                      </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_drop_triggers_by_function_args</span><span class="p">(</span>
+<span class="w">                        </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_rel</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dbops&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;trgfn_prevent_deactivate_if_children&#39;</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">rfk</span><span class="p">.</span><span class="n">child_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">child_table</span><span class="p">,</span><span class="w"> </span><span class="n">fk_col</span>
+<span class="w">                      </span><span class="p">);</span>
+<span class="w">                    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+<span class="w">                  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
 <span class="w">          </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span><span class="w">   </span>
 <span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
 <span class="w">                    </span><span class="n">p_function_name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;dbops.fn_run_automations&#39;</span><span class="p">,</span>
@@ -2109,6 +2132,7 @@
 
 <span class="w">          </span><span class="k">ELSE</span>
 <span class="w">            </span><span class="k">BEGIN</span>
+
 <span class="w">              </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="err">$</span><span class="n">f$</span>
 <span class="w">                </span><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="o">%</span><span class="n">I</span>
 <span class="w">                </span><span class="k">AFTER</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">OF</span><span class="w"> </span><span class="o">%</span><span class="n">I</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="o">%</span><span class="n">I</span><span class="p">.</span><span class="o">%</span><span class="n">I</span>
@@ -2201,6 +2225,35 @@
 <span class="w">          </span><span class="k">OR</span><span class="w"> </span><span class="p">(</span><span class="n">exist_strat</span><span class="o">=</span><span class="s1">&#39;BOTH&#39;</span><span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="p">(</span><span class="n">exists_by_name</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">exists_by_args</span><span class="p">))</span><span class="w"> </span>
 
 <span class="w">        </span><span class="k">THEN</span>
+<span class="w">          </span><span class="c1">-- se prima avevamo CASCADE+REQUIRE, droppali</span>
+<span class="w">          </span><span class="k">IF</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">((</span><span class="n">rrule</span><span class="p">.</span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;reconcile_on_change&#39;</span><span class="p">)::</span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">            </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">              </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
+<span class="w">                </span><span class="n">p_function_name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;fn_run_automations_attivo&#39;</span><span class="p">,</span>
+<span class="w">                </span><span class="n">p_status</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;DRYRUN&#39;</span><span class="p">,</span>
+<span class="w">                </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;ATTIVO&#39;</span><span class="p">,</span>
+<span class="w">                </span><span class="n">p_params</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">jsonb_build_object</span><span class="p">(</span>
+<span class="w">                                    </span><span class="s1">&#39;action&#39;</span><span class="p">,</span><span class="s1">&#39;DROP_CASCADE_REQUIRE&#39;</span><span class="p">,</span>
+<span class="w">                                    </span><span class="s1">&#39;parent&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span>
+<span class="w">                                    </span><span class="s1">&#39;child&#39;</span><span class="p">,</span><span class="w">  </span><span class="n">rfk</span><span class="p">.</span><span class="n">child_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rfk</span><span class="p">.</span><span class="n">child_table</span><span class="p">,</span>
+<span class="w">                                    </span><span class="s1">&#39;fk&#39;</span><span class="p">,</span><span class="w">     </span><span class="n">fk_col</span>
+<span class="w">                                  </span><span class="p">),</span>
+<span class="w">                </span><span class="n">p_message</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;Would drop CASCADE (parent) + REQUIRE (child)&#39;</span>
+<span class="w">              </span><span class="p">);</span>
+<span class="w">            </span><span class="k">ELSE</span>
+<span class="w">              </span><span class="c1">-- CASCADE sul padre</span>
+<span class="w">              </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_drop_triggers_by_function_args</span><span class="p">(</span>
+<span class="w">                </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_rel</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dbops&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;trgfn_soft_delete_cascade&#39;</span><span class="p">,</span>
+<span class="w">                </span><span class="n">rfk</span><span class="p">.</span><span class="n">child_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">child_table</span><span class="p">,</span><span class="w"> </span><span class="n">fk_col</span>
+<span class="w">              </span><span class="p">);</span>
+<span class="w">              </span><span class="c1">-- REQUIRE sul figlio (ha 4 argomenti)</span>
+<span class="w">              </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_drop_triggers_by_function_args</span><span class="p">(</span>
+<span class="w">                </span><span class="n">rfk</span><span class="p">.</span><span class="n">child_rel</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dbops&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;trgfn_child_requires_active_parent&#39;</span><span class="p">,</span>
+<span class="w">                </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span><span class="w"> </span><span class="n">col_attivo_parent</span><span class="p">,</span><span class="w"> </span><span class="n">fk_col</span>
+<span class="w">              </span><span class="p">);</span>
+<span class="w">            </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+<span class="w">          </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
 <span class="w">          </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span>
 
 <span class="w">             </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>

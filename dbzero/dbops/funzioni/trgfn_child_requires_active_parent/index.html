@@ -16,7 +16,7 @@
     
     
       
-        <title>⚙️ Funzione trgfn_child_requires_active_parent - Zero ERP Documentation</title>
+        <title>Trgfn child requires active parent - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#funzione-trgfn_child_requires_active_parent" class="md-skip">
+        <a href="#documentazione-funzione-dbopstrgfn_child_requires_active_parent" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione trgfn_child_requires_active_parent
+              Trgfn child requires active parent
             
           </span>
         </div>
@@ -1668,8 +1668,83 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Indice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-funzione-dbopstrgfn_child_requires_active_parent" class="md-nav__link">
+    <span class="md-ellipsis">
+      📘 Documentazione Funzione – dbops.trgfn_child_requires_active_parent
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Funzione – dbops.trgfn_child_requires_active_parent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Scopo Principale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dettagli" class="md-nav__link">
+    <span class="md-ellipsis">
+      📝 Dettagli
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utilizzo-tipico" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 Utilizzo tipico
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collegamento-con-automazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Collegamento con automazione
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-pratico" class="md-nav__link">
+    <span class="md-ellipsis">
+      💡 Esempio pratico
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#funzione-trgfn_child_requires_active_parent" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚙️ Funzione trgfn_child_requires_active_parent
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1688,6 +1763,100 @@
   
 
 
+<h2 id="documentazione-funzione-dbopstrgfn_child_requires_active_parent">📘 Documentazione Funzione –  <code>dbops.trgfn_child_requires_active_parent</code><a class="headerlink" href="#documentazione-funzione-dbopstrgfn_child_requires_active_parent" title="Permanent link">&para;</a></h2>
+<hr />
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimento funzioni:</p>
+<ul>
+<li><a href="../../../../dbzero/dbops/funzioni/fn_log_and_raise_error"><code>script.fn_log_and_raise_error</code></a></li>
+<li><a href="../../../../dbzero/dbops/funzioni/fn_log_error_only"><code>script.fn_log_error_only</code></a></li>
+</ul>
+<p>Approfondimento tabelle:</p>
+<ul>
+<li><a href="../../../../dbzero/dbops/tabelle/error_log"><code>dbops.error_log</code></a></li>
+<li><a href="../../../../dbzero/dbops/tabelle/automation_rules_tbl"><code>dbops.automation_rules_tbl</code></a></li>
+</ul>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>La funzione <strong><code>trgfn_child_requires_active_parent</code></strong> è un <strong>trigger function</strong> che impedisce l’attivazione di un record figlio se il relativo record padre non è attivo. Garantisce la coerenza dei dati in scenari in cui l’attributo <code>attivo</code> è vincolante per le relazioni.</p>
+<hr />
+<h3 id="dettagli">📝 Dettagli<a class="headerlink" href="#dettagli" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Firma</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">trgfn_child_requires_active_parent</span><span class="p">()</span>
+<span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
+<span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
+</code></pre></div>
+<ul>
+<li>
+<p><strong>Parametri (TG_ARGV)</strong></p>
+</li>
+<li>
+<p><code>parent_schema</code> – schema della tabella padre</p>
+</li>
+<li><code>parent_table</code> – nome tabella padre</li>
+<li><code>parent_attivo_col</code> – colonna di stato attivo nella tabella padre</li>
+<li><code>fk_col</code> – colonna di FK nella tabella figlia</li>
+<li>
+<p><code>[parent_pk_col]</code> – colonna PK del padre (default = <code>id</code>)</p>
+</li>
+<li>
+<p><strong>Logica interna</strong></p>
+</li>
+<li>
+<p>Se <code>NEW.attivo</code> non è <code>TRUE</code>, la funzione non applica controlli.</p>
+</li>
+<li>Estrae il valore della FK da <code>NEW</code>.</li>
+<li>Se FK è <code>NULL</code> e il figlio è attivo → errore (<code>fn_log_and_raise_error</code>).</li>
+<li>Ricava il tipo della PK del padre interrogando <code>pg_attribute</code>.</li>
+<li>
+<p>Costruisce ed esegue query per verificare:</p>
+<ol>
+<li><strong>Esistenza del padre</strong>.</li>
+<li><strong>Stato attivo del padre</strong>.</li>
+<li>Se il padre manca o non è attivo → errore bloccante.</li>
+<li>Usa <code>fn_log_error_only</code> per warning non bloccanti (es. uso PK di default).</li>
+</ol>
+</li>
+<li>
+<p><strong>Ritorno</strong>: <code>trigger</code> → <code>NEW</code> (se i controlli sono superati).</p>
+</li>
+</ul>
+<hr />
+<h3 id="utilizzo-tipico">🔧 Utilizzo tipico<a class="headerlink" href="#utilizzo-tipico" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Prevenire l’inserimento/aggiornamento di figli attivi con padre non attivo.</li>
+<li>Garantire consistenza in domini gerarchici (es. <code>gestori</code> → <code>soggetti figlio</code>).</li>
+<li>Applicato come <strong>BEFORE INSERT/UPDATE</strong> su tabelle figlie.</li>
+</ol>
+<hr />
+<h3 id="collegamento-con-automazione">📊 Collegamento con automazione<a class="headerlink" href="#collegamento-con-automazione" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Può essere attivato da regole in <code>automation_rules_tbl</code>.</li>
+<li>Si integra con il sistema di <strong>error logging</strong> (<code>error_log</code>) e <strong>audit</strong>.</li>
+<li>Usa le funzioni standard di logging (<code>fn_log_and_raise_error</code>, <code>fn_log_error_only</code>) per coerenza.</li>
+</ul>
+<hr />
+<h3 id="esempio-pratico">💡 Esempio pratico<a class="headerlink" href="#esempio-pratico" title="Permanent link">&para;</a></h3>
+<p>Creare trigger che impone la presenza di un padre attivo in <code>anagrafiche.soggetti</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_child_active_requires_parent</span>
+<span class="k">BEFORE</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_figli</span>
+<span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
+<span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">trgfn_child_requires_active_parent</span><span class="p">(</span>
+<span class="w">  </span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;soggetti&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;attivo&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;soggetto_id&#39;</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>➡️ Se <code>NEW.attivo = true</code> e il padre <code>soggetti.attivo</code> ≠ true, l’operazione viene bloccata con errore.</p>
+<hr />
+<blockquote>
+<p>🧠 <strong>In sintesi</strong>: <code>trgfn_child_requires_active_parent</code> è un trigger function che rafforza le regole di business assicurando che <strong>nessun figlio attivo esista senza un padre attivo</strong>, centralizzando i controlli e uniformando la gestione degli errori.</p>
+</blockquote>
 <h1 id="funzione-trgfn_child_requires_active_parent">⚙️ Funzione <code>trgfn_child_requires_active_parent</code><a class="headerlink" href="#funzione-trgfn_child_requires_active_parent" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_child_requires_active_parent</span><span class="p">()</span>
 </code></pre></div>

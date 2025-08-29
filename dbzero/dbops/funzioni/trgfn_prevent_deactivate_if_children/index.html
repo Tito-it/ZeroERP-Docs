@@ -16,7 +16,7 @@
     
     
       
-        <title>⚙️ Funzione trgfn_prevent_deactivate_if_children - Zero ERP Documentation</title>
+        <title>Trgfn prevent deactivate if children - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#funzione-trgfn_prevent_deactivate_if_children" class="md-skip">
+        <a href="#documentazione-funzione-dbopstrgfn_prevent_deactivate_if_children" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione trgfn_prevent_deactivate_if_children
+              Trgfn prevent deactivate if children
             
           </span>
         </div>
@@ -1668,8 +1668,83 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Indice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-funzione-dbopstrgfn_prevent_deactivate_if_children" class="md-nav__link">
+    <span class="md-ellipsis">
+      📘 Documentazione Funzione – dbops.trgfn_prevent_deactivate_if_children
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Funzione – dbops.trgfn_prevent_deactivate_if_children">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Scopo Principale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dettagli" class="md-nav__link">
+    <span class="md-ellipsis">
+      📝 Dettagli
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utilizzo-tipico" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 Utilizzo tipico
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collegamento-con-automazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Collegamento con automazione
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-pratico" class="md-nav__link">
+    <span class="md-ellipsis">
+      💡 Esempio pratico
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#funzione-trgfn_prevent_deactivate_if_children" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚙️ Funzione trgfn_prevent_deactivate_if_children
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1688,6 +1763,87 @@
   
 
 
+<h2 id="documentazione-funzione-dbopstrgfn_prevent_deactivate_if_children">📘 Documentazione Funzione –  <code>dbops.trgfn_prevent_deactivate_if_children</code><a class="headerlink" href="#documentazione-funzione-dbopstrgfn_prevent_deactivate_if_children" title="Permanent link">&para;</a></h2>
+<hr />
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimento funzioni:</p>
+<ul>
+<li><a href="../../../../dbzero/dbops/funzioni/trgfn_child_requires_active_parent"><code>dbops.trgfn_child_requires_active_parent</code></a></li>
+</ul>
+<p>Approfondimento tabelle:</p>
+<ul>
+<li><a href="../../../../dbzero/dbops/tabelle/automation_rules_tbl"><code>dbops.automation_rules_tbl</code></a></li>
+</ul>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>La funzione <strong><code>trgfn_prevent_deactivate_if_children</code></strong> è un <strong>trigger function</strong> che impedisce la disattivazione (<code>attivo = FALSE</code>) di un record padre se esistono ancora record figli associati tramite una FK. Garantisce integrità logica tra entità padre e figlio, preservando la coerenza dei dati.</p>
+<hr />
+<h3 id="dettagli">📝 Dettagli<a class="headerlink" href="#dettagli" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Firma</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">trgfn_prevent_deactivate_if_children</span><span class="p">()</span>
+<span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
+<span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
+</code></pre></div>
+<ul>
+<li>
+<p><strong>Parametri (TG_ARGV)</strong></p>
+</li>
+<li>
+<p><code>child_schema</code> – schema della tabella figlia</p>
+</li>
+<li><code>child_table</code> – tabella figlia</li>
+<li>
+<p><code>fk_col</code> – colonna di FK che collega la tabella figlia alla PK della tabella padre</p>
+</li>
+<li>
+<p><strong>Logica interna</strong></p>
+</li>
+<li>
+<p>Valida solo per operazioni <code>UPDATE</code>.</p>
+</li>
+<li>Se <code>OLD.attivo = TRUE</code> e <code>NEW.attivo = FALSE</code> → controllo blocca disattivazione.</li>
+<li>Costruisce query dinamica per verificare la presenza di righe figlio correlate (<code>EXISTS</code>).</li>
+<li>
+<p>Se esistono record figli → solleva <code>RAISE EXCEPTION</code> con <code>ERRCODE 23503</code> (<em>foreign_key_violation</em>).</p>
+</li>
+<li>
+<p><strong>Ritorno</strong>: <code>trigger</code> → <code>NEW</code> (se i controlli sono superati).</p>
+</li>
+</ul>
+<hr />
+<h3 id="utilizzo-tipico">🔧 Utilizzo tipico<a class="headerlink" href="#utilizzo-tipico" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Evitare che un padre con figli attivi venga disattivato impropriamente.</li>
+<li>Applicabile su entità di dominio con attributo booleano <code>attivo</code>.</li>
+<li>Utile in scenari multi‑tabella (es. <code>gestori</code> → <code>soggetti</code>).</li>
+</ol>
+<hr />
+<h3 id="collegamento-con-automazione">📊 Collegamento con automazione<a class="headerlink" href="#collegamento-con-automazione" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Inseribile tramite <code>automation_rules_tbl</code> come regola di consistenza.</li>
+<li>Complementare a <code>trgfn_child_requires_active_parent</code>: insieme rafforzano la gestione coerente dello stato <code>attivo</code>.</li>
+</ul>
+<hr />
+<h3 id="esempio-pratico">💡 Esempio pratico<a class="headerlink" href="#esempio-pratico" title="Permanent link">&para;</a></h3>
+<p>Impedire la disattivazione di un record in <code>config.gestori</code> se esistono soggetti collegati:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_prevent_gestore_deactivate</span>
+<span class="k">BEFORE</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">gestori</span>
+<span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
+<span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">trgfn_prevent_deactivate_if_children</span><span class="p">(</span>
+<span class="w">  </span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;soggetti&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;gestore_id&#39;</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>➡️ Se un <code>gestore</code> ha ancora <code>soggetti</code> collegati, l’operazione viene bloccata con errore.</p>
+<hr />
+<blockquote>
+<p>🧠 <strong>In sintesi</strong>: <code>trgfn_prevent_deactivate_if_children</code> impedisce che un padre venga disattivato mentre esistono figli associati, rafforzando la coerenza dei dati e prevenendo stati incoerenti nel database.</p>
+</blockquote>
 <h1 id="funzione-trgfn_prevent_deactivate_if_children">⚙️ Funzione <code>trgfn_prevent_deactivate_if_children</code><a class="headerlink" href="#funzione-trgfn_prevent_deactivate_if_children" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_prevent_deactivate_if_children</span><span class="p">()</span>
 </code></pre></div>

@@ -16,7 +16,7 @@
     
     
       
-        <title>⚙️ Funzione trgfn_soft_delete_cascade - Zero ERP Documentation</title>
+        <title>Trgfn soft delete cascade - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#funzione-trgfn_soft_delete_cascade" class="md-skip">
+        <a href="#documentazione-funzione-dbopstrgfn_soft_delete_cascade" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione trgfn_soft_delete_cascade
+              Trgfn soft delete cascade
             
           </span>
         </div>
@@ -1668,8 +1668,83 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Indice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-funzione-dbopstrgfn_soft_delete_cascade" class="md-nav__link">
+    <span class="md-ellipsis">
+      📘 Documentazione Funzione – dbops.trgfn_soft_delete_cascade
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Funzione – dbops.trgfn_soft_delete_cascade">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Scopo Principale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dettagli" class="md-nav__link">
+    <span class="md-ellipsis">
+      📝 Dettagli
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utilizzo-tipico" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 Utilizzo tipico
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collegamento-con-automazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Collegamento con automazione
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-pratico" class="md-nav__link">
+    <span class="md-ellipsis">
+      💡 Esempio pratico
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#funzione-trgfn_soft_delete_cascade" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚙️ Funzione trgfn_soft_delete_cascade
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1688,6 +1763,95 @@
   
 
 
+<h2 id="documentazione-funzione-dbopstrgfn_soft_delete_cascade">📘 Documentazione Funzione –  <code>dbops.trgfn_soft_delete_cascade</code><a class="headerlink" href="#documentazione-funzione-dbopstrgfn_soft_delete_cascade" title="Permanent link">&para;</a></h2>
+<hr />
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimento funzioni:</p>
+<ul>
+<li><a href="../../../../dbzero/dbops/funzioni/trgfn_prevent_deactivate_if_children"><code>dbops.trgfn_prevent_deactivate_if_children</code></a></li>
+<li><a href="../../../../dbzero/dbops/funzioni/trgfn_child_requires_active_parent"><code>dbops.trgfn_child_requires_active_parent</code></a></li>
+</ul>
+<p>Approfondimento tabelle:</p>
+<ul>
+<li><a href="../../../../dbzero/dbops/tabelle/error_log"><code>dbops.error_log</code></a></li>
+</ul>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>La funzione <strong><code>trgfn_soft_delete_cascade</code></strong> è un <strong>trigger function</strong> che implementa la logica di <strong>soft-delete a cascata</strong>: quando un record padre viene disattivato (<code>attivo = FALSE</code>), tutti i record figli correlati vengono automaticamente disattivati.</p>
+<hr />
+<h3 id="dettagli">📝 Dettagli<a class="headerlink" href="#dettagli" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Firma</strong></li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">trgfn_soft_delete_cascade</span><span class="p">()</span>
+<span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
+<span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
+</code></pre></div>
+<ul>
+<li>
+<p><strong>Parametri (TG_ARGV)</strong></p>
+</li>
+<li>
+<p><code>child_schema</code> – schema della tabella figlia</p>
+</li>
+<li><code>child_table</code> – tabella figlia</li>
+<li><code>fk_col</code> – colonna di FK verso il padre</li>
+<li>
+<p><code>[pk_col]</code> – colonna PK del padre (default = <code>id</code>)</p>
+</li>
+<li>
+<p><strong>Logica interna</strong></p>
+</li>
+<li>
+<p>Controlla operazioni <code>UPDATE</code> dove <code>OLD.attivo = TRUE</code> e <code>NEW.attivo = FALSE</code>.</p>
+</li>
+<li>Estrae il valore della PK del padre da <code>OLD</code>.</li>
+<li>Se la PK è nulla → log warning (<code>fn_log_error_only</code>) e termina senza aggiornare figli.</li>
+<li>
+<p>Aggiorna i record figli eseguendo:</p>
+<p><div class="highlight"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="o">&lt;</span><span class="n">child_schema</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="n">child_table</span><span class="o">&gt;</span>
+<span class="k">SET</span><span class="w"> </span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">FALSE</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="o">&lt;</span><span class="n">fk_col</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parent_pk_val</span><span class="p">;</span>
+</code></pre></div>
+  * Gestione errori: in caso di errore durante l’<code>UPDATE</code>, viene richiamata <code>fn_log_and_raise_error</code> con dettagli su SQLSTATE, messaggio ed istruzione generata.</p>
+</li>
+<li>
+<p><strong>Ritorno</strong>: <code>trigger</code> → <code>NEW</code> (record padre aggiornato).</p>
+</li>
+</ul>
+<hr />
+<h3 id="utilizzo-tipico">🔧 Utilizzo tipico<a class="headerlink" href="#utilizzo-tipico" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Soft-delete cascata</strong> in gerarchie (es. cliente → contratti, gestore → soggetti).</li>
+<li>Riduzione della necessità di cancellazioni fisiche: lo stato <code>attivo</code> governa la visibilità.</li>
+<li>Automazione della consistenza: nessun figlio resta attivo se il padre viene disattivato.</li>
+</ol>
+<hr />
+<h3 id="collegamento-con-automazione">📊 Collegamento con automazione<a class="headerlink" href="#collegamento-con-automazione" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Può essere generata automaticamente tramite <code>automation_rules_tbl</code>.</li>
+<li>Integra il sistema di <strong>logging/error handling</strong> standard (<code>error_log</code>).</li>
+<li>Complementa altri trigger come <code>trgfn_prevent_deactivate_if_children</code> e <code>trgfn_child_requires_active_parent</code>.</li>
+</ul>
+<hr />
+<h3 id="esempio-pratico">💡 Esempio pratico<a class="headerlink" href="#esempio-pratico" title="Permanent link">&para;</a></h3>
+<p>Applicare soft-delete a cascata da <code>config.gestori</code> verso <code>anagrafiche.soggetti</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_soft_delete_cascade_gestore</span>
+<span class="k">BEFORE</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">gestori</span>
+<span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
+<span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">trgfn_soft_delete_cascade</span><span class="p">(</span>
+<span class="w">  </span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;soggetti&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;gestore_id&#39;</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>➡️ Quando un <code>gestore</code> viene disattivato (<code>attivo=false</code>), anche tutti i <code>soggetti</code> collegati con <code>gestore_id</code> vengono automaticamente marcati come non attivi.</p>
+<hr />
+<blockquote>
+<p>🧠 <strong>In sintesi</strong>: <code>trgfn_soft_delete_cascade</code> realizza una <strong>soft-delete automatica a cascata</strong>, semplificando la gestione della gerarchia padre-figlio e garantendo coerenza dei dati senza cancellazioni fisiche.</p>
+</blockquote>
 <h1 id="funzione-trgfn_soft_delete_cascade">⚙️ Funzione <code>trgfn_soft_delete_cascade</code><a class="headerlink" href="#funzione-trgfn_soft_delete_cascade" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_soft_delete_cascade</span><span class="p">()</span>
 </code></pre></div>
