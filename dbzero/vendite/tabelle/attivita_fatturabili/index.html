@@ -1704,6 +1704,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#trigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚨 Trigger
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1904,6 +1913,67 @@
 <tr>
 <td>attivita_fatturabili_pkey</td>
 <td><code>CREATE UNIQUE INDEX attivita_fatturabili_pkey ON vendite.attivita_fatturabili USING btree (id)</code></td>
+</tr>
+<tr>
+<td>ix_attivita_articolo_flags</td>
+<td><code>CREATE INDEX ix_attivita_articolo_flags ON vendite.attivita_fatturabili USING btree (articolo_id, approvato, fatturato)</code></td>
+</tr>
+<tr>
+<td>ix_attivita_billing_competenza</td>
+<td><code>CREATE INDEX ix_attivita_billing_competenza ON vendite.attivita_fatturabili USING btree (billing_account_id, competenza_mese)</code></td>
+</tr>
+<tr>
+<td>ix_attivita_istanza_data</td>
+<td><code>CREATE INDEX ix_attivita_istanza_data ON vendite.attivita_fatturabili USING btree (istanza_utility_id, data_attivita)</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="trigger">🚨 Trigger<a class="headerlink" href="#trigger" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Nome</th>
+<th>Timing</th>
+<th>Evento</th>
+<th>Azione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>trg_attivita_guard_ba_coerenza</td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_guard_ba_coerenza()</code></td>
+</tr>
+<tr>
+<td>trg_attivita_guard_ba_coerenza</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_guard_ba_coerenza()</code></td>
+</tr>
+<tr>
+<td>trg_attivita_guard_fonte</td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_guard_fonte()</code></td>
+</tr>
+<tr>
+<td>trg_attivita_guard_fonte</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_guard_fonte()</code></td>
+</tr>
+<tr>
+<td>trg_attivita_norm_competenza_mese</td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_norm_competenza_mese()</code></td>
+</tr>
+<tr>
+<td>trg_attivita_norm_competenza_mese</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_norm_competenza_mese()</code></td>
 </tr>
 </tbody>
 </table>
