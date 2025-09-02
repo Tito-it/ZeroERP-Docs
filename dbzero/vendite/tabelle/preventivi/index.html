@@ -1750,6 +1750,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#trigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚨 Trigger
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1901,6 +1910,18 @@
 <td>YES</td>
 <td>CURRENT_USER</td>
 </tr>
+<tr>
+<td>competenza_mese</td>
+<td>date</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>fatturazione_immediata</td>
+<td>boolean</td>
+<td>YES</td>
+<td>false</td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -1913,6 +1934,11 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>CHECK</td>
+<td>chk_preventivi_competenza_mese_primo</td>
+<td></td>
+</tr>
 <tr>
 <td>CHECK</td>
 <td>chk_preventivi_stato</td>
@@ -1983,6 +2009,37 @@
 <tr>
 <td>ux_preventivi_numero_attiva</td>
 <td><code>CREATE UNIQUE INDEX ux_preventivi_numero_attiva ON vendite.preventivi USING btree (numero_preventivo) WHERE (is_revision_attiva = true)</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="trigger">🚨 Trigger<a class="headerlink" href="#trigger" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Nome</th>
+<th>Timing</th>
+<th>Evento</th>
+<th>Azione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>trg_preventivi_ins_upd_norm</td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_preventivi_norm()</code></td>
+</tr>
+<tr>
+<td>trg_preventivi_ins_upd_norm</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_preventivi_norm()</code></td>
+</tr>
+<tr>
+<td>trg_upd_preventivi_audit_data_user</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION script.trgfn_upd_audit_data_user_generic()</code></td>
 </tr>
 </tbody>
 </table>

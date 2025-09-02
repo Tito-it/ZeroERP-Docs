@@ -1898,6 +1898,60 @@
 <td>NO</td>
 <td>now()</td>
 </tr>
+<tr>
+<td>sorgente_tipo</td>
+<td>character varying</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>sorgente_id</td>
+<td>uuid</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>sorgente_riga</td>
+<td>bigint</td>
+<td>YES</td>
+<td>0</td>
+</tr>
+<tr>
+<td>posticipa_al</td>
+<td>date</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>sospesa</td>
+<td>boolean</td>
+<td>YES</td>
+<td>false</td>
+</tr>
+<tr>
+<td>exclude_reason</td>
+<td>character varying</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>lock_in_fatturazione</td>
+<td>boolean</td>
+<td>YES</td>
+<td>false</td>
+</tr>
+<tr>
+<td>lock_batch_id</td>
+<td>uuid</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>fattura_riga_id</td>
+<td>bigint</td>
+<td>YES</td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -1923,6 +1977,11 @@
 <tr>
 <td>CHECK</td>
 <td>chk_attivita_quantita_pos</td>
+<td></td>
+</tr>
+<tr>
+<td>CHECK</td>
+<td>chk_attivita_sorgente_tripla</td>
 <td></td>
 </tr>
 <tr>
@@ -1969,8 +2028,28 @@
 <td><code>CREATE INDEX ix_attivita_billing_competenza ON vendite.attivita_fatturabili USING btree (billing_account_id, competenza_mese)</code></td>
 </tr>
 <tr>
+<td>ix_attivita_fatturabili_fattura_riga_id</td>
+<td><code>CREATE INDEX ix_attivita_fatturabili_fattura_riga_id ON vendite.attivita_fatturabili USING btree (fattura_riga_id)</code></td>
+</tr>
+<tr>
+<td>ix_attivita_fatturabili_lock</td>
+<td><code>CREATE INDEX ix_attivita_fatturabili_lock ON vendite.attivita_fatturabili USING btree (lock_in_fatturazione, lock_batch_id)</code></td>
+</tr>
+<tr>
+<td>ix_attivita_fatturabili_posticipa_sospesa</td>
+<td><code>CREATE INDEX ix_attivita_fatturabili_posticipa_sospesa ON vendite.attivita_fatturabili USING btree (posticipa_al, sospesa)</code></td>
+</tr>
+<tr>
+<td>ix_attivita_fatturabili_sorgente</td>
+<td><code>CREATE INDEX ix_attivita_fatturabili_sorgente ON vendite.attivita_fatturabili USING btree (sorgente_tipo, sorgente_id)</code></td>
+</tr>
+<tr>
 <td>ix_attivita_istanza_data</td>
 <td><code>CREATE INDEX ix_attivita_istanza_data ON vendite.attivita_fatturabili USING btree (istanza_utility_id, data_attivita)</code></td>
+</tr>
+<tr>
+<td>uq_af_sorgente</td>
+<td><code>CREATE UNIQUE INDEX uq_af_sorgente ON vendite.attivita_fatturabili USING btree (sorgente_tipo, sorgente_id, sorgente_riga) WHERE (sorgente_tipo IS NOT NULL)</code></td>
 </tr>
 </tbody>
 </table>
@@ -1986,40 +2065,82 @@
 </thead>
 <tbody>
 <tr>
-<td>trg_attivita_guard_ba_coerenza</td>
-<td>BEFORE</td>
-<td>INSERT</td>
-<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_guard_ba_coerenza()</code></td>
-</tr>
-<tr>
-<td>trg_attivita_guard_ba_coerenza</td>
+<td>trg_a10_attivita_fatturabili_ins_upd_guard_ba_coerenza</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
-<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_guard_ba_coerenza()</code></td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_fatturabili_guard_ba_coerenza()</code></td>
 </tr>
 <tr>
-<td>trg_attivita_guard_fonte</td>
+<td>trg_a10_attivita_fatturabili_ins_upd_guard_ba_coerenza</td>
 <td>BEFORE</td>
 <td>INSERT</td>
-<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_guard_fonte()</code></td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_fatturabili_guard_ba_coerenza()</code></td>
 </tr>
 <tr>
-<td>trg_attivita_guard_fonte</td>
+<td>trg_a10_attivita_fatturabili_ins_upd_guard_fonte</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
-<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_guard_fonte()</code></td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_fatturabili_guard_fonte()</code></td>
 </tr>
 <tr>
-<td>trg_attivita_norm_competenza_mese</td>
+<td>trg_a10_attivita_fatturabili_ins_upd_guard_fonte</td>
 <td>BEFORE</td>
 <td>INSERT</td>
-<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_norm_competenza_mese()</code></td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_fatturabili_guard_fonte()</code></td>
 </tr>
 <tr>
-<td>trg_attivita_norm_competenza_mese</td>
+<td>trg_a10_attivita_fatturabili_upd_dlt_guard_fatturato</td>
+<td>BEFORE</td>
+<td>DELETE</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_a10_attivita_fatturabili_guard_fatturato()</code></td>
+</tr>
+<tr>
+<td>trg_a10_attivita_fatturabili_upd_dlt_guard_fatturato</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
-<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_norm_competenza_mese()</code></td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_a10_attivita_fatturabili_guard_fatturato()</code></td>
+</tr>
+<tr>
+<td>trg_attivita_fatturabili_ins_upd_gen_tx_id</td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
+</tr>
+<tr>
+<td>trg_attivita_fatturabili_ins_upd_gen_tx_id</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
+</tr>
+<tr>
+<td>trg_attivita_fatturabili_ins_upd_norm</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_fatturabili_norm()</code></td>
+</tr>
+<tr>
+<td>trg_attivita_fatturabili_ins_upd_norm</td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_attivita_fatturabili_norm()</code></td>
+</tr>
+<tr>
+<td>trg_upd_attivita_fatturabili_audit_data_user</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION script.trgfn_upd_audit_data_user_generic()</code></td>
+</tr>
+<tr>
+<td>trg_z90_attivita_fatturabili_upd_dlt_storico</td>
+<td>BEFORE</td>
+<td>DELETE</td>
+<td><code>EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic('attivita_fatturabili_id')</code></td>
+</tr>
+<tr>
+<td>trg_z90_attivita_fatturabili_upd_dlt_storico</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic('attivita_fatturabili_id')</code></td>
 </tr>
 </tbody>
 </table>
