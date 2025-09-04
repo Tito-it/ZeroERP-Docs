@@ -1142,6 +1142,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../magazzino/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Magazzino
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../maintenance/" class="md-nav__link">
         
   
@@ -1860,22 +1883,28 @@
 <li><a href="tabelle/istanze_dati_precontrattuali/">istanze_dati_precontrattuali</a> — La tabella <code>anagrafiche.istanze_dati_precontrattuali</code> raccoglie <strong>tutte le informazioni pre‑contrattuali</strong> relative ad una specifica <strong>istanza utility</strong> (fornitura/utenza). Il campo <strong><code>meta</code> (JSONB)</strong> consente di archiviare attributi <strong>specifici per tipo di utility</strong> (es. potenza impegnata, pressione, soglie tecniche, parametri di profilazione).</li>
 <li><a href="tabelle/istanze_utilities/">istanze_utilities</a> — * Registrare ogni <strong>attivazione</strong> di servizio (volta) per un soggetto su un punto di erogazione. * Gestire la <strong>gerarchia</strong> delle attivazioni successive (subentri/volture) tramite <code>parent_istanza_id</code>. * Supportare record <strong>fittizi</strong>, ossia senza indirizzo obbligatorio.</li>
 <li><a href="tabelle/pdp/">pdp</a> — <code>anagrafiche.pdp</code> rappresenta i <strong>Punti di Prelievo (PDP)</strong> come entità <strong>fisiche</strong> ancorate a un <strong>indirizzo</strong> (<code>indirizzo_dettaglio_id</code>), identificate da un <strong>codice univoco globale</strong> (campo <code>pdp</code>) e <strong>tipizzate</strong> rispetto a una <strong>utility</strong> (<code>utilities_id</code>, es. GAS, ENERGIA…). La tabella <strong>base</strong> contiene lo <strong>stato corrente</strong> (incluso il <strong>cliente attuale</strong> se presente). Questa scelta separa stato (qui) da storia (in storico.pdp), semplificando le query operative e garantendo audit completo.</li>
+<li><a href="tabelle/resellers/">resellers</a></li>
 <li><a href="tabelle/soggetti/">soggetti</a> — - <strong>Coerenza dei dati</strong>     Garantire che ogni soggetto—persona fisica, giuridica o fisica forzata—sia identificato in modo univoco e validato secondo le regole aziendali.</li>
 <li><a href="tabelle/soggetti_conti_bancari/">soggetti_conti_bancari</a> — <code>anagrafiche.soggetti_conti_bancari</code> gestisce l’<strong>associazione tra un Soggetto</strong> (persona/azienda) e uno o più <strong>conti bancari (IBAN)</strong>, distinguendo l’<strong>uso</strong> del conto: <code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code>, <code>GENERICO</code>.</li>
 <li><a href="tabelle/soggetti_ruoli/">soggetti_ruoli</a> — * <strong>Associazione molti-a-molti</strong>: stabilisce una relazione N\:N tra la tabella <code>anagrafiche.soggetti</code> e <code>config.tipi_ruoli</code>, consentendo a ogni soggetto di rivestire più ruoli (es. cliente, fornitore, gestore) e a ogni ruolo di essere assegnato a molti soggetti. * <strong>Estensione semantica</strong>: il campo <code>extra</code> (JSONB) offre la possibilità di collegare metadati aggiuntivi per la singola associazione soggetto-ruolo (ad esempio, parametri contrattuali specifici se il ruolo è “fornitore” o date di attivazione per il ruolo “cliente”). * <strong>Tracciatura delle modifiche</strong>: grazie ai campi di audit (<code>user_insert</code>, <code>data_insert</code>, <code>user_update</code>, <code>data_update</code>) aggiornati automaticamente, la tabella conserva la cronologia di creazione e aggiornamento di ciascuna associazione.</li>
 <li><a href="tabelle/soggetti_ruoli_conti_bancari/">soggetti_ruoli_conti_bancari</a> — <code>anagrafiche.soggetti_ruoli_conti_bancari</code> gestisce l’<strong>associazione tra un Ruolo</strong> di un soggetto (CLIENTE, FORNITORE, GESTORE, …) e uno o più <strong>conti bancari (IBAN)</strong>, distinguendo l’<strong>uso</strong> del conto: <code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code>, <code>GENERICO</code>.</li>
+<li><a href="tabelle/vettori/">vettori</a></li>
 </ul>
 <h2 id="funzioni">⚙️ Funzioni<a class="headerlink" href="#funzioni" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="funzioni/fn_get_conto_bancario_predefinito/">fn_get_conto_bancario_predefinito</a></li>
 <li><a href="funzioni/trgfn_a10_emittenti_fiscali_protect_codice/">trgfn_a10_emittenti_fiscali_protect_codice</a></li>
+<li><a href="funzioni/trgfn_a10_resellers_protect_codice/">trgfn_a10_resellers_protect_codice</a></li>
+<li><a href="funzioni/trgfn_a10_vettori_protect_codice/">trgfn_a10_vettori_protect_codice</a></li>
 <li><a href="funzioni/trgfn_billing_account_ins_upd_guard_normalize/">trgfn_billing_account_ins_upd_guard_normalize</a> — Il trigger <code>anagrafiche.trgfn_billing_account_ins_upd_guard_normalize</code> assicura che ogni record di <strong><code>billing_account</code></strong> abbia un <strong><code>codice (account)</code></strong> valido, generandolo automaticamente quando non viene specificato in fase di INSERT o UPDATE.</li>
 <li><a href="funzioni/trgfn_billing_account_upd_protect_account_code/">trgfn_billing_account_upd_protect_account_code</a> — Il trigger <code>anagrafiche.trgfn_billing_account_upd_protect_account_code</code>, invocato <strong>prima di ogni UPDATE</strong> su <code>anagrafiche.billing_account</code>, impedisce modifiche improprie al campo <strong><code>codice (account)</code></strong> una volta assegnato.</li>
+<li><a href="funzioni/trgfn_clienti_ins_upd_check_ruolo_cliente/">trgfn_clienti_ins_upd_check_ruolo_cliente</a></li>
 <li><a href="funzioni/trgfn_clienti_set_periodo/">trgfn_clienti_set_periodo</a></li>
 <li><a href="funzioni/trgfn_clienti_sync_pdp/">trgfn_clienti_sync_pdp</a></li>
 <li><a href="funzioni/trgfn_contatti_ins_upd_set_default_contatto/">trgfn_contatti_ins_upd_set_default_contatto</a> — * <strong>Impostare il contatto default</strong>   Garantire che il primo contatto (o quello marcato explicitamente) diventi predefinito all’interno del suo contesto.</li>
 <li><a href="funzioni/trgfn_conti_bancari_ins_upd_normalize/">trgfn_conti_bancari_ins_upd_normalize</a></li>
 <li><a href="funzioni/trgfn_dati_societari_ins_upd_check_tipo_soggetto/">trgfn_dati_societari_ins_upd_check_tipo_soggetto</a> — Verificare che il soggetto associato ai dati societari ( <code>new.soggetto_id</code> in <code>anagrafiche.dati_societari</code> ) abbia un <code>codice_interno</code> ammesso (solo <strong><code>SC</code></strong> o <strong><code>SP</code></strong>). In caso contrario, viene lanciato un errore tramite <code>script.fn_log_and_raise_error</code>.</li>
+<li><a href="funzioni/trgfn_emittenti_fiscali_ins_upd_check_ruolo_emi_fis/">trgfn_emittenti_fiscali_ins_upd_check_ruolo_emi_fis</a></li>
 <li><a href="funzioni/trgfn_emittenti_fiscali_norm/">trgfn_emittenti_fiscali_norm</a></li>
 <li><a href="funzioni/trgfn_fornitori_guard_normalize/">trgfn_fornitori_guard_normalize</a></li>
 <li><a href="funzioni/trgfn_fornitori_ins_upd_check_ruolo_fornitore/">trgfn_fornitori_ins_upd_check_ruolo_fornitore</a></li>
@@ -1887,6 +1916,8 @@
 <li><a href="funzioni/trgfn_istanze_utilities_ins_upd_clean_fields/">trgfn_istanze_utilities_ins_upd_clean_fields</a> — Il trigger <code>anagrafiche.trgfn_istanze_utilities_ins_upd_clean_fields</code> è invocato <strong>prima di ogni INSERT o UPDATE</strong> su <code>anagrafiche.istanze_utilities</code> e ha i seguenti obiettivi:</li>
 <li><a href="funzioni/trgfn_istanze_utilities_upd_protect_codice/">trgfn_istanze_utilities_upd_protect_codice</a> — Il trigger <code>anagrafiche.trgfn_istanze_utilities_upd_protect_codice</code>, eseguito <strong>prima di ogni UPDATE</strong> su <code>anagrafiche.istanze_utilities</code>, impedisce modifiche non autorizzate al campo <strong><code>codice (istanza)</code></strong> una volta impostato.</li>
 <li><a href="funzioni/trgfn_pdp_protect_cols/">trgfn_pdp_protect_cols</a></li>
+<li><a href="funzioni/trgfn_resellers_ins_upd_check_ruolo_reseller/">trgfn_resellers_ins_upd_check_ruolo_reseller</a></li>
+<li><a href="funzioni/trgfn_resellers_norm/">trgfn_resellers_norm</a></li>
 <li><a href="funzioni/trgfn_sepa_mandati_guard/">trgfn_sepa_mandati_guard</a></li>
 <li><a href="funzioni/trgfn_soggetti_conti_bancari_guard/">trgfn_soggetti_conti_bancari_guard</a></li>
 <li><a href="funzioni/trgfn_soggetti_ins_upd_check_soggetto_contatti/">trgfn_soggetti_ins_upd_check_soggetto_contatti</a> — * <strong>Validazione di integrità</strong>   Garantire che ogni soggetto disponga di almeno un contatto predefinito o dotato di un canale attivo.</li>
@@ -1894,6 +1925,8 @@
 <li><a href="funzioni/trgfn_soggetti_ruoli_conti_bancari_guard/">trgfn_soggetti_ruoli_conti_bancari_guard</a></li>
 <li><a href="funzioni/trgfn_soggetti_upd_protect_codice_soggetto/">trgfn_soggetti_upd_protect_codice_soggetto</a> — Il trigger <code>anagrafiche.trgfn_soggetti_upd_protect_codice_soggetto</code>, esploso <strong>prima di ogni UPDATE</strong> sulla tabella <code>anagrafiche.soggetti</code>, garantisce che il campo <strong><code>codice(soggetto)</code></strong> non possa essere modificato una volta assegnato.</li>
 <li><a href="funzioni/trgfn_soggetti_valida_cf_piva_dispatch/">trgfn_soggetti_valida_cf_piva_dispatch</a> — La trigger function <strong><code>anagrafiche.trgfn_soggetti_valida_cf_piva_dispatch()</code></strong> viene eseguita <strong><code>BEFORE INSERT OR UPDATE</code></strong> sulla tabella <strong><code>anagrafiche.soggetti</code></strong> e instrada la validazione di codice fiscale e partita IVA in base allo Stato e al dettaglio di soggetto.</li>
+<li><a href="funzioni/trgfn_vettori_ins_upd_check_ruolo_vettore/">trgfn_vettori_ins_upd_check_ruolo_vettore</a></li>
+<li><a href="funzioni/trgfn_vettori_norm/">trgfn_vettori_norm</a></li>
 </ul>
 <h2 id="views">🔍 Views<a class="headerlink" href="#views" title="Permanent link">&para;</a></h2>
 <ul>
