@@ -1986,6 +1986,12 @@ erDiagram
 <td>NO</td>
 <td>CURRENT_USER</td>
 </tr>
+<tr>
+<td>indirizzo_normalizzato</td>
+<td>text</td>
+<td>NO</td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -2025,6 +2031,10 @@ erDiagram
 </thead>
 <tbody>
 <tr>
+<td>ix_stradario_generale_norm_trgm</td>
+<td><code>CREATE INDEX ix_stradario_generale_norm_trgm ON config.stradario_generale USING gin (indirizzo_normalizzato gin_trgm_ops)</code></td>
+</tr>
+<tr>
 <td>ix_stradario_generale_toponomastica_id</td>
 <td><code>CREATE INDEX ix_stradario_generale_toponomastica_id ON config.stradario_generale USING btree (toponomastica_id)</code></td>
 </tr>
@@ -2049,6 +2059,18 @@ erDiagram
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>trg_stradario_generale_ins_upd_norm</td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION config.trgfn_stradario_generale_norm()</code></td>
+</tr>
+<tr>
+<td>trg_stradario_generale_ins_upd_norm</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION config.trgfn_stradario_generale_norm()</code></td>
+</tr>
 <tr>
 <td>trg_stradario_generale_upd_non_permesso</td>
 <td>BEFORE</td>
