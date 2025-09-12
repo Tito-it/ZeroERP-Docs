@@ -1849,6 +1849,42 @@
 <td>NO</td>
 <td>'{}'::jsonb</td>
 </tr>
+<tr>
+<td>codice_interno</td>
+<td>character varying</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td>codice_fe</td>
+<td>character varying</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>data_insert</td>
+<td>timestamp with time zone</td>
+<td>NO</td>
+<td>now()</td>
+</tr>
+<tr>
+<td>user_insert</td>
+<td>character varying</td>
+<td>NO</td>
+<td>CURRENT_USER</td>
+</tr>
+<tr>
+<td>data_update</td>
+<td>timestamp with time zone</td>
+<td>NO</td>
+<td>now()</td>
+</tr>
+<tr>
+<td>user_update</td>
+<td>character varying</td>
+<td>YES</td>
+<td>CURRENT_USER</td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -1870,6 +1906,11 @@
 <td>UNIQUE</td>
 <td>uq_tipi_doc_fiscale_codice</td>
 <td>codice</td>
+</tr>
+<tr>
+<td>UNIQUE</td>
+<td>uq_tipi_doc_fiscale_codice_interno</td>
+<td>codice_interno</td>
 </tr>
 </tbody>
 </table>
@@ -1894,6 +1935,14 @@
 <td>uq_tipi_doc_fiscale_codice</td>
 <td><code>CREATE UNIQUE INDEX uq_tipi_doc_fiscale_codice ON config.tipi_doc_fiscale USING btree (codice)</code></td>
 </tr>
+<tr>
+<td>uq_tipi_doc_fiscale_codice_fe</td>
+<td><code>CREATE UNIQUE INDEX uq_tipi_doc_fiscale_codice_fe ON config.tipi_doc_fiscale USING btree (codice_fe) WHERE (codice_fe IS NOT NULL)</code></td>
+</tr>
+<tr>
+<td>uq_tipi_doc_fiscale_codice_interno</td>
+<td><code>CREATE UNIQUE INDEX uq_tipi_doc_fiscale_codice_interno ON config.tipi_doc_fiscale USING btree (codice_interno)</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="trigger">🚨 Trigger<a class="headerlink" href="#trigger" title="Permanent link">&para;</a></h2>
@@ -1912,6 +1961,12 @@
 <td>BEFORE</td>
 <td>UPDATE</td>
 <td><code>EXECUTE FUNCTION dbops.trgfn_prevent_deactivate_if_children('vendite', 'fatture', 'tipo_doc_fiscale_id')</code></td>
+</tr>
+<tr>
+<td>trg_tipi_doc_fiscale_upd_lock_codiceinterno</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION script.trgfn_lock_columns('codice_interno', 'CODICE_NON_MODIFICABILE')</code></td>
 </tr>
 </tbody>
 </table>
