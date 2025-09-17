@@ -2227,25 +2227,25 @@ soggetti {
 <td>data_insert</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
-<td>CURRENT_TIMESTAMP</td>
+<td>now()</td>
 </tr>
 <tr>
 <td>user_insert</td>
 <td>text</td>
 <td>NO</td>
-<td>CURRENT_USER</td>
+<td>'CURRENT_USER'::text</td>
 </tr>
 <tr>
 <td>data_update</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
-<td>CURRENT_TIMESTAMP</td>
+<td>now()</td>
 </tr>
 <tr>
 <td>user_update</td>
 <td>text</td>
 <td>NO</td>
-<td>CURRENT_USER</td>
+<td>'CURRENT_USER'::text</td>
 </tr>
 <tr>
 <td>titolo_cortesia_id</td>
@@ -2314,11 +2314,6 @@ soggetti {
 </thead>
 <tbody>
 <tr>
-<td>CHECK</td>
-<td>chk_soggetto_soggetto_sesso</td>
-<td></td>
-</tr>
-<tr>
 <td>FOREIGN KEY</td>
 <td>fk_comuni_config</td>
 <td>comune_id, comune_id</td>
@@ -2370,28 +2365,20 @@ soggetti {
 </thead>
 <tbody>
 <tr>
+<td>ix_anagrafiche_soggetti_comune_id</td>
+<td><code>CREATE INDEX ix_anagrafiche_soggetti_comune_id ON anagrafiche.soggetti USING btree (comune_id)</code></td>
+</tr>
+<tr>
+<td>ix_anagrafiche_soggetti_contatto_ruolo_id</td>
+<td><code>CREATE INDEX ix_anagrafiche_soggetti_contatto_ruolo_id ON anagrafiche.soggetti USING btree (titolo_cortesia_id)</code></td>
+</tr>
+<tr>
 <td>ix_anagrafiche_soggetti_ragione_sociale_completa</td>
 <td><code>CREATE INDEX ix_anagrafiche_soggetti_ragione_sociale_completa ON anagrafiche.soggetti USING btree (ragione_sociale_completa)</code></td>
 </tr>
 <tr>
-<td>ix_soggetti_comune_id</td>
-<td><code>CREATE INDEX ix_soggetti_comune_id ON anagrafiche.soggetti USING btree (comune_id)</code></td>
-</tr>
-<tr>
-<td>ix_soggetti_default_contatto_id</td>
-<td><code>CREATE INDEX ix_soggetti_default_contatto_id ON anagrafiche.soggetti USING btree (default_contatto_id)</code></td>
-</tr>
-<tr>
-<td>ix_soggetti_stato_id</td>
-<td><code>CREATE INDEX ix_soggetti_stato_id ON anagrafiche.soggetti USING btree (stato_id)</code></td>
-</tr>
-<tr>
-<td>ix_soggetti_tipo_soggetto_dettaglio_id</td>
-<td><code>CREATE INDEX ix_soggetti_tipo_soggetto_dettaglio_id ON anagrafiche.soggetti USING btree (tipo_soggetto_dettaglio_id)</code></td>
-</tr>
-<tr>
-<td>ix_soggetti_titolo_cortesia_id</td>
-<td><code>CREATE INDEX ix_soggetti_titolo_cortesia_id ON anagrafiche.soggetti USING btree (titolo_cortesia_id)</code></td>
+<td>ix_anagrafiche_soggetti_stato_id</td>
+<td><code>CREATE INDEX ix_anagrafiche_soggetti_stato_id ON anagrafiche.soggetti USING btree (stato_id)</code></td>
 </tr>
 <tr>
 <td>pk_soggetto</td>
@@ -2419,33 +2406,27 @@ soggetti {
 </thead>
 <tbody>
 <tr>
-<td>trg_block_deact_soggetti_gestori</td>
+<td>trg_soggetti_ins_upd_check_soggetto_contatti</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
-<td><code>EXECUTE FUNCTION dbops.trgfn_prevent_deactivate_if_children('anagrafiche', 'gestori', 'soggetto_id')</code></td>
+<td><code>EXECUTE FUNCTION anagrafiche.trgfn_soggetti_ins_upd_check_soggetto_contatti()</code></td>
 </tr>
 <tr>
-<td>trg_block_deact_soggetti_istanze_utilities</td>
+<td>trg_soggetti_ins_upd_check_soggetto_contatti</td>
 <td>BEFORE</td>
-<td>UPDATE</td>
-<td><code>EXECUTE FUNCTION dbops.trgfn_prevent_deactivate_if_children('anagrafiche', 'istanze_utilities', 'soggetto_id')</code></td>
-</tr>
-<tr>
-<td>trg_block_deact_soggetti_soggetti_conti_bancari</td>
-<td>BEFORE</td>
-<td>UPDATE</td>
-<td><code>EXECUTE FUNCTION dbops.trgfn_prevent_deactivate_if_children('anagrafiche', 'soggetti_conti_bancari', 'soggetto_id')</code></td>
-</tr>
-<tr>
-<td>trg_soggetti_ins_upd_clean_fields</td>
-<td>BEFORE</td>
-<td>UPDATE</td>
-<td><code>EXECUTE FUNCTION anagrafiche.trgfn_soggetti_ins_upd_clean_fields()</code></td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION anagrafiche.trgfn_soggetti_ins_upd_check_soggetto_contatti()</code></td>
 </tr>
 <tr>
 <td>trg_soggetti_ins_upd_clean_fields</td>
 <td>BEFORE</td>
 <td>INSERT</td>
+<td><code>EXECUTE FUNCTION anagrafiche.trgfn_soggetti_ins_upd_clean_fields()</code></td>
+</tr>
+<tr>
+<td>trg_soggetti_ins_upd_clean_fields</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
 <td><code>EXECUTE FUNCTION anagrafiche.trgfn_soggetti_ins_upd_clean_fields()</code></td>
 </tr>
 <tr>
@@ -2463,13 +2444,13 @@ soggetti {
 <tr>
 <td>trg_soggetti_ins_upd_gen_tx_id</td>
 <td>BEFORE</td>
-<td>UPDATE</td>
+<td>INSERT</td>
 <td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
 </tr>
 <tr>
 <td>trg_soggetti_ins_upd_gen_tx_id</td>
 <td>BEFORE</td>
-<td>INSERT</td>
+<td>UPDATE</td>
 <td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
 </tr>
 <tr>

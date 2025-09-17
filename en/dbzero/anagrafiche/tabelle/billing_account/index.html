@@ -2206,7 +2206,7 @@ erDiagram
 <td>user_insert</td>
 <td>character varying</td>
 <td>NO</td>
-<td>CURRENT_USER</td>
+<td>'CURRENT_USER'::character varying</td>
 </tr>
 <tr>
 <td>data_update</td>
@@ -2218,7 +2218,7 @@ erDiagram
 <td>user_update</td>
 <td>character varying</td>
 <td>NO</td>
-<td>CURRENT_USER</td>
+<td>'CURRENT_USER'::character varying</td>
 </tr>
 <tr>
 <td>tx_id</td>
@@ -2277,7 +2277,7 @@ erDiagram
 <tr>
 <td>UNIQUE</td>
 <td>uq_billing_instance_utility</td>
-<td>istanza_utility_id, utility_id</td>
+<td>utility_id, istanza_utility_id</td>
 </tr>
 </tbody>
 </table>
@@ -2291,20 +2291,20 @@ erDiagram
 </thead>
 <tbody>
 <tr>
-<td>ix_billing_account_istanza_utility_id</td>
-<td><code>CREATE INDEX ix_billing_account_istanza_utility_id ON anagrafiche.billing_account USING btree (istanza_utility_id)</code></td>
+<td>ix_anagrafiche_billing_account_soggetto_ruolo_id</td>
+<td><code>CREATE INDEX ix_anagrafiche_billing_account_soggetto_ruolo_id ON anagrafiche.billing_account USING btree (soggetto_ruolo_id)</code></td>
 </tr>
 <tr>
-<td>ix_billing_account_parent_account_id</td>
-<td><code>CREATE INDEX ix_billing_account_parent_account_id ON anagrafiche.billing_account USING btree (parent_account_id)</code></td>
+<td>ix_anagrafiche_billing_account_utility_id</td>
+<td><code>CREATE INDEX ix_anagrafiche_billing_account_utility_id ON anagrafiche.billing_account USING btree (utility_id)</code></td>
 </tr>
 <tr>
-<td>ix_billing_account_soggetto_ruolo_id</td>
-<td><code>CREATE INDEX ix_billing_account_soggetto_ruolo_id ON anagrafiche.billing_account USING btree (soggetto_ruolo_id)</code></td>
+<td>ix_billing_account_istanza</td>
+<td><code>CREATE INDEX ix_billing_account_istanza ON anagrafiche.billing_account USING btree (istanza_utility_id)</code></td>
 </tr>
 <tr>
-<td>ix_billing_account_utility_id</td>
-<td><code>CREATE INDEX ix_billing_account_utility_id ON anagrafiche.billing_account USING btree (utility_id)</code></td>
+<td>ix_billing_account_parent</td>
+<td><code>CREATE INDEX ix_billing_account_parent ON anagrafiche.billing_account USING btree (parent_account_id)</code></td>
 </tr>
 <tr>
 <td>pk_billing_account</td>
@@ -2340,25 +2340,25 @@ erDiagram
 <tr>
 <td>trg_billing_account_ins_upd_gen_tx_id</td>
 <td>BEFORE</td>
-<td>UPDATE</td>
+<td>INSERT</td>
 <td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
 </tr>
 <tr>
 <td>trg_billing_account_ins_upd_gen_tx_id</td>
 <td>BEFORE</td>
-<td>INSERT</td>
+<td>UPDATE</td>
 <td><code>EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></td>
 </tr>
 <tr>
 <td>trg_billing_account_ins_upd_guard_normalize</td>
 <td>BEFORE</td>
-<td>UPDATE</td>
+<td>INSERT</td>
 <td><code>EXECUTE FUNCTION anagrafiche.trgfn_billing_account_ins_upd_guard_normalize()</code></td>
 </tr>
 <tr>
 <td>trg_billing_account_ins_upd_guard_normalize</td>
 <td>BEFORE</td>
-<td>INSERT</td>
+<td>UPDATE</td>
 <td><code>EXECUTE FUNCTION anagrafiche.trgfn_billing_account_ins_upd_guard_normalize()</code></td>
 </tr>
 <tr>
@@ -2366,18 +2366,6 @@ erDiagram
 <td>BEFORE</td>
 <td>UPDATE</td>
 <td><code>EXECUTE FUNCTION script.trgfn_upd_audit_data_user_generic()</code></td>
-</tr>
-<tr>
-<td>trg_z90_billing_account_upd_dlt_storico</td>
-<td>BEFORE</td>
-<td>DELETE</td>
-<td><code>EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic('billing_account_id')</code></td>
-</tr>
-<tr>
-<td>trg_z90_billing_account_upd_dlt_storico</td>
-<td>BEFORE</td>
-<td>UPDATE</td>
-<td><code>EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic('billing_account_id')</code></td>
 </tr>
 </tbody>
 </table>

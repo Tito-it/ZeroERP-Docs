@@ -2066,25 +2066,25 @@ erDiagram
 <td>data_insert</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
-<td>CURRENT_TIMESTAMP</td>
+<td>now()</td>
 </tr>
 <tr>
 <td>user_insert</td>
 <td>character varying</td>
 <td>NO</td>
-<td>CURRENT_USER</td>
+<td>'CURRENT_USER'::character varying</td>
 </tr>
 <tr>
 <td>data_update</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
-<td>CURRENT_TIMESTAMP</td>
+<td>now()</td>
 </tr>
 <tr>
 <td>user_update</td>
 <td>character varying</td>
 <td>NO</td>
-<td>CURRENT_USER</td>
+<td>'CURRENT_USER'::character varying</td>
 </tr>
 <tr>
 <td>scala</td>
@@ -2150,12 +2150,12 @@ erDiagram
 </thead>
 <tbody>
 <tr>
-<td>ix_indirizzi_dettaglio_civic_geoloc_gist</td>
-<td><code>CREATE INDEX ix_indirizzi_dettaglio_civic_geoloc_gist ON anagrafiche.indirizzi_dettaglio USING gist (civic_geoloc)</code></td>
+<td>ix_anagrafiche_indirizzi_dettaglio_stradario_id</td>
+<td><code>CREATE INDEX ix_anagrafiche_indirizzi_dettaglio_stradario_id ON anagrafiche.indirizzi_dettaglio USING btree (stradario_id)</code></td>
 </tr>
 <tr>
-<td>ix_indirizzi_dettaglio_stradario_id</td>
-<td><code>CREATE INDEX ix_indirizzi_dettaglio_stradario_id ON anagrafiche.indirizzi_dettaglio USING btree (stradario_id)</code></td>
+<td>ix_indirizzi_dettaglio_civic_geoloc_gist</td>
+<td><code>CREATE INDEX ix_indirizzi_dettaglio_civic_geoloc_gist ON anagrafiche.indirizzi_dettaglio USING btree (civic_geoloc)</code></td>
 </tr>
 <tr>
 <td>ix_uq_indirizzi_dettaglio_norm</td>
@@ -2178,18 +2178,6 @@ erDiagram
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>trg_block_deact_indirizzi_dettaglio_istanze_utilities</td>
-<td>BEFORE</td>
-<td>UPDATE</td>
-<td><code>EXECUTE FUNCTION dbops.trgfn_prevent_deactivate_if_children('anagrafiche', 'istanze_utilities', 'indirizzo_dettaglio_id')</code></td>
-</tr>
-<tr>
-<td>trg_block_deact_indirizzi_dettaglio_pdp</td>
-<td>BEFORE</td>
-<td>UPDATE</td>
-<td><code>EXECUTE FUNCTION dbops.trgfn_prevent_deactivate_if_children('anagrafiche', 'pdp', 'indirizzo_dettaglio_id')</code></td>
-</tr>
 <tr>
 <td>trg_indirizzi_dettaglio_ins_upd_gen_tx_id</td>
 <td>BEFORE</td>
@@ -2223,13 +2211,13 @@ erDiagram
 <tr>
 <td>trg_z90_indirizzi_dettaglio_upd_dlt_storico</td>
 <td>BEFORE</td>
-<td>DELETE</td>
+<td>UPDATE</td>
 <td><code>EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic('indirizzo_dettaglio_id')</code></td>
 </tr>
 <tr>
 <td>trg_z90_indirizzi_dettaglio_upd_dlt_storico</td>
 <td>BEFORE</td>
-<td>UPDATE</td>
+<td>DELETE</td>
 <td><code>EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic('indirizzo_dettaglio_id')</code></td>
 </tr>
 </tbody>

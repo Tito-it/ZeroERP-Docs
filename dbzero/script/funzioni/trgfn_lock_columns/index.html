@@ -1938,7 +1938,7 @@
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
 <span class="k">DECLARE</span>
-<span class="w">  </span><span class="n">n_args</span><span class="w">  </span><span class="nb">int</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">array_length</span><span class="p">(</span><span class="n">TG_ARGV</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">  </span><span class="n">n_args</span><span class="w">  </span><span class="nb">int</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">array_length</span><span class="p">(</span><span class="n">TG_ARGV</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
 <span class="w">  </span><span class="n">i</span><span class="w">       </span><span class="nb">int</span><span class="p">;</span>
 <span class="w">  </span><span class="n">col</span><span class="w">     </span><span class="nb">text</span><span class="p">;</span>
 <span class="w">  </span><span class="n">msgcode</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
@@ -1946,43 +1946,24 @@
 <span class="w">  </span><span class="n">newval</span><span class="w">  </span><span class="nb">text</span><span class="p">;</span>
 <span class="k">BEGIN</span>
 
+<span class="c1">-- Scopo: Verificare per le colonne di input che il loro valore </span>
+<span class="c1">--        non sia modificabile. Attenzione passare i parametri a </span>
+<span class="c1">--        coppie: colonna, msgcode.</span>
+<span class="c1">-- Input : Array di colonne da verificare e codice relativo messaggio di errore</span>
 
-<span class="w">  </span><span class="c1">-- 1) Se il numero di argomenti non è pari, errore</span>
 <span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">n_args</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">      </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">      </span><span class="n">TG_NAME</span><span class="p">,</span>
-<span class="w">      </span><span class="s1">&#39;E_ARGOMENTI_A_COPPIE&#39;</span><span class="p">,</span>
-<span class="w">      </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;expected_pairs&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">n_args</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span>
-<span class="w">      </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">      </span><span class="n">VARIADIC</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[]::</span><span class="nb">text</span><span class="p">[]</span>
-<span class="w">    </span><span class="p">);</span>
+<span class="w">    </span><span class="n">RAISE</span><span class="w"> </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="s1">&#39;Devi passare argomenti a coppie: colonna,msgcode&#39;</span><span class="p">;</span>
 <span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
-<span class="w">  </span><span class="c1">-- 2) Ciclo sulle coppie (colonna, codice messaggio)</span>
 <span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="mi">1</span><span class="p">..</span><span class="n">n_args</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">LOOP</span>
 <span class="w">    </span><span class="n">col</span><span class="w">     </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">TG_ARGV</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">];</span>
 <span class="w">    </span><span class="n">msgcode</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">TG_ARGV</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 
-<span class="w">    </span><span class="c1">-- Leggo dinamicamente OLD.col e NEW.col</span>
-<span class="w">    </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span>
-<span class="w">      </span><span class="s1">&#39;SELECT ($1).%I::text, ($2).%I::text&#39;</span><span class="p">,</span>
-<span class="w">      </span><span class="n">col</span><span class="p">,</span><span class="w"> </span><span class="n">col</span>
-<span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="k">OLD</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">oldval</span><span class="p">,</span><span class="w"> </span><span class="n">newval</span><span class="p">;</span>
+<span class="w">    </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;SELECT ($1).%I::text, ($2).%I::text&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="p">)</span>
+<span class="w">      </span><span class="k">USING</span><span class="w"> </span><span class="k">OLD</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">oldval</span><span class="p">,</span><span class="w"> </span><span class="n">newval</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">oldval</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">newval</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">        </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">TG_NAME</span><span class="p">,</span>
-<span class="w">        </span><span class="n">msgcode</span><span class="p">,</span>
-<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">          </span><span class="s1">&#39;column&#39;</span><span class="p">,</span><span class="w">    </span><span class="n">col</span><span class="p">,</span>
-<span class="w">          </span><span class="s1">&#39;old_value&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">oldval</span><span class="p">,</span>
-<span class="w">          </span><span class="s1">&#39;new_value&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">newval</span>
-<span class="w">        </span><span class="p">),</span>
-<span class="w">        </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">        </span><span class="n">col</span>
-<span class="w">      </span><span class="p">);</span>
+<span class="w">      </span><span class="n">RAISE</span><span class="w"> </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="s1">&#39;%&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_messaggio</span><span class="p">(</span><span class="n">msgcode</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="p">);</span>
 <span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 <span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
 

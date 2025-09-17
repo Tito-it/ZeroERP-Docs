@@ -2108,25 +2108,25 @@ erDiagram
 <td>data_insert</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
-<td>CURRENT_TIMESTAMP</td>
+<td>now()</td>
 </tr>
 <tr>
 <td>user_insert</td>
 <td>character varying</td>
 <td>NO</td>
-<td>CURRENT_USER</td>
+<td>'CURRENT_USER'::character varying</td>
 </tr>
 <tr>
 <td>data_update</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
-<td>CURRENT_TIMESTAMP</td>
+<td>now()</td>
 </tr>
 <tr>
 <td>user_update</td>
 <td>character varying</td>
 <td>NO</td>
-<td>CURRENT_USER</td>
+<td>'CURRENT_USER'::character varying</td>
 </tr>
 <tr>
 <td>comune_id</td>
@@ -2164,16 +2164,6 @@ erDiagram
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>CHECK</td>
-<td>chk_indirizzi_dettaglio_exclusive</td>
-<td></td>
-</tr>
-<tr>
-<td>CHECK</td>
-<td>chk_indirizzi_fallback_required</td>
-<td></td>
-</tr>
 <tr>
 <td>FOREIGN KEY</td>
 <td>fk_codici_postali_config</td>
@@ -2226,6 +2216,10 @@ erDiagram
 </thead>
 <tbody>
 <tr>
+<td>ix_anagrafiche_indirizzi_indirizzo_dettaglio_id</td>
+<td><code>CREATE INDEX ix_anagrafiche_indirizzi_indirizzo_dettaglio_id ON anagrafiche.indirizzi USING btree (indirizzo_dettaglio_id)</code></td>
+</tr>
+<tr>
 <td>ix_indirizzi_codice_postale_id</td>
 <td><code>CREATE INDEX ix_indirizzi_codice_postale_id ON anagrafiche.indirizzi USING btree (codice_postale_id)</code></td>
 </tr>
@@ -2235,11 +2229,7 @@ erDiagram
 </tr>
 <tr>
 <td>ix_indirizzi_geoloc_gist</td>
-<td><code>CREATE INDEX ix_indirizzi_geoloc_gist ON anagrafiche.indirizzi USING gist (geoloc)</code></td>
-</tr>
-<tr>
-<td>ix_indirizzi_indirizzo_dettaglio_id</td>
-<td><code>CREATE INDEX ix_indirizzi_indirizzo_dettaglio_id ON anagrafiche.indirizzi USING btree (indirizzo_dettaglio_id)</code></td>
+<td><code>CREATE INDEX ix_indirizzi_geoloc_gist ON anagrafiche.indirizzi USING btree (geoloc)</code></td>
 </tr>
 <tr>
 <td>ix_indirizzi_soggetto_ruolo_id</td>
@@ -2277,13 +2267,13 @@ erDiagram
 <tr>
 <td>trg_indirizzi_ins_upd_clean_fields</td>
 <td>BEFORE</td>
-<td>UPDATE</td>
+<td>INSERT</td>
 <td><code>EXECUTE FUNCTION anagrafiche.trgfn_indirizzi_ins_upd_clean_fields()</code></td>
 </tr>
 <tr>
 <td>trg_indirizzi_ins_upd_clean_fields</td>
 <td>BEFORE</td>
-<td>INSERT</td>
+<td>UPDATE</td>
 <td><code>EXECUTE FUNCTION anagrafiche.trgfn_indirizzi_ins_upd_clean_fields()</code></td>
 </tr>
 <tr>
@@ -2319,13 +2309,13 @@ erDiagram
 <tr>
 <td>trg_z90_indirizzi_upd_dlt_storico</td>
 <td>BEFORE</td>
-<td>UPDATE</td>
+<td>DELETE</td>
 <td><code>EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic('indirizzo_id')</code></td>
 </tr>
 <tr>
 <td>trg_z90_indirizzi_upd_dlt_storico</td>
 <td>BEFORE</td>
-<td>DELETE</td>
+<td>UPDATE</td>
 <td><code>EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic('indirizzo_id')</code></td>
 </tr>
 </tbody>
