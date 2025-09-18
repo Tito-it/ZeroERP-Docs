@@ -1877,7 +1877,7 @@
 </blockquote>
 <p>La funzione <strong><code>script.fn_log_and_raise_error</code></strong> unifica logging ed escalation di errori in PL/pgSQL, utilizzando l’estensione <strong>dblink</strong> per inserire record di log in una sessione separata e garantire commit immediato, quindi solleva un’eccezione con messaggio, dettaglio e hint.</p>
 <hr />
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_area</span><span class="w">           </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- &#39;database&#39; / &#39;backend&#39; / &#39;frontend&#39; / &#39;job&#39;</span>
 <span class="w">  </span><span class="n">p_function_name</span><span class="w">  </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- nome di trigger o funzione chiamante</span>
 <span class="w">  </span><span class="n">p_error_code</span><span class="w">     </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- codice testuale di messaggio (config.messaggi_errore.codice)</span>
@@ -1891,6 +1891,7 @@
 <span class="p">...</span><span class="n">implementazione</span><span class="w"> </span><span class="n">completa</span><span class="w"> </span><span class="n">con</span><span class="w"> </span><span class="n">dblink_exec</span><span class="p">...</span>
 <span class="err">$$</span><span class="p">;</span>
 </code></pre></div>
+
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Entrypoint unificato</strong> per error handling: evita duplicazioni di log e raise in trigger, procedure e funzioni.</li>
@@ -1940,47 +1941,47 @@
 <ol>
 <li><strong>Assicuro connessione dblink</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_ensure_logconn</span><span class="p">();</span>
-</code></pre></div>
+<p><code>plpgsql
+   PERFORM script.fn_ensure_logconn();</code></p>
 <ol>
 <li><strong>Recupero messaggio e metadati</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">messaggio</span><span class="p">,</span><span class="w"> </span><span class="n">causa</span><span class="p">,</span><span class="w"> </span><span class="n">soluzione</span>
-<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_id</span><span class="p">,</span><span class="w"> </span><span class="n">v_messaggio</span><span class="p">,</span><span class="w"> </span><span class="n">v_causa</span><span class="p">,</span><span class="w"> </span><span class="n">v_soluzione</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">messaggi_errore</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_error_code</span>
-<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">lingua</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lingua</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   SELECT id, messaggio, causa, soluzione
+     INTO v_id, v_messaggio, v_causa, v_soluzione
+   FROM config.messaggi_errore
+   WHERE codice = p_error_code
+     AND lingua = v_lingua;</code></p>
 <p>Se non trovato, imposta testo, causa e soluzione di default indicativi.</p>
 <ol>
 <li><strong>Formattazione del messaggio</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">array_length</span><span class="p">(</span><span class="n">p_valori</span><span class="p">,</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="n">v_messaggio</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="n">v_messaggio</span><span class="p">,</span><span class="w"> </span><span class="k">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="p">);</span>
-<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   IF array_length(p_valori,1) IS NOT NULL THEN
+     v_messaggio := format(v_messaggio, VARIADIC p_valori);
+   END IF;</code></p>
 <ol>
 <li><strong>Preparazione dell’INSERT remoto</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="n">sql_text</span><span class="w"> </span><span class="o">:=</span>
-<span class="w">  </span><span class="s1">&#39;INSERT INTO dbops.error_log(occurred_at, area, function_name,&#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="s1">&#39; messaggio_errore_id, context, tx_id) VALUES (&#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="s1">&#39;now(), &#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">quote_literal</span><span class="p">(</span><span class="n">p_area</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">quote_literal</span><span class="p">(</span><span class="n">p_function_name</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_id</span><span class="o">::</span><span class="nb">text</span><span class="p">,</span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">quote_literal</span><span class="p">(</span><span class="n">v_context</span><span class="o">::</span><span class="nb">text</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;::jsonb, &#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="n">quote_literal</span><span class="p">(</span><span class="n">md5</span><span class="p">(</span><span class="n">txid_current</span><span class="p">()</span><span class="o">::</span><span class="nb">text</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;::uuid&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;);&#39;</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   sql_text :=
+     'INSERT INTO dbops.error_log(occurred_at, area, function_name,' ||
+     ' messaggio_errore_id, context, tx_id) VALUES (' ||
+     'now(), ' || quote_literal(p_area) || ', ' || quote_literal(p_function_name) || ', ' ||
+     coalesce(v_id::text,'NULL') || ', ' || quote_literal(v_context::text) || '::jsonb, ' ||
+     quote_literal(md5(txid_current()::text)) || '::uuid' || ');';</code></p>
 <ol>
 <li><strong>Esecuzione tramite dblink</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">PERFORM</span><span class="w"> </span><span class="n">dblink_exec</span><span class="p">(</span><span class="s1">&#39;logconn&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">sql_text</span><span class="p">);</span>
-</code></pre></div>
+<p><code>plpgsql
+   PERFORM dblink_exec('logconn', sql_text);</code></p>
 <ol>
 <li><strong>Sollevamento dell’eccezione</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">RAISE</span><span class="w"> </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="s1">&#39;%&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_messaggio</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[Errore sconosciuto]&#39;</span><span class="p">)</span>
-<span class="w">  </span><span class="k">USING</span><span class="w"> </span><span class="n">DETAIL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_causa</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">),</span>
-<span class="w">        </span><span class="n">HINT</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_soluzione</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
-</code></pre></div>
+<p><code>plpgsql
+   RAISE EXCEPTION '%', coalesce(v_messaggio, '[Errore sconosciuto]')
+     USING DETAIL = coalesce(v_causa,''),
+           HINT   = coalesce(v_soluzione,'');</code></p>
 <hr />
 <h3 id="comportamenti-e-side-effects">🔒 Comportamenti e Side Effects<a class="headerlink" href="#comportamenti-e-side-effects" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1993,27 +1994,27 @@
 <ol>
 <li><strong>Trigger PL/pgSQL con placeholder</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ERROR&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">TG_NAME</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ERR_INVALID_STATUS&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">OLD</span><span class="mf">.</span><span class="n">id</span><span class="p">),</span>
-<span class="w">    </span><span class="k">OLD</span><span class="mf">.</span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">status</span>
-<span class="w">  </span><span class="p">);</span>
-<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   IF NEW.status = 'ERROR' THEN
+     PERFORM script.fn_log_and_raise_error(
+       'database', TG_NAME, 'ERR_INVALID_STATUS',
+       jsonb_build_object('id', OLD.id),
+       OLD.status, NEW.status
+     );
+   END IF;</code></p>
 <ol>
 <li><strong>Procedure backend</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">BEGIN</span>
-<span class="w">  </span><span class="c1">-- operazioni...</span>
-<span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;backend&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;sync_data&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ERR_TIMEOUT&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">current_user</span><span class="p">),</span>
-<span class="w">    </span><span class="n">now</span><span class="p">()</span><span class="o">::</span><span class="nb">text</span>
-<span class="w">  </span><span class="p">);</span>
-<span class="k">END</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   BEGIN
+     -- operazioni...
+   EXCEPTION WHEN OTHERS THEN
+     PERFORM script.fn_log_and_raise_error(
+       'backend', 'sync_data', 'ERR_TIMEOUT',
+       jsonb_build_object('user', current_user),
+       now()::text
+     );
+   END;</code></p>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2027,10 +2028,11 @@
 <p>🧠 <strong>“Una funzione centralizzata che combina dblink per log persistente e raise exception con template dinamici semplifica error handling, migliorando la robustezza del sistema.”</strong></p>
 </blockquote>
 <h1 id="funzione-fn_log_and_raise_error">⚙️ Funzione <code>fn_log_and_raise_error</code><a class="headerlink" href="#funzione-fn_log_and_raise_error" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_log_and_raise_error</span><span class="p">(</span><span class="n">p_area</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_error_code</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_context</span><span class="w"> </span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="n">p_tx_id</span><span class="w"> </span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="w"> </span><span class="nb">text</span><span class="p">[])</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_log_and_raise_error</span><span class="p">(</span><span class="n">p_area</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_error_code</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_context</span><span class="w"> </span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="n">p_tx_id</span><span class="w"> </span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="w"> </span><span class="nb">text</span><span class="p">[])</span>
 </code></pre></div>
+
 <p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span><span class="n">p_area</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_error_code</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_context</span><span class="w"> </span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="n">p_tx_id</span><span class="w"> </span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="w"> </span><span class="nb">text</span><span class="p">[])</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span><span class="n">p_area</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_error_code</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_context</span><span class="w"> </span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="n">p_tx_id</span><span class="w"> </span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="w"> </span><span class="nb">text</span><span class="p">[])</span>
 <span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
@@ -2084,6 +2086,7 @@
 <span class="w">       </span><span class="k">END</span><span class="p">;</span>
 <span class="w">       </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>
+
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

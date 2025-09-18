@@ -2025,25 +2025,28 @@ All'interno del documento viene spiegata la differenza tra parametri GUC e param
 <h2 id="approfondimenti-e-esempi-avanzati">🔍 Approfondimenti e Esempi Avanzati<a class="headerlink" href="#approfondimenti-e-esempi-avanzati" title="Permanent link">&para;</a></h2>
 <h3 id="esempio-override-parametro-valuta">Esempio: Override Parametro “Valuta”<a class="headerlink" href="#esempio-override-parametro-valuta" title="Permanent link">&para;</a></h3>
 <p>Supponiamo di avere un parametro globale per la valuta di default:</p>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="k">parameters</span><span class="p">(</span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="n">default_value</span><span class="p">,</span><span class="w"> </span><span class="n">description</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="k">parameters</span><span class="p">(</span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="n">default_value</span><span class="p">,</span><span class="w"> </span><span class="n">description</span><span class="p">)</span>
 <span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;DEFAULT_CURRENCY&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;EUR&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Valuta di default per le transazioni&#39;</span><span class="p">);</span>
 </code></pre></div>
+
 <p>Un tenant specifico (tenant_id = 100) vuole usare USD:</p>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">parameter_overrides</span>
+<div class="codehilite"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">parameter_overrides</span>
 <span class="w">  </span><span class="p">(</span><span class="n">parameter_id</span><span class="p">,</span><span class="w"> </span><span class="n">scope_type</span><span class="p">,</span><span class="w"> </span><span class="n">scope_id</span><span class="p">,</span><span class="w"> </span><span class="n">overridden_value</span><span class="p">)</span>
 <span class="k">VALUES</span>
 <span class="w">  </span><span class="p">((</span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="k">parameters</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">code</span><span class="o">=</span><span class="s1">&#39;DEFAULT_CURRENCY&#39;</span><span class="p">),</span>
 <span class="w">   </span><span class="s1">&#39;tenant&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;100&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;USD&#39;</span><span class="p">);</span>
 </code></pre></div>
+
 <p>Per un utente VIP (user_id = 42) si preferisce GBP:</p>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">parameter_overrides</span>
+<div class="codehilite"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">parameter_overrides</span>
 <span class="w">  </span><span class="p">(</span><span class="n">parameter_id</span><span class="p">,</span><span class="w"> </span><span class="n">scope_type</span><span class="p">,</span><span class="w"> </span><span class="n">scope_id</span><span class="p">,</span><span class="w"> </span><span class="n">overridden_value</span><span class="p">)</span>
 <span class="k">VALUES</span>
 <span class="w">  </span><span class="p">((</span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="k">parameters</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">code</span><span class="o">=</span><span class="s1">&#39;DEFAULT_CURRENCY&#39;</span><span class="p">),</span>
 <span class="w">   </span><span class="s1">&#39;user&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;42&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;GBP&#39;</span><span class="p">);</span>
 </code></pre></div>
+
 <p>Chiamando:</p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">get_parameter_full</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">get_parameter_full</span><span class="p">(</span>
 <span class="w">  </span><span class="s1">&#39;DEFAULT_CURRENCY&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_tenant_id</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_user_id</span><span class="w">     </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
@@ -2051,21 +2054,24 @@ All'interno del documento viene spiegata la differenza tra parametri GUC e param
 <span class="w">  </span><span class="n">p_function</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span>
 <span class="p">);</span>
 </code></pre></div>
+
 <p>otterremo <strong>’GBP’</strong>, in quanto l’override utente ha priorità su quello tenant.</p>
 <h3 id="esempio-override-parametro-stato">Esempio: Override Parametro “Stato”<a class="headerlink" href="#esempio-override-parametro-stato" title="Permanent link">&para;</a></h3>
 <p>Un parametro che definisce lo stato iniziale di un workflow:</p>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="k">parameters</span><span class="p">(</span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="n">default_value</span><span class="p">,</span><span class="w"> </span><span class="n">description</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="k">parameters</span><span class="p">(</span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="n">default_value</span><span class="p">,</span><span class="w"> </span><span class="n">description</span><span class="p">)</span>
 <span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;INITIAL_STATE&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NEW&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Stato iniziale del documento&#39;</span><span class="p">);</span>
 </code></pre></div>
+
 <p>Durante l’elaborazione di una particolare funzione <code>invoice_process</code>, vogliamo impostare un override:</p>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">parameter_overrides</span>
+<div class="codehilite"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">parameter_overrides</span>
 <span class="w">  </span><span class="p">(</span><span class="n">parameter_id</span><span class="p">,</span><span class="w"> </span><span class="n">scope_type</span><span class="p">,</span><span class="w"> </span><span class="n">scope_id</span><span class="p">,</span><span class="w"> </span><span class="n">overridden_value</span><span class="p">)</span>
 <span class="k">VALUES</span>
 <span class="w">  </span><span class="p">((</span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="k">parameters</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">code</span><span class="o">=</span><span class="s1">&#39;INITIAL_STATE&#39;</span><span class="p">),</span>
 <span class="w">   </span><span class="s1">&#39;function&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;invoice_process&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;PENDING_APPROVAL&#39;</span><span class="p">);</span>
 </code></pre></div>
+
 <p>La chiamata:</p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">get_parameter_full</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">get_parameter_full</span><span class="p">(</span>
 <span class="w">  </span><span class="s1">&#39;INITIAL_STATE&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_tenant_id</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_user_id</span><span class="w">     </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
@@ -2073,6 +2079,7 @@ All'interno del documento viene spiegata la differenza tra parametri GUC e param
 <span class="w">  </span><span class="n">p_function</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;invoice_process&#39;</span>
 <span class="p">);</span>
 </code></pre></div>
+
 <p>restituirà <strong>’PENDING_APPROVAL’</strong>, senza impattare la configurazione globale.</p>
 <h3 id="confronto-guc-vs-modello-a-tabelle">⚖️ Confronto: GUC vs Modello a Tabelle<a class="headerlink" href="#confronto-guc-vs-modello-a-tabelle" title="Permanent link">&para;</a></h3>
 <table>

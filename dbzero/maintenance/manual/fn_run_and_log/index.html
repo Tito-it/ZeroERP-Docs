@@ -1874,13 +1874,14 @@
 <p><code>maintenance.fn_run_and_log</code> esegue in modo sicuro uno <em>statement</em> SQL arbitrario e ne registra l’esecuzione su <code>maintenance.job_run_log</code>, gestendo in modo opzionale un <strong>lock consulente</strong> (advisory lock) per prevenire esecuzioni sovrapposte dello stesso job/step.</p>
 <hr />
 <h3 id="firma">🧩 Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">FUNCTION</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">fn_run_and_log</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="k">FUNCTION</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">fn_run_and_log</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_jobname</span><span class="w">  </span><span class="nb">text</span><span class="p">,</span><span class="w">         </span><span class="c1">-- nome logico del job</span>
 <span class="w">  </span><span class="n">p_stepname</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w">         </span><span class="c1">-- nome dello step/sottofase</span>
 <span class="w">  </span><span class="n">p_sql</span><span class="w">      </span><span class="nb">text</span><span class="p">,</span><span class="w">         </span><span class="c1">-- SQL da eseguire</span>
 <span class="w">  </span><span class="n">p_lock_key</span><span class="w"> </span><span class="nb">bigint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="c1">-- chiave per advisory lock (opzionale)</span>
 <span class="p">)</span><span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
 </code></pre></div>
+
 <hr />
 <h3 id="comportamento">🔧 Comportamento<a class="headerlink" href="#comportamento" title="Permanent link">&para;</a></h3>
 <ol>
@@ -1949,20 +1950,22 @@
 <hr />
 <h3 id="esempi">🔎 Esempi<a class="headerlink" href="#esempi" title="Permanent link">&para;</a></h3>
 <p><strong>Esecuzione protetta da lock</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">fn_run_and_log</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">fn_run_and_log</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_jobname</span><span class="w">  </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;apply_storicizza_weekly&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_stepname</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;run_proc_apply_storicizza&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_sql</span><span class="w">      </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;CALL dbops.proc_apply_storicizza_defaults();&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_lock_key</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">hashtext</span><span class="p">(</span><span class="s1">&#39;proc_apply_storicizza_defaults&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
+
 <p><strong>Esecuzione senza lock</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">fn_run_and_log</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">fn_run_and_log</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_jobname</span><span class="w">  </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;rebuild_materialized&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_stepname</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;refresh_view_x&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_sql</span><span class="w">      </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.view_x;&#39;</span>
 <span class="p">);</span>
 </code></pre></div>
+
 <hr />
 <blockquote>
 <p>🧠 <strong>Nota</strong>: se si desidera “ingoiare” l’errore nel log senza propagazione, rimuovere il <code>RAISE</code> nella sezione <code>EXCEPTION</code>. Valutare attentamente l’impatto sugli orchestratori esterni.</p>

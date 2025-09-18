@@ -1873,7 +1873,7 @@
 </ul>
 <hr />
 <h3 id="firma-e-restituzione">🔍 Firma e Restituzione<a class="headerlink" href="#firma-e-restituzione" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">fn_find_function_usage</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="n">fn_find_function_usage</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">TEXT</span>
 <span class="p">)</span><span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">TABLE</span><span class="p">(</span>
 <span class="w">  </span><span class="n">object_type</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">   </span><span class="c1">-- &#39;function&#39;, &#39;trigger&#39; o &#39;event_trigger&#39;</span>
@@ -1881,6 +1881,7 @@
 <span class="w">  </span><span class="n">object_name</span><span class="w"> </span><span class="nb">TEXT</span><span class="w">    </span><span class="c1">-- nome dell’oggetto o firma della funzione</span>
 <span class="p">);</span>
 </code></pre></div>
+
 <ul>
 <li><strong><code>p_function_name</code></strong>: nome della funzione da ricercare.</li>
 <li><strong>object_type</strong>: tipo di oggetto che invoca la funzione.</li>
@@ -1900,23 +1901,23 @@
 <ol>
 <li><strong>Ricerca generale di dipendenze</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_find_function_usage</span><span class="p">(</span><span class="s1">&#39;process_order&#39;</span><span class="p">);</span>
-</code></pre></div>
+<p><code>sql
+   SELECT *
+     FROM dbops.fn_find_function_usage('process_order');</code></p>
 <ol>
 <li><strong>Filtrare solo i trigger</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">object_name</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_find_function_usage</span><span class="p">(</span><span class="s1">&#39;audit_update&#39;</span><span class="p">)</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">object_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;trigger&#39;</span><span class="p">;</span>
-</code></pre></div>
+<p><code>sql
+   SELECT schema_name, object_name
+     FROM dbops.fn_find_function_usage('audit_update')
+    WHERE object_type = 'trigger';</code></p>
 <ol>
 <li><strong>Contare le dipendenze per schema</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">object_type</span><span class="p">,</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">usage_count</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_find_function_usage</span><span class="p">(</span><span class="s1">&#39;compute_tax&#39;</span><span class="p">)</span>
-<span class="w"> </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">object_type</span><span class="p">,</span><span class="w"> </span><span class="k">schema_name</span><span class="p">;</span>
-</code></pre></div>
+<p><code>sql
+   SELECT object_type, schema_name, COUNT(*) AS usage_count
+     FROM dbops.fn_find_function_usage('compute_tax')
+    GROUP BY object_type, schema_name;</code></p>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1929,10 +1930,11 @@
 <p>🧠 <strong>“Con <code>fn_find_function_usage</code>, refactoring e manutenzione del codice PL/pgSQL diventano operazioni sicure e documentate, grazie all’individuazione automatica delle dipendenze.”</strong></p>
 </blockquote>
 <h1 id="funzione-fn_find_function_usage">⚙️ Funzione <code>fn_find_function_usage</code><a class="headerlink" href="#funzione-fn_find_function_usage" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_find_function_usage</span><span class="p">(</span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_find_function_usage</span><span class="p">(</span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
 </code></pre></div>
+
 <p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_find_function_usage</span><span class="p">(</span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_find_function_usage</span><span class="p">(</span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
 <span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">TABLE</span><span class="p">(</span><span class="n">object_type</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">schema_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">object_name</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="k">sql</span>
 <span class="w"> </span><span class="k">STABLE</span>
@@ -1972,6 +1974,7 @@
 <span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="n">tgt</span><span class="p">.</span><span class="n">proname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_function_name</span>
 <span class="w">  </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>
+
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

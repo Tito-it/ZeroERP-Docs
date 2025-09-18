@@ -1870,23 +1870,23 @@
 <li><strong>Inserimento in <code>fk_index_policy</code></strong>
    Per ciascuna riga, esegue:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span><span class="p">(</span>
-<span class="w">  </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">consentito</span><span class="p">,</span>
-<span class="w">  </span><span class="n">note</span>
-<span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="n">rec</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">rec</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">rec</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">false</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;Popolamento automatico: indice ix_&lt;table&gt;_&lt;constraint&gt; non ancora presente&#39;</span>
-<span class="p">);</span>
-</code></pre></div>
+<p><code>sql
+   INSERT INTO dbops.fk_index_policy(
+     schema_name,
+     table_name,
+     constraint_name,
+     consentito,
+     note
+   ) VALUES (
+     rec.schema_name,
+     rec.table_name,
+     rec.constraint_name,
+     false,
+     'Popolamento automatico: indice ix_&lt;table&gt;_&lt;constraint&gt; non ancora presente'
+   );</code></p>
 <hr />
 <h3 id="funzione-sql">🔖 Funzione SQL<a class="headerlink" href="#funzione-sql" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">()</span>
 <span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
 <span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
@@ -1926,31 +1926,36 @@
 <span class="k">COMMENT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">()</span><span class="w"> </span><span class="k">IS</span>
 <span class="w">  </span><span class="s1">&#39;Popola automaticamente dbops.fk_index_policy per tutte le FK senza indice, con consentito=false.&#39;</span><span class="p">;</span>
 </code></pre></div>
+
 <hr />
 <h3 id="utilizzo">🚀 Utilizzo<a class="headerlink" href="#utilizzo" title="Permanent link">&para;</a></h3>
 <p>Essendo una <strong>funzione</strong> che restituisce <code>void</code>, puoi eseguirla direttamente con:</p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">();</span>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">();</span>
 </code></pre></div>
+
 <p>In alternativa, in un contesto PL/pgSQL o in un DO block:</p>
-<div class="highlight"><pre><span></span><code><span class="k">DO</span><span class="w"> </span><span class="s">$$</span>
+<div class="codehilite"><pre><span></span><code><span class="k">DO</span><span class="w"> </span><span class="s">$$</span>
 <span class="k">BEGIN</span>
 <span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="mf">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">();</span>
 <span class="k">END</span><span class="p">;</span>
 <span class="s">$$</span><span class="p">;</span>
 </code></pre></div>
+
 <blockquote>
 <p><strong>Nota:</strong> non usare <code>SELECT * FROM dbops.fn_populate_fk_index_policy()</code>, poiché la funzione non restituisce righe tabellari. Se preferisci invocarla con <code>CALL</code>, puoi convertirla in <strong>procedura</strong>:</p>
 </blockquote>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">PROCEDURE</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_population</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">PROCEDURE</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_population</span><span class="p">()</span>
 <span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
 <span class="k">BEGIN</span>
 <span class="w">  </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">();</span>
 <span class="k">END</span><span class="p">;</span>
 <span class="err">$$</span><span class="p">;</span>
 </code></pre></div>
+
 <p>E poi eseguire:</p>
-<div class="highlight"><pre><span></span><code><span class="k">CALL</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_population</span><span class="p">();</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CALL</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_population</span><span class="p">();</span>
 </code></pre></div>
+
 <blockquote>
 <p>🧠 <strong>“Esegui la funzione con <code>SELECT</code> o <code>PERFORM</code>: non è necessario usare <code>SELECT * FROM</code>. Converti in procedura se vuoi chiamare con <code>CALL</code>.”</strong></p>
 </blockquote>

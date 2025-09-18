@@ -1796,6 +1796,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#trigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚨 Trigger
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1876,12 +1885,6 @@
 <td></td>
 </tr>
 <tr>
-<td>stato</td>
-<td>character varying</td>
-<td>YES</td>
-<td>'BOZZA'::character varying</td>
-</tr>
-<tr>
 <td>parent_contratto_id</td>
 <td>bigint</td>
 <td>YES</td>
@@ -1917,6 +1920,18 @@
 <td>YES</td>
 <td>CURRENT_USER</td>
 </tr>
+<tr>
+<td>stato_doc_contratto_id</td>
+<td>bigint</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td>data</td>
+<td>date</td>
+<td>NO</td>
+<td>CURRENT_DATE</td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -1929,11 +1944,6 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>CHECK</td>
-<td>chk_contratti_stato</td>
-<td></td>
-</tr>
 <tr>
 <td>FOREIGN KEY</td>
 <td>fk_contratti_billing_account</td>
@@ -1953,6 +1963,11 @@
 <td>FOREIGN KEY</td>
 <td>fk_contratti_utility</td>
 <td>utility_id</td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_v_contratti_stato_ddt</td>
+<td>stato_doc_contratto_id</td>
 </tr>
 <tr>
 <td>PRIMARY KEY</td>
@@ -1994,6 +2009,25 @@
 <tr>
 <td>uq_contratti_numero</td>
 <td><code>CREATE UNIQUE INDEX uq_contratti_numero ON vendite.contratti USING btree (numero_contratto)</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="trigger">🚨 Trigger<a class="headerlink" href="#trigger" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Nome</th>
+<th>Timing</th>
+<th>Evento</th>
+<th>Azione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>trg_a10_v_contratti_protect_num</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_a10_v_contratti_protect_num()</code></td>
 </tr>
 </tbody>
 </table>

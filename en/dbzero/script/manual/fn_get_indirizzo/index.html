@@ -1911,7 +1911,7 @@
 La funzione <strong>delegata</strong> è <code>script.fn_get_indirizzi_by_ruolo</code>, da cui eredita la logica di formattazione e la priorità della geolocalizzazione.</p>
 <hr />
 <h3 id="firma">🧩 Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="nb">integer</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_tipo_codice</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span>
 <span class="p">)</span>
@@ -1925,6 +1925,7 @@ La funzione <strong>delegata</strong> è <code>script.fn_get_indirizzi_by_ruolo<
 <span class="n">PARALLEL</span><span class="w"> </span><span class="n">UNSAFE</span>
 <span class="k">ROWS</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span>
 </code></pre></div>
+
 <hr />
 <h3 id="parametri-di-input">🔢 Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -1976,23 +1977,24 @@ La funzione <strong>delegata</strong> è <code>script.fn_get_indirizzi_by_ruolo<
 </table>
 <hr />
 <h3 id="logica">🧠 Logica<a class="headerlink" href="#logica" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">indirizzo_completo</span><span class="p">,</span><span class="w"> </span><span class="n">geoloc</span>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">indirizzo_completo</span><span class="p">,</span><span class="w"> </span><span class="n">geoloc</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzi_by_ruolo</span><span class="p">(</span><span class="n">p_soggetto_ruolo_id</span><span class="p">)</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">tipo_indirizzo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_tipo_codice</span>
 <span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 </code></pre></div>
+
 <ul>
 <li>Filtra la tabella restituita da <code>fn_get_indirizzi_by_ruolo</code> per il tipo richiesto.</li>
 <li><strong>Limita</strong> a <strong>una sola riga</strong>.</li>
 </ul>
 <blockquote>
 <p>⚠️ <strong>Determinismo</strong>: senza <code>ORDER BY</code>, in presenza di più indirizzi con lo stesso tipo, la riga scelta <strong>non è garantita</strong> in modo deterministico. Se serve una regola di preferenza (es. <strong>geoloc non NULL</strong>), usare la <strong>variante</strong> seguente:</p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">indirizzo_completo</span><span class="p">,</span><span class="w"> </span><span class="n">geoloc</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzi_by_ruolo</span><span class="p">(</span><span class="n">p_soggetto_ruolo_id</span><span class="p">)</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">tipo_indirizzo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_tipo_codice</span>
-<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">geoloc</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">)</span><span class="w"> </span><span class="c1">-- prima quelli con geoloc valorizzata</span>
-<span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</code></pre></div>
+<p><code>sql
+SELECT indirizzo_completo, geoloc
+FROM script.fn_get_indirizzi_by_ruolo(p_soggetto_ruolo_id)
+WHERE tipo_indirizzo = p_tipo_codice
+ORDER BY (geoloc IS NULL) -- prima quelli con geoloc valorizzata
+LIMIT 1;</code></p>
 </blockquote>
 <hr />
 <h3 id="dipendenze-indirette">🧷 Dipendenze (indirette)<a class="headerlink" href="#dipendenze-indirette" title="Permanent link">&para;</a></h3>
@@ -2012,7 +2014,7 @@ La funzione <strong>delegata</strong> è <code>script.fn_get_indirizzi_by_ruolo<
 </ul>
 <hr />
 <h3 id="esempi-duso">🧪 Esempi d’uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- 1) Indirizzo di SEDE legale per il soggetto_ruolo 123</span>
+<div class="codehilite"><pre><span></span><code><span class="c1">-- 1) Indirizzo di SEDE legale per il soggetto_ruolo 123</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;SEDE&#39;</span><span class="p">);</span>
 
@@ -2031,6 +2033,7 @@ La funzione <strong>delegata</strong> è <code>script.fn_get_indirizzi_by_ruolo<
 <span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="n">sr</span>
 <span class="k">CROSS</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="k">LATERAL</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="n">sr</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;DOM&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">f</span><span class="p">;</span>
 </code></pre></div>
+
 <hr />
 <h3 id="best-practice-e-note">✅ Best practice e note<a class="headerlink" href="#best-practice-e-note" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2041,9 +2044,10 @@ La funzione <strong>delegata</strong> è <code>script.fn_get_indirizzi_by_ruolo<
 <hr />
 <h3 id="commento-catalogo-postgresql">💬 Commento catalogo (PostgreSQL)<a class="headerlink" href="#commento-catalogo-postgresql" title="Permanent link">&para;</a></h3>
 <p>Per tracciare una descrizione nel catalogo:</p>
-<div class="highlight"><pre><span></span><code><span class="k">COMMENT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="nb">integer</span><span class="p">,</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span>
+<div class="codehilite"><pre><span></span><code><span class="k">COMMENT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="nb">integer</span><span class="p">,</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span>
 <span class="w">  </span><span class="s1">&#39;Ritorna un singolo indirizzo (indirizzo_completo, geoloc) per soggetto_ruolo e codice del tipo (config.tipi_indirizzi.codice_interno). Delegata a fn_get_indirizzi_by_ruolo; senza ORDER BY, la scelta tra più indirizzi dello stesso tipo non è deterministica.&#39;</span><span class="p">;</span>
 </code></pre></div>
+
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

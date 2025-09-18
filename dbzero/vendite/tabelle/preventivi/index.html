@@ -1861,12 +1861,6 @@
 <td>false</td>
 </tr>
 <tr>
-<td>stato</td>
-<td>character varying</td>
-<td>YES</td>
-<td>'BOZZA'::character varying</td>
-</tr>
-<tr>
 <td>billing_account_id</td>
 <td>integer</td>
 <td>YES</td>
@@ -1962,6 +1956,18 @@
 <td>YES</td>
 <td>false</td>
 </tr>
+<tr>
+<td>stato_doc_preventivo_id</td>
+<td>bigint</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td>data</td>
+<td>date</td>
+<td>NO</td>
+<td>CURRENT_DATE</td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -1977,11 +1983,6 @@
 <tr>
 <td>CHECK</td>
 <td>chk_preventivi_competenza_mese_primo</td>
-<td></td>
-</tr>
-<tr>
-<td>CHECK</td>
-<td>chk_preventivi_stato</td>
 <td></td>
 </tr>
 <tr>
@@ -2010,6 +2011,11 @@
 <td>valuta_id</td>
 </tr>
 <tr>
+<td>FOREIGN KEY</td>
+<td>fk_v_preventivi_stato_ddt</td>
+<td>stato_doc_preventivo_id</td>
+</tr>
+<tr>
 <td>PRIMARY KEY</td>
 <td>pk_preventivi</td>
 <td>id</td>
@@ -2033,10 +2039,6 @@
 <tr>
 <td>ix_preventivi_numero</td>
 <td><code>CREATE INDEX ix_preventivi_numero ON vendite.preventivi USING btree (numero_preventivo)</code></td>
-</tr>
-<tr>
-<td>ix_preventivi_stato</td>
-<td><code>CREATE INDEX ix_preventivi_stato ON vendite.preventivi USING btree (stato)</code></td>
 </tr>
 <tr>
 <td>pk_preventivi</td>
@@ -2063,6 +2065,12 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>trg_a10_v_preventivi_protect_num</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_a10_v_preventivi_protect_num()</code></td>
+</tr>
 <tr>
 <td>trg_preventivi_ins_upd_norm</td>
 <td>BEFORE</td>

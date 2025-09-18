@@ -1872,14 +1872,14 @@
 <ul>
 <li><strong>Firma</strong></li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span>
-<span class="w">  </span><span class="n">p_schema_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_table_base</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_fk_col</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_create_gin_index</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span>
-<span class="p">)</span><span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
-</code></pre></div>
+<p><code>sql
+  CREATE OR REPLACE FUNCTION dbops.fn_ensure_storico_table(
+    p_schema_base text,
+    p_table_base text,
+    p_fk_col text,
+    p_create_gin_index boolean,
+    p_dry_run boolean
+  ) RETURNS void</code></p>
 <ul>
 <li>
 <p><strong>Comportamento</strong></p>
@@ -1918,7 +1918,7 @@
 <hr />
 <h3 id="esempio-pratico">💡 Esempio pratico<a class="headerlink" href="#esempio-pratico" title="Permanent link">&para;</a></h3>
 <p>Creare (se manca) la tabella storico per <code>anagrafiche.soggetti</code>, con FK <code>soggetto_id</code>, indice GIN su <code>snapshot</code>, <strong>senza</strong> dry‑run:</p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span>
 <span class="w">  </span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="s1">&#39;soggetti&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="s1">&#39;soggetto_id&#39;</span><span class="p">,</span>
@@ -1926,8 +1926,9 @@
 <span class="w">  </span><span class="k">false</span><span class="w">   </span><span class="c1">-- esecuzione reale (no dry‑run)</span>
 <span class="p">);</span>
 </code></pre></div>
+
 <p>Esecuzione in <strong>dry‑run</strong> (solo log, nessun DDL):</p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span>
 <span class="w">  </span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="s1">&#39;soggetti&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="s1">&#39;soggetto_id&#39;</span><span class="p">,</span>
@@ -1935,6 +1936,7 @@
 <span class="w">  </span><span class="k">true</span><span class="w">    </span><span class="c1">-- DRYRUN: non crea la tabella</span>
 <span class="p">);</span>
 </code></pre></div>
+
 <hr />
 <blockquote>
 <p>🧠 <strong>In sintesi</strong>: <code>fn_ensure_storico_table</code> standardizza la creazione delle tabelle di storico, garantendo coerenza di tipi, indici utili alla consultazione e integrazione con il framework di <strong>audit</strong>/<strong>error handling</strong> dell’automazione.</p>

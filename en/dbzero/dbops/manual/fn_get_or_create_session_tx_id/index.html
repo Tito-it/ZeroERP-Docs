@@ -1896,14 +1896,14 @@
 <ol>
 <li><strong>Verifica connessione di logging</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_ensure_logconn</span><span class="p">();</span>
-</code></pre></div>
+<p><code>plpgsql
+   PERFORM script.fn_ensure_logconn();</code></p>
 <p>Garantisce che il database sia pronto per eventuali chiamate <code>dblink</code> di audit o generazione remota.</p>
 <ol>
 <li><strong>Lettura <code>dbops.tx_id</code> dalla sessione</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="n">v_tx_id</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">)</span><span class="o">::</span><span class="nb">UUID</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   v_tx_id := current_setting('dbops.tx_id', TRUE)::UUID;</code></p>
 <ul>
 <li>Se esiste e vale un UUID, lo restituisce subito.</li>
 <li>
@@ -1913,39 +1913,39 @@
 <p><strong>Generazione on‑demand tramite <code>dblink</code></strong></p>
 </li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">tx_id</span>
-<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_tx_id</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dblink</span><span class="p">(</span>
-<span class="w">    </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;dblink.log_connection&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">),</span>
-<span class="w">    </span><span class="s">$</span><span class="dl">gen</span><span class="s">$</span>
-<span class="s">      SELECT dbops.fn_generate_tx_id(</span>
-<span class="s">        &#39;dbops.fn_get_or_create_session_tx_id&#39;,</span>
-<span class="s">        jsonb_build_object(&#39;source&#39;,&#39;fn_get_or_create&#39;)</span>
-<span class="s">      )</span>
-<span class="s">    $</span><span class="dl">gen</span><span class="s">$</span>
-<span class="w">  </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">t</span><span class="p">(</span><span class="n">tx_id</span><span class="w"> </span><span class="nb">UUID</span><span class="p">);</span>
-</code></pre></div>
+<p><code>plpgsql
+   SELECT tx_id
+     INTO v_tx_id
+     FROM dblink(
+       current_setting('dblink.log_connection', TRUE),
+       $gen$
+         SELECT dbops.fn_generate_tx_id(
+           'dbops.fn_get_or_create_session_tx_id',
+           jsonb_build_object('source','fn_get_or_create')
+         )
+       $gen$
+     ) AS t(tx_id UUID);</code></p>
 <ul>
 <li>La chiamata <code>dblink</code> esegue la function remota per creare e registrare un nuovo <code>tx_id</code>.</li>
 <li>
 <p>Imposta la GUC di sessione:</p>
-<p><div class="highlight"><pre><span></span><code><span class="k">PERFORM</span><span class="w"> </span><span class="n">set_config</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_tx_id</span><span class="o">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">);</span>
-</code></pre></div>
+<p><code>plpgsql
+ PERFORM set_config('dbops.tx_id', v_tx_id::text, TRUE);</code>
    * <strong>Casistiche di fallimento</strong>: su qualunque eccezione di <code>dblink</code>, cattura l’errore e assegna:</p>
-<div class="highlight"><pre><span></span><code><span class="n">v_tx_id</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">uuid_nil</span><span class="p">();</span>
-</code></pre></div>
+<p><code>plpgsql
+ v_tx_id := script.uuid_nil();</code></p>
 <p>restituendo un UUID “nil” (<code>00000000-0000-0000-0000-000000000000</code>).</p>
 </li>
 <li>
 <p><strong>Restituzione del <code>tx_id</code></strong></p>
 </li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="k">RETURN</span><span class="w"> </span><span class="n">v_tx_id</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   RETURN v_tx_id;</code></p>
 <hr />
 <hr />
 <h3 id="esempio-di-utilizzo">🚀 Esempio di Utilizzo<a class="headerlink" href="#esempio-di-utilizzo" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Prima invocazione in sessione nuova:</span>
+<div class="codehilite"><pre><span></span><code><span class="c1">-- Prima invocazione in sessione nuova:</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_or_create_session_tx_id</span><span class="p">()</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tx_id</span><span class="p">;</span>
 <span class="c1">-- Restituisce e memorizza un nuovo UUID.</span>
 
@@ -1953,6 +1953,7 @@
 <span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_or_create_session_tx_id</span><span class="p">()</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tx_id</span><span class="p">;</span>
 <span class="c1">-- Restituisce lo stesso UUID senza creare nuovi record.</span>
 </code></pre></div>
+
 <hr />
 <h3 id="vantaggi-e-considerazioni">💡 Vantaggi e Considerazioni<a class="headerlink" href="#vantaggi-e-considerazioni" title="Permanent link">&para;</a></h3>
 <ul>

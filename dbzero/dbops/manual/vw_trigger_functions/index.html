@@ -1877,7 +1877,7 @@
 </ul>
 <hr />
 <h3 id="definizione-ddl">🔍 Definizione (DDL)<a class="headerlink" href="#definizione-ddl" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_trigger_functions</span><span class="w"> </span><span class="k">AS</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_trigger_functions</span><span class="w"> </span><span class="k">AS</span>
 <span class="k">SELECT</span>
 <span class="w">  </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w">                     </span><span class="k">AS</span><span class="w"> </span><span class="k">schema</span><span class="p">,</span>
 <span class="w">  </span><span class="n">cls</span><span class="p">.</span><span class="n">relname</span><span class="w">                   </span><span class="k">AS</span><span class="w"> </span><span class="n">tabella</span><span class="p">,</span>
@@ -1891,6 +1891,7 @@
 <span class="k">WHERE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">trg</span><span class="p">.</span><span class="n">tgisinternal</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="n">cls</span><span class="p">.</span><span class="n">relname</span><span class="p">,</span><span class="w"> </span><span class="n">trg</span><span class="p">.</span><span class="n">tgname</span><span class="p">;</span>
 </code></pre></div>
+
 <p><strong>Owner</strong>: <code>postgres</code></p>
 <p><strong>Commento</strong>: Vista dei trigger utente con dettagli sulla funzione invocata e definizione del codice della funzione.</p>
 <hr />
@@ -1930,24 +1931,24 @@
 <ol>
 <li><strong>Elencare tutti i trigger di una specifica tabella</strong>:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">nome_trigger</span><span class="p">,</span><span class="w"> </span><span class="n">nome_funzione</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_trigger_functions</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">tabella</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;config.iva&#39;</span><span class="p">;</span>
-</code></pre></div>
+<p><code>sql
+   SELECT nome_trigger, nome_funzione
+     FROM dbops.vw_trigger_functions
+    WHERE tabella = 'config.iva';</code></p>
 <ol>
 <li><strong>Visualizzare la definizione di un trigger particolare</strong>:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">definizione_funzione</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_trigger_functions</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">nome_trigger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;trg_upd_iva_audit_data_user&#39;</span><span class="p">;</span>
-</code></pre></div>
+<p><code>sql
+   SELECT definizione_funzione
+     FROM dbops.vw_trigger_functions
+    WHERE nome_trigger = 'trg_upd_iva_audit_data_user';</code></p>
 <ol>
 <li><strong>Contare i trigger per schema</strong>:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">schema</span><span class="p">,</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tot_trigger</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_trigger_functions</span>
-<span class="w"> </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">schema</span><span class="p">;</span>
-</code></pre></div>
+<p><code>sql
+   SELECT schema, COUNT(*) AS tot_trigger
+     FROM dbops.vw_trigger_functions
+    GROUP BY schema;</code></p>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>

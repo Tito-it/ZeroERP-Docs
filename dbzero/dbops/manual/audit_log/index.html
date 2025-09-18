@@ -1946,30 +1946,30 @@
 <ol>
 <li><strong>Inserimento manuale</strong> (il trigger assegna <code>tx_id</code>):</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">audit_log</span><span class="p">(</span>
-<span class="w">  </span><span class="n">function_name</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">duration_ms</span>
-<span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;process_invoices&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{&quot;count&quot;:200}&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;SUCCESS&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1200</span>
-<span class="p">);</span>
-</code></pre></div>
+<p><code>sql
+   INSERT INTO dbops.audit_log(
+     function_name, params, status, duration_ms
+   ) VALUES (
+     'process_invoices', '{"count":200}'::jsonb, 'SUCCESS', 1200
+   );</code></p>
 <ol>
 <li><strong>Recuperare audit di una transazione</strong>:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">audit_log</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">tx_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;123e4567-e89b-12d3-a456-426614174000&#39;</span><span class="p">;</span>
-</code></pre></div>
+<p><code>sql
+   SELECT *
+     FROM dbops.audit_log
+    WHERE tx_id = '123e4567-e89b-12d3-a456-426614174000';</code></p>
 <ol>
 <li><strong>Performance media per funzione</strong>:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">function_name</span><span class="p">,</span>
-<span class="w">       </span><span class="k">AVG</span><span class="p">(</span><span class="n">duration_ms</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">avg_ms</span><span class="p">,</span>
-<span class="w">       </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w">       </span><span class="k">AS</span><span class="w"> </span><span class="n">executions</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">audit_log</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">executed_at</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">now</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">INTERVAL</span><span class="w"> </span><span class="s1">&#39;7 days&#39;</span>
-<span class="w"> </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">function_name</span>
-<span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">avg_ms</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
-</code></pre></div>
+<p><code>sql
+   SELECT function_name,
+          AVG(duration_ms) AS avg_ms,
+          COUNT(*)       AS executions
+     FROM dbops.audit_log
+    WHERE executed_at &gt;= now() - INTERVAL '7 days'
+    GROUP BY function_name
+    ORDER BY avg_ms DESC;</code></p>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>

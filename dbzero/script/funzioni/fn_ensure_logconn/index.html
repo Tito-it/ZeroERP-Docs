@@ -1900,15 +1900,15 @@
 <ol>
 <li><strong>Nel flusso di error handling</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Prima di loggare errori in remoto</span>
-<span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_ensure_logconn</span><span class="p">();</span>
-<span class="k">PERFORM</span><span class="w"> </span><span class="n">dblink_exec</span><span class="p">(</span><span class="s1">&#39;logconn&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;INSERT INTO dbops.error_log ...&#39;</span><span class="p">);</span>
-</code></pre></div>
+<p><code>plpgsql
+   -- Prima di loggare errori in remoto
+   PERFORM script.fn_ensure_logconn();
+   PERFORM dblink_exec('logconn', 'INSERT INTO dbops.error_log ...');</code></p>
 <ol>
 <li><strong>Chiamata manuale</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_ensure_logconn</span><span class="p">();</span>
-</code></pre></div>
+<p><code>sql
+   SELECT script.fn_ensure_logconn();</code></p>
 <hr />
 <h2 id="allegati-best-practice">Allegati / Best practice<a class="headerlink" href="#allegati-best-practice" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1929,10 +1929,11 @@
 <p>🧠 <strong>“Un’utility leggera per gestire connessioni dblink persistenti, essenziale per pattern di logging remoto e task di integrazione tra database.”</strong></p>
 </blockquote>
 <h1 id="funzione-fn_ensure_logconn">⚙️ Funzione <code>fn_ensure_logconn</code><a class="headerlink" href="#funzione-fn_ensure_logconn" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_ensure_logconn</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_ensure_logconn</span><span class="p">()</span>
 </code></pre></div>
+
 <p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_ensure_logconn</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_ensure_logconn</span><span class="p">()</span>
 <span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">search_path</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="s1">&#39;public&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pg_temp&#39;</span>
@@ -1963,6 +1964,7 @@
 <span class="k">END</span><span class="p">;</span><span class="w"> </span>
 <span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>
+
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

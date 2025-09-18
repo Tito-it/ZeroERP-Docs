@@ -1885,33 +1885,33 @@
 <ol>
 <li><strong>Verifica utilizzo</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="mf">1</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">stradario_generale</span>
-<span class="w">   </span><span class="k">WHERE</span><span class="w"> </span><span class="n">toponomastica_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">OLD</span><span class="mf">.</span><span class="n">id</span>
-<span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   IF NOT EXISTS (
+     SELECT 1
+       FROM config.stradario_generale
+      WHERE toponomastica_id = OLD.id
+   ) THEN
+     RETURN NEW;
+   END IF;</code></p>
 <p>Se la toponomastica non è usata, l’UPDATE di <code>descrizione</code> procede normalmente.</p>
 <ol>
 <li><strong>Blocco modifica</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="k">OLD</span><span class="mf">.</span><span class="n">descrizione</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">descrizione</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">TG_NAME</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;E_COLONNA_NON_MODIFICABILE&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;column&#39;</span><span class="p">,</span><span class="s1">&#39;descrizione&#39;</span><span class="p">,</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="k">OLD</span><span class="mf">.</span><span class="n">id</span><span class="p">)</span>
-<span class="w">  </span><span class="p">);</span>
-<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   IF OLD.descrizione IS DISTINCT FROM NEW.descrizione THEN
+     PERFORM script.fn_log_and_raise_error(
+       'database',
+       TG_NAME,
+       'E_COLONNA_NON_MODIFICABILE',
+       jsonb_build_object('column','descrizione','id',OLD.id)
+     );
+   END IF;</code></p>
 <p>Se la <code>descrizione</code> viene cambiata, la funzione lancia un errore bloccando l’operazione e indicando quale colonna e ID sono coinvolti.</p>
 <ol>
 <li><strong>Ritorno</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-</code></pre></div>
+<p><code>plpgsql
+   RETURN NEW;</code></p>
 <p>In ogni caso, il record viene restituito (se l’errore non è stato sollevato), anche se normalmente l’operazione si interrompe al lancio dell’eccezione.</p>
 <hr />
 <h3 id="motivazione-e-benefici">🔒 Motivazione e Benefici<a class="headerlink" href="#motivazione-e-benefici" title="Permanent link">&para;</a></h3>
@@ -1926,10 +1926,11 @@
 <p>🧠 <strong>“Con <code>trgfn_toponomastica_upd_non_permesso</code>, Zero ERP tutela la coerenza dello stradario imponendo la creazione di nuove toponomastiche per ogni cambiamento, piuttosto che modifiche in-place.”</strong></p>
 </blockquote>
 <h1 id="funzione-trgfn_toponomastica_upd_non_permesso">⚙️ Funzione <code>trgfn_toponomastica_upd_non_permesso</code><a class="headerlink" href="#funzione-trgfn_toponomastica_upd_non_permesso" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_toponomastica_upd_non_permesso</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_toponomastica_upd_non_permesso</span><span class="p">()</span>
 </code></pre></div>
+
 <p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">trgfn_toponomastica_upd_non_permesso</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">trgfn_toponomastica_upd_non_permesso</span><span class="p">()</span>
 <span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
@@ -1958,6 +1959,7 @@
 <span class="k">END</span><span class="p">;</span>
 <span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>
+
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
