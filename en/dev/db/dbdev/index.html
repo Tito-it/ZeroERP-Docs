@@ -1,0 +1,2826 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../backend/backend-dev/">
+      
+      
+        <link rel="next" href="../../infra/proxmox/">
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
+    
+    
+      
+        <title>VM dbdev (PostgreSQL) - Zero ERP Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.7e37652d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#guida-operativa-server-dbdev-su-proxmox-con-postgresql" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../" title="Zero ERP Documentation" class="md-header__button md-logo" aria-label="Zero ERP Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Zero ERP Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              VM dbdev (PostgreSQL)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../../../dev/db/dbdev/" hreflang="it" class="md-select__link">
+              Italiano
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Tito-it/ZeroErp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Tito-it/ZeroErp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../" title="Zero ERP Documentation" class="md-nav__button md-logo" aria-label="Zero ERP Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Zero ERP Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Tito-it/ZeroErp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Tito-it/ZeroErp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Introduzione
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Introduzione
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduzione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cos’è Zero ERP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../manifesto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Manifesto
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../LICENSE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Licenza
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Installazione
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Installazione
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../installazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Prerequisiti
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Architettura
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Architettura
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architettura/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Panoramica
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Database
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Database
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../liquibase-setup-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Liquibase Setup & Workflow
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../linee-guida-sql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Linee Guida SQL
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../linee-guida-trigger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Linee Guida Trigger
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2_4" id="__nav_4_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Db PostgresSQL
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Db PostgresSQL
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Panoramica
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/parametri-personalizzati-%28GUC%29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Parmetri personalizzati (GUC)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2_4_3" id="__nav_4_2_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Estensioni
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_2_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Estensioni
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/estensioni-utilizzate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Utilizzate
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/dblink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    dblink
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/pgAgent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    pgAgent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/pgcrypto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    pgcrypto
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    DB Zero
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            DB Zero
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Panoramica
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Schemi
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Schemi
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/anagrafiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Anagrafiche
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/catalogo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Catalogo
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Config
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/dbops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dbops
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/magazzino/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Magazzino
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/vendite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Vendite
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/acquisti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Acquisti
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Pagamenti
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/storico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Storico
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/script/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Script
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/maintenance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Maintenance
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/public/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Public
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Strumenti
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Strumenti
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/tools/gen_db_docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Generatore Documentazione
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Sviluppatori
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Sviluppatori
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Backend
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            Backend
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/backend-dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Guida backend-dev
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Database
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7_3">
+            <span class="md-nav__icon md-icon"></span>
+            Database
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    VM dbdev (PostgreSQL)
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    VM dbdev (PostgreSQL)
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-architettura-linee-generali" class="md-nav__link">
+    <span class="md-ellipsis">
+      1) Architettura &amp; Linee Generali
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-prerequisiti-essenziali" class="md-nav__link">
+    <span class="md-ellipsis">
+      2) Prerequisiti essenziali
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-proxmox-rete-sistema-linee-guida" class="md-nav__link">
+    <span class="md-ellipsis">
+      3) Proxmox: rete &amp; sistema (linee guida)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-nas-synology-per-backup-proxmox-nfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      4) NAS Synology per Backup Proxmox (NFS)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-creazione-e-impostazioni-vm-dbdev" class="md-nav__link">
+    <span class="md-ellipsis">
+      5) Creazione e impostazioni VM “dbdev”
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-tailscale-accesso-remoto" class="md-nav__link">
+    <span class="md-ellipsis">
+      6) Tailscale &amp; accesso remoto
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-postgresql-17-su-dbdev" class="md-nav__link">
+    <span class="md-ellipsis">
+      7) PostgreSQL 17 su “dbdev”
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7) PostgreSQL 17 su “dbdev”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-install-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1 Install &amp; base
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-sicurezza-autenticazione-scram" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2 Sicurezza &amp; autenticazione (SCRAM)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-ruoli-estensioni-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.3 Ruoli, estensioni, ownership
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-liquibase-configurazione-uso" class="md-nav__link">
+    <span class="md-ellipsis">
+      8) Liquibase — configurazione &amp; uso
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-vs-code-remote-workspace-multiroot" class="md-nav__link">
+    <span class="md-ellipsis">
+      9) VS Code Remote &amp; Workspace multi‑root
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-documentazione-mkdocs" class="md-nav__link">
+    <span class="md-ellipsis">
+      10) Documentazione MkDocs
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-avvioriavvio-automatici" class="md-nav__link">
+    <span class="md-ellipsis">
+      11) Avvio/riavvio automatici
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-hardening-consigliato" class="md-nav__link">
+    <span class="md-ellipsis">
+      12) Hardening consigliato
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-errori-comuni-soluzioni-dallesperienza" class="md-nav__link">
+    <span class="md-ellipsis">
+      13) Errori comuni &amp; soluzioni (dall’esperienza)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-pregi-della-struttura" class="md-nav__link">
+    <span class="md-ellipsis">
+      14) Pregi della struttura
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-allegato-comandi-rapidi" class="md-nav__link">
+    <span class="md-ellipsis">
+      15) Allegato — Comandi rapidi
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_4" id="__nav_7_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Infrastruttura
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_4">
+            <span class="md-nav__icon md-icon"></span>
+            Infrastruttura
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/proxmox/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Proxmox
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_5" id="__nav_7_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    GitHub
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_5">
+            <span class="md-nav__icon md-icon"></span>
+            GitHub
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../github/configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Documentazione
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Guide tecniche
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Guide tecniche
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/tx_id_implementation_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Implementazione Transaction ID
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/storicizzazione-tabelle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Storicizzazione Tabelle
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/configurazione-e-gestione-parametri/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configurazione e gestione parametri
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/automazione-db/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Automazione DB
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Log
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_5">
+            <span class="md-nav__icon md-icon"></span>
+            Log
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/Messaggi-di-Errore-e-Generazione-Log/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Messaggi di Errore
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/messaggi-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Messaggi di Audit
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/Analisi-tracciamento-processi-e-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Processi e Job
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/generazione-cliente/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Generazione di un cliente
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-conti-bancari/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Gestione conti bancari
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-degli-indirizzi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Gestione degli indirizzi
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../glossario/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Glossario
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-architettura-linee-generali" class="md-nav__link">
+    <span class="md-ellipsis">
+      1) Architettura &amp; Linee Generali
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-prerequisiti-essenziali" class="md-nav__link">
+    <span class="md-ellipsis">
+      2) Prerequisiti essenziali
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-proxmox-rete-sistema-linee-guida" class="md-nav__link">
+    <span class="md-ellipsis">
+      3) Proxmox: rete &amp; sistema (linee guida)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-nas-synology-per-backup-proxmox-nfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      4) NAS Synology per Backup Proxmox (NFS)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-creazione-e-impostazioni-vm-dbdev" class="md-nav__link">
+    <span class="md-ellipsis">
+      5) Creazione e impostazioni VM “dbdev”
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-tailscale-accesso-remoto" class="md-nav__link">
+    <span class="md-ellipsis">
+      6) Tailscale &amp; accesso remoto
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-postgresql-17-su-dbdev" class="md-nav__link">
+    <span class="md-ellipsis">
+      7) PostgreSQL 17 su “dbdev”
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7) PostgreSQL 17 su “dbdev”">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-install-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1 Install &amp; base
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-sicurezza-autenticazione-scram" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2 Sicurezza &amp; autenticazione (SCRAM)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-ruoli-estensioni-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.3 Ruoli, estensioni, ownership
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-liquibase-configurazione-uso" class="md-nav__link">
+    <span class="md-ellipsis">
+      8) Liquibase — configurazione &amp; uso
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-vs-code-remote-workspace-multiroot" class="md-nav__link">
+    <span class="md-ellipsis">
+      9) VS Code Remote &amp; Workspace multi‑root
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-documentazione-mkdocs" class="md-nav__link">
+    <span class="md-ellipsis">
+      10) Documentazione MkDocs
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-avvioriavvio-automatici" class="md-nav__link">
+    <span class="md-ellipsis">
+      11) Avvio/riavvio automatici
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-hardening-consigliato" class="md-nav__link">
+    <span class="md-ellipsis">
+      12) Hardening consigliato
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-errori-comuni-soluzioni-dallesperienza" class="md-nav__link">
+    <span class="md-ellipsis">
+      13) Errori comuni &amp; soluzioni (dall’esperienza)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-pregi-della-struttura" class="md-nav__link">
+    <span class="md-ellipsis">
+      14) Pregi della struttura
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-allegato-comandi-rapidi" class="md-nav__link">
+    <span class="md-ellipsis">
+      15) Allegato — Comandi rapidi
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="guida-operativa-server-dbdev-su-proxmox-con-postgresql">Guida Operativa — Server “dbdev” su Proxmox con PostgreSQL<a class="headerlink" href="#guida-operativa-server-dbdev-su-proxmox-con-postgresql" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Obiettivo</strong>
+Preparare e gestire un server <em>dbdev</em> (VM) con <strong>PostgreSQL 17</strong> su <strong>Proxmox VE</strong>, accessibile in sicurezza via <strong>Tailscale</strong>/<strong>SSH tunnel</strong>, con <strong>Liquibase</strong> per le migrazioni e <strong>backup Proxmox → NAS Synology</strong>.</p>
+<p><strong>Contesto</strong>
+Le istruzioni sintetizzano e normalizzano quanto fatto nelle sessioni “Proxmox parte 1–3” e successive: rete, Tailscale (exit node <em>solo se serve</em>), firewall, Postgres (SCRAM), Liquibase, VS Code remoto, MkDocs, backup su NAS.</p>
+</blockquote>
+<hr />
+<h2 id="1-architettura-linee-generali">1) Architettura &amp; Linee Generali<a class="headerlink" href="#1-architettura-linee-generali" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Host</strong>: Proxmox VE (nodo unico) con accesso web <code>https://&lt;IP&gt;:8006</code>.</li>
+<li><strong>Rete</strong>: LAN <code>192.168.8.0/24</code>; opzionale <strong>Tailscale</strong> per accesso remoto sicuro (IP 100.x).</li>
+<li><strong>VM “dbdev”</strong>: Debian/Ubuntu, ospita PostgreSQL 17 e tooling (Liquibase, MkDocs).</li>
+<li><strong>Accesso DB</strong>: <em>solo locale</em> o via <strong>SSH tunnel</strong>; evitare esposizioni esterne (niente 5432 pubblico).</li>
+<li><strong>Backup</strong>: <strong>VZDump</strong> Proxmox verso <strong>Synology NAS</strong> via <strong>NFS</strong> (storage <code>nas-backup</code>).</li>
+<li><strong>Dev tools</strong>: VS Code Remote-SSH, workspace multi-root; documentazione con MkDocs + port-forward 8000.</li>
+</ul>
+<hr />
+<h2 id="2-prerequisiti-essenziali">2) Prerequisiti essenziali<a class="headerlink" href="#2-prerequisiti-essenziali" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Proxmox aggiornato e con repository <strong>no-subscription</strong>.</li>
+<li>Accesso <strong>SSH</strong> funzionante su nodo e VM.</li>
+<li><strong>Tailscale</strong> configurato (solo se richiesto accesso remoto). Evitare <em>Exit Node</em> salvo casi particolari.</li>
+<li>NAS Synology con <strong>NFS abilitato</strong> e share dedicata ai backup.</li>
+</ul>
+<hr />
+<h2 id="3-proxmox-rete-sistema-linee-guida">3) Proxmox: rete &amp; sistema (linee guida)<a class="headerlink" href="#3-proxmox-rete-sistema-linee-guida" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Accesso Web</strong>: <code>https://IP_PROXMOX:8006</code> (utente <code>root</code>).</li>
+<li><strong>Repo no-subscription</strong>: aggiungi <code>pve-no-subscription</code> e fai <code>apt update &amp;&amp; apt dist-upgrade</code>.</li>
+<li><strong>Firewall Proxmox</strong> (se usato): abilita a livello <strong>Datacenter/Node/VM</strong> e definisci regole minime (SSH 22, GUI 8006). Per il DB, preferire tunnel SSH → non aprire 5432.</li>
+</ol>
+<hr />
+<h2 id="4-nas-synology-per-backup-proxmox-nfs">4) NAS Synology per Backup Proxmox (NFS)<a class="headerlink" href="#4-nas-synology-per-backup-proxmox-nfs" title="Permanent link">&para;</a></h2>
+<ol>
+<li>DSM → <strong>Pannello di Controllo → Servizi file → NFS</strong>: abilita NFS (NFSv3 ok; opz. NFSv4.1).</li>
+<li>Crea <strong>Cartella condivisa</strong> <code>proxmox-backup</code> (cestino OFF).</li>
+<li>
+<p><strong>Permessi NFS</strong> su <code>proxmox-backup</code> per l’IP del nodo Proxmox:</p>
+</li>
+<li>
+<p><strong>RW</strong>, <strong>Squash: Nessuna mappatura</strong> (in alternativa, <em>Mappa tutti su admin</em> se incontri “Permission denied”).</p>
+</li>
+<li><strong>Sicurezza</strong>: <code>sys</code>; <strong>Asincrono</strong>: ON.</li>
+<li>
+<p>In <strong>Proxmox → Datacenter → Storage → Add → NFS</strong>:</p>
+</li>
+<li>
+<p><strong>ID</strong>: <code>nas-backup</code> · <strong>Server</strong>: <code>192.168.8.X</code> · <strong>Export</strong>: <code>/volume1/proxmox-backup</code>.</p>
+</li>
+<li><strong>Content</strong>: <strong>Backup</strong> (solo) · <strong>Nodes</strong>: seleziona il nodo · <strong>NFS Version</strong>: 3 o 4.1.</li>
+<li>
+<p><strong>Job di backup</strong>: Datacenter → <strong>Backup → Add</strong></p>
+</li>
+<li>
+<p><strong>Node</strong>: il tuo nodo · <strong>Storage</strong>: <code>nas-backup</code> · <strong>Selection</strong>: VM desiderate · <strong>Schedule</strong>: <code>daily 02:00</code>.</p>
+</li>
+<li><strong>Mode</strong>: <code>snapshot</code> · <strong>Compression</strong>: <code>zstd</code> · <strong>Retention</strong>: es. <em>Keep last 7</em> (o daily/weekly/monthly).</li>
+<li><strong>Test</strong>: <em>Run now</em> e verifica file <code>.vma.zst</code> su <code>nas-backup</code>.</li>
+</ol>
+<hr />
+<h2 id="5-creazione-e-impostazioni-vm-dbdev">5) Creazione e impostazioni VM “dbdev”<a class="headerlink" href="#5-creazione-e-impostazioni-vm-dbdev" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Installazione</strong>: carica ISO Debian/Ubuntu → <em>Create VM</em> con risorse adeguate.</li>
+<li>
+<p><strong>QEMU Guest Agent</strong>:</p>
+</li>
+<li>
+<p>VM → <strong>Options</strong> → <strong>QEMU Guest Agent</strong>: Enabled.</p>
+</li>
+<li>
+<p>Dentro la VM:</p>
+<p><code>bash
+sudo apt-get update &amp;&amp; sudo apt-get install -y qemu-guest-agent
+sudo systemctl enable --now qemu-guest-agent</code>
+* <strong>Ordine di avvio/chiusura</strong> (priorità):</p>
+</li>
+<li>
+<p>Esempio (VMID 100):</p>
+<p><code>bash
+qm set 100 -onboot 1 -startup order=20,up=60,down=120</code>
+  * (<em>order basso = avvio prima; up = ritardo avvio; down = timeout chiusura</em>)</p>
+</li>
+</ul>
+<hr />
+<h2 id="6-tailscale-accesso-remoto">6) Tailscale &amp; accesso remoto<a class="headerlink" href="#6-tailscale-accesso-remoto" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Uso consigliato</strong>: Tailscale <strong>solo per il PC e il server</strong>; <strong>no Exit Node</strong> di default (riduce latenza e complessità).</li>
+<li><strong>SSH tunnel per DB</strong> (sul PC):</li>
+</ul>
+<p><code>bash
+  ssh -L 5432:localhost:5432 tid@100.&lt;IP-dbdev&gt;
+  # pgAdmin/cli: host=localhost, port=5432</code>
+* <strong>Firewall</strong>: non aprire 5432 su Internet. In <code>pg_hba.conf</code> consentire <em>solo</em> loopback; LAN/Tailscale opzionali.</p>
+<hr />
+<h2 id="7-postgresql-17-su-dbdev">7) PostgreSQL 17 su “dbdev”<a class="headerlink" href="#7-postgresql-17-su-dbdev" title="Permanent link">&para;</a></h2>
+<h3 id="71-install-base">7.1 Install &amp; base<a class="headerlink" href="#71-install-base" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Usa repository ufficiali (già in uso) e servizi systemd.</li>
+<li>Verifica porta:</li>
+</ul>
+<p><code>bash
+  sudo ss -ltnp | grep 5432</code></p>
+<h3 id="72-sicurezza-autenticazione-scram">7.2 Sicurezza &amp; autenticazione (SCRAM)<a class="headerlink" href="#72-sicurezza-autenticazione-scram" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>postgresql.conf</code></strong>:</li>
+</ul>
+<p><code>listen_addresses = 'localhost'   # consigliato, usare tunnel</code>
+* <strong><code>pg_hba.conf</code></strong> (in cima):</p>
+<p><code>host  all  all  127.0.0.1/32  scram-sha-256
+  host  all  all  ::1/128       scram-sha-256
+  # Opzionali, se proprio servono:
+  # host all all 192.168.8.0/24  scram-sha-256
+  # host all all 100.0.0.0/8     scram-sha-256</code>
+* <strong>Password SCRAM</strong>:</p>
+<p><code>bash
+  sudo -u postgres psql -c "ALTER SYSTEM SET password_encryption='scram-sha-256'; SELECT pg_reload_conf();"
+  sudo -u postgres psql -c "ALTER ROLE titodb WITH LOGIN PASSWORD '*****';"</code></p>
+<h3 id="73-ruoli-estensioni-ownership">7.3 Ruoli, estensioni, ownership<a class="headerlink" href="#73-ruoli-estensioni-ownership" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Ruoli applicativi</strong> (es. <code>titodb</code>, <code>zeroerp_app</code>):</li>
+</ul>
+<p><code>bash
+  sudo -u postgres psql -c "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='zeroerp_app') THEN CREATE ROLE zeroerp_app LOGIN; END IF; END $$;"</code>
+* <strong>Estensioni</strong> (richiedono superuser):</p>
+<p><code>bash
+  sudo -u postgres psql -d zeroerp -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+  sudo -u postgres psql -d zeroerp -c "CREATE EXTENSION IF NOT EXISTS postgis_topology;"
+  sudo -u postgres psql -d zeroerp -c "CREATE EXTENSION IF NOT EXISTS dblink WITH SCHEMA public;"</code>
+* <strong>Ownership tabelle Liquibase</strong>:</p>
+<p><code>bash
+  sudo -u postgres psql -d zeroerp -c "ALTER TABLE public.databasechangelog OWNER TO titodb; ALTER TABLE public.databasechangeloglock OWNER TO titodb;"</code></p>
+<hr />
+<h2 id="8-liquibase-configurazione-uso">8) Liquibase — configurazione &amp; uso<a class="headerlink" href="#8-liquibase-configurazione-uso" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>db/liquibase.properties</code></strong> (su <em>dbdev</em>):</li>
+</ul>
+<p><code>properties
+  url=jdbc:postgresql://127.0.0.1:5432/zeroerp
+  username=titodb
+  password=*****
+  changeLogFile=changelog/changelog-master.yaml</code>
+* <strong>Comandi tipici (sicuri)</strong>:</p>
+<p><code>bash
+  liquibase validate
+  liquibase status --verbose
+  liquibase updateSQL</code>
+* <strong>Esecuzione</strong>:</p>
+<p><code>bash
+  liquibase update</code>
+* <strong>Note errori comuni risolti</strong>:</p>
+<ul>
+<li><em>password corretta ma login fallito</em>: mismatch <strong>SCRAM vs md5</strong> in <code>pg_hba.conf</code> o uso IPv6 <code>::1</code> → forza 127.0.0.1 e <code>scram-sha-256</code>.</li>
+<li><em>estensioni mancanti</em>: installate come <strong>superuser</strong> prima di <code>liquibase update</code>.</li>
+<li><em><code>session_replication_role</code> negato</em>: eseguire l’UPDATE richiesto come superuser con <code>SET LOCAL session_replication_role = replica</code> entro transazione.</li>
+</ul>
+<hr />
+<h2 id="9-vs-code-remote-workspace-multiroot">9) VS Code Remote &amp; Workspace multi‑root<a class="headerlink" href="#9-vs-code-remote-workspace-multiroot" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Connessione</strong>: Remote-SSH → host <code>dbdev</code>.</li>
+<li><strong>Workspace</strong> (file <code>ZeroErp-dbdev.code-workspace</code>):</li>
+</ul>
+<p><code>json
+  {
+    "folders": [
+      { "path": "/home/tid/software/ZeroErp" },
+      { "path": "/etc/postgresql" },
+      { "path": "/var/log/postgresql" },
+      { "path": "/home/tid/.ssh" }
+    ],
+    "settings": {
+      "python.defaultInterpreterPath": "/home/tid/software/ZeroErp/.venv/bin/python",
+      "python.terminal.activateEnvironment": true,
+      "liquibase.java.home": "/usr/lib/jvm/java-17-openjdk-amd64"
+    }
+  }</code>
+* <strong>Apertura rapida</strong>: <code>code --remote ssh-remote+dbdev /home/tid/software/ZeroErp/ZeroErp-dbdev.code-workspace</code>.</p>
+<hr />
+<h2 id="10-documentazione-mkdocs">10) Documentazione MkDocs<a class="headerlink" href="#10-documentazione-mkdocs" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Setup</strong>:</li>
+</ul>
+<p><code>bash
+  cd ~/software/ZeroErp
+  python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+  pip install -r requirements.txt   # mkdocs/material inclusi qui
+  mkdocs serve -a 127.0.0.1:8000    # VS Code farà port-forward</code>
+* <strong>Task VS Code</strong> (esempio):</p>
+<p><code>json
+  { "label": "Docs: serve", "type": "shell", "command": "bash", "args": ["-lc", "source ${workspaceFolder}/.venv/bin/activate &amp;&amp; mkdocs serve -a 127.0.0.1:8000" ] }</code></p>
+<hr />
+<h2 id="11-avvioriavvio-automatici">11) Avvio/riavvio automatici<a class="headerlink" href="#11-avvioriavvio-automatici" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Priorità VM/CT</strong>: usa <code>Start at boot</code>, <code>Start/Shutdown order</code>, <code>Startup delay</code> (VM → Options) o <code>qm/pct set</code>.</li>
+<li>
+<p><strong>Riavvio nodo settimanale</strong> (systemd timer — es. lun 03:30):</p>
+</li>
+<li>
+<p><code>/etc/systemd/system/weekly-reboot.service</code> → <code>ExecStart=/usr/sbin/reboot</code></p>
+</li>
+<li><code>/etc/systemd/system/weekly-reboot.timer</code> → <code>OnCalendar=Mon 03:30</code></li>
+<li><code>systemctl enable --now weekly-reboot.timer</code></li>
+</ul>
+<hr />
+<h2 id="12-hardening-consigliato">12) Hardening consigliato<a class="headerlink" href="#12-hardening-consigliato" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Postgres non esposto</strong> (solo loopback; accesso via SSH tunnel).</li>
+<li><strong>Tailscale</strong>: niente Exit Node per il PC (salvo necessità specifiche).</li>
+<li><strong>Firewall VM</strong>: regole minime; disattiva aperture inutili (es. 5432) se non richieste.</li>
+<li><strong>Permessi NAS</strong>: share dedicata, retention nei job, test periodico di <strong>restore</strong>.</li>
+</ul>
+<hr />
+<h2 id="13-errori-comuni-soluzioni-dallesperienza">13) Errori comuni &amp; soluzioni (dall’esperienza)<a class="headerlink" href="#13-errori-comuni-soluzioni-dallesperienza" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>PgAdmin “funziona”, CLI no</strong> → in PgAdmin usavi <code>postgres</code>, da CLI <code>titodb</code>: allinea utente o permessi.</li>
+<li><strong>Autenticazione fallita su localhost</strong> → psql usa <code>::1</code> prima di 127.0.0.1: aggiungi regola IPv6 <code>::1/128</code> in <code>pg_hba.conf</code> con <code>scram-sha-256</code>.</li>
+<li><strong>Estensioni mancanti (postgis/dblink)</strong> → installale <em>prima</em> come superuser; poi <code>liquibase update</code> come utente applicativo.</li>
+<li><strong><code>session_replication_role</code> negato</strong> → fai l’UPDATE come superuser dentro transazione con <code>SET LOCAL ... = replica</code>.</li>
+<li><strong>Storage NFS senza “Backup”</strong> → in Proxmox “Content” deve includere <strong>Backup</strong> (equiv. VZDump); in dubbio, aggiungi via CLI <code>--content backup</code>.</li>
+</ul>
+<hr />
+<h2 id="14-pregi-della-struttura">14) Pregi della struttura<a class="headerlink" href="#14-pregi-della-struttura" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Sicurezza by design</strong>: DB non esposto; accesso via <strong>SSH tunnel</strong>/<strong>Tailscale</strong>.</li>
+<li><strong>Affidabilità</strong>: backup <em>a caldo</em> delle VM con <strong>snapshot</strong> e <strong>retention</strong> sul NAS.</li>
+<li><strong>Semplicità operativa</strong>: un unico job Proxmox copre l’intera VM (OS, Postgres, tool, configurazioni).</li>
+<li><strong>Scalabilità</strong>: facile aggiungere nodi/VM; ordine d’avvio garantisce dipendenze corrette.</li>
+<li><strong>Dev Experience</strong>: VS Code Remote, workspace multi-root, MkDocs con port-forward; comandi <code>liquibase</code> pronti.</li>
+<li><strong>Governance del DB</strong>: <strong>Liquibase</strong> per migrazioni tracciate e ripetibili; <strong>SCRAM</strong> per auth moderna.</li>
+<li><strong>Flessibilità</strong>: Tailscale opzionale; possibile Exit Node solo per host specifici (es. NAS), non per tutti.</li>
+</ul>
+<hr />
+<h2 id="15-allegato-comandi-rapidi">15) Allegato — Comandi rapidi<a class="headerlink" href="#15-allegato-comandi-rapidi" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Tunnel SSH (PC → dbdev)</span>
+ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">5432</span>:localhost:5432<span class="w"> </span>tid@100.&lt;IP-dbdev&gt;
+
+<span class="c1"># Liquibase (dbdev)</span>
+liquibase<span class="w"> </span>validate
+liquibase<span class="w"> </span>status<span class="w"> </span>--verbose
+liquibase<span class="w"> </span>update
+
+<span class="c1"># Postgres (dbdev)</span>
+sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;SHOW hba_file;&quot;</span>
+sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-d<span class="w"> </span>zeroerp<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS postgis;&quot;</span>
+
+<span class="c1"># Proxmox backup storage (CLI)</span>
+pvesm<span class="w"> </span>add<span class="w"> </span>nfs<span class="w"> </span>nas-backup<span class="w"> </span>--server<span class="w"> </span><span class="m">192</span>.168.8.20<span class="w"> </span>--export<span class="w"> </span>/volume1/proxmox-backup<span class="w"> </span>--content<span class="w"> </span>backup<span class="w"> </span>--mkdir<span class="w"> </span><span class="m">1</span>
+
+<span class="c1"># VM order/delay</span>
+qm<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="m">100</span><span class="w"> </span>-onboot<span class="w"> </span><span class="m">1</span><span class="w"> </span>-startup<span class="w"> </span><span class="nv">order</span><span class="o">=</span><span class="m">20</span>,up<span class="o">=</span><span class="m">60</span>,down<span class="o">=</span><span class="m">120</span>
+</code></pre></div>
+
+<blockquote>
+<p><strong>Suggerimento finale</strong>: esegui periodicamente un <strong>restore di prova</strong> su un VMID nuovo per validare i backup. Una verifica reale vale più di mille log verdi. ✅</p>
+</blockquote>
+<hr />
+<p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.sections", "navigation.expand"], "search": "../../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+      
+        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+      
+    
+  </body>
+</html>
