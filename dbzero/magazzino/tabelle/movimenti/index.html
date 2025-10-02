@@ -16,7 +16,7 @@
     
     
       
-        <title>📚 Tabella eventi_assets - Zero ERP Documentation</title>
+        <title>📚 Tabella movimenti - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tabella-eventi_assets" class="md-skip">
+        <a href="#tabella-movimenti" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              📚 Tabella eventi_assets
+              📚 Tabella movimenti
             
           </span>
         </div>
@@ -121,7 +121,7 @@
           </li>
         
           <li class="md-select__item">
-            <a href="../../../../en/dbzero/magazzino/tabelle/eventi_assets/" hreflang="en" class="md-select__link">
+            <a href="../../../../en/dbzero/magazzino/tabelle/movimenti/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
@@ -2152,7 +2152,7 @@
   
 
 
-<h1 id="tabella-eventi_assets">📚 Tabella <code>eventi_assets</code><a class="headerlink" href="#tabella-eventi_assets" title="Permanent link">&para;</a></h1>
+<h1 id="tabella-movimenti">📚 Tabella <code>movimenti</code><a class="headerlink" href="#tabella-movimenti" title="Permanent link">&para;</a></h1>
 <h2 id="campi-principali">🗂️ Campi principali<a class="headerlink" href="#campi-principali" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2171,27 +2171,63 @@
 <td></td>
 </tr>
 <tr>
-<td>asset_id</td>
+<td>articolo_id</td>
+<td>uuid</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td>magazzino_id</td>
 <td>bigint</td>
 <td>NO</td>
 <td></td>
 </tr>
 <tr>
-<td>data_evento</td>
+<td>magazzino_id_dest</td>
+<td>bigint</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>uom_id</td>
+<td>bigint</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>qta</td>
+<td>numeric</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td>costo_unitario</td>
+<td>numeric</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>data_mov</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
 <td>now()</td>
 </tr>
 <tr>
-<td>magazzino_id_from</td>
-<td>bigint</td>
+<td>lotto</td>
+<td>character varying</td>
 <td>YES</td>
 <td></td>
 </tr>
 <tr>
-<td>magazzino_id_to</td>
-<td>bigint</td>
+<td>seriale</td>
+<td>character varying</td>
 <td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>causale_id</td>
+<td>bigint</td>
+<td>NO</td>
 <td></td>
 </tr>
 <tr>
@@ -2231,28 +2267,10 @@
 <td>true</td>
 </tr>
 <tr>
-<td>extra_info</td>
+<td>meta</td>
 <td>jsonb</td>
-<td>YES</td>
+<td>NO</td>
 <td>'{}'::jsonb</td>
-</tr>
-<tr>
-<td>tx_id</td>
-<td>uuid</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>user_insert</td>
-<td>character varying</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>user_update</td>
-<td>character varying</td>
-<td>YES</td>
-<td></td>
 </tr>
 <tr>
 <td>data_insert</td>
@@ -2261,8 +2279,26 @@
 <td>now()</td>
 </tr>
 <tr>
+<td>user_insert</td>
+<td>character varying</td>
+<td>NO</td>
+<td>CURRENT_USER</td>
+</tr>
+<tr>
 <td>data_update</td>
 <td>timestamp with time zone</td>
+<td>NO</td>
+<td>now()</td>
+</tr>
+<tr>
+<td>user_update</td>
+<td>character varying</td>
+<td>YES</td>
+<td>CURRENT_USER</td>
+</tr>
+<tr>
+<td>tx_id</td>
+<td>uuid</td>
 <td>YES</td>
 <td></td>
 </tr>
@@ -2271,24 +2307,6 @@
 <td>boolean</td>
 <td>NO</td>
 <td>false</td>
-</tr>
-<tr>
-<td>tipo_evento_id</td>
-<td>bigint</td>
-<td>NO</td>
-<td></td>
-</tr>
-<tr>
-<td>stato_da_id</td>
-<td>bigint</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>stato_a_id</td>
-<td>bigint</td>
-<td>YES</td>
-<td></td>
 </tr>
 </tbody>
 </table>
@@ -2303,29 +2321,44 @@
 </thead>
 <tbody>
 <tr>
-<td>FOREIGN KEY</td>
-<td>fk_mag_eventi_assets_asset</td>
-<td>asset_id</td>
+<td>CHECK</td>
+<td>chk_mag_movimenti_qta_non_zero</td>
+<td></td>
 </tr>
 <tr>
 <td>FOREIGN KEY</td>
-<td>fk_mag_eventi_assets_magazzino_from</td>
-<td>magazzino_id_from</td>
+<td>fk_mag_movimenti_articolo</td>
+<td>articolo_id</td>
 </tr>
 <tr>
 <td>FOREIGN KEY</td>
-<td>fk_mag_eventi_assets_magazzino_to</td>
-<td>magazzino_id_to</td>
+<td>fk_mag_movimenti_causale</td>
+<td>causale_id</td>
 </tr>
 <tr>
 <td>FOREIGN KEY</td>
-<td>fk_mag_eventi_assets_tipo_evento</td>
-<td>tipo_evento_id</td>
+<td>fk_mag_movimenti_magazzino</td>
+<td>magazzino_id</td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_mag_movimenti_magazzino_dest</td>
+<td>magazzino_id_dest</td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_mag_movimenti_uom</td>
+<td>uom_id</td>
 </tr>
 <tr>
 <td>PRIMARY KEY</td>
-<td>pk_mag_eventi_assets</td>
+<td>pk_mag_movimenti</td>
 <td>id</td>
+</tr>
+<tr>
+<td>UNIQUE</td>
+<td>uq_mag_movimenti_sorgente</td>
+<td>sorgente_schema, sorgente_tabella, sorgente_id, sorgente_riga_id</td>
 </tr>
 </tbody>
 </table>
@@ -2339,28 +2372,44 @@
 </thead>
 <tbody>
 <tr>
-<td>ix_mag_eventi_assets_asset</td>
-<td><code>CREATE INDEX ix_mag_eventi_assets_asset ON magazzino.eventi_assets USING btree (asset_id)</code></td>
+<td>ix_mag_movimenti_articolo</td>
+<td><code>CREATE INDEX ix_mag_movimenti_articolo ON magazzino.movimenti USING btree (articolo_id)</code></td>
 </tr>
 <tr>
-<td>ix_mag_eventi_assets_data</td>
-<td><code>CREATE INDEX ix_mag_eventi_assets_data ON magazzino.eventi_assets USING btree (data_evento)</code></td>
+<td>ix_mag_movimenti_causale</td>
+<td><code>CREATE INDEX ix_mag_movimenti_causale ON magazzino.movimenti USING btree (causale_id)</code></td>
 </tr>
 <tr>
-<td>ix_mag_eventi_assets_stato_a_id</td>
-<td><code>CREATE INDEX ix_mag_eventi_assets_stato_a_id ON magazzino.eventi_assets USING btree (stato_a_id)</code></td>
+<td>ix_mag_movimenti_data</td>
+<td><code>CREATE INDEX ix_mag_movimenti_data ON magazzino.movimenti USING btree (data_mov)</code></td>
 </tr>
 <tr>
-<td>ix_mag_eventi_assets_stato_da_id</td>
-<td><code>CREATE INDEX ix_mag_eventi_assets_stato_da_id ON magazzino.eventi_assets USING btree (stato_da_id)</code></td>
+<td>ix_mag_movimenti_lotto_upper</td>
+<td><code>CREATE INDEX ix_mag_movimenti_lotto_upper ON magazzino.movimenti USING btree (upper((lotto)::text))</code></td>
 </tr>
 <tr>
-<td>ix_mag_eventi_assets_tipo_evento_id</td>
-<td><code>CREATE INDEX ix_mag_eventi_assets_tipo_evento_id ON magazzino.eventi_assets USING btree (tipo_evento_id)</code></td>
+<td>ix_mag_movimenti_magazzino</td>
+<td><code>CREATE INDEX ix_mag_movimenti_magazzino ON magazzino.movimenti USING btree (magazzino_id)</code></td>
 </tr>
 <tr>
-<td>pk_mag_eventi_assets</td>
-<td><code>CREATE UNIQUE INDEX pk_mag_eventi_assets ON magazzino.eventi_assets USING btree (id)</code></td>
+<td>ix_mag_movimenti_magazzino_dest</td>
+<td><code>CREATE INDEX ix_mag_movimenti_magazzino_dest ON magazzino.movimenti USING btree (magazzino_id_dest)</code></td>
+</tr>
+<tr>
+<td>ix_mag_movimenti_seriale_upper</td>
+<td><code>CREATE INDEX ix_mag_movimenti_seriale_upper ON magazzino.movimenti USING btree (upper((seriale)::text))</code></td>
+</tr>
+<tr>
+<td>ix_mag_movimenti_sorgente</td>
+<td><code>CREATE INDEX ix_mag_movimenti_sorgente ON magazzino.movimenti USING btree (sorgente_schema, sorgente_tabella, sorgente_id, sorgente_riga_id)</code></td>
+</tr>
+<tr>
+<td>pk_mag_movimenti</td>
+<td><code>CREATE UNIQUE INDEX pk_mag_movimenti ON magazzino.movimenti USING btree (id)</code></td>
+</tr>
+<tr>
+<td>uq_mag_movimenti_sorgente</td>
+<td><code>CREATE UNIQUE INDEX uq_mag_movimenti_sorgente ON magazzino.movimenti USING btree (sorgente_schema, sorgente_tabella, sorgente_id, sorgente_riga_id)</code></td>
 </tr>
 </tbody>
 </table>
