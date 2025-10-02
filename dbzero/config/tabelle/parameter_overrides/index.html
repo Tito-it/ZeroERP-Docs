@@ -2496,12 +2496,6 @@
 <td></td>
 </tr>
 <tr>
-<td>user_id</td>
-<td>integer</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
 <td>session_key</td>
 <td>text</td>
 <td>YES</td>
@@ -2525,6 +2519,24 @@
 <td>YES</td>
 <td>true</td>
 </tr>
+<tr>
+<td>django_user_id</td>
+<td>integer</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>django_group_id</td>
+<td>integer</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>attivo</td>
+<td>boolean</td>
+<td>YES</td>
+<td>true</td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli_1">🔒 Vincoli<a class="headerlink" href="#vincoli_1" title="Permanent link">&para;</a></h2>
@@ -2538,6 +2550,21 @@
 </thead>
 <tbody>
 <tr>
+<td>CHECK</td>
+<td>chk_overrides_has_scope</td>
+<td></td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_overrides_django_group</td>
+<td>django_group_id</td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_overrides_django_user</td>
+<td>django_user_id</td>
+</tr>
+<tr>
 <td>FOREIGN KEY</td>
 <td>fk_overrides_parameter</td>
 <td>parameter_id</td>
@@ -2549,8 +2576,8 @@
 </tr>
 <tr>
 <td>UNIQUE</td>
-<td>uq_overrides_full_scope</td>
-<td>parameter_id, tenant_id, user_id, session_key, function_name</td>
+<td>uq_overrides_full_scope_v2</td>
+<td>parameter_id, tenant_id, django_user_id, django_group_id, session_key, function_name</td>
 </tr>
 </tbody>
 </table>
@@ -2564,12 +2591,24 @@
 </thead>
 <tbody>
 <tr>
+<td>ix_overrides_param_group</td>
+<td><code>CREATE INDEX ix_overrides_param_group ON config.parameter_overrides USING btree (parameter_id, django_group_id)</code></td>
+</tr>
+<tr>
+<td>ix_overrides_param_tenant</td>
+<td><code>CREATE INDEX ix_overrides_param_tenant ON config.parameter_overrides USING btree (parameter_id, tenant_id)</code></td>
+</tr>
+<tr>
+<td>ix_overrides_param_user</td>
+<td><code>CREATE INDEX ix_overrides_param_user ON config.parameter_overrides USING btree (parameter_id, django_user_id)</code></td>
+</tr>
+<tr>
 <td>parameter_overrides_pkey</td>
 <td><code>CREATE UNIQUE INDEX parameter_overrides_pkey ON config.parameter_overrides USING btree (id)</code></td>
 </tr>
 <tr>
-<td>uq_overrides_full_scope</td>
-<td><code>CREATE UNIQUE INDEX uq_overrides_full_scope ON config.parameter_overrides USING btree (parameter_id, tenant_id, user_id, session_key, function_name)</code></td>
+<td>uq_overrides_full_scope_v2</td>
+<td><code>CREATE UNIQUE INDEX uq_overrides_full_scope_v2 ON config.parameter_overrides USING btree (parameter_id, tenant_id, django_user_id, django_group_id, session_key, function_name)</code></td>
 </tr>
 </tbody>
 </table>
