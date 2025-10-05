@@ -2231,25 +2231,25 @@
 <td></td>
 </tr>
 <tr>
-<td>sorgente_schema</td>
+<td>doc_schema</td>
 <td>character varying</td>
-<td>YES</td>
+<td>NO</td>
 <td></td>
 </tr>
 <tr>
-<td>sorgente_tabella</td>
+<td>doc_table</td>
 <td>character varying</td>
-<td>YES</td>
+<td>NO</td>
 <td></td>
 </tr>
 <tr>
-<td>sorgente_id</td>
+<td>doc_id</td>
 <td>bigint</td>
-<td>YES</td>
+<td>NO</td>
 <td></td>
 </tr>
 <tr>
-<td>sorgente_riga_id</td>
+<td>doc_riga_id</td>
 <td>bigint</td>
 <td>YES</td>
 <td></td>
@@ -2322,6 +2322,11 @@
 <tbody>
 <tr>
 <td>CHECK</td>
+<td>chk_mag_movimenti_da_destinazione_distinti</td>
+<td></td>
+</tr>
+<tr>
+<td>CHECK</td>
 <td>chk_mag_movimenti_qta_non_zero</td>
 <td></td>
 </tr>
@@ -2357,8 +2362,8 @@
 </tr>
 <tr>
 <td>UNIQUE</td>
-<td>uq_mag_movimenti_sorgente</td>
-<td>sorgente_schema, sorgente_tabella, sorgente_id, sorgente_riga_id</td>
+<td>uq_mag_movimenti_docref</td>
+<td>doc_schema, doc_table, doc_id, doc_riga_id</td>
 </tr>
 </tbody>
 </table>
@@ -2371,6 +2376,10 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>ix_mag_mov_docref</td>
+<td><code>CREATE INDEX ix_mag_mov_docref ON magazzino.movimenti USING btree (doc_schema, doc_table, doc_id, doc_riga_id)</code></td>
+</tr>
 <tr>
 <td>ix_mag_mov_transfer_uid</td>
 <td><code>CREATE INDEX ix_mag_mov_transfer_uid ON magazzino.movimenti USING btree (transfer_uid)</code></td>
@@ -2405,15 +2414,15 @@
 </tr>
 <tr>
 <td>ix_mag_movimenti_sorgente</td>
-<td><code>CREATE INDEX ix_mag_movimenti_sorgente ON magazzino.movimenti USING btree (sorgente_schema, sorgente_tabella, sorgente_id, sorgente_riga_id)</code></td>
+<td><code>CREATE INDEX ix_mag_movimenti_sorgente ON magazzino.movimenti USING btree (doc_schema, doc_table, doc_id, doc_riga_id)</code></td>
 </tr>
 <tr>
 <td>pk_mag_movimenti</td>
 <td><code>CREATE UNIQUE INDEX pk_mag_movimenti ON magazzino.movimenti USING btree (id)</code></td>
 </tr>
 <tr>
-<td>uq_mag_movimenti_sorgente</td>
-<td><code>CREATE UNIQUE INDEX uq_mag_movimenti_sorgente ON magazzino.movimenti USING btree (sorgente_schema, sorgente_tabella, sorgente_id, sorgente_riga_id)</code></td>
+<td>uq_mag_movimenti_docref</td>
+<td><code>CREATE UNIQUE INDEX uq_mag_movimenti_docref ON magazzino.movimenti USING btree (doc_schema, doc_table, doc_id, doc_riga_id)</code></td>
 </tr>
 </tbody>
 </table>
