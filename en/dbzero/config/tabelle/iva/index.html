@@ -2380,12 +2380,6 @@
 <td>0</td>
 </tr>
 <tr>
-<td>assoggettamento_iva</td>
-<td>character</td>
-<td>NO</td>
-<td>''::bpchar</td>
-</tr>
-<tr>
 <td>natura_iva_id</td>
 <td>integer</td>
 <td>YES</td>
@@ -2419,7 +2413,7 @@
 <td>user_insert</td>
 <td>text</td>
 <td>NO</td>
-<td>'CURRENT_USER'::text</td>
+<td>CURRENT_USER</td>
 </tr>
 <tr>
 <td>data_update</td>
@@ -2431,7 +2425,7 @@
 <td>user_update</td>
 <td>text</td>
 <td>NO</td>
-<td>'CURRENT_USER'::text</td>
+<td>CURRENT_USER</td>
 </tr>
 <tr>
 <td>attivo</td>
@@ -2444,6 +2438,12 @@
 <td>boolean</td>
 <td>YES</td>
 <td>true</td>
+</tr>
+<tr>
+<td>assoggettamento_id</td>
+<td>bigint</td>
+<td>YES</td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -2459,8 +2459,18 @@
 <tbody>
 <tr>
 <td>CHECK</td>
-<td>chk_iva_assoggettamento_aliquota</td>
+<td>chk_iva_aliquota_pos_no_natura_assogg</td>
 <td></td>
+</tr>
+<tr>
+<td>CHECK</td>
+<td>chk_iva_zero_requires_natura_or_assogg</td>
+<td></td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_iva_assoggettamento</td>
+<td>assoggettamento_id</td>
 </tr>
 <tr>
 <td>FOREIGN KEY</td>
@@ -2528,6 +2538,12 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>trg_a10_config_iva_protect_columns</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION script.trgfn_lock_columns('perc_iva', 'E_PERC_IVA_NO_MOD', 'assoggettamento_id', 'E_ASSOGGETTAMENTO_NO_MOD')</code></td>
+</tr>
 <tr>
 <td>trg_iva_ins_upd_check_conti</td>
 <td>BEFORE</td>

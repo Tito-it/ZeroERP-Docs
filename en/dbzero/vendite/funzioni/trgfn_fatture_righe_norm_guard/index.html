@@ -2126,20 +2126,73 @@
 <span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">DECLARE</span>
-<span class="w">  </span><span class="n">v_parent</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">;</span>
-<span class="k">BEGIN</span>
 
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">dest_billing_account_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">billing_account_id</span>
-<span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_parent</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span>
-<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">fattura_id</span><span class="p">;</span>
-<span class="w">    </span><span class="k">NEW</span><span class="p">.</span><span class="n">dest_billing_account_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_parent</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+<span class="w"> </span><span class="cm">/*</span>
+<span class="cm">   vendite.trgfn_fatture_righe_norm_guard()</span>
 
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="k">END</span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
+<span class="cm">   Scopo:</span>
+<span class="cm">     - Eredita BA di destinazione dalla testata fattura se non valorizzato.</span>
+<span class="cm">     - Normalizza SOLO la natura IVA &quot;snapshot&quot; (campo riga: iva_natura)</span>
+<span class="cm">       in base a config.iva.natura_iva_id -&gt; config.iva_natura.codice.</span>
+<span class="cm">     - NON gestisce più aliquota (iva_perc) né assoggettamento.</span>
+
+<span class="cm">   Note:</span>
+<span class="cm">     - Se l&#39;IVA master ha aliquota &gt; 0, per design natura_iva_id è NULL: lo snapshot risulterà NULL.</span>
+<span class="cm">     - Se l&#39;IVA master ha aliquota = 0, natura_iva_id può essere presente e verrà copiato il codice corrispondente.</span>
+<span class="cm"> */</span>
+<span class="w"> </span><span class="k">DECLARE</span>
+<span class="w">   </span><span class="n">v_parent_ba</span><span class="w">   </span><span class="nb">integer</span><span class="p">;</span>
+<span class="w">   </span><span class="n">v_natura_code</span><span class="w"> </span><span class="nb">varchar</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+<span class="w"> </span><span class="k">BEGIN</span>
+<span class="w">   </span><span class="c1">-- 1) Eredita BA dalla testata se non fornito</span>
+<span class="w">   </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">dest_billing_account_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">     </span><span class="k">SELECT</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">billing_account_id</span>
+<span class="w">       </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_parent_ba</span>
+<span class="w">     </span><span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span><span class="w"> </span><span class="n">f</span>
+<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">fattura_id</span><span class="p">;</span>
+
+<span class="w">     </span><span class="k">NEW</span><span class="p">.</span><span class="n">dest_billing_account_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_parent_ba</span><span class="p">;</span>
+<span class="w">   </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">   </span><span class="c1">-- 2) Normalizzazione snapshot NATURA IVA</span>
+<span class="w">   </span><span class="c1">--    Se è indicato iva_id, copia SEMPRE in riga il &quot;codice&quot; di natura associato all&#39;IVA master.</span>
+<span class="w">   </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">iva_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">     </span><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">codice</span>
+<span class="w">       </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_natura_code</span>
+<span class="w">     </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">iva</span><span class="w"> </span><span class="n">i</span>
+<span class="w">     </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">iva_natura</span><span class="w"> </span><span class="n">n</span>
+<span class="w">           </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">natura_iva_id</span>
+<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">iva_id</span><span class="p">;</span>
+
+<span class="w">     </span><span class="c1">-- Se la natura in master è NULL (es. aliquota &gt; 0 o non definita), lo snapshot resta NULL</span>
+<span class="w">     </span><span class="k">NEW</span><span class="p">.</span><span class="n">iva_natura</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_natura_code</span><span class="p">;</span>
+<span class="w">   </span><span class="k">ELSE</span>
+<span class="w">     </span><span class="c1">-- Nessuna IVA associata: non forziamo alcuna natura (resta com&#39;è)</span>
+<span class="w">     </span><span class="k">NULL</span><span class="p">;</span>
+<span class="w">   </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">   </span><span class="c1">-- 3) Protezione soft su UPDATE:</span>
+<span class="w">   </span><span class="c1">--    Se l&#39;aliquota/assoggettamento non sono più gestiti in riga, non si fa nulla.</span>
+<span class="w">   </span><span class="c1">--    Se qualcuno cambia solo iva_natura manualmente lasciando invariato iva_id,</span>
+<span class="w">   </span><span class="c1">--    riallineiamo comunque allo snapshot da master per evitare derive manuali.</span>
+<span class="w">   </span><span class="k">IF</span><span class="w"> </span><span class="n">TG_OP</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;UPDATE&#39;</span>
+<span class="w">     </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">iva_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">     </span><span class="k">AND</span><span class="w"> </span><span class="k">OLD</span><span class="p">.</span><span class="n">iva_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">iva_id</span>
+<span class="w">     </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">iva_natura</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">OLD</span><span class="p">.</span><span class="n">iva_natura</span>
+<span class="w">   </span><span class="k">THEN</span>
+<span class="w">     </span><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">codice</span>
+<span class="w">       </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_natura_code</span>
+<span class="w">     </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">iva</span><span class="w"> </span><span class="n">i</span>
+<span class="w">     </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">iva_natura</span><span class="w"> </span><span class="n">n</span>
+<span class="w">           </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">natura_iva_id</span>
+<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">iva_id</span><span class="p">;</span>
+
+<span class="w">     </span><span class="k">NEW</span><span class="p">.</span><span class="n">iva_natura</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_natura_code</span><span class="p">;</span>
+<span class="w">   </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">   </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
+<span class="w"> </span><span class="k">END</span>
+<span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>
 
 <hr />
