@@ -2327,12 +2327,6 @@
 <td></td>
 </tr>
 <tr>
-<td>assoggettamento_override</td>
-<td>character</td>
-<td>NO</td>
-<td></td>
-</tr>
-<tr>
 <td>data_insert</td>
 <td>timestamp with time zone</td>
 <td>NO</td>
@@ -2356,6 +2350,12 @@
 <td>NO</td>
 <td>'CURRENT_USER'::text</td>
 </tr>
+<tr>
+<td>assoggettamento_id_override</td>
+<td>bigint</td>
+<td>YES</td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -2370,8 +2370,18 @@
 <tbody>
 <tr>
 <td>CHECK</td>
-<td>chk_iva_assoggettamento_aliquota_iva_stati</td>
+<td>chk_iva_aliquota_pos_no_assogg</td>
 <td></td>
+</tr>
+<tr>
+<td>CHECK</td>
+<td>chk_iva_stati_zero_requires_assogg</td>
+<td></td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_iva_stati_assoggettamento_override</td>
+<td>assoggettamento_id_override</td>
 </tr>
 <tr>
 <td>FOREIGN KEY</td>
@@ -2420,6 +2430,12 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>trg_config_iva_a10_upd_stati_protect_columns</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION script.trgfn_lock_columns('aliquota_override', 'E_PERC_IVA_NO_MOD', 'assoggettamento_id_override', 'E_ASSOGGETTAMENTO_NO_MOD')</code></td>
+</tr>
 <tr>
 <td>trg_iva_stati_ins_upd_clean_fields</td>
 <td>BEFORE</td>
