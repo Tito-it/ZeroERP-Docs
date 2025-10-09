@@ -2402,29 +2402,28 @@ Entrambe le estensioni sono valide per Liquibase, ma in <strong>ZeroErp</strong>
 </ul>
 <hr />
 <h2 id="3-struttura-dei-changelog-e-delle-cartelle">3. Struttura dei Changelog e delle Cartelle<a class="headerlink" href="#3-struttura-dei-changelog-e-delle-cartelle" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">ZeroErp</span><span class="o">/</span><span class="n">db</span><span class="o">/</span><span class="n">changelog</span><span class="o">/</span>
-<span class="err">├─</span> <span class="n">changelog</span><span class="o">-</span><span class="n">master</span><span class="o">-</span><span class="n">v2</span><span class="o">.</span><span class="n">yaml</span>     <span class="c1"># NUOVO master (in uso)</span>
-<span class="err">├─</span> <span class="n">changelog</span><span class="o">-</span><span class="n">master</span><span class="o">.</span><span class="n">yaml</span>        <span class="c1"># master storico (v1) — incluso da v2</span>
-<span class="err">│</span>
-<span class="err">├─</span> <span class="n">migrations_v2</span><span class="o">/</span>               <span class="c1"># nuove migrazioni da oggi in poi</span>
-<span class="err">│</span>  <span class="err">├─</span> <span class="mi">00</span><span class="n">_schema</span><span class="o">/</span>                <span class="c1"># DDL: tabelle/indici/FK/VIEW ecc.</span>
-<span class="err">│</span>  <span class="err">│</span>  <span class="err">├─</span> <span class="n">anagrafiche</span><span class="o">/</span>
-<span class="err">│</span>  <span class="err">│</span>  <span class="err">├─</span> <span class="n">vendite</span><span class="o">/</span>
-<span class="err">│</span>  <span class="err">│</span>  <span class="err">└─</span> <span class="err">…</span> <span class="p">(</span><span class="n">acquisti</span><span class="p">,</span> <span class="n">catalogo</span><span class="p">,</span> <span class="n">contabilita</span><span class="p">,</span> <span class="n">internal</span><span class="p">,</span> <span class="n">magazzino</span><span class="p">,</span> <span class="n">maintenance</span><span class="p">,</span> <span class="n">pagamenti</span><span class="p">)</span>
-<span class="err">│</span>  <span class="err">├─</span> <span class="mi">20</span><span class="n">_code</span><span class="o">/</span>                  <span class="c1"># codice DB: funzioni/trigger/procedure</span>
-<span class="err">│</span>  <span class="err">│</span>  <span class="err">├─</span> <span class="n">anagrafiche</span><span class="o">/</span>
-<span class="err">│</span>  <span class="err">│</span>  <span class="err">├─</span> <span class="n">vendite</span><span class="o">/</span>
-<span class="err">│</span>  <span class="err">│</span>  <span class="err">└─</span> <span class="err">…</span> <span class="p">(</span><span class="n">stessi</span> <span class="n">schemi</span><span class="p">)</span>
-<span class="err">│</span>  <span class="err">├─</span> <span class="mi">80</span><span class="n">_data</span><span class="o">/</span>                  <span class="c1"># import dati/config (CSV + loadUpdateData)</span>
-<span class="err">│</span>  <span class="err">│</span>  <span class="err">└─</span> <span class="n">config</span><span class="o">/</span>
-<span class="err">│</span>  <span class="err">├─</span> <span class="mi">85</span><span class="n">_pgagent</span><span class="o">/</span>               <span class="c1"># job di scheduling (pgAgent)</span>
-<span class="err">│</span>  <span class="err">└─</span> <span class="mi">90</span><span class="n">_end</span><span class="o">/</span>                   <span class="c1"># step finali (runAlways / operazioni di chiusura)</span>
-<span class="err">│</span>
-<span class="err">├─</span> <span class="n">migrations</span><span class="o">/</span>                  <span class="c1"># **LEGACY v1** (non modificare)</span>
-<span class="err">├─</span> <span class="n">baseline</span><span class="o">/</span>                    <span class="c1"># **LEGACY v1** (non modificare)</span>
-<span class="err">└─</span> <span class="n">legacy</span><span class="o">/</span>                      <span class="c1"># archivio eventuali file dismessi/spostati</span>
+<div class="highlight"><pre><span></span><code>ZeroErp/db/changelog/
+├─ changelog-master-v2.yaml     # NUOVO master (in uso)
+├─ changelog-master.yaml        # master storico (v1) — incluso da v2
+│
+├─ migrations_v2/               # nuove migrazioni da oggi in poi
+│  ├─ 00_schema/                # DDL: tabelle/indici/FK/VIEW ecc.
+│  │  ├─ anagrafiche/
+│  │  ├─ vendite/
+│  │  └─ … (acquisti, catalogo, contabilita, internal, magazzino, maintenance, pagamenti)
+│  ├─ 20_code/                  # codice DB: funzioni/trigger/procedure
+│  │  ├─ anagrafiche/
+│  │  ├─ vendite/
+│  │  └─ … (stessi schemi)
+│  ├─ 80_data/                  # import dati/config (CSV + loadUpdateData)
+│  │  └─ config/
+│  ├─ 85_pgagent/               # job di scheduling (pgAgent)
+│  └─ 90_end/                   # step finali (runAlways / operazioni di chiusura)
+│
+├─ migrations/                  # **LEGACY v1** (non modificare)
+├─ baseline/                    # **LEGACY v1** (non modificare)
+└─ legacy/                      # archivio eventuali file dismessi/spostati
 </code></pre></div>
-
 <p><strong>Regole operative (v2):</strong></p>
 <ul>
 <li><strong>Nuovo lavoro</strong> solo in <code>migrations_v2/…</code>.</li>
@@ -2432,7 +2431,7 @@ Entrambe le estensioni sono valide per Liquibase, ma in <strong>ZeroErp</strong>
 </ul>
 <hr />
 <h2 id="4-master-changelog-v2">4. Master Changelog (v2)<a class="headerlink" href="#4-master-changelog-v2" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="nt">databaseChangeLog</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="nt">databaseChangeLog</span><span class="p">:</span>
 <span class="w">  </span><span class="c1"># 1) Storia esistente (v1): lasciata com&#39;è, semplicemente inclusa</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">include</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">changelog-master.yaml</span>
@@ -2455,11 +2454,10 @@ Entrambe le estensioni sono valide per Liquibase, ma in <strong>ZeroErp</strong>
 <span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">migrations_v2/90_end</span>
 <span class="w">      </span><span class="nt">relativeToChangelogFile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </code></pre></div>
-
 <p><strong>Ordine d’esecuzione</strong>: <code>00_schema</code> → <code>20_code</code> → <code>80_data</code> → <code>85_pgagent</code> → <code>90_end</code>.</p>
 <hr />
 <h2 id="5-file-liquibaseproperties-esempio">5. File <code>liquibase.properties</code> (esempio)<a class="headerlink" href="#5-file-liquibaseproperties-esempio" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="c1"># Connessione PostgreSQL</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connessione PostgreSQL</span>
 <span class="na">driver</span><span class="o">=</span><span class="s">org.postgresql.Driver</span>
 <span class="c1"># classpath=&lt;path&gt;/postgresql-&lt;version&gt;.jar   # se serve</span>
 
@@ -2469,7 +2467,6 @@ Entrambe le estensioni sono valide per Liquibase, ma in <strong>ZeroErp</strong>
 <span class="c1"># Master in uso</span>
 <span class="na">changeLogFile</span><span class="o">=</span><span class="s">db/changelog/changelog-master-v2.yaml</span>
 </code></pre></div>
-
 <blockquote>
 <p><strong>Nota</strong>: il master v2 include il master storico v1. Non è necessario modificare/traslocare la storia precedente.</p>
 </blockquote>
@@ -2489,10 +2486,10 @@ Entrambe le estensioni sono valide per Liquibase, ma in <strong>ZeroErp</strong>
 <li><strong>Validazione</strong>: <code>liquibase validate</code></li>
 <li><strong>Update</strong> su nuovi o esistenti:</li>
 </ul>
-<p><code>bash
-  liquibase --defaults-file=db/liquibase.properties \
-            --changelog-file=db/changelog/changelog-master-v2.yaml \
-            update</code></p>
+<div class="highlight"><pre><span></span><code>liquibase<span class="w"> </span>--defaults-file<span class="o">=</span>db/liquibase.properties<span class="w"> </span><span class="se">\</span>
+<span class="w">          </span>--changelog-file<span class="o">=</span>db/changelog/changelog-master-v2.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">          </span>update
+</code></pre></div>
 <p><em>Gli ambienti già aggiornati con v1 non rieseguono i changeSet storici, perché sono gli stessi file (stessi checksum).</em></p>
 <hr />
 <h2 id="8-evoluzioni-future-v2">8. Evoluzioni Future (v2)<a class="headerlink" href="#8-evoluzioni-future-v2" title="Permanent link">&para;</a></h2>
@@ -2507,9 +2504,9 @@ Entrambe le estensioni sono valide per Liquibase, ma in <strong>ZeroErp</strong>
 <li><code>migrations_v2/90_end/…</code> per step finali</li>
 <li><strong>Header obbligatorio</strong> in ogni file:</li>
 </ul>
-<p><code>yaml
-  databaseChangeLog:
-    logicalFilePath: db/changelog/migrations_v2/&lt;subpath&gt;/&lt;filename&gt;.yaml</code>
+<p><div class="highlight"><pre><span></span><code><span class="nt">databaseChangeLog</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">logicalFilePath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db/changelog/migrations_v2/&lt;subpath&gt;/&lt;filename&gt;.yaml</span>
+</code></pre></div>
 * <strong>Pattern sicuro per rinomine</strong>: <strong>Expand → Align (20_code) → Contract</strong></p>
 <ul>
 <li>Expand (00_schema): aggiungi il nuovo senza rimuovere il vecchio</li>
@@ -2537,7 +2534,7 @@ Entrambe le estensioni sono valide per Liquibase, ma in <strong>ZeroErp</strong>
 <hr />
 <h2 id="11-struttura-legacy-solo-riferimento">11. Struttura <strong>Legacy</strong> (solo riferimento)<a class="headerlink" href="#11-struttura-legacy-solo-riferimento" title="Permanent link">&para;</a></h2>
 <p>La precedente organizzazione rimane nel repository per <strong>compatibilità e consultazione</strong>:</p>
-<div class="codehilite"><pre><span></span><code>ZeroErp/db/changelog/
+<div class="highlight"><pre><span></span><code>ZeroErp/db/changelog/
 ├─ changelog-master.yaml         # master storico (v1)
 ├─ baseline/                     # snapshot iniziale v1
 └─ migrations/                   # vecchie migrazioni
@@ -2552,7 +2549,6 @@ Entrambe le estensioni sono valide per Liquibase, ma in <strong>ZeroErp</strong>
    ├─ 85_pgagent/
    └─ 90_end/
 </code></pre></div>
-
 <blockquote>
 <p><strong>Uso pratico</strong>: Il <strong>master v2</strong> include il <strong>master storico v1</strong>; quindi i nuovi cloni possono partire direttamente da <code>changelog-master-v2.yaml</code>. In caso di necessità, è sempre possibile <strong>recuperare</strong> changeSet o script dal percorso legacy senza modificarlo.</p>
 </blockquote>
@@ -2613,9 +2609,9 @@ Entrambe le estensioni sono valide per Liquibase, ma in <strong>ZeroErp</strong>
     
       <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

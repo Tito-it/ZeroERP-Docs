@@ -2221,16 +2221,15 @@
 <p>La regola è <strong>immutabilità dopo prima valorizzazione</strong>: è consentito impostare il valore da <code>NULL → valore</code>, ma <strong>qualunque modifica successiva</strong> viene bloccata con eccezione applicativa tracciata via <code>script.fn_log_and_raise_error</code>.</p>
 <hr />
 <h3 id="firma">🧩 Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_pdp_protect_cols</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_pdp_protect_cols</span><span class="p">()</span>
 <span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
 <span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">VOLATILE</span>
 </code></pre></div>
-
 <p><strong>Perché <code>VOLATILE</code></strong>: la funzione può lanciare eccezioni e scrivere log; inoltre dipende da variabili di contesto del trigger (<code>TG_OP</code>, <code>TG_NAME</code>).</p>
 <hr />
 <h3 id="logica">🔎 Logica<a class="headerlink" href="#logica" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">TG_OP</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;UPDATE&#39;</span><span class="w"> </span><span class="k">THEN</span>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">TG_OP</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;UPDATE&#39;</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">  </span><span class="c1">-- Blocca cambio codice PDP (se già valorizzato)</span>
 <span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">OLD</span><span class="mf">.</span><span class="n">pdp</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">pdp</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">OLD</span><span class="mf">.</span><span class="n">pdp</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">    </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
@@ -2252,7 +2251,6 @@
 <span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 <span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
 </code></pre></div>
-
 <p><strong>Effetti pratici</strong></p>
 <ul>
 <li>✅ Consentito: <code>pdp: NULL → 'IT001...'</code> (prima valorizzazione).</li>
@@ -2271,7 +2269,7 @@
 <hr />
 <h3 id="esempi-duso">🧪 Esempi d’uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
 <p><strong>DDL trigger su tabella <code>anagrafiche.pdp</code></strong></p>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- Ricrea il trigger di protezione</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Ricrea il trigger di protezione</span>
 <span class="k">DROP</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">trg_pdp_upd_protect_cols</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">pdp</span><span class="p">;</span>
 <span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_pdp_upd_protect_cols</span>
 <span class="k">BEFORE</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">OF</span><span class="w"> </span><span class="n">pdp</span><span class="p">,</span><span class="w"> </span><span class="n">indirizzo_dettaglio_id</span>
@@ -2279,9 +2277,8 @@
 <span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
 <span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_pdp_protect_cols</span><span class="p">();</span>
 </code></pre></div>
-
 <p><strong>Test rapido</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- 1) Prima valorizzazione: OK</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- 1) Prima valorizzazione: OK</span>
 <span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">pdp</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">pdp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;IT001ABCDEF&#39;</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">pdp</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
 
 <span class="c1">-- 2) Tentativo di cambio codice: ERRORE atteso</span>
@@ -2290,7 +2287,6 @@
 <span class="c1">-- 3) Tentativo di spostare indirizzo: ERRORE atteso</span>
 <span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">pdp</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">indirizzo_dettaglio_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">999</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span><span class="w"> </span><span class="c1">-- raise E_COLONNA_NON_MODIFICABILE</span>
 </code></pre></div>
-
 <hr />
 <h3 id="motivazioni-progettuali">✅ Motivazioni progettuali<a class="headerlink" href="#motivazioni-progettuali" title="Permanent link">&para;</a></h3>
 <ol>
@@ -2361,9 +2357,9 @@
     
       <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

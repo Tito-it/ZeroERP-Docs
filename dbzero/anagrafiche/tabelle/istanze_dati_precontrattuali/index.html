@@ -2365,7 +2365,7 @@
 <hr />
 <h3 id="query-tipiche">🔎 Query Tipiche<a class="headerlink" href="#query-tipiche" title="Permanent link">&para;</a></h3>
 <p><strong>1) Ultimo snapshot consolidato per istanza</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">istanze_dati_precontrattuali</span><span class="w"> </span><span class="n">idp</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">idp</span><span class="p">.</span><span class="n">istanza_utility_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">istanza_id</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">idp</span><span class="p">.</span><span class="n">utility_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">utility_id</span>
@@ -2373,24 +2373,21 @@
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">idp</span><span class="p">.</span><span class="n">data_update</span><span class="w"> </span><span class="k">DESC</span>
 <span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 </code></pre></div>
-
 <p><strong>2) Avanzamento stato (VALIDATO → CONSOLIDATO)</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">istanze_dati_precontrattuali</span>
+<div class="highlight"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">istanze_dati_precontrattuali</span>
 <span class="w">   </span><span class="k">SET</span><span class="w"> </span><span class="n">stato</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CONSOLIDATO&#39;</span><span class="p">,</span>
 <span class="w">       </span><span class="n">data_update</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">()</span>
 <span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">id</span>
 <span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">stato</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;VALIDATO&#39;</span><span class="p">,</span><span class="s1">&#39;RICEVUTO&#39;</span><span class="p">);</span>
 </code></pre></div>
-
 <p><strong>3) Upsert di un attributo tecnico in <code>meta</code></strong></p>
-<div class="codehilite"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">istanze_dati_precontrattuali</span>
+<div class="highlight"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">istanze_dati_precontrattuali</span>
 <span class="w">   </span><span class="k">SET</span><span class="w"> </span><span class="n">meta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">jsonb_set</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{elettrico,potenza_impegnata_kw}&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">to_jsonb</span><span class="p">(:</span><span class="n">kw</span><span class="p">)::</span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span>
 <span class="w">       </span><span class="n">data_update</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">()</span>
 <span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">id</span><span class="p">;</span>
 </code></pre></div>
-
 <p><strong>4) Ricavo parametri per pricing in fatturazione</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">contratto_id</span><span class="p">,</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">contratto_id</span><span class="p">,</span>
 <span class="w">       </span><span class="n">idp</span><span class="p">.</span><span class="n">meta</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s1">&#39;elettrico&#39;</span><span class="w"> </span><span class="o">-&gt;&gt;</span><span class="w"> </span><span class="s1">&#39;potenza_impegnata_kw&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">pot_kw</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">contratti</span><span class="w"> </span><span class="k">c</span>
 <span class="k">JOIN</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">istanze_dati_precontrattuali</span><span class="w"> </span><span class="n">idp</span>
@@ -2398,7 +2395,6 @@
 <span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">contratto_id</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">idp</span><span class="p">.</span><span class="n">stato</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CONSOLIDATO&#39;</span><span class="p">;</span>
 </code></pre></div>
-
 <hr />
 <h3 id="esempi-duso-flusso">🧪 Esempi d’Uso (flusso)<a class="headerlink" href="#esempi-duso-flusso" title="Permanent link">&para;</a></h3>
 <ol>
@@ -2660,9 +2656,9 @@
     
       <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

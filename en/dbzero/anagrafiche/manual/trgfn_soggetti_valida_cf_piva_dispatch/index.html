@@ -2214,35 +2214,32 @@
 <ol>
 <li><strong>Recupero Stato</strong></li>
 </ol>
-<p>```
-   SELECT codice_iso2 INTO country
-     FROM config.stati
-    WHERE id = NEW.stato_id;</p>
-<p><code>``
-2. **Controllo branch IT**
-   Se</code>country = 'IT'`, viene eseguita:</p>
-<p>```
-   PERFORM script.fn_validate_cf_piva_it(
-     NEW.tipo_soggetto_dettaglio_id,
-     NEW.partita_iva,
-     NEW.piva_gruppo_acquisto,
-     NEW.codice_fiscale
-   );</p>
-<p>```
+<p><div class="highlight"><pre><span></span><code>SELECT codice_iso2 INTO country
+  FROM config.stati
+ WHERE id = NEW.stato_id;
+</code></pre></div>
+2. <strong>Controllo branch IT</strong>
+   Se <code>country = 'IT'</code>, viene eseguita:</p>
+<p><div class="highlight"><pre><span></span><code>PERFORM script.fn_validate_cf_piva_it(
+  NEW.tipo_soggetto_dettaglio_id,
+  NEW.partita_iva,
+  NEW.piva_gruppo_acquisto,
+  NEW.codice_fiscale
+);
+</code></pre></div>
 3. <strong>Ritorno del record</strong>
    Quando la validazione termina senza eccezioni, la riga viene restituita a INSERT/UPDATE.</p>
 <hr />
 <h3 id="esempio-di-trigger-ddl">🔖 Esempio di Trigger DDL<a class="headerlink" href="#esempio-di-trigger-ddl" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="k">DROP</span><span class="w"> </span><span class="n">TRIGGER</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">trg_soggetti_ins_upd_dispatch_valida_cf_piva</span>
-<span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code>DROP TRIGGER IF EXISTS trg_soggetti_ins_upd_dispatch_valida_cf_piva
+  ON anagrafiche.soggetti;
 
-<span class="k">CREATE</span><span class="w"> </span><span class="n">TRIGGER</span><span class="w"> </span><span class="n">trg_soggetti_ins_upd_dispatch_valida_cf_piva</span>
-<span class="w">  </span><span class="n">BEFORE</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span>
-<span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti</span>
-<span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="n">EACH</span><span class="w"> </span><span class="k">ROW</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_soggetti_valida_cf_piva_dispatch</span><span class="p">();</span>
+CREATE TRIGGER trg_soggetti_ins_upd_dispatch_valida_cf_piva
+  BEFORE INSERT OR UPDATE
+  ON anagrafiche.soggetti
+  FOR EACH ROW
+  EXECUTE FUNCTION anagrafiche.trgfn_soggetti_valida_cf_piva_dispatch();
 </code></pre></div>
-
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2307,9 +2304,9 @@
     
       <script src="../../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

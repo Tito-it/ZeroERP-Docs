@@ -2470,7 +2470,7 @@
 <li>Ideale per join applicative e per incapsulare la logica di selezione.</li>
 </ul>
 <p><strong>Esempi d’uso</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- Vista: ottenere il conto d&#39;incasso oggi valido per un ruolo</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Vista: ottenere il conto d&#39;incasso oggi valido per un ruolo</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">vw_conti_bancari_per_ruolo</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">srid</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">uso</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;INCASSO&#39;</span><span class="p">;</span>
@@ -2479,7 +2479,6 @@
 <span class="k">SELECT</span><span class="w"> </span><span class="p">(</span><span class="n">f</span><span class="p">).</span><span class="o">*</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_conto_bancario_predefinito</span><span class="p">(:</span><span class="n">srid</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;PAGAMENTO&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">f</span><span class="p">;</span>
 </code></pre></div>
-
 <hr />
 <h2 id="best-practice">📌 Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2524,17 +2523,15 @@
 </ul>
 <hr />
 <h2 id="diagramma-er-semplificato">📊 Diagramma ER (semplificato)<a class="headerlink" href="#diagramma-er-semplificato" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="c">%%{init: {&#39;er&#39;: {&#39;layoutDirection&#39;: &#39;TB&#39;}}}%%</span>
-<span class="n">erDiagram</span>
-<span class="w">    </span><span class="s">soggetti</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">ha</span>
-<span class="w">    </span><span class="n">soggetti</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti_conti_bancari</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">possiede</span>
-<span class="w">    </span><span class="n">conti_bancari</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti_conti_bancari</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">collega</span>
-<span class="w">    </span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti_ruoli_conti_bancari</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">possiede</span>
-<span class="w">    </span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">vw_conti_bancari_per_ruolo</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">selezione</span>
-<span class="w">    </span><span class="n">soggetti_ruoli_conti_bancari</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">sepa_mandati</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">usa</span>
-<span class="w">    </span><span class="n">conti_bancari</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti_ruoli_conti_bancari</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">collega</span>
-</code></pre></div>
-
+<pre class="mermaid"><code>%%{init: {'er': {'layoutDirection': 'TB'}}}%%
+erDiagram
+    soggetti ||--o{ soggetti_ruoli : ha
+    soggetti ||--o{ soggetti_conti_bancari : possiede
+    conti_bancari ||--o{ soggetti_conti_bancari : collega
+    soggetti_ruoli ||--o{ soggetti_ruoli_conti_bancari : possiede
+    soggetti_ruoli ||--o{ vw_conti_bancari_per_ruolo : selezione
+    soggetti_ruoli_conti_bancari ||--o{ sepa_mandati : usa
+    conti_bancari ||--o{ soggetti_ruoli_conti_bancari : collega</code></pre>
 <hr />
 <h2 id="riepilogo">✅ Riepilogo<a class="headerlink" href="#riepilogo" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2597,9 +2594,9 @@
     
       <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

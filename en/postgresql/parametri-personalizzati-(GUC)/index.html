@@ -2362,18 +2362,15 @@
 <hr />
 <h3 id="definizione-e-utilizzo">🛠️ Definizione e Utilizzo<a class="headerlink" href="#definizione-e-utilizzo" title="Permanent link">&para;</a></h3>
 <p>Si definiscono in <code>postgresql.conf</code> o con:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">DATABASE</span><span class="w"> </span><span class="n">zeroerp</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">myapp</span><span class="p">.</span><span class="n">user_language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;it&#39;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">DATABASE</span><span class="w"> </span><span class="n">zeroerp</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">myapp</span><span class="p">.</span><span class="n">user_language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;it&#39;</span><span class="p">;</span>
 <span class="k">ALTER</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="n">app_user</span><span class="w">   </span><span class="k">SET</span><span class="w"> </span><span class="n">myapp</span><span class="p">.</span><span class="n">bypass_tx_id_check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;on&#39;</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Si leggono in PL/pgSQL o SQL con:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.user_language&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.user_language&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">);</span>
 </code></pre></div>
-
 <p>e si possono modificare in sessione:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="n">myapp</span><span class="p">.</span><span class="n">user_language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;en&#39;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="n">myapp</span><span class="p">.</span><span class="n">user_language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;en&#39;</span><span class="p">;</span>
 </code></pre></div>
-
 <hr />
 <h3 id="tipologie-di-guc">⚖️ Tipologie di GUC<a class="headerlink" href="#tipologie-di-guc" title="Permanent link">&para;</a></h3>
 <table>
@@ -2412,16 +2409,16 @@
 <li><strong><code>myapp.dblink_log_connection</code></strong>
   Stringa di connessione per <code>dblink</code>, usata per log remoti fuori dalla transazione corrente.</li>
 </ul>
-<p><code>conf
-  myapp.dblink_log_connection = 'host=localhost port=5432 dbname=Zero user=xx password=xx'</code>
+<p><div class="highlight"><pre><span></span><code>myapp.dblink_log_connection = &#39;host=localhost port=5432 dbname=Zero user=xx password=xx&#39;
+</code></pre></div>
 * <strong><code>myapp.user_language</code></strong>
   Lingua di default per le funzioni applicative.</p>
-<p><code>conf
-  myapp.user_language = 'it'</code>
+<p><div class="highlight"><pre><span></span><code>myapp.user_language = &#39;it&#39;
+</code></pre></div>
 * <strong><code>myapp.bypass_tx_id_check</code></strong>
   Flag booleano per abilitare/disabilitare il controllo obbligatorio di <code>tx_id</code> nel trigger.</p>
-<p><code>conf
-  myapp.bypass_tx_id_check = off</code>
+<p><div class="highlight"><pre><span></span><code>myapp.bypass_tx_id_check = off
+</code></pre></div>
 * <strong><code>dbops.tx_id</code></strong> <em>(temporanea)</em>
   UUID di sessione che identifica le operazioni della stessa transazione. Viene settato da trigger PL/pgSQL e reset al commit/rollback.</p>
 <hr />
@@ -2474,11 +2471,11 @@
 </ul>
 <blockquote>
 <p><strong>Suggerimento</strong>: per estrarre le GUC già definite in conf usa:</p>
-<p><code>sql
-SELECT name, setting
-  FROM pg_settings
- WHERE name LIKE 'myapp.%' OR name LIKE 'dbops.%'
- ORDER BY name;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">setting</span>
+<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_settings</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;myapp.%&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;dbops.%&#39;</span>
+<span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">name</span><span class="p">;</span>
+</code></pre></div>
 </blockquote>
 <hr />
 <h3 id="comandi-utili">🗂️ Comandi Utili<a class="headerlink" href="#comandi-utili" title="Permanent link">&para;</a></h3>
@@ -2557,9 +2554,9 @@ SHOW myapp.user_language;     -- (Show nome Guc)</p>
     
       <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

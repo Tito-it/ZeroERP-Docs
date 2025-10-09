@@ -2266,20 +2266,19 @@
 </tr>
 </tbody>
 </table>
-<div class="codehilite"><pre><span></span><code><span class="w">               </span><span class="o">|</span><span class="w"> </span><span class="n">Esempi</span><span class="o">:</span><span class="w"> </span><span class="n n-Quoted">`ORD-000123`</span><span class="p">,</span><span class="w"> </span><span class="n n-Quoted">`CL_000045`</span><span class="p">.</span><span class="w">                                                                                 </span><span class="o">|</span>
+<div class="highlight"><pre><span></span><code>               | Esempi: `ORD-000123`, `CL_000045`.                                                                                 |
 </code></pre></div>
-
 <hr />
 <h3 id="logica-interna">🔍 Logica interna<a class="headerlink" href="#logica-interna" title="Permanent link">&para;</a></h3>
 <ol>
 <li><strong>Lettura dei parametri</strong></li>
 </ol>
-<p><code>plpgsql
-   SELECT prefisso, separatore, lunghezza_numero, nome_sequenza
-     INTO prefix, sep, len, seq_name
-     FROM config.sistema_codici
-    WHERE codice_tipo = tipo
-      AND attivo = TRUE;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">prefisso</span><span class="p">,</span><span class="w"> </span><span class="n">separatore</span><span class="p">,</span><span class="w"> </span><span class="n">lunghezza_numero</span><span class="p">,</span><span class="w"> </span><span class="n">nome_sequenza</span>
+<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">prefix</span><span class="p">,</span><span class="w"> </span><span class="n">sep</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span>
+<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">sistema_codici</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice_tipo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tipo</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span><span class="p">;</span>
+</code></pre></div>
 <ul>
 <li>
 <p>Recupera da <strong><code>config.sistema_codici</code></strong> i valori di:</p>
@@ -2295,15 +2294,15 @@
 <p><strong>Generazione del numero tramite sequenza</strong></p>
 </li>
 </ul>
-<p><code>plpgsql
-   IF seq_name IS NOT NULL THEN
-     EXECUTE format('SELECT nextval(%L)', seq_name) INTO seq_val;
-     risultato := prefix || sep || lpad(seq_val::TEXT, len, '0');
-     RETURN risultato;
-   ELSE
-     RAISE EXCEPTION '%',
-       script.fn_get_messaggio('SEQUENZA_NON_CONFIGURATA', tipo);
-   END IF;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">seq_name</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;SELECT nextval(%L)&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">seq_val</span><span class="p">;</span>
+<span class="w">  </span><span class="n">risultato</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">sep</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">lpad</span><span class="p">(</span><span class="n">seq_val</span><span class="o">::</span><span class="nb">TEXT</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="n">risultato</span><span class="p">;</span>
+<span class="k">ELSE</span>
+<span class="w">  </span><span class="k">RAISE</span><span class="w"> </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="s1">&#39;%&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_get_messaggio</span><span class="p">(</span><span class="s1">&#39;SEQUENZA_NON_CONFIGURATA&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">tipo</span><span class="p">);</span>
+<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div>
 <ul>
 <li>
 <p>Se <code>nome_sequenza</code> è valorizzato:</p>
@@ -2333,8 +2332,8 @@
 <li>Il campo <code>nome_sequenza</code> è <code>NULL</code> (anche se la riga esiste e <code>attivo = TRUE</code>).</li>
 </ul>
 <p>Il messaggio di errore è generato da:</p>
-<p><code>plpgsql
-  script.fn_get_messaggio('SEQUENZA_NON_CONFIGURATA', tipo)</code></p>
+<div class="highlight"><pre><span></span><code><span class="n">script</span><span class="mf">.</span><span class="n">fn_get_messaggio</span><span class="p">(</span><span class="s1">&#39;SEQUENZA_NON_CONFIGURATA&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">tipo</span><span class="p">)</span>
+</code></pre></div>
 <hr />
 <h3 id="dipendenze">🔗 Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2356,8 +2355,8 @@
 </li>
 <li>
 <p>La sequenza indicata in <code>nome_sequenza</code> deve esistere, ad esempio:</p>
-<p><code>sql
-CREATE SEQUENCE seq_ordine;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="n">SEQUENCE</span><span class="w"> </span><span class="n">seq_ordine</span><span class="p">;</span>
+</code></pre></div>
 </li>
 <li>
 <p><strong>Funzione di supporto</strong></p>
@@ -2436,9 +2435,9 @@ CREATE SEQUENCE seq_ordine;</code></p>
     
       <script src="../../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

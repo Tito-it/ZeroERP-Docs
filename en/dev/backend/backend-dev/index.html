@@ -2599,10 +2599,9 @@ Approfondimento dettagli installazione     </p>
 <li><strong>DB</strong> → <strong>PostgreSQL</strong> su VM <code>dbdev</code> (scram-sha-256), schema dedicato <strong><code>django</code></strong>.</li>
 </ul>
 <p>Schema logico della path richiesta:</p>
-<div class="codehilite"><pre><span></span><code>Client → (HTTPS) Nginx :443 → (HTTP loopback) Gunicorn :8000 → Django → PostgreSQL (VM dbdev)
+<div class="highlight"><pre><span></span><code>Client → (HTTPS) Nginx :443 → (HTTP loopback) Gunicorn :8000 → Django → PostgreSQL (VM dbdev)
                                              ↘ static/media da Nginx (alias)
 </code></pre></div>
-
 <hr />
 <h2 id="2-creazione-ct-wizard-proxmox">2) Creazione CT (wizard Proxmox)<a class="headerlink" href="#2-creazione-ct-wizard-proxmox" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2615,47 +2614,41 @@ Approfondimento dettagli installazione     </p>
 <blockquote>
 <p><strong>Nota TUN (Tailscale)</strong> – Su <strong>host Proxmox</strong>, in <code>/etc/pve/lxc/&lt;CTID&gt;.conf</code>:</p>
 </blockquote>
-<div class="codehilite"><pre><span></span><code>lxc.cgroup2.devices.allow: c 10:200 rwm
+<div class="highlight"><pre><span></span><code>lxc.cgroup2.devices.allow: c 10:200 rwm
 lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
 </code></pre></div>
-
 <p>Riavvia CT: <code>pct restart &lt;CTID&gt;</code></p>
 <hr />
 <h2 id="3-post-install-base-nel-ct">3) Post-install base nel CT<a class="headerlink" href="#3-post-install-base-nel-ct" title="Permanent link">&para;</a></h2>
 <h3 id="locale-ssh">Locale &amp; SSH<a class="headerlink" href="#locale-ssh" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt<span class="w"> </span>-y<span class="w"> </span>upgrade
+<div class="highlight"><pre><span></span><code>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt<span class="w"> </span>-y<span class="w"> </span>upgrade
 apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>locales<span class="w"> </span>openssh-server<span class="w"> </span>sudo
 sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;s/^# *\(it_IT.UTF-8 UTF-8\)/\1/&#39;</span><span class="w"> </span>/etc/locale.gen
 sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;s/^# *\(en_US.UTF-8 UTF-8\)/\1/&#39;</span><span class="w"> </span>/etc/locale.gen
 locale-gen<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>update-locale<span class="w"> </span><span class="nv">LANG</span><span class="o">=</span>it_IT.UTF-8
 </code></pre></div>
-
 <p><strong>Utente amministrativo</strong> (es. <code>tid</code>) + sudo + chiave SSH:</p>
-<div class="codehilite"><pre><span></span><code>adduser<span class="w"> </span>tid<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>sudo<span class="w"> </span>tid
+<div class="highlight"><pre><span></span><code>adduser<span class="w"> </span>tid<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>sudo<span class="w"> </span>tid
 <span class="c1"># ~/.ssh/authorized_keys con permessi (700 dir, 600 file)</span>
 </code></pre></div>
-
 <p><strong>Hardening SSH</strong> (<code>/etc/ssh/sshd_config</code>):</p>
-<div class="codehilite"><pre><span></span><code>PermitRootLogin no
+<div class="highlight"><pre><span></span><code>PermitRootLogin no
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>ssh
+<div class="highlight"><pre><span></span><code>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>ssh
 </code></pre></div>
-
 <h3 id="tailscale">Tailscale<a class="headerlink" href="#tailscale" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>curl<span class="w"> </span>gnupg
+<div class="highlight"><pre><span></span><code>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>curl<span class="w"> </span>gnupg
 curl<span class="w"> </span>-fsSL<span class="w"> </span>https://tailscale.com/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>tailscaled
 <span class="c1"># login (senza cert automatici):</span>
 tailscale<span class="w"> </span>up<span class="w"> </span>--hostname<span class="o">=</span>backend-dev
 </code></pre></div>
-
 <h3 id="dnsfirewall">DNS/Firewall<a class="headerlink" href="#dnsfirewall" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Se apt segnala errori DNS: impostare nameserver (p.es. <code>1.1.1.1</code>) o usare <code>tailscale up --accept-dns=false</code>.</li>
 <li><strong>UFW</strong> (sequenza sicura):</li>
 </ul>
-<div class="codehilite"><pre><span></span><code>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>ufw
+<div class="highlight"><pre><span></span><code>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>ufw
 ufw<span class="w"> </span>allow<span class="w"> </span><span class="m">22</span>/tcp
 ufw<span class="w"> </span>default<span class="w"> </span>deny<span class="w"> </span>incoming
 ufw<span class="w"> </span>default<span class="w"> </span>allow<span class="w"> </span>outgoing
@@ -2664,10 +2657,9 @@ ufw<span class="w"> </span>allow<span class="w"> </span><span class="m">443</spa
 ufw<span class="w"> </span><span class="nb">enable</span>
 ufw<span class="w"> </span>status<span class="w"> </span>verbose
 </code></pre></div>
-
 <hr />
 <h2 id="4-software-applicativo">4) Software applicativo<a class="headerlink" href="#4-software-applicativo" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>python3-venv<span class="w"> </span>python3-pip<span class="w"> </span>python3-dev<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>build-essential<span class="w"> </span>libpq-dev<span class="w"> </span>pkg-config<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>postgresql-client<span class="w"> </span><span class="se">\</span>
@@ -2675,9 +2667,8 @@ ufw<span class="w"> </span>status<span class="w"> </span>verbose
 <span class="w">  </span>git<span class="w"> </span>ca-certificates<span class="w"> </span>curl<span class="w"> </span>unzip
 systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>nginx<span class="w"> </span>redis-server
 </code></pre></div>
-
 <h3 id="progetto-django">Progetto Django<a class="headerlink" href="#progetto-django" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c1"># workspace app</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># workspace app</span>
 mkdir<span class="w"> </span>-p<span class="w"> </span>/home/tid/apps/zeroerp<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/home/tid/apps/zeroerp
 python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
@@ -2691,33 +2682,29 @@ django-admin<span class="w"> </span>startproject<span class="w"> </span>zeroerp_
 <span class="c1">#   ├─ manage.py</span>
 <span class="c1">#   └─ zeroerp_backend/ (settings.py, urls.py, wsgi.py, asgi.py)</span>
 </code></pre></div>
-
 <hr />
 <h2 id="5-static-media-best-practice">5) Static &amp; media (best practice)<a class="headerlink" href="#5-static-media-best-practice" title="Permanent link">&para;</a></h2>
 <p><strong>Django</strong> (<code>zeroerp_backend/settings.py</code>):</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="n">STATIC_URL</span> <span class="o">=</span> <span class="s2">&quot;/static/&quot;</span>
 <span class="n">MEDIA_URL</span>  <span class="o">=</span> <span class="s2">&quot;/media/&quot;</span>
 <span class="n">STATIC_ROOT</span> <span class="o">=</span> <span class="s2">&quot;/var/www/zeroerp/static&quot;</span>
 <span class="n">MEDIA_ROOT</span>  <span class="o">=</span> <span class="s2">&quot;/var/www/zeroerp/media&quot;</span>
 </code></pre></div>
-
 <p><strong>FS &amp; collectstatic</strong>:</p>
-<div class="codehilite"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>/var/www/zeroerp/static<span class="w"> </span>/var/www/zeroerp/media
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>/var/www/zeroerp/static<span class="w"> </span>/var/www/zeroerp/media
 chown<span class="w"> </span>-R<span class="w"> </span>tid:tid<span class="w"> </span>/var/www/zeroerp
 <span class="nb">source</span><span class="w"> </span>.venv/bin/activate<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>python<span class="w"> </span>manage.py<span class="w"> </span>collectstatic<span class="w"> </span>--noinput
 </code></pre></div>
-
 <p><strong>Nginx (blocchi server)</strong> – <code>location</code> per static/media (vedi §8):</p>
-<div class="codehilite"><pre><span></span><code><span class="n">location</span><span class="w"> </span><span class="o">/</span><span class="k">static</span><span class="o">/</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">alias</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="n">zeroerp</span><span class="o">/</span><span class="k">static</span><span class="o">/</span><span class="p">;</span><span class="w"> </span><span class="n">expires</span><span class="w"> </span><span class="mi">7</span><span class="n">d</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-<span class="n">location</span><span class="w"> </span><span class="o">/</span><span class="n">media</span><span class="o">/</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="n">alias</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="n">zeroerp</span><span class="o">/</span><span class="n">media</span><span class="o">/</span><span class="p">;</span><span class="w">  </span><span class="n">expires</span><span class="w"> </span><span class="n">off</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code>location /static/ { alias /var/www/zeroerp/static/; expires 7d; }
+location /media/  { alias /var/www/zeroerp/media/;  expires off; }
 </code></pre></div>
-
 <hr />
 <h2 id="6-connessione-a-postgresql-vm-dbdev">6) Connessione a PostgreSQL (VM <code>dbdev</code>)<a class="headerlink" href="#6-connessione-a-postgresql-vm-dbdev" title="Permanent link">&para;</a></h2>
 <h3 id="variabili-dambiente-niente-password-in-settings">Variabili d’ambiente (niente password in settings)<a class="headerlink" href="#variabili-dambiente-niente-password-in-settings" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong> <code>/etc/zeroerp/zeroerp.env</code> (permessi 640; gruppo <code>tid</code>):</p>
-<div class="codehilite"><pre><span></span><code>DJANGO_SECRET_KEY=⚠️_metti-chiave-lunga-random
+<div class="highlight"><pre><span></span><code>DJANGO_SECRET_KEY=⚠️_metti-chiave-lunga-random
 DJANGO_DEBUG=1
 DJANGO_ALLOWED_HOSTS=backend-dev,backend-dev.tail4644ef.ts.net,localhost,127.0.0.1
 
@@ -2727,16 +2714,14 @@ DB_PASSWORD=⚠️_password_scram
 DB_HOST=⚠️_ip_o_hostname_dbdev
 DB_PORT=5432
 </code></pre></div>
-
 <p>Permessi:</p>
-<div class="codehilite"><pre><span></span><code>install<span class="w"> </span>-d<span class="w"> </span>-m<span class="w"> </span><span class="m">0750</span><span class="w"> </span>/etc/zeroerp
+<div class="highlight"><pre><span></span><code>install<span class="w"> </span>-d<span class="w"> </span>-m<span class="w"> </span><span class="m">0750</span><span class="w"> </span>/etc/zeroerp
 <span class="nb">printf</span><span class="w"> </span><span class="s2">&quot;(vars)&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>/etc/zeroerp/zeroerp.env<span class="w"> </span>&gt;/dev/null
 chown<span class="w"> </span>root:tid<span class="w"> </span>/etc/zeroerp<span class="w"> </span>/etc/zeroerp/zeroerp.env
 chmod<span class="w"> </span><span class="m">750</span><span class="w"> </span>/etc/zeroerp<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">640</span><span class="w"> </span>/etc/zeroerp/zeroerp.env
 </code></pre></div>
-
 <p><strong><code>settings.py</code></strong> – lettura env + DB + cache/sessioni:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImproperlyConfigured</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">env</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -2775,9 +2760,8 @@ chmod<span class="w"> </span><span class="m">750</span><span class="w"> </span>/
 <span class="n">TIME_ZONE</span> <span class="o">=</span> <span class="s2">&quot;Europe/Rome&quot;</span>
 <span class="n">USE_TZ</span> <span class="o">=</span> <span class="kc">True</span>
 </code></pre></div>
-
 <h3 id="lato-postgresql-solo-una-volta-su-vm-dbdev">Lato PostgreSQL (solo una volta, su VM <code>dbdev</code>)<a class="headerlink" href="#lato-postgresql-solo-una-volta-su-vm-dbdev" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- ruolo applicativo</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- ruolo applicativo</span>
 <span class="k">CREATE</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="n">zeroerp_app</span><span class="w"> </span><span class="n">LOGIN</span><span class="w"> </span><span class="n">PASSWORD</span><span class="w"> </span><span class="s1">&#39;⚠️_password_scram&#39;</span><span class="w"> </span><span class="k">NOCREATEDB</span><span class="w"> </span><span class="n">NOCREATEROLE</span><span class="p">;</span>
 
 <span class="c1">-- schema dedicato per Django</span>
@@ -2793,29 +2777,26 @@ chmod<span class="w"> </span><span class="m">750</span><span class="w"> </span>/
 <span class="c1">-- pg_hba.conf (solo IP del CT; autenticazione SCRAM)</span>
 <span class="c1">-- host  ⚠️yourdb  zeroerp_app  ⚠️IP_backend-dev/32  scram-sha-256</span>
 </code></pre></div>
-
 <blockquote>
 <p><strong>Nota migrazione</strong>: se per errore le prime tabelle Django sono finite in <code>public</code>, spostarle con <code>ALTER TABLE public.&lt;t&gt; SET SCHEMA django;</code> (sequence collegate incluse se presenti).</p>
 </blockquote>
 <p><strong>Migrazioni &amp; superuser</strong> (con env caricato):</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># shell: carica env (se permessi 640):</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># shell: carica env (se permessi 640):</span>
 <span class="nb">set</span><span class="w"> </span>-a<span class="p">;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>&lt;<span class="o">(</span>sudo<span class="w"> </span>cat<span class="w"> </span>/etc/zeroerp/zeroerp.env<span class="o">)</span><span class="p">;</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>+a
 <span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 python<span class="w"> </span>manage.py<span class="w"> </span>migrate
 python<span class="w"> </span>manage.py<span class="w"> </span>createsuperuser
 </code></pre></div>
-
 <hr />
 <h2 id="7-sicurezza-django-dietro-proxy-https">7) Sicurezza Django dietro proxy HTTPS<a class="headerlink" href="#7-sicurezza-django-dietro-proxy-https" title="Permanent link">&para;</a></h2>
 <p>In <code>settings.py</code>:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">CSRF_TRUSTED_ORIGINS</span> <span class="o">=</span> <span class="p">[</span>
+<div class="highlight"><pre><span></span><code><span class="n">CSRF_TRUSTED_ORIGINS</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;https://backend-dev.tail4644ef.ts.net&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 <span class="n">SECURE_PROXY_SSL_HEADER</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;HTTP_X_FORWARDED_PROTO&quot;</span><span class="p">,</span> <span class="s2">&quot;https&quot;</span><span class="p">)</span>
 <span class="n">SESSION_COOKIE_SECURE</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">CSRF_COOKIE_SECURE</span> <span class="o">=</span> <span class="kc">True</span>
 </code></pre></div>
-
 <blockquote>
 <p>Se provi login in <strong>HTTP</strong>, i cookie <code>Secure</code> non vengono inviati ⇒ errore CSRF atteso. Mantieni redirect 80→443.</p>
 </blockquote>
@@ -2823,7 +2804,7 @@ python<span class="w"> </span>manage.py<span class="w"> </span>createsuperuser
 <h2 id="8-gunicorn-systemd-nginx">8) Gunicorn (systemd) + Nginx<a class="headerlink" href="#8-gunicorn-systemd-nginx" title="Permanent link">&para;</a></h2>
 <h3 id="gunicorn-come-servizio">Gunicorn come servizio<a class="headerlink" href="#gunicorn-come-servizio" title="Permanent link">&para;</a></h3>
 <p><strong>Unit</strong> <code>/etc/systemd/system/zeroerp-gunicorn.service</code>:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">[Unit]</span>
+<div class="highlight"><pre><span></span><code><span class="k">[Unit]</span>
 <span class="na">Description</span><span class="o">=</span><span class="s">ZeroERP Django (Gunicorn)</span>
 <span class="na">After</span><span class="o">=</span><span class="s">network.target</span>
 
@@ -2840,22 +2821,19 @@ python<span class="w"> </span>manage.py<span class="w"> </span>createsuperuser
 <span class="k">[Install]</span>
 <span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code>systemctl<span class="w"> </span>daemon-reload
+<div class="highlight"><pre><span></span><code>systemctl<span class="w"> </span>daemon-reload
 systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>zeroerp-gunicorn
 systemctl<span class="w"> </span>status<span class="w"> </span>zeroerp-gunicorn
 </code></pre></div>
-
 <h3 id="nginx-https-selfsigned-redirect">Nginx (HTTPS self‑signed + redirect)<a class="headerlink" href="#nginx-https-selfsigned-redirect" title="Permanent link">&para;</a></h3>
 <p><strong>Cert self-signed (solo dev)</strong>:</p>
-<div class="codehilite"><pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-x509<span class="w"> </span>-nodes<span class="w"> </span>-newkey<span class="w"> </span>rsa:2048<span class="w"> </span>-days<span class="w"> </span><span class="m">365</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>openssl<span class="w"> </span>req<span class="w"> </span>-x509<span class="w"> </span>-nodes<span class="w"> </span>-newkey<span class="w"> </span>rsa:2048<span class="w"> </span>-days<span class="w"> </span><span class="m">365</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-keyout<span class="w"> </span>/etc/ssl/private/backend-dev.key<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-out<span class="w"> </span>/etc/ssl/certs/backend-dev.crt<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-subj<span class="w"> </span><span class="s2">&quot;/CN=backend-dev.tail4644ef.ts.net&quot;</span>
 </code></pre></div>
-
 <p><strong>Virtual host</strong> <code>/etc/nginx/sites-available/zeroerp</code>:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="k">server</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">443</span><span class="w"> </span><span class="s">ssl</span><span class="w"> </span><span class="s">http2</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">backend-dev.tail4644ef.ts.net</span><span class="w"> </span><span class="s">backend-dev</span><span class="p">;</span>
 
@@ -2882,11 +2860,9 @@ systemctl<span class="w"> </span>status<span class="w"> </span>zeroerp-gunicorn
 <span class="w">    </span><span class="kn">return</span><span class="w"> </span><span class="mi">308</span><span class="w"> </span><span class="s">https://</span><span class="nv">$host$request_uri</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code>ln<span class="w"> </span>-s<span class="w"> </span>/etc/nginx/sites-available/zeroerp<span class="w"> </span>/etc/nginx/sites-enabled/zeroerp
+<div class="highlight"><pre><span></span><code>ln<span class="w"> </span>-s<span class="w"> </span>/etc/nginx/sites-available/zeroerp<span class="w"> </span>/etc/nginx/sites-enabled/zeroerp
 nginx<span class="w"> </span>-t<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>systemctl<span class="w"> </span>reload<span class="w"> </span>nginx
 </code></pre></div>
-
 <hr />
 <h2 id="9-snapshot-backup">9) Snapshot &amp; backup<a class="headerlink" href="#9-snapshot-backup" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2984,9 +2960,9 @@ nginx<span class="w"> </span>-t<span class="w"> </span><span class="o">&amp;&amp
     
       <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

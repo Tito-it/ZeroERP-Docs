@@ -2500,38 +2500,33 @@
 <hr />
 <h2 id="2-rete-dns-endtoend">2) Rete &amp; DNS end‑to‑end<a class="headerlink" href="#2-rete-dns-endtoend" title="Permanent link">&para;</a></h2>
 <h3 id="21-vm-connettivita-base">2.1 VM: connettività base<a class="headerlink" href="#21-vm-connettivita-base" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>ip<span class="w"> </span>-4<span class="w"> </span>addr<span class="w"> </span>show
+<div class="highlight"><pre><span></span><code>ip<span class="w"> </span>-4<span class="w"> </span>addr<span class="w"> </span>show
 ip<span class="w"> </span>route
 ping<span class="w"> </span>-c<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">192</span>.168.8.1<span class="w">       </span><span class="c1"># router</span>
 ping<span class="w"> </span>-c<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">192</span>.168.8.4<span class="w">       </span><span class="c1"># nodo Proxmox</span>
 ping<span class="w"> </span>-c<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">8</span>.8.8.8<span class="w">           </span><span class="c1"># internet IP</span>
 </code></pre></div>
-
 <h3 id="22-vm-risoluzione-dns">2.2 VM: risoluzione DNS<a class="headerlink" href="#22-vm-risoluzione-dns" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>cat<span class="w"> </span>/etc/resolv.conf<span class="w">        </span><span class="c1"># atteso: nameserver 192.168.8.4</span>
+<div class="highlight"><pre><span></span><code>cat<span class="w"> </span>/etc/resolv.conf<span class="w">        </span><span class="c1"># atteso: nameserver 192.168.8.4</span>
 grep<span class="w"> </span><span class="s1">&#39;^hosts:&#39;</span><span class="w"> </span>/etc/nsswitch.conf<span class="w">  </span><span class="c1"># atteso: files dns</span>
 getent<span class="w"> </span>hosts<span class="w"> </span>google.com
 </code></pre></div>
-
 <p>Blocca/sblocca modifiche a <code>resolv.conf</code>:</p>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>chattr<span class="w"> </span>+i<span class="w"> </span>/etc/resolv.conf<span class="w">     </span><span class="c1"># blocca</span>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>chattr<span class="w"> </span>+i<span class="w"> </span>/etc/resolv.conf<span class="w">     </span><span class="c1"># blocca</span>
 sudo<span class="w"> </span>chattr<span class="w"> </span>-i<span class="w"> </span>/etc/resolv.conf<span class="w">     </span><span class="c1"># sblocca</span>
 </code></pre></div>
-
 <h3 id="23-nodo-unbound-e-in-ascolto">2.3 Nodo: Unbound è in ascolto<a class="headerlink" href="#23-nodo-unbound-e-in-ascolto" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;:53&#39;</span><span class="w">   </span><span class="c1"># atteso: 0.0.0.0:53 (UDP)</span>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;:53&#39;</span><span class="w">   </span><span class="c1"># atteso: 0.0.0.0:53 (UDP)</span>
 sudo<span class="w"> </span>ss<span class="w"> </span>-ltnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;:53&#39;</span><span class="w">   </span><span class="c1"># atteso: 0.0.0.0:53 (TCP)</span>
 </code></pre></div>
-
 <p>Test dal nodo e da VM:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># sul nodo</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># sul nodo</span>
 dig<span class="w"> </span>@192.168.8.4<span class="w"> </span>google.com<span class="w"> </span>+short
 
 <span class="c1"># dalla VM</span>
 <span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;nameserver 192.168.8.4&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/resolv.conf
 getent<span class="w"> </span>hosts<span class="w"> </span>google.com
 </code></pre></div>
-
 <p>Se <strong>VM non risolve ma nodo sì</strong> → probabile blocco su pve‑firewall <strong>HOST</strong>.</p>
 <hr />
 <h2 id="3-proxmox-firewall-vs-ufw">3) Proxmox Firewall vs UFW<a class="headerlink" href="#3-proxmox-firewall-vs-ufw" title="Permanent link">&para;</a></h2>
@@ -2540,16 +2535,15 @@ getent<span class="w"> </span>hosts<span class="w"> </span>google.com
 <li><strong>Consigliato:</strong> usare <strong>solo pve‑firewall</strong> (integrato Proxmox).</li>
 <li><strong>Disabilita UFW</strong> (evita catene concorrenti che rompono DNS delle VM):</li>
 </ul>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>ufw<span class="w"> </span>disable
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ufw<span class="w"> </span>disable
 sudo<span class="w"> </span>systemctl<span class="w"> </span>disable<span class="w"> </span>--now<span class="w"> </span>ufw
 <span class="c1"># opzionale: sudo systemctl mask ufw</span>
 <span class="c1"># opzionale: sudo apt-get purge -y ufw</span>
 </code></pre></div>
-
 <h3 id="32-regole-minime-su-host-nodo-proxmox">3.2 Regole minime su <strong>HOST</strong> (nodo Proxmox)<a class="headerlink" href="#32-regole-minime-su-host-nodo-proxmox" title="Permanent link">&para;</a></h3>
 <p>GUI: <em>Datacenter → proxmox-node1 → Firewall → Rules</em>
 Oppure file: <code>/etc/pve/nodes/proxmox-node1/host.fw</code></p>
-<div class="codehilite"><pre><span></span><code><span class="k">[OPTIONS]</span>
+<div class="highlight"><pre><span></span><code><span class="k">[OPTIONS]</span>
 <span class="na">enable</span><span class="o">:</span><span class="w"> </span><span class="s">1</span>
 
 <span class="k">[RULES]</span>
@@ -2566,14 +2560,12 @@ Oppure file: <code>/etc/pve/nodes/proxmox-node1/host.fw</code></p>
 <span class="c1"># Tailscale (servizio locale)</span>
 <span class="na">IN ACCEPT -p udp -dport 41641 -log nolog</span>
 </code></pre></div>
-
 <p>Ricarica:</p>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>pve-firewall<span class="w"> </span>reload
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>pve-firewall<span class="w"> </span>reload
 </code></pre></div>
-
 <h3 id="33-regole-minime-su-vm-dbdev-101">3.3 Regole minime su <strong>VM dbdev (101)</strong><a class="headerlink" href="#33-regole-minime-su-vm-dbdev-101" title="Permanent link">&para;</a></h3>
 <p>File: <code>/etc/pve/firewall/101.fw</code></p>
-<div class="codehilite"><pre><span></span><code><span class="k">[OPTIONS]</span>
+<div class="highlight"><pre><span></span><code><span class="k">[OPTIONS]</span>
 <span class="na">enable</span><span class="o">:</span><span class="w"> </span><span class="s">1</span>
 
 <span class="k">[RULES]</span>
@@ -2592,12 +2584,11 @@ Oppure file: <code>/etc/pve/nodes/proxmox-node1/host.fw</code></p>
 <span class="c1"># Uscita libera</span>
 <span class="na">OUT ACCEPT -i net0 -dest 0.0.0.0/0 -log nolog</span>
 </code></pre></div>
-
 <hr />
 <h2 id="4-unbound-sul-nodo">4) Unbound sul nodo<a class="headerlink" href="#4-unbound-sul-nodo" title="Permanent link">&para;</a></h2>
 <h3 id="41-config-minimal-forwarder-router-o-dns-pubblici">4.1 Config minimal forwarder (→ router o DNS pubblici)<a class="headerlink" href="#41-config-minimal-forwarder-router-o-dns-pubblici" title="Permanent link">&para;</a></h3>
 <p>File: <code>/etc/unbound/unbound.conf</code></p>
-<div class="codehilite"><pre><span></span><code><span class="na">server</span><span class="o">:</span>
+<div class="highlight"><pre><span></span><code><span class="na">server</span><span class="o">:</span>
 <span class="w">  </span><span class="na">interface</span><span class="o">:</span><span class="w"> </span><span class="s">0.0.0.0</span>
 <span class="w">  </span><span class="na">access-control</span><span class="o">:</span><span class="w"> </span><span class="s">127.0.0.0/8 allow</span>
 <span class="w">  </span><span class="na">access-control</span><span class="o">:</span><span class="w"> </span><span class="s">192.168.8.0/24 allow</span>
@@ -2611,48 +2602,41 @@ Oppure file: <code>/etc/pve/nodes/proxmox-node1/host.fw</code></p>
 <span class="w">  </span><span class="c1"># forward-addr: 8.8.8.8</span>
 <span class="w">  </span><span class="c1"># forward-addr: 9.9.9.9</span>
 </code></pre></div>
-
 <p>Controllo e restart:</p>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>unbound-checkconf<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>unbound
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>unbound-checkconf<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>unbound
 sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;:53&#39;</span>
 </code></pre></div>
-
 <hr />
 <h2 id="5-tailscale">5) Tailscale<a class="headerlink" href="#5-tailscale" title="Permanent link">&para;</a></h2>
 <h3 id="51-stato">5.1 Stato<a class="headerlink" href="#51-stato" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>tailscale<span class="w"> </span>status
+<div class="highlight"><pre><span></span><code>tailscale<span class="w"> </span>status
 </code></pre></div>
-
 <h3 id="52-nodo-come-exit-node">5.2 Nodo come Exit Node<a class="headerlink" href="#52-nodo-come-exit-node" title="Permanent link">&para;</a></h3>
 <p>Sul nodo:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># forwarding richiesto per exit node (persistente)</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># forwarding richiesto per exit node (persistente)</span>
 <span class="nb">echo</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;net.ipv4.ip_forward=1\nnet.ipv6.conf.all.forwarding=1&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/sysctl.d/99-tailscale-exit.conf
 sudo<span class="w"> </span>sysctl<span class="w"> </span>--system
 
 <span class="c1"># annuncia exit node (poi approva da Admin Console)</span>
 sudo<span class="w"> </span>tailscale<span class="w"> </span>up<span class="w"> </span>--reset<span class="w"> </span>--advertise-exit-node<span class="w"> </span>--ssh
 </code></pre></div>
-
 <h3 id="53-vm-usare-lexit-node">5.3 VM: usare l’exit node<a class="headerlink" href="#53-vm-usare-lexit-node" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>tailscale<span class="w"> </span>up<span class="w"> </span>--reset<span class="w"> </span>--exit-node<span class="o">=</span>&lt;IP_TS_nodo&gt;<span class="w"> </span>--exit-node-allow-lan-access
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>tailscale<span class="w"> </span>up<span class="w"> </span>--reset<span class="w"> </span>--exit-node<span class="o">=</span>&lt;IP_TS_nodo&gt;<span class="w"> </span>--exit-node-allow-lan-access
 <span class="c1"># verifica IP pubblico</span>
 curl<span class="w"> </span>-s<span class="w"> </span>ifconfig.io
 </code></pre></div>
-
 <p>Ripristino:</p>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>tailscale<span class="w"> </span>up<span class="w"> </span>--exit-node<span class="o">=</span>none
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>tailscale<span class="w"> </span>up<span class="w"> </span>--exit-node<span class="o">=</span>none
 </code></pre></div>
-
 <hr />
 <h2 id="6-postgresql-17main">6) PostgreSQL 17/main<a class="headerlink" href="#6-postgresql-17main" title="Permanent link">&para;</a></h2>
 <h3 id="61-stato-cluster-e-avvio">6.1 Stato cluster e avvio<a class="headerlink" href="#61-stato-cluster-e-avvio" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>pg_lsclusters
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>pg_lsclusters
 sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>postgresql@17-main<span class="w"> </span>--no-pager
 </code></pre></div>
-
 <h3 id="62-avvio-affidabile-dopo-rete-e-tailscale">6.2 Avvio affidabile (dopo rete e Tailscale)<a class="headerlink" href="#62-avvio-affidabile-dopo-rete-e-tailscale" title="Permanent link">&para;</a></h3>
 <p>Override systemd:</p>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/systemd/system/postgresql@17-main.service.d
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/systemd/system/postgresql@17-main.service.d
 sudo<span class="w"> </span>tee<span class="w"> </span>/etc/systemd/system/postgresql@17-main.service.d/override.conf<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
 <span class="s">[Unit]</span>
 <span class="s">After=network-online.target tailscaled.service</span>
@@ -2667,14 +2651,12 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>daemon-reload
 sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>postgresql@17-main
 sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>postgresql@17-main
 </code></pre></div>
-
 <h3 id="63-listen-accessi">6.3 Listen &amp; accessi<a class="headerlink" href="#63-listen-accessi" title="Permanent link">&para;</a></h3>
 <p><strong>Opzione A (consigliata):</strong> <code>listen_addresses='*'</code> e limito con pg_hba + firewall</p>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s/^#\?listen_addresses.*/listen_addresses = &#39;*&#39;/&#39;&quot;</span><span class="w"> </span>/etc/postgresql/17/main/postgresql.conf
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s/^#\?listen_addresses.*/listen_addresses = &#39;*&#39;/&#39;&quot;</span><span class="w"> </span>/etc/postgresql/17/main/postgresql.conf
 </code></pre></div>
-
 <p><code>pg_hba.conf</code> (LAN + Tailscale):</p>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/postgresql/17/main/pg_hba.conf<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/postgresql/17/main/pg_hba.conf<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
 <span class="s"># LAN 192.168.8.0/24</span>
 <span class="s">host    all     all     192.168.8.0/24        md5</span>
 <span class="s"># Tailscale 100.64.0.0/10</span>
@@ -2683,17 +2665,15 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 
 sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>postgresql@17-main
 </code></pre></div>
-
 <p>Verifica:</p>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-ltnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="m">5432</span>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-ltnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="m">5432</span>
 pg_isready<span class="w"> </span>-h<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span>-p<span class="w"> </span><span class="m">5432</span>
 </code></pre></div>
-
 <hr />
 <h2 id="7-gitgithub-da-vs-code">7) Git/GitHub da VS Code<a class="headerlink" href="#7-gitgithub-da-vs-code" title="Permanent link">&para;</a></h2>
 <h3 id="71-ssh-bloccato-usare-443-o-https">7.1 SSH bloccato → usare 443 o HTTPS<a class="headerlink" href="#71-ssh-bloccato-usare-443-o-https" title="Permanent link">&para;</a></h3>
 <p><strong>SSH via 443:</strong> <code>~/.ssh/config</code></p>
-<div class="codehilite"><pre><span></span><code>Host github.com
+<div class="highlight"><pre><span></span><code>Host github.com
   HostName ssh.github.com
   Port 443
   User git
@@ -2704,25 +2684,21 @@ pg_isready<span class="w"> </span>-h<span class="w"> </span><span class="m">127<
   StrictHostKeyChecking accept-new
   UpdateHostKeys yes
 </code></pre></div>
-
 <p>Pre‑accetta host key:</p>
-<div class="codehilite"><pre><span></span><code>ssh-keyscan<span class="w"> </span>-p<span class="w"> </span><span class="m">443</span><span class="w"> </span>ssh.github.com<span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.ssh/known_hosts
+<div class="highlight"><pre><span></span><code>ssh-keyscan<span class="w"> </span>-p<span class="w"> </span><span class="m">443</span><span class="w"> </span>ssh.github.com<span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.ssh/known_hosts
 chmod<span class="w"> </span><span class="m">700</span><span class="w"> </span>~/.ssh<span class="p">;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>~/.ssh/config<span class="w"> </span>~/.ssh/id_ed25519<span class="p">;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span>~/.ssh/id_ed25519.pub<span class="w"> </span>~/.ssh/known_hosts
 </code></pre></div>
-
 <p>Test:</p>
-<div class="codehilite"><pre><span></span><code>ssh<span class="w"> </span>-T<span class="w"> </span>git@github.com
+<div class="highlight"><pre><span></span><code>ssh<span class="w"> </span>-T<span class="w"> </span>git@github.com
 </code></pre></div>
-
 <p><strong>HTTPS alternativa:</strong></p>
-<div class="codehilite"><pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://github.com/&lt;org&gt;/&lt;repo&gt;.git
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://github.com/&lt;org&gt;/&lt;repo&gt;.git
 git<span class="w"> </span>ls-remote<span class="w"> </span>origin
 git<span class="w"> </span>pull
 </code></pre></div>
-
 <p>(usa un <strong>Personal Access Token</strong> come password quando richiesto)</p>
 <h3 id="72-repo-disallineato">7.2 Repo disallineato<a class="headerlink" href="#72-repo-disallineato" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>-v
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>remote<span class="w"> </span>-v
 git<span class="w"> </span>status<span class="w"> </span>-sb
 git<span class="w"> </span>fetch<span class="w"> </span>origin
 <span class="c1"># allineo il ramo di lavoro (es. Tito-dev)</span>
@@ -2730,31 +2706,30 @@ git<span class="w"> </span>pull<span class="w"> </span>--rebase<span class="w"> 
 <span class="c1"># se serve, reset distruttivo:</span>
 <span class="c1"># git reset --hard origin/Tito-dev</span>
 </code></pre></div>
-
 <hr />
 <h2 id="8-checklist-postriavvio">8) Checklist post‑riavvio<a class="headerlink" href="#8-checklist-postriavvio" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>UFW disabilitato</strong> sul nodo:</li>
 </ol>
-<p><code>bash
-   sudo ufw status verbose   # Status: inactive</code>
+<p><div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ufw<span class="w"> </span>status<span class="w"> </span>verbose<span class="w">   </span><span class="c1"># Status: inactive</span>
+</code></pre></div>
 2. <strong>pve-firewall attivo</strong> e regole host caricate:</p>
-<p><code>bash
-   pve-firewall status</code>
+<p><div class="highlight"><pre><span></span><code>pve-firewall<span class="w"> </span>status
+</code></pre></div>
 3. <strong>Unbound</strong> in ascolto su <code>0.0.0.0:53</code>:</p>
-<p><code>bash
-   sudo ss -lunp | grep ':53'</code>
+<p><div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;:53&#39;</span>
+</code></pre></div>
 4. <strong>DNS VM</strong> punta al nodo:</p>
-<p><code>bash
-   cat /etc/resolv.conf
-   getent hosts google.com</code>
+<p><div class="highlight"><pre><span></span><code>cat<span class="w"> </span>/etc/resolv.conf
+getent<span class="w"> </span>hosts<span class="w"> </span>google.com
+</code></pre></div>
 5. <strong>Tailscale</strong> up (e exit node se serve):</p>
-<p><code>bash
-   tailscale status</code>
+<p><div class="highlight"><pre><span></span><code>tailscale<span class="w"> </span>status
+</code></pre></div>
 6. <strong>PostgreSQL</strong> up e listening:</p>
-<p><code>bash
-   systemctl status postgresql@17-main --no-pager
-   sudo ss -ltnp | grep 5432</code>
+<p><div class="highlight"><pre><span></span><code>systemctl<span class="w"> </span>status<span class="w"> </span>postgresql@17-main<span class="w"> </span>--no-pager
+sudo<span class="w"> </span>ss<span class="w"> </span>-ltnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="m">5432</span>
+</code></pre></div>
 7. <strong>Git</strong>:</p>
 <ul>
 <li>Via SSH/443: <code>ssh -T git@github.com</code></li>
@@ -2763,41 +2738,36 @@ git<span class="w"> </span>pull<span class="w"> </span>--rebase<span class="w"> 
 <hr />
 <h2 id="9-appendice-comandi-veloci">9) Appendice – Comandi veloci<a class="headerlink" href="#9-appendice-comandi-veloci" title="Permanent link">&para;</a></h2>
 <h3 id="firewall-proxmox">Firewall Proxmox<a class="headerlink" href="#firewall-proxmox" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>pve-firewall<span class="w"> </span>reload
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>pve-firewall<span class="w"> </span>reload
 sudo<span class="w"> </span>iptables<span class="w"> </span>-L<span class="w"> </span>-n<span class="w"> </span>-v<span class="w"> </span><span class="p">|</span><span class="w"> </span>less
 </code></pre></div>
-
 <h3 id="dns-troubleshooting">DNS troubleshooting<a class="headerlink" href="#dns-troubleshooting" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c1"># VM</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># VM</span>
 nc<span class="w"> </span>-zu<span class="w"> </span><span class="m">192</span>.168.8.4<span class="w"> </span><span class="m">53</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;UDP 53 reach OK&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;UDP 53 reach FAIL&quot;</span>
 dig<span class="w"> </span>@192.168.8.4<span class="w"> </span>google.com<span class="w"> </span>+time<span class="o">=</span><span class="m">2</span><span class="w"> </span>+tries<span class="o">=</span><span class="m">1</span>
 
 <span class="c1"># Nodo</span>
 sudo<span class="w"> </span>journalctl<span class="w"> </span>-u<span class="w"> </span>unbound<span class="w"> </span>--no-pager<span class="w"> </span>-n<span class="w"> </span><span class="m">50</span>
 </code></pre></div>
-
 <h3 id="tailscale">Tailscale<a class="headerlink" href="#tailscale" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c1"># Nodo → annuncia exit node</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Nodo → annuncia exit node</span>
 sudo<span class="w"> </span>tailscale<span class="w"> </span>up<span class="w"> </span>--reset<span class="w"> </span>--advertise-exit-node<span class="w"> </span>--ssh
 <span class="c1"># VM → usa exit node</span>
 a<span class="o">)</span><span class="w"> </span>sudo<span class="w"> </span>tailscale<span class="w"> </span>up<span class="w"> </span>--reset<span class="w"> </span>--exit-node<span class="o">=</span>&lt;IP_TS_nodo&gt;<span class="w"> </span>--exit-node-allow-lan-access
 b<span class="o">)</span><span class="w"> </span>sudo<span class="w"> </span>tailscale<span class="w"> </span>up<span class="w"> </span>--exit-node<span class="o">=</span>none<span class="w">   </span><span class="c1"># disattiva</span>
 </code></pre></div>
-
 <h3 id="postgresql">PostgreSQL<a class="headerlink" href="#postgresql" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>sudo<span class="w"> </span>pg_lsclusters
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>pg_lsclusters
 sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>postgresql@17-main<span class="w"> </span>--no-pager
 sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>postgresql@17-main
 sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;select version();&#39;</span>
 </code></pre></div>
-
 <h3 id="git">Git<a class="headerlink" href="#git" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c1"># HTTPS</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># HTTPS</span>
 git<span class="w"> </span>remote<span class="w"> </span>set-url<span class="w"> </span>origin<span class="w"> </span>https://github.com/&lt;org&gt;/&lt;repo&gt;.git
 <span class="c1"># SSH 443 test</span>
 essh<span class="w"> </span>-vvv<span class="w"> </span>-p<span class="w"> </span><span class="m">443</span><span class="w"> </span>-i<span class="w"> </span>~/.ssh/id_ed25519<span class="w"> </span>-o<span class="w"> </span><span class="nv">HostName</span><span class="o">=</span>ssh.github.com<span class="w"> </span>git@github.com
 </code></pre></div>
-
 <hr />
 <p><strong>Nota finale</strong>
 Questo runbook è pensato per “stabilizzare” le componenti critiche (DNS, firewall, Tailscale, Postgres, Git) con passi minimi e reversibili. In caso di incidenti futuri, parti dal §1 (cheatsheet) e percorri nell’ordine: rete → DNS → firewall → servizi.</p>
@@ -2856,9 +2826,9 @@ Questo runbook è pensato per “stabilizzare” le componenti critiche (DNS, fi
     
       <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

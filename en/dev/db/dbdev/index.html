@@ -2579,15 +2579,15 @@ Le istruzioni sintetizzano e normalizzano quanto fatto nelle sessioni “Proxmox
 </li>
 <li>
 <p>Dentro la VM:</p>
-<p><code>bash
-sudo apt-get update &amp;&amp; sudo apt-get install -y qemu-guest-agent
-sudo systemctl enable --now qemu-guest-agent</code>
+<p><div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>qemu-guest-agent
+sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>qemu-guest-agent
+</code></pre></div>
 * <strong>Ordine di avvio/chiusura</strong> (priorità):</p>
 </li>
 <li>
 <p>Esempio (VMID 100):</p>
-<p><code>bash
-qm set 100 -onboot 1 -startup order=20,up=60,down=120</code>
+<p><div class="highlight"><pre><span></span><code>qm<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="m">100</span><span class="w"> </span>-onboot<span class="w"> </span><span class="m">1</span><span class="w"> </span>-startup<span class="w"> </span><span class="nv">order</span><span class="o">=</span><span class="m">20</span>,up<span class="o">=</span><span class="m">60</span>,down<span class="o">=</span><span class="m">120</span>
+</code></pre></div>
   * (<em>order basso = avvio prima; up = ritardo avvio; down = timeout chiusura</em>)</p>
 </li>
 </ul>
@@ -2597,9 +2597,9 @@ qm set 100 -onboot 1 -startup order=20,up=60,down=120</code>
 <li><strong>Uso consigliato</strong>: Tailscale <strong>solo per il PC e il server</strong>; <strong>no Exit Node</strong> di default (riduce latenza e complessità).</li>
 <li><strong>SSH tunnel per DB</strong> (sul PC):</li>
 </ul>
-<p><code>bash
-  ssh -L 5432:localhost:5432 tid@100.&lt;IP-dbdev&gt;
-  # pgAdmin/cli: host=localhost, port=5432</code>
+<p><div class="highlight"><pre><span></span><code>ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">5432</span>:localhost:5432<span class="w"> </span>tid@100.&lt;IP-dbdev&gt;
+<span class="c1"># pgAdmin/cli: host=localhost, port=5432</span>
+</code></pre></div>
 * <strong>Firewall</strong>: non aprire 5432 su Internet. In <code>pg_hba.conf</code> consentire <em>solo</em> loopback; LAN/Tailscale opzionali.</p>
 <hr />
 <h2 id="7-postgresql-17-su-dbdev">7) PostgreSQL 17 su “dbdev”<a class="headerlink" href="#7-postgresql-17-su-dbdev" title="Permanent link">&para;</a></h2>
@@ -2608,55 +2608,57 @@ qm set 100 -onboot 1 -startup order=20,up=60,down=120</code>
 <li>Usa repository ufficiali (già in uso) e servizi systemd.</li>
 <li>Verifica porta:</li>
 </ul>
-<p><code>bash
-  sudo ss -ltnp | grep 5432</code></p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-ltnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="m">5432</span>
+</code></pre></div>
 <h3 id="72-sicurezza-autenticazione-scram">7.2 Sicurezza &amp; autenticazione (SCRAM)<a class="headerlink" href="#72-sicurezza-autenticazione-scram" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>postgresql.conf</code></strong>:</li>
 </ul>
-<p><code>listen_addresses = 'localhost'   # consigliato, usare tunnel</code>
+<p><div class="highlight"><pre><span></span><code>listen_addresses = &#39;localhost&#39;   # consigliato, usare tunnel
+</code></pre></div>
 * <strong><code>pg_hba.conf</code></strong> (in cima):</p>
-<p><code>host  all  all  127.0.0.1/32  scram-sha-256
-  host  all  all  ::1/128       scram-sha-256
-  # Opzionali, se proprio servono:
-  # host all all 192.168.8.0/24  scram-sha-256
-  # host all all 100.0.0.0/8     scram-sha-256</code>
+<p><div class="highlight"><pre><span></span><code>host  all  all  127.0.0.1/32  scram-sha-256
+host  all  all  ::1/128       scram-sha-256
+# Opzionali, se proprio servono:
+# host all all 192.168.8.0/24  scram-sha-256
+# host all all 100.0.0.0/8     scram-sha-256
+</code></pre></div>
 * <strong>Password SCRAM</strong>:</p>
-<p><code>bash
-  sudo -u postgres psql -c "ALTER SYSTEM SET password_encryption='scram-sha-256'; SELECT pg_reload_conf();"
-  sudo -u postgres psql -c "ALTER ROLE titodb WITH LOGIN PASSWORD '*****';"</code></p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;ALTER SYSTEM SET password_encryption=&#39;scram-sha-256&#39;; SELECT pg_reload_conf();&quot;</span>
+sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;ALTER ROLE titodb WITH LOGIN PASSWORD &#39;*****&#39;;&quot;</span>
+</code></pre></div>
 <h3 id="73-ruoli-estensioni-ownership">7.3 Ruoli, estensioni, ownership<a class="headerlink" href="#73-ruoli-estensioni-ownership" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Ruoli applicativi</strong> (es. <code>titodb</code>, <code>zeroerp_app</code>):</li>
 </ul>
-<p><code>bash
-  sudo -u postgres psql -c "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='zeroerp_app') THEN CREATE ROLE zeroerp_app LOGIN; END IF; END $$;"</code>
+<p><div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;DO </span><span class="nv">$$</span><span class="s2"> BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname=&#39;zeroerp_app&#39;) THEN CREATE ROLE zeroerp_app LOGIN; END IF; END </span><span class="nv">$$</span><span class="s2">;&quot;</span>
+</code></pre></div>
 * <strong>Estensioni</strong> (richiedono superuser):</p>
-<p><code>bash
-  sudo -u postgres psql -d zeroerp -c "CREATE EXTENSION IF NOT EXISTS postgis;"
-  sudo -u postgres psql -d zeroerp -c "CREATE EXTENSION IF NOT EXISTS postgis_topology;"
-  sudo -u postgres psql -d zeroerp -c "CREATE EXTENSION IF NOT EXISTS dblink WITH SCHEMA public;"</code>
+<p><div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-d<span class="w"> </span>zeroerp<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS postgis;&quot;</span>
+sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-d<span class="w"> </span>zeroerp<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS postgis_topology;&quot;</span>
+sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-d<span class="w"> </span>zeroerp<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS dblink WITH SCHEMA public;&quot;</span>
+</code></pre></div>
 * <strong>Ownership tabelle Liquibase</strong>:</p>
-<p><code>bash
-  sudo -u postgres psql -d zeroerp -c "ALTER TABLE public.databasechangelog OWNER TO titodb; ALTER TABLE public.databasechangeloglock OWNER TO titodb;"</code></p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-d<span class="w"> </span>zeroerp<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;ALTER TABLE public.databasechangelog OWNER TO titodb; ALTER TABLE public.databasechangeloglock OWNER TO titodb;&quot;</span>
+</code></pre></div>
 <hr />
 <h2 id="8-liquibase-configurazione-uso">8) Liquibase — configurazione &amp; uso<a class="headerlink" href="#8-liquibase-configurazione-uso" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong><code>db/liquibase.properties</code></strong> (su <em>dbdev</em>):</li>
 </ul>
-<p><code>properties
-  url=jdbc:postgresql://127.0.0.1:5432/zeroerp
-  username=titodb
-  password=*****
-  changeLogFile=changelog/changelog-master.yaml</code>
+<p><div class="highlight"><pre><span></span><code><span class="na">url</span><span class="o">=</span><span class="s">jdbc:postgresql://127.0.0.1:5432/zeroerp</span>
+<span class="na">username</span><span class="o">=</span><span class="s">titodb</span>
+<span class="na">password</span><span class="o">=</span><span class="s">*****</span>
+<span class="na">changeLogFile</span><span class="o">=</span><span class="s">changelog/changelog-master.yaml</span>
+</code></pre></div>
 * <strong>Comandi tipici (sicuri)</strong>:</p>
-<p><code>bash
-  liquibase validate
-  liquibase status --verbose
-  liquibase updateSQL</code>
+<p><div class="highlight"><pre><span></span><code>liquibase<span class="w"> </span>validate
+liquibase<span class="w"> </span>status<span class="w"> </span>--verbose
+liquibase<span class="w"> </span>updateSQL
+</code></pre></div>
 * <strong>Esecuzione</strong>:</p>
-<p><code>bash
-  liquibase update</code>
+<p><div class="highlight"><pre><span></span><code>liquibase<span class="w"> </span>update
+</code></pre></div>
 * <strong>Note errori comuni risolti</strong>:</p>
 <ul>
 <li><em>password corretta ma login fallito</em>: mismatch <strong>SCRAM vs md5</strong> in <code>pg_hba.conf</code> o uso IPv6 <code>::1</code> → forza 127.0.0.1 e <code>scram-sha-256</code>.</li>
@@ -2669,34 +2671,34 @@ qm set 100 -onboot 1 -startup order=20,up=60,down=120</code>
 <li><strong>Connessione</strong>: Remote-SSH → host <code>dbdev</code>.</li>
 <li><strong>Workspace</strong> (file <code>ZeroErp-dbdev.code-workspace</code>):</li>
 </ul>
-<p><code>json
-  {
-    "folders": [
-      { "path": "/home/tid/software/ZeroErp" },
-      { "path": "/etc/postgresql" },
-      { "path": "/var/log/postgresql" },
-      { "path": "/home/tid/.ssh" }
-    ],
-    "settings": {
-      "python.defaultInterpreterPath": "/home/tid/software/ZeroErp/.venv/bin/python",
-      "python.terminal.activateEnvironment": true,
-      "liquibase.java.home": "/usr/lib/jvm/java-17-openjdk-amd64"
-    }
-  }</code>
+<p><div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;folders&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/home/tid/software/ZeroErp&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/etc/postgresql&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/var/log/postgresql&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/home/tid/.ssh&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;settings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;python.defaultInterpreterPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/home/tid/software/ZeroErp/.venv/bin/python&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;python.terminal.activateEnvironment&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;liquibase.java.home&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/jvm/java-17-openjdk-amd64&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 * <strong>Apertura rapida</strong>: <code>code --remote ssh-remote+dbdev /home/tid/software/ZeroErp/ZeroErp-dbdev.code-workspace</code>.</p>
 <hr />
 <h2 id="10-documentazione-mkdocs">10) Documentazione MkDocs<a class="headerlink" href="#10-documentazione-mkdocs" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Setup</strong>:</li>
 </ul>
-<p><code>bash
-  cd ~/software/ZeroErp
-  python3 -m venv .venv &amp;&amp; source .venv/bin/activate
-  pip install -r requirements.txt   # mkdocs/material inclusi qui
-  mkdocs serve -a 127.0.0.1:8000    # VS Code farà port-forward</code>
+<p><div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/software/ZeroErp
+python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt<span class="w">   </span><span class="c1"># mkdocs/material inclusi qui</span>
+mkdocs<span class="w"> </span>serve<span class="w"> </span>-a<span class="w"> </span><span class="m">127</span>.0.0.1:8000<span class="w">    </span><span class="c1"># VS Code farà port-forward</span>
+</code></pre></div>
 * <strong>Task VS Code</strong> (esempio):</p>
-<p><code>json
-  { "label": "Docs: serve", "type": "shell", "command": "bash", "args": ["-lc", "source ${workspaceFolder}/.venv/bin/activate &amp;&amp; mkdocs serve -a 127.0.0.1:8000" ] }</code></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Docs: serve&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;shell&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bash&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;-lc&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;source ${workspaceFolder}/.venv/bin/activate &amp;&amp; mkdocs serve -a 127.0.0.1:8000&quot;</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
 <hr />
 <h2 id="11-avvioriavvio-automatici">11) Avvio/riavvio automatici<a class="headerlink" href="#11-avvioriavvio-automatici" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2740,7 +2742,7 @@ qm set 100 -onboot 1 -startup order=20,up=60,down=120</code>
 </ul>
 <hr />
 <h2 id="15-allegato-comandi-rapidi">15) Allegato — Comandi rapidi<a class="headerlink" href="#15-allegato-comandi-rapidi" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="c1"># Tunnel SSH (PC → dbdev)</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Tunnel SSH (PC → dbdev)</span>
 ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">5432</span>:localhost:5432<span class="w"> </span>tid@100.&lt;IP-dbdev&gt;
 
 <span class="c1"># Liquibase (dbdev)</span>
@@ -2758,7 +2760,6 @@ pvesm<span class="w"> </span>add<span class="w"> </span>nfs<span class="w"> </sp
 <span class="c1"># VM order/delay</span>
 qm<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="m">100</span><span class="w"> </span>-onboot<span class="w"> </span><span class="m">1</span><span class="w"> </span>-startup<span class="w"> </span><span class="nv">order</span><span class="o">=</span><span class="m">20</span>,up<span class="o">=</span><span class="m">60</span>,down<span class="o">=</span><span class="m">120</span>
 </code></pre></div>
-
 <blockquote>
 <p><strong>Suggerimento finale</strong>: esegui periodicamente un <strong>restore di prova</strong> su un VMID nuovo per validare i backup. Una verifica reale vale più di mille log verdi. ✅</p>
 </blockquote>
@@ -2817,9 +2818,9 @@ qm<span class="w"> </span><span class="nb">set</span><span class="w"> </span><sp
     
       <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

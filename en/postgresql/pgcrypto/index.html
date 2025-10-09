@@ -2554,16 +2554,15 @@
 <blockquote>
 <p>Da eseguire <strong>per ogni database</strong> dove serve usare le funzioni (es.: <code>zeroerp</code>).</p>
 </blockquote>
-<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="n">EXTENSION</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">pgcrypto</span><span class="p">;</span><span class="w">  </span><span class="c1">-- crea in schema &quot;public&quot; (default)</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="n">EXTENSION</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">pgcrypto</span><span class="p">;</span><span class="w">  </span><span class="c1">-- crea in schema &quot;public&quot; (default)</span>
 <span class="c1">-- oppure, se vuoi collocarla in uno schema dedicato</span>
 <span class="c1">-- CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public;</span>
 </code></pre></div>
-
 <blockquote>
 <p>In CI/Liquibase crea l’estensione <strong>prima</strong> di tabelle/funzioni che la usano.</p>
 </blockquote>
 <h3 id="changeset-liquibase-esempio">Changeset Liquibase (esempio)<a class="headerlink" href="#changeset-liquibase-esempio" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">databaseChangeLog</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="nt">databaseChangeLog</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">changeSet</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20250810-01-ext-pgcrypto</span>
 <span class="w">      </span><span class="nt">author</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mctit</span>
@@ -2574,27 +2573,24 @@
 <span class="w">            </span><span class="nt">sql</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">              </span><span class="no">CREATE EXTENSION IF NOT EXISTS pgcrypto;</span>
 </code></pre></div>
-
 <hr />
 <h2 id="funzioni-piu-usate">🧰 Funzioni più usate<a class="headerlink" href="#funzioni-piu-usate" title="Permanent link">&para;</a></h2>
 <h3 id="uuid-random">UUID &amp; Random<a class="headerlink" href="#uuid-random" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">gen_random_uuid</span><span class="p">();</span><span class="w">                </span><span class="c1">-- uuid v4</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">gen_random_uuid</span><span class="p">();</span><span class="w">                </span><span class="c1">-- uuid v4</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">gen_random_bytes</span><span class="p">(</span><span class="mi">32</span><span class="p">);</span><span class="w">             </span><span class="c1">-- bytea</span>
 </code></pre></div>
-
 <h3 id="digest-hmac">Digest / HMAC<a class="headerlink" href="#digest-hmac" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- SHA-256 in esadecimale</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- SHA-256 in esadecimale</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">encode</span><span class="p">(</span><span class="n">digest</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span><span class="s1">&#39;sha256&#39;</span><span class="p">),</span><span class="s1">&#39;hex&#39;</span><span class="p">);</span>
 
 <span class="c1">-- HMAC-SHA256 (chiave app):</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">encode</span><span class="p">(</span><span class="n">hmac</span><span class="p">(</span><span class="s1">&#39;payload&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.crypto.key&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;sha256&#39;</span><span class="p">),</span><span class="s1">&#39;hex&#39;</span><span class="p">);</span>
 </code></pre></div>
-
 <h3 id="password-hashing-bcrypt">Password hashing (bcrypt)<a class="headerlink" href="#password-hashing-bcrypt" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>Non</strong> usare MD5 per password. Usa <code>crypt()</code> + <code>gen_salt('bf')</code>.</p>
 </blockquote>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- Creazione</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Creazione</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">users</span><span class="p">(</span><span class="n">username</span><span class="p">,</span><span class="w"> </span><span class="n">password_hash</span><span class="p">)</span>
 <span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="err">$</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">crypt</span><span class="p">(</span><span class="err">$</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">gen_salt</span><span class="p">(</span><span class="s1">&#39;bf&#39;</span><span class="p">)));</span>
 
@@ -2604,9 +2600,8 @@
 <span class="k">WHERE</span><span class="w"> </span><span class="n">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="mi">1</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">password_hash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">crypt</span><span class="p">(</span><span class="err">$</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">password_hash</span><span class="p">);</span>
 </code></pre></div>
-
 <h3 id="cifratura-pgp-simmetrica">Cifratura PGP simmetrica<a class="headerlink" href="#cifratura-pgp-simmetrica" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- Cifra testo con passphrase (meglio leggere da GUC)</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Cifra testo con passphrase (meglio leggere da GUC)</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">secret_docs</span><span class="p">(</span><span class="n">content_enc</span><span class="p">)</span>
 <span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="n">pgp_sym_encrypt</span><span class="p">(</span><span class="s1">&#39;testo chiaro&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.crypto.pass&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)));</span>
 
@@ -2615,50 +2610,45 @@
 <span class="k">FROM</span><span class="w"> </span><span class="n">secret_docs</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="mi">1</span><span class="p">;</span>
 </code></pre></div>
-
 <h3 id="cifratura-pgp-asimmetrica-pubpriv">Cifratura PGP asimmetrica (pub/priv)<a class="headerlink" href="#cifratura-pgp-asimmetrica-pubpriv" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- Cifra con chiave pubblica (armored)</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Cifra con chiave pubblica (armored)</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">pgp_pub_encrypt</span><span class="p">(</span><span class="s1">&#39;payload&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">dearmor</span><span class="p">(</span><span class="n">pubkey_text</span><span class="p">))</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">keyring</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="err">$</span><span class="mi">1</span><span class="p">;</span>
 
 <span class="c1">-- Decifra con chiave privata + passphrase</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">pgp_pub_decrypt</span><span class="p">(</span><span class="n">payload_enc</span><span class="p">,</span><span class="w"> </span><span class="n">dearmor</span><span class="p">(</span><span class="n">privkey_text</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;passphrase&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">inbox</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="err">$</span><span class="mi">1</span><span class="p">;</span>
 </code></pre></div>
-
 <blockquote>
 <p>Suggerito: conservare <strong>solo</strong> chiavi pubbliche nel DB; chiavi private protette fuori dal DB o custodite con policy rigide.</p>
 </blockquote>
 <hr />
 <h2 id="pattern-utili">🧱 Pattern utili<a class="headerlink" href="#pattern-utili" title="Permanent link">&para;</a></h2>
 <h3 id="colonna-uuid-di-default">Colonna UUID di default<a class="headerlink" href="#colonna-uuid-di-default" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">orders</span>
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">orders</span>
 <span class="w">  </span><span class="k">ADD</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="n">uuid</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="n">gen_random_uuid</span><span class="p">();</span>
 </code></pre></div>
-
 <h3 id="indice-su-digest-ricerca-rapida-per-hash">Indice su digest (ricerca rapida per hash)<a class="headerlink" href="#indice-su-digest-ricerca-rapida-per-hash" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">events</span><span class="w"> </span><span class="k">ADD</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="n">payload_sha256</span><span class="w"> </span><span class="n">bytea</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">events</span><span class="w"> </span><span class="k">ADD</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="n">payload_sha256</span><span class="w"> </span><span class="n">bytea</span><span class="p">;</span>
 <span class="k">UPDATE</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">events</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">payload_sha256</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">digest</span><span class="p">(</span><span class="n">payload</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="s1">&#39;sha256&#39;</span><span class="p">);</span>
 <span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">events</span><span class="w"> </span><span class="p">(</span><span class="n">payload_sha256</span><span class="p">);</span>
 </code></pre></div>
-
 <h3 id="logging-robusto-con-maintenancerun_and_log">Logging robusto (con <code>maintenance.run_and_log</code>)<a class="headerlink" href="#logging-robusto-con-maintenancerun_and_log" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="k">CALL</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">run_and_log</span><span class="p">(</span>
+<div class="highlight"><pre><span></span><code><span class="k">CALL</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">run_and_log</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_jobname</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;rebuild_materialized&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_stepname</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;refresh_view_x&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_sql</span><span class="w">      </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;REFRESH MATERIALIZED VIEW CONCURRENTLY app.view_x;&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_lock_key</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">hashtextextended</span><span class="p">(</span><span class="s1">&#39;refresh_view_x&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-
 <hr />
 <h2 id="buone-pratiche-di-sicurezza">🔒 Buone pratiche di sicurezza<a class="headerlink" href="#buone-pratiche-di-sicurezza" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Password</strong>: usa <code>crypt()</code> + <code>gen_salt('bf')</code> (bcrypt). Evita <code>md5()</code>/<code>sha1()</code> per password.</li>
 <li><strong>Chiavi/Passphrase</strong>: non hardcodare. Leggile da <strong>GUC</strong> applicativi:</li>
 </ul>
-<p><code>sql
-  ALTER DATABASE zeroerp SET app.crypto.pass = '...';
-  ALTER DATABASE zeroerp SET app.crypto.key  = '...';
-  -- poi current_setting('app.crypto.pass', true)</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">DATABASE</span><span class="w"> </span><span class="n">zeroerp</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">crypto</span><span class="p">.</span><span class="n">pass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;...&#39;</span><span class="p">;</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">DATABASE</span><span class="w"> </span><span class="n">zeroerp</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">crypto</span><span class="p">.</span><span class="k">key</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;...&#39;</span><span class="p">;</span>
+<span class="c1">-- poi current_setting(&#39;app.crypto.pass&#39;, true)</span>
+</code></pre></div>
 <p>Meglio ancora: impostare a runtime (sessione) via application server.
 * <strong>Rotazione</strong>: prevedi la rotazione passphrase/chiavi (versiona i segreti e i record cifrati, es. colonna <code>key_version</code>).
 * <strong>Least privilege</strong>: concedi <code>EXECUTE</code> solo alle funzioni necessarie e ai ruoli che ne hanno bisogno.
@@ -2681,12 +2671,11 @@
 <hr />
 <h2 id="ci-ubuntugithub-actions">🧪 CI (Ubuntu/GitHub Actions)<a class="headerlink" href="#ci-ubuntugithub-actions" title="Permanent link">&para;</a></h2>
 <p>Esegui il changeset <strong>prima</strong> delle migrazioni che richiedono <code>pgcrypto</code>:</p>
-<div class="codehilite"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create pgcrypto extension</span>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create pgcrypto extension</span>
 <span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">    </span><span class="no">export PGPASSWORD=secret</span>
 <span class="w">    </span><span class="no">psql -h localhost -p 5432 -U zeroerp -d zeroerp -c &quot;CREATE EXTENSION IF NOT EXISTS pgcrypto;&quot;</span>
 </code></pre></div>
-
 <hr />
 <h2 id="checklist-rapida">✅ Checklist rapida<a class="headerlink" href="#checklist-rapida" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2756,9 +2745,9 @@
     
       <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

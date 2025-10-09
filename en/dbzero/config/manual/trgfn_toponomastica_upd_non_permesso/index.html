@@ -2215,33 +2215,33 @@
 <ol>
 <li><strong>Verifica utilizzo</strong></li>
 </ol>
-<p><code>plpgsql
-   IF NOT EXISTS (
-     SELECT 1
-       FROM config.stradario_generale
-      WHERE toponomastica_id = OLD.id
-   ) THEN
-     RETURN NEW;
-   END IF;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">stradario_generale</span>
+<span class="w">   </span><span class="k">WHERE</span><span class="w"> </span><span class="n">toponomastica_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">OLD</span><span class="mf">.</span><span class="n">id</span>
+<span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
+<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div>
 <p>Se la toponomastica non è usata, l’UPDATE di <code>descrizione</code> procede normalmente.</p>
 <ol>
 <li><strong>Blocco modifica</strong></li>
 </ol>
-<p><code>plpgsql
-   IF OLD.descrizione IS DISTINCT FROM NEW.descrizione THEN
-     PERFORM script.fn_log_and_raise_error(
-       'database',
-       TG_NAME,
-       'E_COLONNA_NON_MODIFICABILE',
-       jsonb_build_object('column','descrizione','id',OLD.id)
-     );
-   END IF;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="k">OLD</span><span class="mf">.</span><span class="n">descrizione</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">descrizione</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">TG_NAME</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;E_COLONNA_NON_MODIFICABILE&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;column&#39;</span><span class="p">,</span><span class="s1">&#39;descrizione&#39;</span><span class="p">,</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="k">OLD</span><span class="mf">.</span><span class="n">id</span><span class="p">)</span>
+<span class="w">  </span><span class="p">);</span>
+<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div>
 <p>Se la <code>descrizione</code> viene cambiata, la funzione lancia un errore bloccando l’operazione e indicando quale colonna e ID sono coinvolti.</p>
 <ol>
 <li><strong>Ritorno</strong></li>
 </ol>
-<p><code>plpgsql
-   RETURN NEW;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
+</code></pre></div>
 <p>In ogni caso, il record viene restituito (se l’errore non è stato sollevato), anche se normalmente l’operazione si interrompe al lancio dell’eccezione.</p>
 <hr />
 <h3 id="motivazione-e-benefici">🔒 Motivazione e Benefici<a class="headerlink" href="#motivazione-e-benefici" title="Permanent link">&para;</a></h3>
@@ -2308,9 +2308,9 @@
     
       <script src="../../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

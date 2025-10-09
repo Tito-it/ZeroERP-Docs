@@ -2209,7 +2209,7 @@
 </ul>
 <hr />
 <h3 id="definizione-ddl">🔍 Definizione (DDL)<a class="headerlink" href="#definizione-ddl" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_catalogo_oggetti</span><span class="w"> </span><span class="k">AS</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_catalogo_oggetti</span><span class="w"> </span><span class="k">AS</span>
 <span class="k">SELECT</span>
 <span class="w">  </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w">            </span><span class="k">AS</span><span class="w"> </span><span class="k">schema</span><span class="p">,</span>
 <span class="w">  </span><span class="k">c</span><span class="p">.</span><span class="n">relkind</span><span class="w">            </span><span class="k">AS</span><span class="w"> </span><span class="n">tipo_oggetto</span><span class="p">,</span>
@@ -2230,7 +2230,6 @@
 <span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_roles</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">pg_roles</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relowner</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="w"> </span><span class="p">(</span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;dbops&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;script&#39;</span><span class="p">]);</span>
 </code></pre></div>
-
 <p><strong>Owner</strong>: <code>postgres</code></p>
 <p><strong>Commento</strong>: "Vista degli oggetti presenti negli schemi dbops,script (tabelle, viste, sequenze, indici ecc.)"</p>
 <hr />
@@ -2274,25 +2273,25 @@
 <ol>
 <li><strong>Elencare tutte le tabelle</strong> dei due schemi:</li>
 </ol>
-<p><code>sql
-   SELECT nome_oggetto, descrizione
-     FROM dbops.vw_catalogo_oggetti
-    WHERE tipo_oggetto = 'r';</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">nome_oggetto</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span>
+<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_catalogo_oggetti</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">tipo_oggetto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;r&#39;</span><span class="p">;</span>
+</code></pre></div>
 <ol>
 <li><strong>Filtrare le view</strong> (oggetti di tipo <code>v</code>) e mostrarne il proprietario:</li>
 </ol>
-<p><code>sql
-   SELECT schema, nome_oggetto, proprietario
-     FROM dbops.vw_catalogo_oggetti
-    WHERE tipo_oggetto = 'v'
-      AND schema = 'dbops';</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">schema</span><span class="p">,</span><span class="w"> </span><span class="n">nome_oggetto</span><span class="p">,</span><span class="w"> </span><span class="n">proprietario</span>
+<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_catalogo_oggetti</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">tipo_oggetto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;v&#39;</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="k">schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;dbops&#39;</span><span class="p">;</span>
+</code></pre></div>
 <ol>
 <li><strong>Trovare oggetti senza descrizione</strong> (per manutenzione commenti):</li>
 </ol>
-<p><code>sql
-   SELECT schema, nome_oggetto
-     FROM dbops.vw_catalogo_oggetti
-    WHERE descrizione IS NULL;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">schema</span><span class="p">,</span><span class="w"> </span><span class="n">nome_oggetto</span>
+<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_catalogo_oggetti</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">descrizione</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
+</code></pre></div>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2305,7 +2304,7 @@
 <p>🧠 <strong>“Una view di catalogo centralizzato semplifica il discovery e il governo degli oggetti di database, favorendo manutenzione e compliance.”</strong></p>
 </blockquote>
 <h1 id="view-vw_catalogo_oggetti">🔍 View <code>vw_catalogo_oggetti</code><a class="headerlink" href="#view-vw_catalogo_oggetti" title="Permanent link">&para;</a></h1>
-<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_catalogo_oggetti</span><span class="w"> </span><span class="k">AS</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_catalogo_oggetti</span><span class="w"> </span><span class="k">AS</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">schema</span><span class="p">,</span>
 <span class="w">    </span><span class="k">c</span><span class="p">.</span><span class="n">relkind</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tipo_oggetto</span><span class="p">,</span>
 <span class="w">    </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">nome_oggetto</span><span class="p">,</span>
@@ -2325,7 +2324,6 @@
 <span class="w">     </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_roles</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">((</span><span class="n">pg_roles</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relowner</span><span class="p">)))</span>
 <span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="w"> </span><span class="p">(</span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;dbops&#39;</span><span class="p">::</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;script&#39;</span><span class="p">::</span><span class="n">name</span><span class="p">]));</span>
 </code></pre></div>
-
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
@@ -2381,9 +2379,9 @@
     
       <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

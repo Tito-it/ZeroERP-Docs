@@ -2466,11 +2466,11 @@
 <li><strong>DDL</strong>: aggiungere colonna <code>tx_id UUID NOT NULL</code> in ogni tabella.</li>
 <li><strong>Trigger</strong>:</li>
 </ol>
-<p><code>sql
-   CREATE TRIGGER trg_assign_tx_id ON schema.my_table
-     BEFORE INSERT OR UPDATE
-     FOR EACH ROW
-     EXECUTE FUNCTION dbops.trgfn_tx_id_managed();</code>
+<p><div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_assign_tx_id</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">my_table</span>
+<span class="w">  </span><span class="k">BEFORE</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span>
+<span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
+<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">trgfn_tx_id_managed</span><span class="p">();</span>
+</code></pre></div>
 3. <strong>Vantaggi</strong>: operazioni garantite lato DB, nessun intervento lato client.
 4. <strong>Svantaggi</strong>: potenziali errori mascherati, dipendenze DB forti.</p>
 <h3 id="42-lato-backend-con-function">4.2 Lato Backend con Function<a class="headerlink" href="#42-lato-backend-con-function" title="Permanent link">&para;</a></h3>
@@ -2478,8 +2478,8 @@
 <li><strong>Colonna DDL</strong>: <code>tx_id UUID NOT NULL</code> su tabelle.</li>
 <li><strong>Chiamata esplicita</strong>: prima di operazioni SQL, backend esegue:</li>
 </ol>
-<p><code>sql
-   SELECT dbops.fn_get_or_create_session_tx_id() AS tx_id;</code>
+<p><div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_or_create_session_tx_id</span><span class="p">()</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tx_id</span><span class="p">;</span>
+</code></pre></div>
 3. <strong>Iniezione</strong>: popola il campo <code>tx_id</code> nelle istruzioni <code>INSERT/UPDATE</code>.
 4. <strong>Vantaggi</strong>: completa visibilità e controllo lato applicazione; facile debugging.
 5. <strong>Svantaggi</strong>: responsabilità di implementazione distribuita tra team.</p>
@@ -2502,7 +2502,7 @@
 </ol>
 <hr />
 <h2 id="6-esempi-di-codice-backend-pseudo">6. Esempi di Codice Backend (Pseudo)<a class="headerlink" href="#6-esempi-di-codice-backend-pseudo" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="c1">// Node.js + pg</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// Node.js + pg</span>
 <span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">withTxId</span><span class="p">(</span><span class="nx">client</span><span class="p">,</span><span class="w"> </span><span class="nx">callback</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Recupera o crea tx_id</span>
 <span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="sb">`SELECT dbops.fn_get_or_create_session_tx_id() AS tx_id`</span><span class="p">);</span>
@@ -2520,7 +2520,6 @@
 <span class="w">  </span><span class="c1">// Altre query...</span>
 <span class="p">});</span>
 </code></pre></div>
-
 <hr />
 <h2 id="7-conclusioni-e-raccomandazioni">7. Conclusioni e Raccomandazioni<a class="headerlink" href="#7-conclusioni-e-raccomandazioni" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2587,9 +2586,9 @@
     
       <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

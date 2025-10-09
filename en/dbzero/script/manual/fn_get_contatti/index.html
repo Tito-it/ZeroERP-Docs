@@ -2249,40 +2249,40 @@
 <li><strong>Validazione <code>p_soggetto_id</code></strong>
    Se <code>p_soggetto_id</code> è <code>NULL</code>, attiva il CTE <code>validate</code> che chiama:</li>
 </ol>
-<p><code>sql
-   script.fn_log_and_raise_error(
-     'database',
-     'fn_get_contatti',
-     'ERRORE_PARAMETRI',
-     jsonb_build_object(
-       'soggetto_id', p_soggetto_id,
-       'soggetto_ruolo_id', p_soggetto_ruolo_id,
-       'utility_id', p_utility_id,
-       'tipo_contatto_id', p_tipo_contatto_id
-     ),
-     COALESCE(p_soggetto_id::text,'NULL')
-   )</code></p>
+<div class="highlight"><pre><span></span><code><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">  </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;fn_get_contatti&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;ERRORE_PARAMETRI&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="n">jsonb_build_object</span><span class="p">(</span>
+<span class="w">    </span><span class="s1">&#39;soggetto_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_soggetto_id</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;soggetto_ruolo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;utility_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_utility_id</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;tipo_contatto_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_tipo_contatto_id</span>
+<span class="w">  </span><span class="p">),</span>
+<span class="w">  </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">p_soggetto_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
 <ol>
 <li><strong>Costruzione del CTE <code>candidates</code></strong>
    Seleziona da <code>anagrafiche.contatti</code> i record matching <code>p_soggetto_id</code>, <code>p_soggetto_ruolo_id</code>, <code>p_utility_id</code>, <code>p_tipo_contatto_id</code>, calcolando <code>priority</code>:</li>
 </ol>
-<p><code>sql
-   CASE
-     WHEN c.soggetto_ruolo_id IS NOT DISTINCT FROM p_soggetto_ruolo_id
-       AND c.utility_id IS NOT DISTINCT FROM p_utility_id THEN 1
-     WHEN c.soggetto_ruolo_id IS NOT DISTINCT FROM p_soggetto_ruolo_id THEN 2
-     WHEN c.utility_id IS NOT DISTINCT FROM p_utility_id THEN 3
-     ELSE 4
-   END AS priority</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">CASE</span>
+<span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span>
+<span class="w">    </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_utility_id</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_utility_id</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">  </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">4</span>
+<span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">priority</span>
+</code></pre></div>
 <ol>
 <li><strong>Selezione del contatto per tipo</strong>
    Applica:</li>
 </ol>
-<p><code>sql
-   ROW_NUMBER() OVER (
-     PARTITION BY candidates.tipo_contatto_id
-     ORDER BY candidates.priority
-   ) AS rn</code></p>
+<div class="highlight"><pre><span></span><code><span class="n">ROW_NUMBER</span><span class="p">()</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">candidates</span><span class="p">.</span><span class="n">tipo_contatto_id</span>
+<span class="w">  </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">candidates</span><span class="p">.</span><span class="n">priority</span>
+<span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">rn</span>
+</code></pre></div>
 <p>e filtra <code>WHERE rn = 1</code>.</p>
 <ol>
 <li><strong>Restituzione dei risultati</strong>
@@ -2346,9 +2346,9 @@
     
       <script src="../../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

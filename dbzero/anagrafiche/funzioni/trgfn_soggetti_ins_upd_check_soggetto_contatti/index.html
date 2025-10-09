@@ -2227,40 +2227,40 @@
 <ul>
 <li><strong>Trigger associato</strong>: <code>AFTER INSERT OR UPDATE</code> su <code>anagrafiche.soggetti</code>, definito come:</li>
 </ul>
-<p><code>sql
-  CREATE CONSTRAINT TRIGGER trg_soggetti_ins_upd_check_soggetto_contatti
-    AFTER INSERT OR UPDATE ON anagrafiche.soggetti
-    DEFERRABLE INITIALLY DEFERRED
-    FOR EACH ROW
-    EXECUTE FUNCTION anagrafiche.trgfn_soggetti_ins_upd_check_soggetto_contatti();</code>
+<p><div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_soggetti_ins_upd_check_soggetto_contatti</span>
+<span class="w">  </span><span class="k">AFTER</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti</span>
+<span class="w">  </span><span class="k">DEFERRABLE</span><span class="w"> </span><span class="k">INITIALLY</span><span class="w"> </span><span class="k">DEFERRED</span>
+<span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
+<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_soggetti_ins_upd_check_soggetto_contatti</span><span class="p">();</span>
+</code></pre></div>
 * <strong>Deferrable</strong>: permette di posticipare la verifica fino alla fine della transazione per includere eventuali operazioni correlate su <code>anagrafiche.contatti</code>.</p>
 <hr />
 <h3 id="flusso-logico">⚙️ Flusso Logico<a class="headerlink" href="#flusso-logico" title="Permanent link">&para;</a></h3>
 <ol>
 <li><strong>Conteggio contatti validi</strong></li>
 </ol>
-<p><code>plpgsql
-   SELECT COUNT(*) INTO v_count
-     FROM anagrafiche.contatti c
-    WHERE c.soggetto_id = NEW.id
-      AND c.default_context = 'soggetto'
-      AND (
-        c.is_default
-        OR c.email      IS NOT NULL
-        OR c.telefono   IS NOT NULL
-        OR c.cellulare  IS NOT NULL
-        OR c.pec        IS NOT NULL
-      );</code>
+<p><div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_count</span>
+<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="mf">.</span><span class="n">contatti</span><span class="w"> </span><span class="n">c</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">c</span><span class="mf">.</span><span class="n">soggetto_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">id</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">c</span><span class="mf">.</span><span class="n">default_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;soggetto&#39;</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span>
+<span class="w">     </span><span class="n">c</span><span class="mf">.</span><span class="n">is_default</span>
+<span class="w">     </span><span class="k">OR</span><span class="w"> </span><span class="n">c</span><span class="mf">.</span><span class="n">email</span><span class="w">      </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">     </span><span class="k">OR</span><span class="w"> </span><span class="n">c</span><span class="mf">.</span><span class="n">telefono</span><span class="w">   </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">     </span><span class="k">OR</span><span class="w"> </span><span class="n">c</span><span class="mf">.</span><span class="n">cellulare</span><span class="w">  </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">     </span><span class="k">OR</span><span class="w"> </span><span class="n">c</span><span class="mf">.</span><span class="n">pec</span><span class="w">        </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">   </span><span class="p">);</span>
+</code></pre></div>
 2. <strong>Verifica risultato</strong></p>
-<p><code>plpgsql
-   IF v_count = 0 THEN
-     PERFORM script.fn_log_and_raise_error(
-       'database',
-       TG_NAME,
-       'E_SOGGETTO_NO_CONTATTI',
-       jsonb_build_object('soggetto_id', NEW.id)
-     );
-   END IF;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">v_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">TG_NAME</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;E_SOGGETTO_NO_CONTATTI&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;soggetto_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">id</span><span class="p">)</span>
+<span class="w">  </span><span class="p">);</span>
+<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div>
 <ul>
 <li>Chiama <code>fn_log_and_raise_error</code>, che registra su log la violazione e solleva l’eccezione appropriata.</li>
 <li><strong>Restituzione</strong>
@@ -2290,11 +2290,10 @@
 <p>🧠 <strong>“Usare un constraint trigger deferrable per verificare i contatti di un soggetto assicura integrità e coerenza dei dati, sfruttando logging e gestione errori centralizzata.”</strong></p>
 </blockquote>
 <h1 id="funzione-trgfn_soggetti_ins_upd_check_soggetto_contatti">⚙️ Funzione <code>trgfn_soggetti_ins_upd_check_soggetto_contatti</code><a class="headerlink" href="#funzione-trgfn_soggetti_ins_upd_check_soggetto_contatti" title="Permanent link">&para;</a></h1>
-<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_soggetti_ins_upd_check_soggetto_contatti</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_soggetti_ins_upd_check_soggetto_contatti</span><span class="p">()</span>
 </code></pre></div>
-
 <p><strong>Definizione completa:</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_soggetti_ins_upd_check_soggetto_contatti</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_soggetti_ins_upd_check_soggetto_contatti</span><span class="p">()</span>
 <span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
@@ -2336,7 +2335,6 @@
 <span class="k">END</span><span class="p">;</span>
 <span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>
-
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
@@ -2392,9 +2390,9 @@
     
       <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

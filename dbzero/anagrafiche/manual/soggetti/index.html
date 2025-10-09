@@ -2380,18 +2380,18 @@
 <p>**Rimozione della colonna **<strong><code>tipo_soggetto</code></strong></p>
 </li>
 </ol>
-<p><code>sql
-   ALTER TABLE anagrafiche.soggetti
-     DROP COLUMN IF EXISTS tipo_soggetto;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti</span>
+<span class="w">  </span><span class="k">DROP</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">tipo_soggetto</span><span class="p">;</span>
+</code></pre></div>
 <ol>
 <li>**Introduzione di **<strong><code>tipo_soggetto_dettaglio_id</code></strong></li>
 </ol>
-<p><code>sql
-   ALTER TABLE anagrafiche.soggetti
-     ADD COLUMN tipo_soggetto_dettaglio_id BIGINT NOT NULL
-       REFERENCES config.tipi_soggetto_dettaglio(id)
-       ON UPDATE CASCADE
-       ON DELETE RESTRICT;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti</span>
+<span class="w">  </span><span class="k">ADD</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="n">tipo_soggetto_dettaglio_id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">    </span><span class="k">REFERENCES</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">tipi_soggetto_dettaglio</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">CASCADE</span>
+<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="k">DELETE</span><span class="w"> </span><span class="k">RESTRICT</span><span class="p">;</span>
+</code></pre></div>
 <ol>
 <li>
 <p><strong>Vincoli e trigger aggiornati</strong></p>
@@ -2401,55 +2401,53 @@
 </li>
 <li>È stato aggiunto il vincolo di FK:</li>
 </ol>
-<p><code>sql
-   ALTER TABLE anagrafiche.soggetti
-     ADD CONSTRAINT fk_soggetti_tipo_soggetto_dettaglio
-       FOREIGN KEY (tipo_soggetto_dettaglio_id)
-       REFERENCES config.tipi_soggetto_dettaglio(id)
-       ON UPDATE CASCADE
-       ON DELETE RESTRICT;</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti</span>
+<span class="w">  </span><span class="k">ADD</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">fk_soggetti_tipo_soggetto_dettaglio</span>
+<span class="w">    </span><span class="k">FOREIGN</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="p">(</span><span class="n">tipo_soggetto_dettaglio_id</span><span class="p">)</span>
+<span class="w">    </span><span class="k">REFERENCES</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">tipi_soggetto_dettaglio</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">CASCADE</span>
+<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="k">DELETE</span><span class="w"> </span><span class="k">RESTRICT</span><span class="p">;</span>
+</code></pre></div>
 <blockquote>
 <p>🧠 <strong>“Un’Anagrafica Soggetti solida e coerente: controlli condizionali e campi generati assicurano dati puliti, ricercabili e univoci, senza dover ripetere informazioni in fase applicativa.”</strong></p>
 </blockquote>
 <hr />
 <h3 id="diagramma-er-relazioni">Diagramma ER relazioni<a class="headerlink" href="#diagramma-er-relazioni" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c">%%{init: {&#39;er&#39;: {&#39;layoutDirection&#39;: &#39;TB&#39;}}}%%</span>
-<span class="n">erDiagram</span>
-<span class="w">    </span><span class="s">stati</span><span class="w">                   </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">has</span>
-<span class="w">    </span><span class="n">comuni</span><span class="w">                  </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">has</span>
-<span class="w">    </span><span class="n">titoli_cortesia</span><span class="w">         </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">has</span>
-<span class="w">    </span><span class="n">tipi_soggetto_dettaglio</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">has</span>
-<span class="w">    </span><span class="n">contatti</span><span class="w">                </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">soggetti</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">default_of</span>
-<span class="w">    </span><span class="n">soggetti</span><span class="w">                </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">storico_soggetti</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">history</span>
-</code></pre></div>
-
+<pre class="mermaid"><code>%%{init: {'er': {'layoutDirection': 'TB'}}}%%
+erDiagram
+    stati                   ||--o{ soggetti : has
+    comuni                  ||--o{ soggetti : has
+    titoli_cortesia         ||--o{ soggetti : has
+    tipi_soggetto_dettaglio ||--o{ soggetti : has
+    contatti                ||--o{ soggetti : default_of
+    soggetti                ||--o{ storico_soggetti : history
+</code></pre>
 <hr />
 <h3 id="diagramma-er-attributi">Diagramma ER attributi<a class="headerlink" href="#diagramma-er-attributi" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c">%%{init: {&#39;er&#39;: {&#39;layoutDirection&#39;: &#39;TB&#39;}}}%%</span>
-<span class="n">erDiagram</span>
-<span class="s">soggetti</span><span class="w"> </span><span class="s">{</span>
-<span class="w">        </span><span class="n">uuid</span><span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="n">PK</span>
-<span class="w">        </span><span class="nb">string</span><span class="w"> </span><span class="n">codice</span>
-<span class="w">        </span><span class="nb">string</span><span class="w"> </span><span class="n">ragione_sociale</span>
-<span class="w">        </span><span class="nb">string</span><span class="w"> </span><span class="n">cognome</span>
-<span class="w">        </span><span class="nb">string</span><span class="w"> </span><span class="n">nome</span>
-<span class="w">        </span><span class="nb">char</span><span class="w">   </span><span class="n">sesso</span>
-<span class="w">        </span><span class="n">int</span><span class="w">    </span><span class="n">stato_id</span><span class="w"> </span><span class="n">FK</span>
-<span class="w">        </span><span class="n">int</span><span class="w">    </span><span class="n">comune_id</span><span class="w"> </span><span class="n">FK</span>
-<span class="w">        </span><span class="n">int</span><span class="w">    </span><span class="n">titolo_cortesia_id</span><span class="w"> </span><span class="n">FK</span>
-<span class="w">        </span><span class="n">int</span><span class="w">    </span><span class="n">default_contatto_id</span><span class="w"> </span><span class="n">FK</span>
-<span class="w">        </span><span class="n">bigint</span><span class="w"> </span><span class="n">tipo_soggetto_dettaglio_id</span><span class="w"> </span><span class="n">FK</span>
-<span class="w">        </span><span class="nb">string</span><span class="w"> </span><span class="n">ragione_sociale_completa</span>
-<span class="w">        </span><span class="nb">string</span><span class="w"> </span><span class="n">id_fiscale_univoco_cf_piva</span>
-<span class="w">        </span><span class="nb">string</span><span class="w"> </span><span class="n">user_insert</span>
-<span class="w">        </span><span class="nb">string</span><span class="w"> </span><span class="n">user_update</span>
-<span class="w">        </span><span class="nb">datetime</span><span class="w"> </span><span class="n">data_insert</span>
-<span class="w">        </span><span class="nb">datetime</span><span class="w"> </span><span class="n">data_update</span>
-<span class="w">        </span><span class="n">uuid</span><span class="w">   </span><span class="n">tx_id</span>
-<span class="w">        </span><span class="n">bool</span><span class="w">   </span><span class="n">storicizza</span>
-<span class="w">    </span><span class="p">}</span>
-</code></pre></div>
-
+<pre class="mermaid"><code>%%{init: {'er': {'layoutDirection': 'TB'}}}%%
+erDiagram
+soggetti {
+        uuid  id PK
+        string codice
+        string ragione_sociale
+        string cognome
+        string nome
+        char   sesso
+        int    stato_id FK
+        int    comune_id FK
+        int    titolo_cortesia_id FK
+        int    default_contatto_id FK
+        bigint tipo_soggetto_dettaglio_id FK
+        string ragione_sociale_completa
+        string id_fiscale_univoco_cf_piva
+        string user_insert
+        string user_update
+        datetime data_insert
+        datetime data_update
+        uuid   tx_id
+        bool   storicizza
+    }
+</code></pre>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
@@ -2505,9 +2503,9 @@
     
       <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

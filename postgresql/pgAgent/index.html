@@ -2489,7 +2489,7 @@
 <li><code>EXECUTE</code> su funzioni/procedure in <code>maintenance</code></li>
 <li>privilegi minimi necessari su oggetti target (tabelle, viste, ecc.)</li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- Ruolo e grant di base</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Ruolo e grant di base</span>
 <span class="k">CREATE</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">maintenance_executor</span><span class="p">;</span>
 <span class="k">GRANT</span><span class="w"> </span><span class="k">USAGE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">SCHEMA</span><span class="w"> </span><span class="n">maintenance</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="n">maintenance_executor</span><span class="p">;</span>
 <span class="k">GRANT</span><span class="w"> </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">ALL</span><span class="w"> </span><span class="n">FUNCTIONS</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="k">SCHEMA</span><span class="w"> </span><span class="n">maintenance</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="n">maintenance_executor</span><span class="p">;</span>
@@ -2497,10 +2497,9 @@
 <span class="c1">-- Assegna il ruolo all&#39;utente con cui gira pgAgent (es. postgres o zeroerp)</span>
 <span class="k">GRANT</span><span class="w"> </span><span class="n">maintenance_executor</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="n">postgres</span><span class="p">;</span>
 </code></pre></div>
-
 <hr />
 <h2 id="schema-maintenance-setup-minimo">🧰 Schema <code>maintenance</code> (setup minimo)<a class="headerlink" href="#schema-maintenance-setup-minimo" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- 0) Schema</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- 0) Schema</span>
 <span class="k">CREATE</span><span class="w"> </span><span class="k">SCHEMA</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">maintenance</span><span class="p">;</span>
 
 <span class="c1">-- 1) Log esecuzioni</span>
@@ -2591,10 +2590,9 @@
 <span class="k">END</span>
 <span class="err">$$</span><span class="p">;</span>
 </code></pre></div>
-
 <hr />
 <h2 id="creare-un-job-esempio-sabato-ore-0700">🛠️ Creare un job (esempio: <strong>sabato ore 07:00</strong>)<a class="headerlink" href="#creare-un-job-esempio-sabato-ore-0700" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="k">DO</span><span class="w"> </span><span class="err">$$</span>
+<div class="highlight"><pre><span></span><code><span class="k">DO</span><span class="w"> </span><span class="err">$$</span>
 <span class="k">DECLARE</span>
 <span class="w">  </span><span class="n">v_jobid</span><span class="w">   </span><span class="nb">integer</span><span class="p">;</span>
 <span class="w">  </span><span class="n">v_classid</span><span class="w"> </span><span class="nb">integer</span><span class="p">;</span>
@@ -2647,9 +2645,8 @@
 <span class="k">END</span>
 <span class="err">$$</span><span class="p">;</span>
 </code></pre></div>
-
 <h3 id="operazioni-veloci">Operazioni veloci<a class="headerlink" href="#operazioni-veloci" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c1">-- Disabilita/abilita job</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Disabilita/abilita job</span>
 <span class="k">UPDATE</span><span class="w"> </span><span class="n">pgagent</span><span class="p">.</span><span class="n">pga_job</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">jobenabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">FALSE</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">jobname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;apply_storicizza_weekly&#39;</span><span class="p">;</span>
 <span class="k">UPDATE</span><span class="w"> </span><span class="n">pgagent</span><span class="p">.</span><span class="n">pga_job</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">jobenabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span><span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="n">jobname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;apply_storicizza_weekly&#39;</span><span class="p">;</span>
 
@@ -2664,10 +2661,9 @@
 <span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pgagent</span><span class="p">.</span><span class="n">pga_job</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">j</span><span class="p">.</span><span class="n">jobid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">jstjobid</span>
 <span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">j</span><span class="p">.</span><span class="n">jobname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;apply_storicizza_weekly&#39;</span><span class="p">;</span>
 </code></pre></div>
-
 <hr />
 <h2 id="installazione-su-windows-servizio">🪟 Installazione su Windows (servizio)<a class="headerlink" href="#installazione-su-windows-servizio" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="c"># Apri PowerShell/cmd come Amministratore</span>
+<div class="highlight"><pre><span></span><code><span class="c"># Apri PowerShell/cmd come Amministratore</span>
 <span class="c"># Installa il servizio sotto LocalSystem</span>
 <span class="s2">&quot;C:\Program Files\PostgreSQL\17\bin\pgagent.exe&quot;</span> <span class="n">INSTALL</span> <span class="n">pgagent-pg17</span> <span class="n">-u</span> <span class="s2">&quot;NT AUTHORITY\LocalSystem&quot;</span> <span class="n">-p</span> <span class="s2">&quot;&quot;</span> <span class="s2">&quot;host=localhost port=5432 dbname=Zero user=postgres password=&lt;PWD&gt;&quot;</span>
 
@@ -2678,14 +2674,13 @@
 <span class="c"># Se serve rimuovere/reinstallare</span>
 <span class="s2">&quot;C:\Program Files\PostgreSQL\17\bin\pgagent.exe&quot;</span> <span class="n">REMOVE</span> <span class="n">pgagent-pg17</span>
 </code></pre></div>
-
 <blockquote>
 <p>🔎 In pgAdmin il nodo <strong>pgAgent Jobs</strong> è a <strong>livello server</strong> e legge dal <strong>Maintenance DB</strong> configurato nelle <em>Properties</em> del server (impostalo al DB che contiene <code>pgagent.*</code>).</p>
 </blockquote>
 <hr />
 <h2 id="integrazione-ci-ubuntugithub-actions">🐧 Integrazione CI (Ubuntu/GitHub Actions)<a class="headerlink" href="#integrazione-ci-ubuntugithub-actions" title="Permanent link">&para;</a></h2>
 <p>Aggiungi un <strong>servizio pgAgent</strong> accanto a PostgreSQL e verifica che il job giri.</p>
-<div class="codehilite"><pre><span></span><code><span class="nt">services</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="nt">services</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">postgres</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgis/postgis:17-3.5</span>
 <span class="w">    </span><span class="nt">env</span><span class="p">:</span>
@@ -2706,8 +2701,7 @@
 <span class="w">      </span><span class="nt">PGAGENT_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">zeroerp</span>
 <span class="w">      </span><span class="nt">PGAGENT_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">secret</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="c1"># Dopo le migrazioni Liquibase</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Dopo le migrazioni Liquibase</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Wait for pgAgent</span>
 <span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sleep 15</span>
 
@@ -2717,7 +2711,6 @@
 <span class="w">    </span><span class="no">psql -h localhost -p 5432 -U zeroerp -d zeroerp -c \</span>
 <span class="w">      </span><span class="no">&quot;SELECT * FROM maintenance.job_run_log ORDER BY id DESC LIMIT 1;&quot;</span>
 </code></pre></div>
-
 <blockquote>
 <p>🔐 Gestisci le password via <code>secrets</code> del provider CI. Evita di committare credenziali.</p>
 </blockquote>
@@ -2732,12 +2725,11 @@
 </ul>
 <hr />
 <h2 id="backup-migrazione-dei-job">🧰 Backup &amp; migrazione dei job<a class="headerlink" href="#backup-migrazione-dei-job" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code>pg_dump<span class="w"> </span>-h<span class="w"> </span>&lt;host&gt;<span class="w"> </span>-U<span class="w"> </span>&lt;user&gt;<span class="w"> </span>-d<span class="w"> </span>&lt;db&gt;<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>pg_dump<span class="w"> </span>-h<span class="w"> </span>&lt;host&gt;<span class="w"> </span>-U<span class="w"> </span>&lt;user&gt;<span class="w"> </span>-d<span class="w"> </span>&lt;db&gt;<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--data-only<span class="w"> </span>--column-inserts<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-t<span class="w"> </span>pgagent.pga_job<span class="w"> </span>-t<span class="w"> </span>pgagent.pga_schedule<span class="w"> </span>-t<span class="w"> </span>pgagent.pga_jobstep<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>&gt;<span class="w"> </span>pgagent_jobs.sql
 </code></pre></div>
-
 <blockquote>
 <p>Consigliato comunque <em>versionare</em> creazione/modifica job via Liquibase (idempotente).</p>
 </blockquote>
@@ -2817,9 +2809,9 @@ In ambiente Windows l’Utilità di pianificazione (Task Scheduler) offre l’op
     
       <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>

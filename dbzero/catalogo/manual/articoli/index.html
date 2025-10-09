@@ -2373,22 +2373,20 @@
 <hr />
 <h3 id="query-tipiche">🔎 Query tipiche<a class="headerlink" href="#query-tipiche" title="Permanent link">&para;</a></h3>
 <p><strong>1) Ricerca per codice case‑insensitive</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="o">*</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="o">*</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli</span><span class="w"> </span><span class="n">a</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="k">upper</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">codice</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">upper</span><span class="p">(:</span><span class="n">codice</span><span class="p">);</span>
 </code></pre></div>
-
 <p><strong>2) Articoli attivi per tipologia e gruppo</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">descrizione</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">descrizione</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli</span><span class="w"> </span><span class="n">a</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">tipo_voce_id</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">tipo_id</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">gruppo_voce_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">gruppo_id</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">descrizione</span><span class="p">;</span>
 </code></pre></div>
-
 <p><strong>3) Articoli compositi con componenti (schema indicativo)</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">codice</span><span class="w">   </span><span class="k">AS</span><span class="w"> </span><span class="n">prodotto</span><span class="p">,</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">codice</span><span class="w">   </span><span class="k">AS</span><span class="w"> </span><span class="n">prodotto</span><span class="p">,</span>
 <span class="w">       </span><span class="k">c</span><span class="p">.</span><span class="n">codice</span><span class="w">   </span><span class="k">AS</span><span class="w"> </span><span class="n">componente</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli_componenti</span><span class="w"> </span><span class="n">ac</span>
 <span class="k">JOIN</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ac</span><span class="p">.</span><span class="n">prodotto_id</span>
@@ -2397,15 +2395,13 @@
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">codice</span><span class="p">;</span>
 </code></pre></div>
-
 <p><strong>4) Verifica coerenza UoM attiva (diagnostica)</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">codice</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">codice</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli</span><span class="w"> </span><span class="n">a</span>
 <span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">unita_misura</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">uom_id</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">uom_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">u</span><span class="p">.</span><span class="n">attivo</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">true</span><span class="p">);</span>
 </code></pre></div>
-
 <hr />
 <h3 id="best-practice">🧭 Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2417,18 +2413,16 @@
 </ul>
 <hr />
 <h3 id="diagramma-er-relazioni-focus-articolo">Diagramma ER relazioni (focus articolo)<a class="headerlink" href="#diagramma-er-relazioni-focus-articolo" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c">%%{init: {&#39;er&#39;: {&#39;layoutDirection&#39;: &#39;TB&#39;}}}%%</span>
-<span class="n">erDiagram</span>
-<span class="w">    </span><span class="s">articoli</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">articoli_componenti</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">usa_componenti</span>
-<span class="w">    </span><span class="n">unita_misura</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">articoli</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">misura</span>
-<span class="w">    </span><span class="n">articoli_tipologie</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">articoli</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">tipizza</span>
-<span class="w">    </span><span class="n">articoli_gruppi</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">articoli</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">raggruppa</span>
-<span class="w">    </span><span class="n">articoli_spesa</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">articoli</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">spesa</span>
-<span class="w">    </span><span class="n">iva</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">articoli</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">aliquota</span>
-<span class="w">    </span><span class="n">conti_contabili</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">articoli</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">conto_vendita</span>
-<span class="w">    </span><span class="n">conti_contabili</span><span class="w"> </span><span class="o">||--</span><span class="n">o</span><span class="p">{</span><span class="w"> </span><span class="n">articoli</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">conto_acquisto</span>
-</code></pre></div>
-
+<pre class="mermaid"><code>%%{init: {'er': {'layoutDirection': 'TB'}}}%%
+erDiagram
+    articoli ||--o{ articoli_componenti : usa_componenti
+    unita_misura ||--o{ articoli : misura
+    articoli_tipologie ||--o{ articoli : tipizza
+    articoli_gruppi ||--o{ articoli : raggruppa
+    articoli_spesa ||--o{ articoli : spesa
+    iva ||--o{ articoli : aliquota
+    conti_contabili ||--o{ articoli : conto_vendita
+    conti_contabili ||--o{ articoli : conto_acquisto</code></pre>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 <hr />
@@ -2485,9 +2479,9 @@
     
       <script src="../../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="https://unpkg.com/mermaid@11.9.0/dist/mermaid.min.js"></script>
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
-        <script src="../../../../assets/javascripts/custom-mermaid.js"></script>
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
       
     
   </body>
