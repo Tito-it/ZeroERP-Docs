@@ -2124,15 +2124,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#collegamenti-con-altre-tabelle" class="md-nav__link">
-    <span class="md-ellipsis">
-      🔗 Collegamenti con Altre Tabelle
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#regole-di-validazione-condizionale" class="md-nav__link">
     <span class="md-ellipsis">
       🚩 Regole di Validazione Condizionale
@@ -2273,21 +2264,22 @@
 <h2 id="documentazione-concettuale-tabella-anagraficheclienti">📘 Documentazione Concettuale – Tabella <code>anagrafiche.clienti</code><a class="headerlink" href="#documentazione-concettuale-tabella-anagraficheclienti" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p>Guide generali:</p>
+<p><strong>Guide generali:</strong></p>
 <ul>
 <li><a href="../../../../guide/generazione-cliente">Generazione di un cliente</a></li>
 </ul>
-<p>Approfondimento tabelle:</p>
+<p><strong>Approfondimento tabelle:</strong></p>
 <ul>
 <li><a href="../../../../dbzero/anagrafiche/tabelle/istanze_utilities">anagrafiche.istanze_utilities</a></li>
 <li><a href="../../../../dbzero/anagrafiche/tabelle/billing_account">anagrafiche.billing_account</a></li>
 <li><a href="../../../../dbzero/anagrafiche/tabelle/soggetti_ruoli">anagrafiche.soggetti_ruoli</a></li>
+<li><a href="../../../../dbzero/config/tabelle/termini_pagamento">config.termini_pagamento</a></li>
 <li><a href="../../../../dbzero/config/tabelle/modalita_pagamento">config.modalita_pagamento</a></li>
 <li><a href="../../../../dbzero/config/tabelle/stati_cliente">config.stati_cliente</a></li>
 <li><a href="../../../../dbzero/config/tabelle/iva">config.iva</a></li>
 <li><a href="../../../../dbzero/config/tabelle/utilities">config.utilities</a></li>
 </ul>
-<p>Approfondimeto funzioni:</p>
+<p><strong>Approfondimeto funzioni:</strong></p>
 <ul>
 <li><a href="../../../../dbzero/script/funzioni/trgfn_upd_audit_data_user_generic">script.trgfn_upd_audit_data_user_generic</a></li>
 <li><a href="../../../../dbzero/script/funzioni/trgfn_upd_dlt_storico_generic">script.trgfn_upd_dlt_storico_generic</a></li>
@@ -2299,76 +2291,14 @@
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <p>La tabella <code>anagrafiche.clienti</code> memorizza le informazioni contrattuali e di fatturazione di un soggetto per una specifica <em>istanza</em> di servizio. Rappresenta la fase in cui un'attivazione (istanza) diventa un cliente ufficiale, includendo dettagli di scadenze, pagamento e classificazioni speciali (PA, split payment).</p>
 <hr />
-<h3 id="collegamenti-con-altre-tabelle">🔗 Collegamenti con Altre Tabelle<a class="headerlink" href="#collegamenti-con-altre-tabelle" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Campo</th>
-<th>Tabella di riferimento</th>
-<th>Azione</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>istanza_utility_id</code></td>
-<td><code>anagrafiche.istanze_utilities(id)</code></td>
-<td>ON UPDATE CASCADE, ON DELETE SET NULL</td>
-</tr>
-<tr>
-<td><code>soggetto_ruolo_id</code></td>
-<td><code>anagrafiche.soggetti_ruoli(id)</code></td>
-<td>ON UPDATE CASCADE, ON DELETE RESTRICT</td>
-</tr>
-<tr>
-<td><code>modalita_pagamento_id</code></td>
-<td><code>config.modalita_pagamento(id)</code></td>
-<td>ON UPDATE CASCADE, ON DELETE SET NULL</td>
-</tr>
-<tr>
-<td><code>stato_cliente_id</code></td>
-<td><code>config.stati_cliente(id)</code></td>
-<td>ON UPDATE CASCADE, ON DELETE RESTRICT</td>
-</tr>
-<tr>
-<td><code>iva_id</code></td>
-<td><code>config.iva(id)</code></td>
-<td>ON UPDATE CASCADE, ON DELETE RESTRICT</td>
-</tr>
-<tr>
-<td><code>utility_id</code></td>
-<td><code>config.utilities(id)</code></td>
-<td>ON UPDATE CASCADE, ON DELETE RESTRICT</td>
-</tr>
-</tbody>
-</table>
-<hr />
 <h3 id="regole-di-validazione-condizionale">🚩 Regole di Validazione Condizionale<a class="headerlink" href="#regole-di-validazione-condizionale" title="Permanent link">&para;</a></h3>
 <ol>
-<li>
-<p><strong>Tipo giorni scadenza (<code>tipo_gg_scadenza_ft</code>)</strong>
-   Valori ammessi: <code>G</code>, <code>F</code>, <code>N</code>, <code>M</code>.</p>
-</li>
-<li>
-<p><strong>Numero giorni scadenza (<code>nr_giorni_scadenza</code>)</strong></p>
-</li>
-<li>
-<p>Se <code>tipo_gg_scadenza_ft</code> = <code>G</code> o <code>F</code>, <strong><code>nr_giorni_scadenza</code> &gt; 0</strong>.</p>
-</li>
-<li>
-<p>Se <code>tipo_gg_scadenza_ft</code> = <code>N</code> o <code>M</code>, <strong><code>nr_giorni_scadenza</code> = 0</strong>.</p>
-</li>
-<li>
-<p><strong>Cliente PA (<code>cliente_pa</code>)</strong>
-   Valori ammessi: <code>S</code> (Pubblica Amministrazione), <code>N</code> (Privato).</p>
-</li>
-<li>
-<p><strong>Split payment (<code>split_payment</code>)</strong>
-   Valori ammessi: <code>S</code>, <code>N</code>.</p>
-</li>
-<li>
-<p><strong>Servizio da fatturare (<code>servizio_da_fatturare</code>)</strong>
-   Valori ammessi: <code>true</code>, <code>false</code>.</p>
-</li>
+<li><strong>Cliente PA (<code>cliente_pa</code>)</strong>
+   Valori ammessi: <code>S</code> (Pubblica Amministrazione), <code>N</code> (Privato).</li>
+<li><strong>Split payment (<code>split_payment</code>)</strong>
+   Valori ammessi: <code>S</code>, <code>N</code>.</li>
+<li><strong>Servizio da fatturare (<code>servizio_da_fatturare</code>)</strong>
+   Valori ammessi: <code>true</code>, <code>false</code>.</li>
 </ol>
 <hr />
 <hr />
@@ -2395,6 +2325,7 @@
 <ul>
 <li>La tabella <code>clienti</code> è il <strong>fulcro</strong> della logica di fatturazione: garantisce il passaggio dalla fase precontrattuale (istanza) alla fase contrattuale.</li>
 <li>Il cliente <strong>assume lo stesso</strong> <code>billing_account</code> generato in fase di istanza, mantenendo continuità nelle relazioni.</li>
+<li>La tabella <code>config.termini_pagamento</code> permette di impostare in maniera parametrica, sia la possibilità di calcolare una data scadenza che generare "n" pagamenti della fattura(esempio classico 30/60/90 o scadenza fine mese o calcalata in base al nr.giorni dalla data emissione) </li>
 </ul>
 <hr />
 <h3 id="diagramma-er-relazioni">Diagramma ER relazioni<a class="headerlink" href="#diagramma-er-relazioni" title="Permanent link">&para;</a></h3>
@@ -2406,6 +2337,8 @@ erDiagram
     stati_cliente     ||--o{ clienti : status_of
     iva               ||--o{ clienti : vat_of
     modalita_pagamento||--o{ clienti : pays_with
+    termini_pagamento ||--o{ clienti : pays_as
+
 
     istanze_utilities   { int id PK }
     soggetti_ruoli      { int id PK }
@@ -2413,6 +2346,7 @@ erDiagram
     stati_cliente       { int id PK }
     iva                 { int id PK }
     modalita_pagamento  { int id PK }
+    termine_pagamento   { int id PK }
     clienti             { int id PK }</code></pre>
 <hr />
 <h3 id="diagramma-er-attributi">Diagramma ER attributi<a class="headerlink" href="#diagramma-er-attributi" title="Permanent link">&para;</a></h3>
@@ -2422,8 +2356,7 @@ erDiagram
         int       id PK
         int       soggetto_ruolo_id FK
         int       istanza_utility_id FK
-        char      tipo_gg_scadenza_ft
-        int       nr_giorni_scadenza
+        int       termine_pagamento_id FK
         int       modalita_pagamento_id FK
         char      cliente_pa
         varchar   codice_cig
@@ -2620,18 +2553,6 @@ erDiagram
 <td></td>
 </tr>
 <tr>
-<td>tipo_giorni_scadenza</td>
-<td>character</td>
-<td>YES</td>
-<td>'N'::bpchar</td>
-</tr>
-<tr>
-<td>numero_giorni</td>
-<td>smallint</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
 <td>garanzia_tipo</td>
 <td>character</td>
 <td>YES</td>
@@ -2646,6 +2567,12 @@ erDiagram
 <tr>
 <td>periodo</td>
 <td>daterange</td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td>termine_pagamento_id</td>
+<td>bigint</td>
 <td>YES</td>
 <td></td>
 </tr>
@@ -2677,21 +2604,6 @@ erDiagram
 <td></td>
 </tr>
 <tr>
-<td>CHECK</td>
-<td>chk_clienti_numero_giorni_range</td>
-<td></td>
-</tr>
-<tr>
-<td>CHECK</td>
-<td>chk_clienti_numero_giorni_uso</td>
-<td></td>
-</tr>
-<tr>
-<td>CHECK</td>
-<td>chk_clienti_tipo_giorni_scadenza</td>
-<td></td>
-</tr>
-<tr>
 <td>FOREIGN KEY</td>
 <td>fk_clienti_istanze_utilities</td>
 <td>istanza_utility_id</td>
@@ -2700,6 +2612,11 @@ erDiagram
 <td>FOREIGN KEY</td>
 <td>fk_clienti_pdp</td>
 <td>pdp_id</td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_clienti_termini_pagamento</td>
+<td>termine_pagamento_id</td>
 </tr>
 <tr>
 <td>FOREIGN KEY</td>
