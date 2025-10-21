@@ -1588,6 +1588,29 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/backend/configurazione-django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configurazione Django
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2337,11 +2360,11 @@
 <li><a href="tabelle/ddt_righe/">ddt_righe</a></li>
 <li><a href="tabelle/fatture/">fatture</a> — <code>vendite.fatture</code> rappresenta la <strong>testata del documento fiscale di vendita</strong>. Gestisce <strong>identità fiscale (registro/anno/serie/numero)</strong>, <strong>stato e tipo documento</strong>, <strong>intestatari economici</strong> (BA, emittente, reseller), <strong>valuta e pagamento</strong>, <strong>totali</strong> e <strong>metadati</strong>. È il <strong>punto di aggregazione</strong> delle righe (<code>vendite.fatture_righe</code>) e dei riepiloghi IVA.</li>
 <li><a href="tabelle/fatture_indirizzi/">fatture_indirizzi</a> — <code>vendite.fatture_indirizzi</code> <strong>semplifica la gestione degli indirizzi di fattura</strong> e garantisce la <strong>ristampa conforme</strong> nel tempo tramite <strong>snapshot</strong> JSON dell’indirizzo al momento dell’emissione.</li>
-<li><a href="tabelle/fatture_rettifiche/">fatture_rettifiche</a></li>
+<li><a href="tabelle/fatture_rettifiche/">fatture_rettifiche</a> — <code>vendite.fatture_rettifiche</code> modella il <strong>legame N:N</strong> fra <strong>documenti rettificanti</strong> (es. note di credito/debito) e <strong>documenti rettificati</strong> (fatture originarie).</li>
 <li><a href="tabelle/fatture_riepiloghi_iva/">fatture_riepiloghi_iva</a> — <code>vendite.fatture_riepiloghi_iva</code> è lo <strong>specchietto fiscale</strong> della fattura: aggrega le righe per <strong>combinazione fiscale</strong> e ne memorizza i totali. Serve per:</li>
 <li><a href="tabelle/fatture_righe/">fatture_righe</a> — <code>vendite.fatture_righe</code> contiene le <strong>righe economiche</strong> di una fattura: descrizione, articolo (opzionale), UoM, quantità, prezzo, sconti, IVA e <strong>importi congelati</strong> (<em>snapshot</em>) al momento della generazione. Ogni riga è ordinata tramite <code>riga_nr</code> ed è collegata a una testata <code>vendite.fatture</code> (FK <code>fattura_id</code>). Supporta la <strong>destinazione a BA diverso</strong> dalla testata e l’idempotenza di import riga‑per‑riga.</li>
 <li><a href="tabelle/fatture_scadenze/">fatture_scadenze</a> — <code>vendite.fatture_scadenze</code> memorizza lo <strong>schedule di pagamento</strong> (rate/scadenze) della fattura come <strong>snapshot</strong> al momento dell’emissione, così da:</li>
-<li><a href="tabelle/note/">note</a></li>
+<li><a href="tabelle/note/">note</a> — <code>vendite.note</code> gestisce <strong>note testuali</strong> ancorabili sia alla <strong>testata</strong> del documento sia alla <strong>riga</strong>, con controllo di posizionamento e ordinamento di rendering. È una tabella <strong>partizionata per <code>target_tipo</code></strong> per garantire prestazioni e manutenzione più semplici, con <strong>FK forti</strong> verso le rispettive testate/righe nelle singole partizioni.</li>
 <li><a href="tabelle/note_contratto/">note_contratto</a></li>
 <li><a href="tabelle/note_ddt/">note_ddt</a></li>
 <li><a href="tabelle/note_fatture/">note_fatture</a></li>
@@ -2362,6 +2385,7 @@
 <ul>
 <li><a href="funzioni/fn_get_vendite_note/">fn_get_vendite_note</a></li>
 <li><a href="funzioni/fn_numera_fattura_opz_emessa/">fn_numera_fattura_opz_emessa</a></li>
+<li><a href="funzioni/fn_resolve_termini_pagamento/">fn_resolve_termini_pagamento</a></li>
 <li><a href="funzioni/trgfn_a10_attivita_fatturabili_guard_fatturato/">trgfn_a10_attivita_fatturabili_guard_fatturato</a></li>
 <li><a href="funzioni/trgfn_a10_fatture_protect_num/">trgfn_a10_fatture_protect_num</a></li>
 <li><a href="funzioni/trgfn_a10_ordini_v_protect_num/">trgfn_a10_ordini_v_protect_num</a></li>
@@ -2375,13 +2399,12 @@
 <li><a href="funzioni/trgfn_attivita_guard_ba_coerenza/">trgfn_attivita_guard_ba_coerenza</a></li>
 <li><a href="funzioni/trgfn_attivita_guard_fonte/">trgfn_attivita_guard_fonte</a></li>
 <li><a href="funzioni/trgfn_attivita_norm_competenza_mese/">trgfn_attivita_norm_competenza_mese</a></li>
-<li><a href="funzioni/trgfn_contnote_validate/">trgfn_contnote_validate</a></li>
 <li><a href="funzioni/trgfn_ddt_indirizzi_only_allowed_tipi/">trgfn_ddt_indirizzi_only_allowed_tipi</a></li>
 <li><a href="funzioni/trgfn_fatture_indirizzi_only_allowed_tipi/">trgfn_fatture_indirizzi_only_allowed_tipi</a></li>
 <li><a href="funzioni/trgfn_fatture_righe_norm_guard/">trgfn_fatture_righe_norm_guard</a></li>
+<li><a href="funzioni/trgfn_note_validate_generic/">trgfn_note_validate_generic</a></li>
 <li><a href="funzioni/trgfn_ordini_indirizzi_only_allowed_tipi/">trgfn_ordini_indirizzi_only_allowed_tipi</a></li>
 <li><a href="funzioni/trgfn_preventivi_norm/">trgfn_preventivi_norm</a></li>
-<li><a href="funzioni/trgfn_prevnote_validate/">trgfn_prevnote_validate</a></li>
 <li><a href="funzioni/trgfn_tipi_indirizzi_only_allowed/">trgfn_tipi_indirizzi_only_allowed</a></li>
 </ul>
 <h2 id="views">🔍 Views<a class="headerlink" href="#views" title="Permanent link">&para;</a></h2>

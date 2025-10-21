@@ -16,7 +16,7 @@
     
     
       
-        <title>⚙️ Funzione trgfn_contnote_validate - Zero ERP Documentation</title>
+        <title>Note - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#funzione-trgfn_contnote_validate" class="md-skip">
+        <a href="#documentazione-concettuale-tabella-venditenote-partizionata" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione trgfn_contnote_validate
+              Note
             
           </span>
         </div>
@@ -115,7 +115,7 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../../../../dbzero/vendite/funzioni/trgfn_contnote_validate/" hreflang="it" class="md-select__link">
+            <a href="../../../../../dbzero/vendite/manual/note/" hreflang="it" class="md-select__link">
               Italiano
             </a>
           </li>
@@ -1515,6 +1515,29 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../dev/backend/configurazione-django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configurazione Django
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2193,8 +2216,83 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-concettuale-tabella-venditenote-partizionata" class="md-nav__link">
+    <span class="md-ellipsis">
+      📘 Documentazione Concettuale – Tabella vendite.note (partizionata)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Tabella vendite.note (partizionata)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Scopo Principale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#struttura-padre" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧱 Struttura (padre)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partizioni-e-regole" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧩 Partizioni e regole
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempi-duso" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧪 Esempi d’uso
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migliorie-anomalie-riscontrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 Migliorie / anomalie riscontrate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ruolo-nel-sistema" class="md-nav__link">
+    <span class="md-ellipsis">
+      👓 Ruolo nel sistema
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -2213,35 +2311,131 @@
   
 
 
-<h1 id="funzione-trgfn_contnote_validate">⚙️ Funzione <code>trgfn_contnote_validate</code><a class="headerlink" href="#funzione-trgfn_contnote_validate" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_contnote_validate</span><span class="p">()</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">trgfn_contnote_validate</span><span class="p">()</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">DECLARE</span><span class="w"> </span><span class="n">v_ctr_id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="p">;</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">anchor_tipo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;RIGA&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">contratto_id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_ctr_id</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">contratti_righe</span>
-<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">target_riga_id</span><span class="p">;</span>
+  <h1>Note</h1>
 
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">FOUND</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">v_ctr_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">target_id</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">        </span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="s1">&#39;note_contratto&#39;</span><span class="p">,</span><span class="s1">&#39;E_NOTE_RIGA_MISMATCH&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;target_id&#39;</span><span class="p">,</span><span class="k">NEW</span><span class="p">.</span><span class="n">target_id</span><span class="p">,</span><span class="s1">&#39;target_riga_id&#39;</span><span class="p">,</span><span class="k">NEW</span><span class="p">.</span><span class="n">target_riga_id</span><span class="p">),</span>
-<span class="w">        </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">        </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;La riga %s non appartiene al contratto %s&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">target_riga_id</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">target_id</span><span class="p">)</span>
-<span class="w">      </span><span class="p">);</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="k">END</span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
+<h2 id="documentazione-concettuale-tabella-venditenote-partizionata">📘 Documentazione Concettuale – Tabella <code>vendite.note</code> (partizionata)<a class="headerlink" href="#documentazione-concettuale-tabella-venditenote-partizionata" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p>• <a href="../../../../dbzero/vendite/tabelle/fatture">vendite.fatture</a> <br />
+• <a href="../../../../dbzero/vendite/tabelle/ordini">vendite.ordini</a> <br />
+• <a href="../../../../dbzero/vendite/tabelle/preventivi">vendite.preventivi</a> <br />
+• <a href="../../../../dbzero/vendite/tabelle/contratti">vendite.contratti</a>  <br />
+• <a href="../../../../dbzero/vendite/tabelle/ddt">vendite.ddt</a>    </p>
+</blockquote>
 <hr />
-<p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p><code>vendite.note</code> gestisce <strong>note testuali</strong> ancorabili sia alla <strong>testata</strong> del documento sia alla <strong>riga</strong>, con controllo di posizionamento e ordinamento di rendering. È una tabella <strong>partizionata per <code>target_tipo</code></strong> per garantire prestazioni e manutenzione più semplici, con <strong>FK forti</strong> verso le rispettive testate/righe nelle singole partizioni.</p>
+<hr />
+<h3 id="struttura-padre">🧱 Struttura (padre)<a class="headerlink" href="#struttura-padre" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Partizionamento</strong>: <code>PARTITION BY LIST (target_tipo)</code>.</li>
+<li><strong>PK composita</strong>: <code>(target_tipo, id)</code> → necessaria per le partizioni (l’<code>id</code> non è univoco globalmente).</li>
+<li><strong>Ancora</strong>: <code>anchor_tipo ∈ {DOCUMENTO, RIGA}</code>.</li>
+<li><strong>Posizione</strong>: <code>posizione ∈ {HEADER, FOOTER, SEZIONE, BEFORE, AFTER}</code> (le ammissibilità effettive sono raffinate nelle partizioni).</li>
+<li><strong>Ordinamento</strong>: <code>seq ≥ 0</code> (default 10) per controllare l’ordine di resa all’interno della stessa area di ancoraggio/posizione.</li>
+<li><strong>Contenuti</strong>: <code>testo</code> (plain) e/o <code>testo_md</code> (Markdown); <code>stile</code> per resa (es. NORMALE, AVVISO…).</li>
+<li><strong>Localizzazione</strong>: <code>lingua</code> (char(5), es. <code>it-IT</code>).</li>
+<li><strong>Visibilità</strong>: <code>visibile</code> e <code>solo_stampa</code>.</li>
+<li><strong>Meta</strong>: JSONB estendibile.</li>
+</ul>
+<p>Indici globali utili:</p>
+<ul>
+<li><code>ix_note_render_order(target_tipo, target_id, anchor_tipo, posizione, seq)</code></li>
+<li><code>ix_vendite_note_by_riga(… WHERE target_riga_id IS NOT NULL)</code></li>
+</ul>
+<hr />
+<h3 id="partizioni-e-regole">🧩 Partizioni e regole<a class="headerlink" href="#partizioni-e-regole" title="Permanent link">&para;</a></h3>
+<p>Ogni partizione applica <strong>FK</strong> coerenti con il dominio e un <strong>CHECK combinato</strong> che allinea <code>anchor_tipo</code>/<code>posizione</code>/<code>target_riga_id</code>:</p>
+<ol>
+<li>
+<p><strong><code>vendite.note_contratto</code></strong> – <code>FOR VALUES IN ('CONTRATTO')</code></p>
+</li>
+<li>
+<p>FK: <code>target_id → vendite.contratti(id)</code>, <code>target_riga_id → vendite.contratti_righe(id)</code>.</p>
+</li>
+<li>CHECK: se <code>anchor_tipo='DOCUMENTO'</code> → <code>target_riga_id IS NULL</code> e <code>posizione ∈ {HEADER, FOOTER, SEZIONE}</code>; se <code>anchor_tipo='RIGA'</code> → <code>target_riga_id IS NOT NULL</code> e <code>posizione ∈ {BEFORE, AFTER}</code>.</li>
+<li>
+<p>Trigger: <code>trg_note_contratto_ins_upd_contnote_validate()</code>.</p>
+</li>
+<li>
+<p><strong><code>vendite.note_ddt</code></strong> – <code>FOR VALUES IN ('DDT')</code></p>
+</li>
+<li>
+<p>FK: <code>target_id → vendite.ddt(id)</code>, <code>target_riga_id → vendite.ddt_righe(id)</code>.</p>
+</li>
+<li>CHECK analogo a <code>CONTRATTO</code>.</li>
+<li>
+<p>Indice dedicato <code>ix_ddt_note_render</code>.</p>
+</li>
+<li>
+<p><strong><code>vendite.note_fatture</code></strong> – <code>FOR VALUES IN ('FATTURA')</code></p>
+</li>
+<li>
+<p>FK: <code>target_id → vendite.fatture(id)</code>, <code>target_riga_id → vendite.fatture_righe(id)</code>.</p>
+</li>
+<li>CHECK analogo a <code>CONTRATTO</code>.</li>
+<li>
+<p>Indice dedicato <code>ix_fatture_note_render</code>.</p>
+</li>
+<li>
+<p><strong><code>vendite.note_ordini</code></strong> – <code>FOR VALUES IN ('ORDINE')</code></p>
+</li>
+<li>
+<p>FK: <code>target_id → vendite.ordini(id)</code>, <code>target_riga_id → vendite.ordini_righe(id)</code>.</p>
+</li>
+<li>CHECK analogo a <code>CONTRATTO</code>.</li>
+<li>
+<p>Indice dedicato <code>ix_ordini_note_render</code>.</p>
+</li>
+<li>
+<p><strong><code>vendite.note_preventivo</code></strong> – <code>FOR VALUES IN ('PREVENTIVO')</code></p>
+</li>
+<li>
+<p>FK: <code>target_id → vendite.preventivi(id)</code>, <code>target_riga_id → vendite.preventivi_righe(id)</code>.</p>
+</li>
+<li>CHECK analogo a <code>CONTRATTO</code>.</li>
+<li>Trigger: <code>trg_note_preventivo_ins_upd_prevnote_validate()</code>.</li>
+</ol>
+<blockquote>
+<p>💡 <strong>Perché partizionare?</strong></p>
+<ul>
+<li>query/cleanup <strong>target-specifiche</strong> (es. rebuild di tutte le note fatture) sono più veloci;</li>
+<li>si possono impostare policy di <strong>retention</strong> e <strong>permessi</strong> differenti per dominio;</li>
+<li>manutenzione più semplice (vacuum, reindex, backup parziali).</li>
+</ul>
+</blockquote>
+<hr />
+<h3 id="esempi-duso">🧪 Esempi d’uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Nota di piede FATTURA</strong> (documento): <code>anchor_tipo='DOCUMENTO'</code>, <code>posizione='FOOTER'</code>, <code>target_riga_id=NULL</code>, <code>seq=10</code>.</li>
+<li><strong>Nota “prima della riga” ORDINE</strong>: <code>anchor_tipo='RIGA'</code>, <code>posizione='BEFORE'</code>, <code>target_riga_id=&lt;id_riga&gt;</code>, <code>seq=5</code>.</li>
+<li><strong>Condizioni generali</strong> su <strong>HEADER PREVENTIVO</strong> in <code>testo_md</code>.</li>
+</ul>
+<hr />
+<h3 id="migliorie-anomalie-riscontrate">🔧 Migliorie / anomalie riscontrate<a class="headerlink" href="#migliorie-anomalie-riscontrate" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Dominio <code>stile</code></strong>
+   Attualmente libero (<code>VARCHAR(16)</code> con default <code>NORMALE</code>).
+   ▶ Consigliato un CHECK (es. <code>IN ('NORMALE','EVIDENZA','AVVISO','PICCOLO')</code>) o una tabella <code>config.note_stili</code>.</p>
+</li>
+<li>
+<p><strong>Lingua</strong>
+   <code>CHAR(5)</code> è corretto, ma conviene un CHECK sul pattern <code>^[a-z]{2}-[A-Z]{2}$</code> o una lookup table <code>config.lingue</code> per evitare valori incoerenti.
+   ▶ In PostgreSQL, il pattern si può validare in trigger (<code>SIMILAR TO</code>/regex) se necessario.</p>
+</li>
+<li>
+<p><strong>Indici addizionali</strong>
+   Selezione frequente per <strong>testata</strong>: aggiungi indice dedicato <code>(target_tipo, target_id)</code> (senza altre colonne) per lookup rapidi.</p>
+</li>
+<li>
+<p><strong>Policy di update</strong>
+   Se le note devono essere <strong>immutabili</strong> dopo emissione/numerazione (es. su FATTURA), valuta un trigger <em>fail‑fast</em> condizionato allo stato documento.</p>
+</li>
+</ol>
+<hr />
+<h3 id="ruolo-nel-sistema">👓 Ruolo nel sistema<a class="headerlink" href="#ruolo-nel-sistema" title="Permanent link">&para;</a></h3>
+<p><code>vendite.note</code> fornisce un <strong>layer di annotazioni</strong> uniforme e riusabile per tutto il dominio vendite. Il partizionamento per <code>target_tipo</code> consente crescita ordinata, performance prevedibili e governance per dominio, mantenendo al contempo un’unica API di scrittura/lettura.</p>
 
 
 
