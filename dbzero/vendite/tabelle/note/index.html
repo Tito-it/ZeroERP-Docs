@@ -2455,16 +2455,6 @@
 <h3 id="migliorie-anomalie-riscontrate">🔧 Migliorie / anomalie riscontrate<a class="headerlink" href="#migliorie-anomalie-riscontrate" title="Permanent link">&para;</a></h3>
 <ol>
 <li>
-<p><strong>Dominio <code>stile</code></strong>
-   Attualmente libero (<code>VARCHAR(16)</code> con default <code>NORMALE</code>).
-   ▶ Consigliato un CHECK (es. <code>IN ('NORMALE','EVIDENZA','AVVISO','PICCOLO')</code>) o una tabella <code>config.note_stili</code>.</p>
-</li>
-<li>
-<p><strong>Lingua</strong>
-   <code>CHAR(5)</code> è corretto, ma conviene un CHECK sul pattern <code>^[a-z]{2}-[A-Z]{2}$</code> o una lookup table <code>config.lingue</code> per evitare valori incoerenti.
-   ▶ In PostgreSQL, il pattern si può validare in trigger (<code>SIMILAR TO</code>/regex) se necessario.</p>
-</li>
-<li>
 <p><strong>Indici addizionali</strong>
    Selezione frequente per <strong>testata</strong>: aggiungi indice dedicato <code>(target_tipo, target_id)</code> (senza altre colonne) per lookup rapidi.</p>
 </li>
@@ -2543,18 +2533,6 @@
 <td></td>
 </tr>
 <tr>
-<td>stile</td>
-<td>character varying</td>
-<td>NO</td>
-<td>'NORMALE'::character varying</td>
-</tr>
-<tr>
-<td>lingua</td>
-<td>character</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
 <td>visibile</td>
 <td>boolean</td>
 <td>NO</td>
@@ -2596,6 +2574,18 @@
 <td>YES</td>
 <td>CURRENT_USER</td>
 </tr>
+<tr>
+<td>id_stile</td>
+<td>bigint</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td>id_lingua</td>
+<td>bigint</td>
+<td>YES</td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -2627,6 +2617,21 @@
 <td>CHECK</td>
 <td>chk_note_target_tipo</td>
 <td></td>
+</tr>
+<tr>
+<td>CHECK</td>
+<td>chk_note_testo_non_vuoto</td>
+<td></td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_vendite_note_id_lingua</td>
+<td>id_lingua, id_lingua, id_lingua, id_lingua, id_lingua, id_lingua</td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_vendite_note_id_stile</td>
+<td>id_stile, id_stile, id_stile, id_stile, id_stile, id_stile</td>
 </tr>
 <tr>
 <td>PRIMARY KEY</td>

@@ -16,7 +16,7 @@
     
     
       
-        <title>📚 Tabella note - Zero ERP Documentation</title>
+        <title>Note - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tabella-note" class="md-skip">
+        <a href="#documentazione-concettuale-tabella-acquistinote-partizionata" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              📚 Tabella note
+              Note
             
           </span>
         </div>
@@ -2216,8 +2216,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -2226,6 +2224,76 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#documentazione-concettuale-tabella-acquistinote-partizionata" class="md-nav__link">
+    <span class="md-ellipsis">
+      📘 Documentazione Concettuale – Tabella acquisti.note (partizionata)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Tabella acquisti.note (partizionata)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Scopo Principale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#struttura-padre" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧱 Struttura (padre)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partizioni-e-regole" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧩 Partizioni e regole
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempi-duso" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧪 Esempi d’uso
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ruolo-nel-sistema" class="md-nav__link">
+    <span class="md-ellipsis">
+      👓 Ruolo nel sistema
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tabella-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      📚 Tabella note
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📚 Tabella note">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#campi-principali" class="md-nav__link">
     <span class="md-ellipsis">
       🗂️ Campi principali
@@ -2233,8 +2301,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#vincoli" class="md-nav__link">
     <span class="md-ellipsis">
       🔒 Vincoli
@@ -2242,13 +2310,18 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#indici" class="md-nav__link">
     <span class="md-ellipsis">
       📑 Indici
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2271,6 +2344,75 @@
   
 
 
+<h2 id="documentazione-concettuale-tabella-acquistinote-partizionata">📘 Documentazione Concettuale – Tabella <code>acquisti.note</code> (partizionata)<a class="headerlink" href="#documentazione-concettuale-tabella-acquistinote-partizionata" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p><strong>Approfondimento tabelle:</strong></p>
+<p>• <a href="../../../../dbzero/acquisti/tabelle/ordini">acquisti.ordini</a> <br />
+• <a href="../../../../dbzero/acquisti/tabelle/ddt">acquisti.ddt</a>    </p>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p><code>acquisti.note</code> gestisce <strong>note testuali</strong> ancorabili sia alla <strong>testata</strong> del documento sia alla <strong>riga</strong>, con controllo di posizionamento e ordinamento di rendering. È una tabella <strong>partizionata per <code>target_tipo</code></strong> per garantire prestazioni e manutenzione più semplici, con <strong>FK forti</strong> verso le rispettive testate/righe nelle singole partizioni.</p>
+<hr />
+<h3 id="struttura-padre">🧱 Struttura (padre)<a class="headerlink" href="#struttura-padre" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Partizionamento</strong>: <code>PARTITION BY LIST (target_tipo)</code>.</li>
+<li><strong>PK composita</strong>: <code>(target_tipo, id)</code> → necessaria per le partizioni (l’<code>id</code> non è univoco globalmente).</li>
+<li><strong>Ancora</strong>: <code>anchor_tipo ∈ {DOCUMENTO, RIGA}</code>.</li>
+<li><strong>Posizione</strong>: <code>posizione ∈ {HEADER, FOOTER, SEZIONE, BEFORE, AFTER}</code> (le ammissibilità effettive sono raffinate nelle partizioni).</li>
+<li><strong>Ordinamento</strong>: <code>seq ≥ 0</code> (default 10) per controllare l’ordine di resa all’interno della stessa area di ancoraggio/posizione.</li>
+<li><strong>Contenuti</strong>: <code>testo</code> (plain) e/o <code>testo_md</code> (Markdown); <code>stile</code> per resa (es. NORMALE, AVVISO…).</li>
+<li><strong>Localizzazione</strong>: <code>lingua</code> (char(5), es. <code>it-IT</code>).</li>
+<li><strong>Visibilità</strong>: <code>visibile</code> e <code>solo_stampa</code>.</li>
+<li><strong>Meta</strong>: JSONB estendibile.</li>
+</ul>
+<p>Indici globali utili:</p>
+<ul>
+<li><code>ix_note_render_order(target_tipo, target_id, anchor_tipo, posizione, seq)</code></li>
+<li><code>ix_acquisti_note_by_riga(… WHERE target_riga_id IS NOT NULL)</code></li>
+</ul>
+<hr />
+<h3 id="partizioni-e-regole">🧩 Partizioni e regole<a class="headerlink" href="#partizioni-e-regole" title="Permanent link">&para;</a></h3>
+<p>Ogni partizione applica <strong>FK</strong> coerenti con il dominio e un <strong>CHECK combinato</strong> che allinea <code>anchor_tipo</code>/<code>posizione</code>/<code>target_riga_id</code>:</p>
+<ol>
+<li>
+<p><strong><code>acquisti.note_ddt</code></strong> – <code>FOR VALUES IN ('DDT')</code></p>
+</li>
+<li>
+<p>FK: <code>target_id → acquisti.ddt(id)</code>, <code>target_riga_id → acquisti.ddt_righe(id)</code>.</p>
+</li>
+<li>CHECK analogo a <code>CONTRATTO</code>.</li>
+<li>
+<p>Indice dedicato <code>ix_ddt_note_render</code>.</p>
+</li>
+<li>
+<p><strong><code>acquisti.note_ordini</code></strong> – <code>FOR VALUES IN ('ORDINE')</code></p>
+</li>
+<li>
+<p>FK: <code>target_id → acquisti.ordini(id)</code>, <code>target_riga_id → acquisti.ordini_righe(id)</code>.</p>
+</li>
+<li>CHECK analogo a <code>CONTRATTO</code>.</li>
+<li>Indice dedicato <code>ix_ordini_note_render</code>.</li>
+</ol>
+<blockquote>
+<p>💡 <strong>Perché partizionare?</strong></p>
+<ul>
+<li>query/cleanup <strong>target-specifiche</strong> (es. rebuild di tutte le note fatture) sono più veloci;</li>
+<li>si possono impostare policy di <strong>retention</strong> e <strong>permessi</strong> differenti per dominio;</li>
+<li>manutenzione più semplice (vacuum, reindex, backup parziali).</li>
+</ul>
+</blockquote>
+<hr />
+<h3 id="esempi-duso">🧪 Esempi d’uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Nota di piede FATTURA</strong> (documento): <code>anchor_tipo='DOCUMENTO'</code>, <code>posizione='FOOTER'</code>, <code>target_riga_id=NULL</code>, <code>seq=10</code>.</li>
+<li><strong>Nota “prima della riga” ORDINE</strong>: <code>anchor_tipo='RIGA'</code>, <code>posizione='BEFORE'</code>, <code>target_riga_id=&lt;id_riga&gt;</code>, <code>seq=5</code>.</li>
+<li><strong>Condizioni generali</strong> su <strong>HEADER PREVENTIVO</strong> in <code>testo_md</code>.</li>
+</ul>
+<hr />
+<h3 id="ruolo-nel-sistema">👓 Ruolo nel sistema<a class="headerlink" href="#ruolo-nel-sistema" title="Permanent link">&para;</a></h3>
+<p><code>acquisti.note</code> fornisce un <strong>layer di annotazioni</strong> uniforme e riusabile per tutto il dominio acquisti. Il partizionamento per <code>target_tipo</code> consente crescita ordinata, performance prevedibili e governance per dominio, mantenendo al contempo un’unica API di scrittura/lettura.</p>
 <h1 id="tabella-note">📚 Tabella <code>note</code><a class="headerlink" href="#tabella-note" title="Permanent link">&para;</a></h1>
 <h2 id="campi-principali">🗂️ Campi principali<a class="headerlink" href="#campi-principali" title="Permanent link">&para;</a></h2>
 <table>
@@ -2338,18 +2480,6 @@
 <td></td>
 </tr>
 <tr>
-<td>stile</td>
-<td>character varying</td>
-<td>NO</td>
-<td>'NORMALE'::character varying</td>
-</tr>
-<tr>
-<td>lingua</td>
-<td>character</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
 <td>visibile</td>
 <td>boolean</td>
 <td>NO</td>
@@ -2391,6 +2521,18 @@
 <td>YES</td>
 <td>CURRENT_USER</td>
 </tr>
+<tr>
+<td>id_stile</td>
+<td>bigint</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td>id_lingua</td>
+<td>bigint</td>
+<td>YES</td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -2422,6 +2564,21 @@
 <td>CHECK</td>
 <td>chk_acq_note_target_tipo</td>
 <td></td>
+</tr>
+<tr>
+<td>CHECK</td>
+<td>chk_note_testo_non_vuoto</td>
+<td></td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_acq_note_id_lingua</td>
+<td>id_lingua, id_lingua, id_lingua</td>
+</tr>
+<tr>
+<td>FOREIGN KEY</td>
+<td>fk_acq_note_id_stile</td>
+<td>id_stile, id_stile, id_stile</td>
 </tr>
 <tr>
 <td>PRIMARY KEY</td>

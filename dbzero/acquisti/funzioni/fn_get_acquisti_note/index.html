@@ -2245,42 +2245,9 @@
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="k">sql</span>
 <span class="w"> </span><span class="k">STABLE</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="w"> </span><span class="c1">------------------------------------------------------</span>
-<span class="w"> </span><span class="c1">-- Funzione generica per estrarre note per target_tipo/target_id</span>
-<span class="w"> </span><span class="c1">------------------------------------------------------</span>
-<span class="w">  </span><span class="k">SELECT</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">target_tipo</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">target_id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">target_riga_id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">anchor_tipo</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">posizione</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">seq</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">testo</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">testo_md</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">stile</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">lingua</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">visibile</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">solo_stampa</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">meta</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">data_insert</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">user_insert</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">data_update</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">user_update</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">acquisti</span><span class="p">.</span><span class="n">note</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">n</span>
-<span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">target_tipo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">upper</span><span class="p">(</span><span class="n">_target_tipo</span><span class="p">)</span>
-<span class="w">    </span><span class="k">AND</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">target_id</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">_target_id</span>
-<span class="w">    </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">_target_riga_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">target_riga_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_target_riga_id</span><span class="p">)</span>
-<span class="w">    </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span>
-<span class="w">          </span><span class="p">(</span><span class="n">_include_doc</span><span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">anchor_tipo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;DOCUMENTO&#39;</span><span class="p">)</span>
-<span class="w">       </span><span class="k">OR</span><span class="w"> </span><span class="p">(</span><span class="n">_include_righe</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">anchor_tipo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;RIGA&#39;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="w">    </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">_only_visible</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">FALSE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">visibile</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">TRUE</span><span class="p">)</span>
-<span class="w">  </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span>
-<span class="w">    </span><span class="c1">-- ordina prima DOCUMENTO poi RIGA, mantenendo il rendering naturale</span>
-<span class="w">    </span><span class="k">CASE</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">anchor_tipo</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="s1">&#39;DOCUMENTO&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="k">END</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">posizione</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">seq</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">id</span><span class="p">;</span><span class="w">  </span><span class="c1">-- id come tie-breaker</span>
+<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_note</span><span class="p">(</span><span class="s1">&#39;acquisti.note&#39;</span><span class="p">::</span><span class="n">regclass</span><span class="p">,</span>
+<span class="w">                                   </span><span class="n">_target_tipo</span><span class="p">,</span><span class="w"> </span><span class="n">_target_id</span><span class="p">,</span><span class="w"> </span><span class="n">_target_riga_id</span><span class="p">,</span>
+<span class="w">                                   </span><span class="n">_include_doc</span><span class="p">,</span><span class="w"> </span><span class="n">_include_righe</span><span class="p">,</span><span class="w"> </span><span class="n">_only_visible</span><span class="p">);</span>
 <span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>
 <hr />
