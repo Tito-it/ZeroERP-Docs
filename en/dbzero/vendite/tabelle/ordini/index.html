@@ -2306,15 +2306,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#osservazioni-e-migliorie-consigliate" class="md-nav__link">
-    <span class="md-ellipsis">
-      ⚠️ Osservazioni e migliorie consigliate
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#ruolo-nel-sistema" class="md-nav__link">
     <span class="md-ellipsis">
       👓 Ruolo nel sistema
@@ -2404,14 +2395,14 @@
 <p><strong>Approfondimento tabelle:</strong></p>
 <p>• <a href="../../../../dbzero/vendite/tabelle/ordini_righe">vendite.ordini_righe</a><br />
 • <a href="../../../../dbzero/config/tabelle/stati_doc_ordini">config.stati_doc_ordini</a><br />
-• <a href="../../../../dbzero/config/tabelle/modalita_pagamento">config.modalita_pagamento</a><br />
+• <a href="../../../../dbzero/config/tabelle/modalita_pagamento">config.modalita_pagamento</a> <br />
 • <a href="../../../../dbzero/config/tabelle/valute">config.valute</a><br />
 • <a href="../../../../dbzero/config/tabelle/termini_pagamento">config.termini_pagamento</a><br />
 • <a href="../../../../dbzero/config/tabelle/causali_trasporto">config.causali_trasporto</a><br />
 • <a href="../../../../dbzero/config/tabelle/aspetti_beni">config.aspetti_beni</a><br />
 • <a href="../../../../dbzero/config/tabelle/modalita_addebito_trasporto">config.modalita_addebito_trasporto</a><br />
 • <a href="../../../../dbzero/anagrafiche/tabelle/soggetti_ruoli">anagrafiche.soggetti_ruoli</a><br />
-• <a href="../../../../dbzero/anagrafiche/tabelle/billing_account">anagrafiche.billing_account</a>  </p>
+• <a href="../../../../dbzero/anagrafiche/tabelle/billing_account">anagrafiche.billing_account</a>    </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
@@ -2503,16 +2494,6 @@
 <li><strong>Sorgente esterna</strong> – se popolata, blocca rinumerazione automatica e update su <code>serie/numero</code>.  </li>
 </ol>
 <hr />
-<h3 id="osservazioni-e-migliorie-consigliate">⚠️ Osservazioni e migliorie consigliate<a class="headerlink" href="#osservazioni-e-migliorie-consigliate" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>Campo <code>numero</code></strong> – aggiungere <code>CHECK (numero &lt;&gt; '')</code> per evitare numeri vuoti nei documenti numerati.  </li>
-<li><strong>Gestione <code>vettore_soggetto_ruolo_id</code></strong> – attualmente non referenziata con <code>ON DELETE SET NULL</code>; potrebbe essere utile aggiungerla per coerenza logistica.  </li>
-<li><strong>Campi peso/volume</strong> – valutare default = 0 o <code>CHECK (&gt;= 0)</code> per validazione quantitativa.  </li>
-<li><strong>Indice composito cliente + data</strong> – utile per cruscotti di analisi ordini per periodo.  </li>
-<li><strong>Campo <code>uid</code></strong> – raccomandato <code>NOT NULL</code> con generazione automatica per garantire tracciabilità anche offline.  </li>
-<li><strong>Evoluzione futura</strong> – possibile estensione verso <code>vendite.ordini_righe_evasi</code> e <code>vendite.ordini_righe_fatturate</code> per tracciamento stato di avanzamento.</li>
-</ol>
-<hr />
 <h3 id="ruolo-nel-sistema">👓 Ruolo nel sistema<a class="headerlink" href="#ruolo-nel-sistema" title="Permanent link">&para;</a></h3>
 <p><code>vendite.ordini</code> è la <strong>base operativa</strong> del ciclo vendite: raccoglie tutte le informazioni contrattuali e logistiche preliminari alla spedizione e alla fatturazione.<br />
 Assicura la <strong>tracciabilità completa</strong> del flusso commerciale e costituisce un <strong>ponte naturale</strong> tra la fase commerciale, logistica e amministrativa del gestionale.</p>
@@ -2537,7 +2518,7 @@ Assicura la <strong>tracciabilità completa</strong> del flusso commerciale e co
 <tr>
 <td>uid</td>
 <td>uuid</td>
-<td>YES</td>
+<td>NO</td>
 <td>gen_random_uuid()</td>
 </tr>
 <tr>
@@ -2597,84 +2578,6 @@ Assicura la <strong>tracciabilità completa</strong> del flusso commerciale e co
 <tr>
 <td>modalita_pagamento_id</td>
 <td>integer</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>giorni_pagamento</td>
-<td>smallint</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>fine_mese</td>
-<td>boolean</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>causale_trasporto_id</td>
-<td>bigint</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>aspetto_bene_id</td>
-<td>bigint</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>vettore_soggetto_ruolo_id</td>
-<td>bigint</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>num_colli</td>
-<td>integer</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>peso_lordo</td>
-<td>numeric</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>peso_netto</td>
-<td>numeric</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>volume</td>
-<td>numeric</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>modalita_addebito_trasporto_id</td>
-<td>bigint</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>targa</td>
-<td>character varying</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>data_ora_partenza</td>
-<td>timestamp with time zone</td>
-<td>YES</td>
-<td></td>
-</tr>
-<tr>
-<td>data_ora_consegna_prev</td>
-<td>timestamp with time zone</td>
 <td>YES</td>
 <td></td>
 </tr>
@@ -2781,28 +2684,13 @@ Assicura la <strong>tracciabilità completa</strong> del flusso commerciale e co
 </tr>
 <tr>
 <td>FOREIGN KEY</td>
-<td>fk_ordini_v_aspetto_bene</td>
-<td>aspetto_bene_id</td>
-</tr>
-<tr>
-<td>FOREIGN KEY</td>
 <td>fk_ordini_v_billing_account</td>
 <td>billing_account_id</td>
 </tr>
 <tr>
 <td>FOREIGN KEY</td>
-<td>fk_ordini_v_causale_trasporto</td>
-<td>causale_trasporto_id</td>
-</tr>
-<tr>
-<td>FOREIGN KEY</td>
 <td>fk_ordini_v_cliente_ruolo</td>
 <td>soggetto_ruolo_id</td>
-</tr>
-<tr>
-<td>FOREIGN KEY</td>
-<td>fk_ordini_v_mod_add_trasporto</td>
-<td>modalita_addebito_trasporto_id</td>
 </tr>
 <tr>
 <td>FOREIGN KEY</td>
@@ -2882,6 +2770,18 @@ Assicura la <strong>tracciabilità completa</strong> del flusso commerciale e co
 <td>BEFORE</td>
 <td>UPDATE</td>
 <td><code>EXECUTE FUNCTION vendite.trgfn_a10_ordini_v_protect_num()</code></td>
+</tr>
+<tr>
+<td>trg_ordini_ins_upd_norm</td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_ordini_norm()</code></td>
+</tr>
+<tr>
+<td>trg_ordini_ins_upd_norm</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION vendite.trgfn_ordini_norm()</code></td>
 </tr>
 </tbody>
 </table>
