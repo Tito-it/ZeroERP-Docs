@@ -2463,14 +2463,18 @@
 <span class="w"> </span><span class="k">SECURITY</span><span class="w"> </span><span class="k">DEFINER</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
 <span class="k">DECLARE</span>
-<span class="w">    </span><span class="n">v_bypass_enabled</span><span class="w"> </span><span class="nb">BOOLEAN</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">FALSE</span><span class="p">;</span><span class="w">   </span><span class="c1">-- Il bypass è abilitato di default</span>
+<span class="w">    </span><span class="n">v_bypass_enabled</span><span class="w"> </span><span class="nb">BOOLEAN</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">FALSE</span><span class="p">;</span><span class="w">   </span>
 <span class="w">    </span><span class="n">v_session_tx_id</span><span class="w">     </span><span class="n">UUID</span><span class="p">;</span>
 <span class="w">    </span><span class="n">v_new_tx_id</span><span class="w">      </span><span class="n">UUID</span><span class="p">;</span>
 <span class="k">BEGIN</span>
-<span class="w">    </span><span class="c1">-- --------------------------------------</span>
-<span class="w">    </span><span class="c1">-- 1. Verifica stato bypass (config + sessione)</span>
-<span class="w">    </span><span class="c1">-- --------------------------------------</span>
-<span class="w">    </span><span class="c1">-- Legge da config.parameters</span>
+
+
+
+
+
+
+
+
 <span class="w">    </span><span class="k">BEGIN</span>
 <span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="n">default_value</span><span class="p">::</span><span class="nb">BOOLEAN</span>
 <span class="w">          </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_bypass_enabled</span>
@@ -2478,7 +2482,7 @@
 <span class="w">        </span><span class="k">WHERE</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tx_id_bypass_enabled&#39;</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">FOUND</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="c1">-- Parametro mancante: log e prosegui con bypass disabilitato</span>
+
 
 <span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_error_only</span><span class="p">(</span>
 <span class="w">                </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
@@ -2489,14 +2493,14 @@
 <span class="w">                    </span><span class="s1">&#39;nome_tabella&#39;</span><span class="p">,</span><span class="w">      </span><span class="s1">&#39;config.parameters&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="s1">&#39;action&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;default bypass=false&#39;</span><span class="w"> </span>
 <span class="w">                </span><span class="p">),</span>
-<span class="w">                   </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
+<span class="w">                  </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
 <span class="w">                  </span><span class="s1">&#39;tx_id_bypass_enabled&#39;</span><span class="p">,</span>
 <span class="w">                  </span><span class="s1">&#39;config.parameters&#39;</span>
 <span class="w">              </span><span class="p">);</span>
 <span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
 <span class="w">    </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="c1">-- Errore reale nella lettura del parametro: log e abort</span>
+
 <span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">            </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
 <span class="w">            </span><span class="s1">&#39;dbops.trgfn_tx_id_managed&#39;</span><span class="p">,</span>
@@ -2509,49 +2513,49 @@
 <span class="w">            </span><span class="n">TG_TABLE_NAME</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span>
 <span class="w">            </span><span class="n">SQLERRM</span><span class="p">::</span><span class="nb">text</span>
 <span class="w">        </span><span class="p">);</span>
-<span class="w">        </span><span class="c1">-- Rilascia eccezione per non proseguire</span>
+
 <span class="w">        </span><span class="n">RAISE</span><span class="p">;</span>
 <span class="w">    </span><span class="k">END</span><span class="p">;</span>
 
-<span class="w">      </span><span class="c1">-- --------------------------------------</span>
-<span class="w">    </span><span class="c1">-- 2.  Override da sessione se non attivo</span>
-<span class="w">      </span><span class="c1">-- --------------------------------------</span>
+
+
+
 <span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">v_bypass_enabled</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">        </span><span class="k">BEGIN</span>
 <span class="w">            </span><span class="n">v_bypass_enabled</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.bypass_tx_id_check&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">)::</span><span class="nb">BOOLEAN</span><span class="p">;</span>
 <span class="w">        </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="c1">-- Variabile sessione non impostata: procedi senza bypass</span>
+
 <span class="w">            </span><span class="k">NULL</span><span class="p">;</span>
 <span class="w">        </span><span class="k">END</span><span class="p">;</span>
 <span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">      </span><span class="c1">-- --------------------------------------</span>
-<span class="w">   </span><span class="c1">-- 3. Lettura tx_id da variabile di sessione</span>
-<span class="w">      </span><span class="c1">-- --------------------------------------</span>
+
+
+
 <span class="w">    </span><span class="k">BEGIN</span>
 <span class="w">        </span><span class="n">v_session_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">)::</span><span class="n">UUID</span><span class="p">;</span>
 <span class="w">    </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">        </span><span class="n">v_session_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="k">END</span><span class="p">;</span>
-<span class="w">      </span><span class="c1">-- --------------------------------------</span>
-<span class="w">    </span><span class="c1">-- 4. Assegnazione tx_id in base alla modalità</span>
-<span class="w">      </span><span class="c1">-- --------------------------------------</span>
+
+
+
 <span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_bypass_enabled</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="c1">-- Caso A) Bypass attivo: usa nil o valore in sessione</span>
+
 <span class="w">        </span><span class="n">v_new_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">v_session_tx_id</span><span class="p">,</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">uuid_nil</span><span class="p">());</span>
 
 <span class="w">    </span><span class="k">ELSE</span>
 <span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="n">v_session_tx_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="c1">-- Caso B)  Modalità normale con tx_id in sessione</span>
-<span class="w">            </span><span class="c1">-- Verifica esistenza in transaction_ids</span>
+
+
 <span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span>
 <span class="w">              </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">transaction_ids</span><span class="w"> </span>
-<span class="w">             </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_session_tx_id</span><span class="p">;</span>
+<span class="w">            </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_session_tx_id</span><span class="p">;</span>
 <span class="w">            </span><span class="k">IF</span><span class="w"> </span><span class="k">FOUND</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">                </span><span class="n">v_new_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_session_tx_id</span><span class="p">;</span>
 
 <span class="w">            </span><span class="k">ELSE</span>
-<span class="w">                 </span><span class="c1">-- Caso C)</span>
-<span class="w">                </span><span class="c1">-- ID non registrato: log warning e assegna nil</span>
+
+
 <span class="w">                </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">                    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="s1">&#39;dbops.trgfn_tx_id_managed&#39;</span><span class="p">,</span>
@@ -2565,16 +2569,16 @@
 <span class="w">            </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">ELSE</span>
-<span class="w">            </span><span class="c1">-- Caso D)</span>
-<span class="w">            </span><span class="c1">-- Nessun tx_id in sessione: generazione tramite dblink (assegna nuovo)</span>
-<span class="w">            </span><span class="c1">--  modalita standard</span>
+
+
+
 <span class="w">            </span><span class="k">BEGIN</span><span class="w">  </span>
-<span class="w">              </span><span class="c1">-- Invochiamo il helper che fa dblink + set_config</span>
+
 <span class="w">              </span><span class="n">v_new_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_or_create_session_tx_id</span><span class="p">();</span>
 
 <span class="w">            </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
 
-<span class="w">                </span><span class="c1">-- Errore generazione tx_id: log e assegna nil</span>
+
 <span class="w">                </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">                    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="s1">&#39;dbops.trgfn_tx_id_managed&#39;</span><span class="p">,</span>
@@ -2589,20 +2593,27 @@
 <span class="w">            </span><span class="k">END</span><span class="p">;</span>
 <span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 <span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">      </span><span class="c1">-- --------------------------------------</span>
-<span class="w">    </span><span class="c1">-- 5. Assegna tx_id al record</span>
-<span class="w">      </span><span class="c1">-- --------------------------------------</span>
-<span class="w">      </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">tx_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="w">      </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
-<span class="w">      </span><span class="k">NEW</span><span class="p">.</span><span class="n">tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span>
-<span class="w">        </span><span class="n">v_new_tx_id</span><span class="p">,</span>
-<span class="w">        </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">        </span><span class="n">gen_random_uuid</span><span class="p">()</span><span class="w">              </span><span class="c1">-- ultima ancora</span>
-<span class="w">      </span><span class="p">);</span>
-<span class="w">      </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
 
+
+
+<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">tx_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">tx_id</span><span class="p">::</span><span class="nb">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="k">NEW</span><span class="p">.</span><span class="n">tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
+<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+
+<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">tx_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
+<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+
+<span class="w">  </span><span class="k">NEW</span><span class="p">.</span><span class="n">tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span>
+<span class="w">    </span><span class="n">v_new_tx_id</span><span class="p">,</span>
+<span class="w">    </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)::</span><span class="n">uuid</span><span class="p">,</span>
+<span class="w">    </span><span class="n">gen_random_uuid</span><span class="p">()</span><span class="w">  </span>
+<span class="w">  </span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
 
 <span class="k">END</span><span class="p">;</span>
 <span class="err">$</span><span class="k">function</span><span class="err">$</span>
