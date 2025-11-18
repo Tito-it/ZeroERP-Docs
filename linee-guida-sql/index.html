@@ -2937,61 +2937,53 @@ Quando una colonna ha un significato comune e ricorrente (ad esempio <code>descr
 <hr />
 <h3 id="5-trigger-e-funzioni">5. Trigger e Funzioni<a class="headerlink" href="#5-trigger-e-funzioni" title="Permanent link">&para;</a></h3>
 <ul>
-<li>
-<p><strong>Trigger Functions</strong> (PL/pgSQL, <code>schema.trgfn_&lt;table&gt;_&lt;descr&gt;</code>):</p>
-</li>
-<li>
-<p>Esempio: <code>CREATE OR REPLACE FUNCTION anagrafiche.trgfn_contatti_set_default()</code></p>
-</li>
-<li><strong>Trigger</strong> (DDL):</li>
+<li><strong>Trigger Functions</strong> :</li>
 </ul>
-<p><div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_contatti_set_default</span>
-<span class="w">  </span><span class="k">BEFORE</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span>
-<span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">contatti</span>
-<span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_contatti_set_default</span><span class="p">();</span>
-</code></pre></div>
-* <strong>Nomi</strong>:</p>
+<blockquote>
+<p>Vedi il documento:</p>
 <ul>
-<li>Funzioni: <code>trgfn_&lt;table&gt;_&lt;action&gt;</code></li>
-<li>Trigger: <code>trg_&lt;table&gt;_&lt;action&gt;</code></li>
-<li>
-<p><strong>Best practice</strong>:</p>
+<li><a href="../linee-guida-trigger/">Linee Guida Trigger</a> <br />
 </li>
-<li>
-<p>Mettere funzioni e trigger nello stesso schema della tabella (se dedicate), o in <code>script</code>/<code>dbops</code> per utilizzabilità multipla.</p>
-</li>
-<li>
-<p>Documentare sempre parametri e comportamento</p>
-</li>
-<li>
-<p><strong>Funzioni di Cleanup</strong> (PL/pgSQL, <code>schema.trgfn_&lt;table&gt;_ins_upd_clean_fields</code>):</p>
-</li>
-<li>Usate per pulire, normalizzare o impostare valori di default sui campi mancanti prima di <code>INSERT</code> o <code>UPDATE</code>.</li>
-<li>Convenzione di naming:<ul>
-<li>Funzione: <code>trgfn_&lt;table&gt;_ins_upd_clean_fields</code></li>
-<li>Trigger:   <code>trg_&lt;table&gt;_ins_upd_clean_fields</code></li>
 </ul>
-</li>
-<li>Esempio:
-    <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_soggetti_ins_upd_clean_fields</span><span class="p">()</span>
-<span class="w">  </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span><span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">stato_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">NEW</span><span class="p">.</span><span class="n">stato_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_default_by_param</span><span class="p">(</span>
-<span class="w">      </span><span class="s1">&#39;config&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;stati&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;codice_iso3&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;state_code_iso3&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">TG_NAME</span>
-<span class="w">    </span><span class="p">)::</span><span class="nb">integer</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="err">$$</span><span class="p">;</span>
+</blockquote>
+<p><strong>Naming delle trigger function:</strong></p>
+<p>Qui la scelta migliore è NON mettere né fase né eventi nel nome della funzione.</p>
+<p>Quindi:</p>
+<p><strong>trgfn_<schema_opzionale><em><tabella></em><descrizione_breve></strong>
+<div class="highlight"><pre><span></span><code>Esempi:
 
-<span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_soggetti_ins_upd_clean_fields</span>
-<span class="w">  </span><span class="k">BEFORE</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti</span>
-<span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_soggetti_ins_upd_clean_fields</span><span class="p">();</span>
-</code></pre></div></li>
+trgfn_anagrafiche_soggetti_tx_id_managed
+
+trgfn_vendite_ddt_righe_qta_from_operativa
+
+trgfn_config_stati_prevent_delete_if_used
+</code></pre></div>
+<strong>Utilizzo di check o guard</strong></p>
+<ul>
+<li>A. Usa check per funzioni “pure” che verificano</li>
 </ul>
+<p>Funzioni che:
+  prendono input restituiscono boolean (o un codice)
+  non fanno RAISE EXCEPTION da sole</p>
+<p>Esempi:
+  fn_check_codice_fiscale(formato text) RETURNS boolean
+  fn_check_piva(formato text, stato text) RETURNS boolean</p>
+<p>Queste le usi dentro altre funzioni/trigger per decidere cosa fare.</p>
+<ul>
+<li>B. Usa guard per funzioni che bloccano (fail-fast)</li>
+</ul>
+<p>Funzioni che:
+  chiamano eventualmente fn_log_and_raise_error(...)
+  fanno da “sentinella”: se la condizione non è rispettata → alzano errore
+  normalmente restituiscono void o al massimo un boolean che quasi non guardi mai</p>
+<p>Esempi:</p>
+<p>fn_guard_codice_fiscale(formato text)
+  fn_guard_piva(formato text, stato text)</p>
+<p><strong>Cosa non fare:</strong></p>
+<p>Mescolare i nomi a caso:</p>
+<p>una volta fn_check_<em> che fa RAISE
+  una volta fn_guard_</em> che torna boolean</p>
+<p>Diventa impossibile capire dal nome se la funzione lancia o verifica soltanto.</p>
 <hr />
 <h3 id="6-viste-views">6. Viste (Views)<a class="headerlink" href="#6-viste-views" title="Permanent link">&para;</a></h3>
 <ul>
