@@ -16,7 +16,7 @@
     
     
       
-        <title>⚙️ Funzione trgfn_magazzini_norm - Zero ERP Documentation</title>
+        <title>⚙️ Funzione trgfn_magazzini_protect_codice - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#funzione-trgfn_magazzini_norm" class="md-skip">
+        <a href="#funzione-trgfn_magazzini_protect_codice" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione trgfn_magazzini_norm
+              ⚙️ Funzione trgfn_magazzini_protect_codice
             
           </span>
         </div>
@@ -121,7 +121,7 @@
           </li>
         
           <li class="md-select__item">
-            <a href="../../../../en/dbzero/magazzino/funzioni/trgfn_magazzini_norm/" hreflang="en" class="md-select__link">
+            <a href="../../../../en/dbzero/magazzino/funzioni/trgfn_magazzini_protect_codice/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
@@ -2335,17 +2335,26 @@
   
 
 
-<h1 id="funzione-trgfn_magazzini_norm">⚙️ Funzione <code>trgfn_magazzini_norm</code><a class="headerlink" href="#funzione-trgfn_magazzini_norm" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_magazzini_norm</span><span class="p">()</span>
+<h1 id="funzione-trgfn_magazzini_protect_codice">⚙️ Funzione <code>trgfn_magazzini_protect_codice</code><a class="headerlink" href="#funzione-trgfn_magazzini_protect_codice" title="Permanent link">&para;</a></h1>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_magazzini_protect_codice</span><span class="p">()</span>
 </code></pre></div>
 <p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">magazzino</span><span class="p">.</span><span class="n">trgfn_magazzini_norm</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">magazzino</span><span class="p">.</span><span class="n">trgfn_magazzini_protect_codice</span><span class="p">()</span>
 <span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
 <span class="k">BEGIN</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">codice</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">NEW</span><span class="p">.</span><span class="n">codice</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">upper</span><span class="p">(</span><span class="n">btrim</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">codice</span><span class="p">));</span>
+<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">TG_OP</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;UPDATE&#39;</span>
+<span class="w">     </span><span class="k">AND</span><span class="w"> </span><span class="k">OLD</span><span class="p">.</span><span class="n">codice</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">     </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">codice</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">OLD</span><span class="p">.</span><span class="n">codice</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">      </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="n">TG_NAME</span><span class="p">,</span>
+<span class="w">      </span><span class="s1">&#39;E_COLONNA_NON_MODIFICABILE&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="s1">&#39;magazzino.magazzini&#39;</span><span class="p">,</span><span class="s1">&#39;column&#39;</span><span class="p">,</span><span class="s1">&#39;codice&#39;</span><span class="p">,</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="k">OLD</span><span class="p">.</span><span class="n">id</span><span class="p">),</span>
+<span class="w">      </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
+<span class="w">      </span><span class="s1">&#39;codice (magazzino)&#39;</span>
+<span class="w">    </span><span class="p">);</span>
 <span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 <span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
 <span class="k">END</span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
