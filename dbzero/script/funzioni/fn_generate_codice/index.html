@@ -2622,6 +2622,7 @@
 <span class="w">  </span><span class="n">len</span><span class="w">        </span><span class="nb">INT</span><span class="p">;</span>
 <span class="w">  </span><span class="n">seq_name</span><span class="w">   </span><span class="nb">TEXT</span><span class="p">;</span>
 <span class="w">  </span><span class="n">risultato</span><span class="w">  </span><span class="nb">TEXT</span><span class="p">;</span>
+<span class="w">  </span><span class="n">v_context_name</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;script.fn_generate_codice&#39;</span><span class="p">;</span>
 <span class="k">BEGIN</span>
 <span class="w">  </span><span class="cm">/*    Crea la funzione generica script.fn_generate_codice(tipo TEXT) che:</span>
 <span class="cm">        - legge da config.sistema_codici i parametri per quel tipo</span>
@@ -2631,8 +2632,8 @@
 <span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">prefisso</span><span class="p">,</span><span class="w"> </span><span class="n">separatore</span><span class="p">,</span><span class="w"> </span><span class="n">lunghezza_numero</span><span class="p">,</span><span class="w"> </span><span class="n">nome_sequenza</span>
 <span class="w">    </span><span class="k">INTO</span><span class="w"> </span><span class="k">prefix</span><span class="p">,</span><span class="w"> </span><span class="n">sep</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span>
 <span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">sistema_codici</span>
-<span class="w">   </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice_tipo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tipo</span>
-<span class="w">     </span><span class="k">AND</span><span class="w"> </span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span><span class="p">;</span>
+<span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice_tipo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tipo</span>
+<span class="w">    </span><span class="k">AND</span><span class="w"> </span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span><span class="p">;</span>
 
 <span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">seq_name</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">    </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;SELECT nextval(%L)&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">seq_val</span><span class="p">;</span>
@@ -2640,9 +2641,9 @@
 <span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="n">risultato</span><span class="p">;</span>
 <span class="w">  </span><span class="k">ELSE</span>
 <span class="w">    </span><span class="c1">-- Se non esiste una sequenza per questo tipo, lancia un errore</span>
-<span class="w">       </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">      </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">          </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">          </span><span class="n">TG_NAME</span><span class="p">,</span>
+<span class="w">          </span><span class="n">v_context_name</span><span class="p">,</span>
 <span class="w">          </span><span class="s1">&#39;SEQUENZA_NON_CONFIGURATA&#39;</span><span class="p">,</span>
 <span class="w">          </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;codice_tipo&#39;</span><span class="p">,</span><span class="n">tipo</span><span class="p">),</span>
 <span class="w">          </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>

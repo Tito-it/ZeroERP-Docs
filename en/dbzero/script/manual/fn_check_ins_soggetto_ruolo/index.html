@@ -2439,10 +2439,6 @@
   Controlla se esiste già un’associazione tra il soggetto e il codice interno del ruolo in <code>anagrafiche.soggetti_ruoli</code>.</p>
 </li>
 <li>
-<p><strong>Inserimento automatico</strong><br />
-  Quando <code>p_soggetto_ruolo_id</code> è <code>NULL</code> o <code>0</code>, crea un nuovo record in <code>anagrafiche.soggetti_ruoli</code> con <code>soggetto_id</code>, <code>ruolo_id</code> e <code>user_insert = current_user</code>.</p>
-</li>
-<li>
 <p><strong>Ritorno dell’ID</strong><br />
   Restituisce sempre l’ID valido della relazione soggetto–ruolo, sia esso appena creato o già esistente.</p>
 </li>
@@ -2465,7 +2461,7 @@
 <tr>
 <td><code>p_soggetto_id</code></td>
 <td><code>UUID</code></td>
-<td>ID del soggetto in <code>anagrafiche.oggetti</code>.</td>
+<td>ID del soggetto in <code>anagrafiche.oggetti</code> ---&gt; Opzionale.</td>
 </tr>
 <tr>
 <td><code>p_soggetto_ruolo_id</code></td>
@@ -2497,19 +2493,6 @@
    Cerca in <code>config.tipi_ruoli</code> il record con <code>codice_interno = p_cd_int_ruolo</code>. Se non trovato, solleva eccezione <code>E_COD_INT_RUOLO</code>.</p>
 </li>
 <li>
-<p><strong>Inserimento condizionale</strong><br />
-   Se <code>p_soggetto_ruolo_id</code> è <code>NULL</code> o <code>0</code>:</p>
-</li>
-<li>Inserisce in <code>anagrafiche.soggetti_ruoli</code> un nuovo record con:<ul>
-<li><code>soggetto_id = p_soggetto_id</code></li>
-<li><code>ruolo_id = &lt;id recuperato&gt;</code></li>
-<li><code>user_insert = current_user</code></li>
-</ul>
-</li>
-<li>
-<p>Restituisce l’<code>id</code> del nuovo record.</p>
-</li>
-<li>
 <p><strong>Verifica esistenza</strong><br />
    Altrimenti:</p>
 </li>
@@ -2538,9 +2521,9 @@
 <h3 id="integrazione-con-trigger">🔗 Integrazione con Trigger<a class="headerlink" href="#integrazione-con-trigger" title="Permanent link">&para;</a></h3>
 <p>Utilizzare all’interno di trigger <code>BEFORE INSERT</code> o <code>BEFORE UPDATE</code> sulle tabelle di assegnazione ruoli:</p>
 <div class="highlight"><pre><span></span><code><span class="k">NEW</span><span class="mf">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_check_ins_soggetto_ruolo</span><span class="p">(</span>
-<span class="w">  </span><span class="k">NEW</span><span class="mf">.</span><span class="n">soggetto_id</span><span class="p">,</span>
+<span class="w">  </span><span class="k">NULL</span><span class="p">,</span>
 <span class="w">  </span><span class="k">NEW</span><span class="mf">.</span><span class="n">soggetto_ruolo_id</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;CLIENTE&#39;</span><span class="w">            </span><span class="c1">-- o altro codice interno di ruolo</span>
+<span class="w">  </span><span class="s1">&#39;CL&#39;</span><span class="w">            </span><span class="c1">-- o altro codice interno di ruolo</span>
 <span class="p">);</span>
 </code></pre></div>
 <hr />
@@ -2558,16 +2541,13 @@
 <p>Audit automatico
       Ogni inserimento registra user_insert = current_user, facilitando tracciabilità e debugging.</p>
 </li>
-<li>
-<p>Flessibilità futura
-      Per aggiungere nuovi ruoli, basta inserire record in config.tipi_ruoli; la funzione li gestirà </p>
-</li>
 </ul>
 <h3 id="nota-di-sviluppo">🚧 Nota di sviluppo<a class="headerlink" href="#nota-di-sviluppo" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="nx">Questa</span><span class="w">  </span><span class="nx">la</span><span class="w"> </span><span class="nx">funzione</span><span class="w"> </span><span class="nx">generica</span><span class="w"> </span><span class="nx">costituisce</span><span class="w"> </span><span class="nx">il</span><span class="w"> </span><span class="nx">nucleo</span><span class="w"> </span><span class="nx">metodologico</span><span class="w"> </span><span class="nx">per</span><span class="w"> </span><span class="nx">la</span><span class="w"> </span><span class="nx">gestione</span><span class="w"> </span><span class="nx">dei</span><span class="w"> </span><span class="nx">ruoli</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">Zero</span><span class="w"> </span><span class="nx">ERP</span><span class="p">:</span><span class="w"> </span><span class="nx">sarà</span><span class="w"> </span><span class="nx">estese</span><span class="w"> </span><span class="nx">e</span><span class="w"> </span><span class="nx">replicate</span><span class="w"> </span><span class="nx">per</span><span class="w"> </span><span class="nx">ogni</span><span class="w"> </span><span class="nx">nuovo</span><span class="w"> </span><span class="nx">tipo</span><span class="w"> </span><span class="nx">di</span><span class="w"> </span><span class="nx">ruolo</span><span class="w"> </span><span class="nx">oggetto</span><span class="w"> </span><span class="nx">di</span><span class="w"> </span><span class="nx">implementazione</span><span class="p">.</span>
 </code></pre></div>
 
 <hr />
+<p>Versione aggiornata il 21/11/2025. Da completare.</p>
 
 
 
