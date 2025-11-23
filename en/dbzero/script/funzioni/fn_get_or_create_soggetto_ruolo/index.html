@@ -16,7 +16,7 @@
     
     
       
-        <title>⚙️ Funzione fn_check_soggetto_ruolo - Zero ERP Documentation</title>
+        <title>⚙️ Funzione fn_get_or_create_soggetto_ruolo - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#funzione-fn_check_soggetto_ruolo" class="md-skip">
+        <a href="#funzione-fn_get_or_create_soggetto_ruolo" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione fn_check_soggetto_ruolo
+              ⚙️ Funzione fn_get_or_create_soggetto_ruolo
             
           </span>
         </div>
@@ -115,7 +115,7 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../../../../dbzero/script/funzioni/fn_check_soggetto_ruolo/" hreflang="it" class="md-select__link">
+            <a href="../../../../../dbzero/script/funzioni/fn_get_or_create_soggetto_ruolo/" hreflang="it" class="md-select__link">
               Italiano
             </a>
           </li>
@@ -2335,50 +2335,49 @@
   
 
 
-<h1 id="funzione-fn_check_soggetto_ruolo">⚙️ Funzione <code>fn_check_soggetto_ruolo</code><a class="headerlink" href="#funzione-fn_check_soggetto_ruolo" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_check_soggetto_ruolo</span><span class="p">(</span><span class="n">p_soggetto_id</span><span class="w"> </span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="nb">integer</span><span class="p">,</span><span class="w"> </span><span class="n">p_cd_int_ruolo</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">)</span>
+<h1 id="funzione-fn_get_or_create_soggetto_ruolo">⚙️ Funzione <code>fn_get_or_create_soggetto_ruolo</code><a class="headerlink" href="#funzione-fn_get_or_create_soggetto_ruolo" title="Permanent link">&para;</a></h1>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_get_or_create_soggetto_ruolo</span><span class="p">(</span><span class="n">p_soggetto_id</span><span class="w"> </span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">p_cd_int_ruolo</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_check_soggetto_ruolo</span><span class="p">(</span><span class="n">p_soggetto_id</span><span class="w"> </span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="nb">integer</span><span class="p">,</span><span class="w"> </span><span class="n">p_cd_int_ruolo</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_or_create_soggetto_ruolo</span><span class="p">(</span><span class="n">p_soggetto_id</span><span class="w"> </span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">p_cd_int_ruolo</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">)</span>
 <span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="nb">integer</span>
 <span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
 <span class="k">DECLARE</span>
 <span class="w">    </span><span class="n">v_tipo_ruolo_id</span><span class="w">  </span><span class="nb">integer</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_count</span><span class="w">     </span><span class="nb">integer</span><span class="p">;</span>
-
+<span class="w">    </span><span class="n">v_id</span><span class="w">        </span><span class="nb">integer</span><span class="p">;</span>
 <span class="k">BEGIN</span>
-<span class="w">    </span><span class="c1">-- ------------------------------------------------------------</span>
-<span class="w">    </span><span class="c1">-- Funzione di supporto per validare che un soggetto_ruolo_id sia coerente</span>
-<span class="w">    </span><span class="c1">-- con il ruolo atteso (p_cd_int_ruolo) e, se specificato, con il soggetto (p_soggetto_id).</span>
-<span class="w">    </span><span class="c1">--  In caso di incoerenza, utilizza script.fn_log_and_raise_error e solleva eccezione.</span>
-<span class="w">    </span><span class="c1">-- In caso di esito positivo, restituisce p_soggetto_ruolo_id.</span>
-<span class="w">    </span><span class="c1">-- Il parametro p_soggetto_id è opzionale: se NULL, non viene verificato.</span>
-<span class="w">    </span><span class="c1">-- ------------------------------------------------------------</span>
 
+<span class="w">  </span><span class="c1">-- ------------------------------------------------------------</span>
+<span class="w">  </span><span class="c1">-- Funzione factory per ottenere o creare un legame in anagrafiche.soggetti_ruoli</span>
+<span class="w">  </span><span class="c1">-- per la coppia (p_soggetto_id, p_cd_int_ruolo).</span>
+<span class="w">  </span><span class="c1">-- Se il legame esiste già, ne restituisce l&#39;ID; altrimenti lo crea.  </span>
+<span class="w">  </span><span class="c1">-- Input :</span>
+<span class="w">  </span><span class="c1">--   - p_soggetto_id:   UUID del soggetto in anagrafiche.soggetti</span>
+<span class="w">  </span><span class="c1">--   - p_cd_int_ruolo:  Codice interno del ruolo (config.tipi_ruoli.codice_interno)</span>
+<span class="w">  </span><span class="c1">-- Output:</span>
+<span class="w">  </span><span class="c1">--   - integer: ID del record in anagrafiche.soggetti_ruoli</span>
+<span class="w">  </span><span class="c1">-- ------------------------------------------------------------</span>
 
-<span class="w">    </span><span class="c1">-- 1) Validazione parametri minimi</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="c1">-- 1) Validazione soggetto</span>
+<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">p_soggetto_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">            </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;fn_check_soggetto_ruolo&#39;</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;E_SOGGETTI_RUOLI&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="s1">&#39;fn_get_or_create_soggetto_ruolo&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="s1">&#39;E_SOGGETTO_NULL&#39;</span><span class="p">,</span>
 <span class="w">            </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">                </span><span class="s1">&#39;soggetto_ruolo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="p">,</span>
 <span class="w">                </span><span class="s1">&#39;soggetto_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_soggetto_id</span><span class="p">,</span>
 <span class="w">                </span><span class="s1">&#39;codice_interno_ruolo&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_cd_int_ruolo</span>
 <span class="w">            </span><span class="p">),</span>
 <span class="w">            </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">            </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_soggetto_ruolo_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">),</span>
 <span class="w">            </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_soggetto_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">),</span>
 <span class="w">            </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_cd_int_ruolo</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span>
 <span class="w">        </span><span class="p">);</span>
-<span class="w">        </span><span class="c1">-- fn_log_and_raise_error dovrebbe fare RAISE; per sicurezza:</span>
-<span class="w">       </span><span class="c1">-- RAISE EXCEPTION &#39;soggetto_ruolo_id mancante o non valido (%).&#39;, p_soggetto_ruolo_id</span>
-<span class="w">       </span><span class="c1">--     USING ERRCODE = &#39;P0001&#39;;</span>
+<span class="w">        </span><span class="c1">--RAISE EXCEPTION &#39;soggetto_id mancante per fn_get_or_create_soggetto_ruolo.&#39;</span>
+<span class="w">        </span><span class="c1">--    USING ERRCODE = &#39;P0001&#39;;</span>
 <span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
-<span class="w">    </span><span class="c1">-- 2) Risolvo l&#39;ID del ruolo da config.tipi_ruoli</span>
+<span class="w">    </span><span class="c1">-- 2) Risolvo l&#39;&#39;ID del ruolo da config.tipi_ruoli</span>
 <span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">id</span>
 <span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_tipo_ruolo_id</span>
 <span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">tipi_ruoli</span><span class="w"> </span><span class="n">r</span>
@@ -2388,59 +2387,81 @@
 <span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_tipo_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">            </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;fn_check_soggetto_ruolo&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="s1">&#39;fn_get_or_create_soggetto_ruolo&#39;</span><span class="p">,</span>
 <span class="w">            </span><span class="s1">&#39;E_COD_INT_RUOLO&#39;</span><span class="p">,</span>
 <span class="w">            </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;codice_interno&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_cd_int_ruolo</span><span class="p">),</span>
 <span class="w">            </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;codice_interno&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_cd_int_ruolo</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span>
+<span class="w">            </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_cd_int_ruolo</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span>
 <span class="w">        </span><span class="p">);</span>
-
-<span class="w">        </span><span class="c1">-- RAISE EXCEPTION &#39;Codice interno ruolo non valido: %&#39;, p_cd_int_ruolo</span>
+<span class="w">        </span><span class="c1">--RAISE EXCEPTION &#39;Codice interno ruolo non valido in fn_get_or_create_soggetto_ruolo: %&#39;,</span>
+<span class="w">        </span><span class="c1">--    p_cd_int_ruolo</span>
 <span class="w">        </span><span class="c1">--    USING ERRCODE = &#39;P0001&#39;;</span>
 <span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
-<span class="w">    </span><span class="c1">-- 3) Verifica esistenza e coerenza del legame in anagrafiche.soggetti_ruoli</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">p_soggetto_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="c1">-- Controllo solo id + ruolo_id</span>
-<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
-<span class="w">          </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_count</span>
-<span class="w">          </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="n">sr</span>
-<span class="w">        </span><span class="k">WHERE</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span>
-<span class="w">          </span><span class="k">AND</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">tipo_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_tipo_ruolo_id</span><span class="p">;</span>
-<span class="w">    </span><span class="k">ELSE</span>
-<span class="w">        </span><span class="c1">-- Controllo anche soggetto_id</span>
-<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
-<span class="w">          </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_count</span>
-<span class="w">          </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="n">sr</span>
-<span class="w">        </span><span class="k">WHERE</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span>
-<span class="w">          </span><span class="k">AND</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">tipo_ruolo_id</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="n">v_tipo_ruolo_id</span>
-<span class="w">          </span><span class="k">AND</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">soggetto_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_soggetto_id</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">-- 3) Cerco se esiste già un legame soggetto↔ruolo</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span>
+<span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_id</span>
+<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="n">sr</span>
+<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">soggetto_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_soggetto_id</span>
+<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">tipo_ruolo_id</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="n">v_tipo_ruolo_id</span>
+<span class="w">    </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span>
+<span class="w">    </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">        </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_id</span><span class="p">;</span>
 <span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">            </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;fn_check_soggetto_ruolo&#39;</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;E_SOGGETTI_RUOLI&#39;</span><span class="p">,</span>
-<span class="w">            </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">                </span><span class="s1">&#39;soggetto_ruolo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="p">,</span>
-<span class="w">                </span><span class="s1">&#39;soggetto_id&#39;</span><span class="p">,</span><span class="w">       </span><span class="n">p_soggetto_id</span><span class="p">,</span>
-<span class="w">                </span><span class="s1">&#39;ruolo_id&#39;</span><span class="p">,</span><span class="w">          </span><span class="n">v_tipo_ruolo_id</span><span class="p">,</span>
-<span class="w">                </span><span class="s1">&#39;codice_interno&#39;</span><span class="p">,</span><span class="w">    </span><span class="n">p_cd_int_ruolo</span>
-<span class="w">            </span><span class="p">),</span>
-<span class="w">            </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">            </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_soggetto_ruolo_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">),</span>
-<span class="w">            </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_soggetto_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">),</span>
-<span class="w">            </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_tipo_ruolo_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">),</span>
-<span class="w">            </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_cd_int_ruolo</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span>
-<span class="w">        </span><span class="p">);</span>
-<span class="w">         </span><span class="c1">-- RAISE EXCEPTION &#39;Nessun legame soggetto_ruolo coerente trovato (id %, ruolo %, soggetto %).&#39;,</span>
-<span class="w">         </span><span class="c1">--   p_soggetto_ruolo_id, v_tipo_ruolo_id, p_soggetto_id</span>
-<span class="w">          </span><span class="c1">--    USING ERRCODE = &#39;P0001&#39;;</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">-- 4) Non esiste: provo a crearlo</span>
+<span class="w">    </span><span class="k">BEGIN</span>
+<span class="w">        </span><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">soggetto_id</span><span class="p">,</span>
+<span class="w">            </span><span class="n">tipo_ruolo_id</span><span class="p">,</span><span class="w">     </span><span class="c1">-- FIX tipo_ruolo_id. </span>
+<span class="w">            </span><span class="n">extra</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">p_soggetto_id</span><span class="p">,</span>
+<span class="w">            </span><span class="n">v_tipo_ruolo_id</span><span class="p">,</span>
+<span class="w">            </span><span class="s1">&#39;{}&#39;</span><span class="p">::</span><span class="n">jsonb</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="n">RETURNING</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_id</span><span class="p">;</span>
 
-<span class="w">    </span><span class="c1">-- 4) Tutto ok: ritorno l&#39;ID passato</span>
-<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="p">;</span>
+<span class="w">        </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_id</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">EXCEPTION</span>
+<span class="w">        </span><span class="k">WHEN</span><span class="w"> </span><span class="n">unique_violation</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">            </span><span class="c1">-- Qualcun altro ha creato contemporaneamente lo stesso legame:</span>
+<span class="w">            </span><span class="c1">-- rileggo e ritorno l&#39;ID esistente.</span>
+<span class="w">            </span><span class="k">SELECT</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span>
+<span class="w">              </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_id</span>
+<span class="w">              </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="n">sr</span>
+<span class="w">            </span><span class="k">WHERE</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">soggetto_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_soggetto_id</span>
+<span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">tipo_ruolo_id</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="n">v_tipo_ruolo_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span>
+<span class="w">            </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="w">            </span><span class="k">IF</span><span class="w"> </span><span class="n">v_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">                </span><span class="c1">-- Caso anomalo: unique_violation ma non trovo il record</span>
+<span class="w">                </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">                    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="s1">&#39;fn_get_or_create_soggetto_ruolo&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="s1">&#39;E_SOGGETTI_RUOLI_RACE&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">jsonb_build_object</span><span class="p">(</span>
+<span class="w">                        </span><span class="s1">&#39;soggetto_id&#39;</span><span class="p">,</span><span class="w">    </span><span class="n">p_soggetto_id</span><span class="p">,</span>
+<span class="w">                        </span><span class="s1">&#39;ruolo_id&#39;</span><span class="p">,</span><span class="w">       </span><span class="n">v_tipo_ruolo_id</span><span class="p">,</span>
+<span class="w">                        </span><span class="s1">&#39;codice_interno&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_cd_int_ruolo</span>
+<span class="w">                    </span><span class="p">),</span>
+<span class="w">                    </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
+<span class="w">                    </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_soggetto_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">),</span>
+<span class="w">                    </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_tipo_ruolo_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">),</span>
+<span class="w">                    </span><span class="k">coalesce</span><span class="p">(</span><span class="n">p_cd_int_ruolo</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span>
+<span class="w">                </span><span class="p">);</span>
+<span class="w">              </span><span class="c1">--  RAISE EXCEPTION &#39;Race condition su soggetti_ruoli per soggetto %, ruolo %.&#39;,</span>
+<span class="w">              </span><span class="c1">--      p_soggetto_id, v_tipo_ruolo_id</span>
+<span class="w">              </span><span class="c1">--      USING ERRCODE = &#39;P0001&#39;;</span>
+<span class="w">            </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">            </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_id</span><span class="p">;</span>
+<span class="w">    </span><span class="k">END</span><span class="p">;</span>
 <span class="k">END</span><span class="p">;</span>
 <span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>

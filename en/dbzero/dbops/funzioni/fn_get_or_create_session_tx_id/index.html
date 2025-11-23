@@ -2537,49 +2537,81 @@
 <span class="w"> </span><span class="k">SECURITY</span><span class="w"> </span><span class="k">DEFINER</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
 <span class="k">DECLARE</span>
-<span class="w">    </span><span class="n">v_tx_id</span><span class="w"> </span><span class="n">UUID</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_tx_id</span><span class="w">        </span><span class="n">uuid</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_dblink_conn</span><span class="w">  </span><span class="nb">text</span><span class="p">;</span>
 <span class="k">BEGIN</span>
-<span class="w">        </span><span class="c1">-- 0) Assicurati connessione logconn</span>
-<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_ensure_logconn</span><span class="p">();</span>
-<span class="w">    </span><span class="c1">-- RAISE NOTICE &#39;[DBG] fn_ensure_logconn() invocata&#39;;</span>
-
-<span class="w">    </span><span class="c1">-- 1) Provo a leggere dalla sessione</span>
+<span class="w">    </span><span class="c1">----------------------------------------------------------------------</span>
+<span class="w">    </span><span class="c1">-- 0) Se esiste già un tx_id in sessione, riusalo e basta</span>
+<span class="w">    </span><span class="c1">----------------------------------------------------------------------</span>
 <span class="w">    </span><span class="k">BEGIN</span>
-<span class="w">        </span><span class="n">v_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">)::</span><span class="n">UUID</span><span class="p">;</span>
-<span class="w">        </span><span class="c1">-- RAISE NOTICE &#39;[DBG] dbops.tx_id in sessione = %&#39;, v_tx_id;</span>
+<span class="w">        </span><span class="n">v_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)::</span><span class="n">uuid</span><span class="p">;</span>
 <span class="w">    </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="c1">-- RAISE NOTICE &#39;[DBG] dbops.tx_id non settato: %&#39;, SQLERRM;</span>
 <span class="w">        </span><span class="n">v_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="k">END</span><span class="p">;</span>
 
-<span class="w">    </span><span class="c1">-- 2) Se non esiste, genero uno nuovo tramite dblink</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_tx_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="c1">-- RAISE NOTICE &#39;[DBG] Entrato ramo generazione nuovo tx_id&#39;;</span>
-<span class="w">        </span><span class="k">BEGIN</span>
-<span class="w">            </span><span class="k">SELECT</span><span class="w"> </span><span class="n">tx_id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_tx_id</span>
-<span class="w">              </span><span class="k">FROM</span><span class="w"> </span><span class="n">dblink</span><span class="p">(</span>
-<span class="w">                </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.dblink_log_connection&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">),</span>
-<span class="w">                </span><span class="err">$</span><span class="n">gen$</span>
-<span class="w">                  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_generate_tx_id</span><span class="p">(</span>
-<span class="w">                    </span><span class="s1">&#39;dbops.fn_get_or_create_session_tx_id&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">,</span><span class="s1">&#39;fn_get_or_create&#39;</span><span class="p">)</span>
-<span class="w">                  </span><span class="p">)</span>
-<span class="w">                </span><span class="err">$</span><span class="n">gen$</span>
-<span class="w">              </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">t</span><span class="p">(</span><span class="n">tx_id</span><span class="w"> </span><span class="n">UUID</span><span class="p">);</span>
-
-<span class="w">            </span><span class="c1">-- RAISE NOTICE &#39;[DBG] dblink ha restituito tx_id = %&#39;, v_tx_id;</span>
-<span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">set_config</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_tx_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">TRUE</span><span class="p">);</span>
-<span class="w">            </span><span class="c1">-- RAISE NOTICE &#39;[DBG] set_config dbops.tx_id = %&#39;, v_tx_id;</span>
-<span class="w">        </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="c1">-- RAISE WARNING &#39;[DBG] Errore in dblink: %&#39;, SQLERRM;</span>
-<span class="w">            </span><span class="n">v_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">uuid_nil</span><span class="p">();</span>
-<span class="w">        </span><span class="k">END</span><span class="p">;</span>
+<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_tx_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">        </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_tx_id</span><span class="p">;</span>
 <span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
-<span class="w">    </span><span class="c1">-- 3) Ritorna</span>
-<span class="w">    </span><span class="c1">-- RAISE NOTICE &#39;[DBG] fn_get_or_create_session_tx_id restituisce %&#39;, v_tx_id;</span>
-<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_tx_id</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">----------------------------------------------------------------------</span>
+<span class="w">    </span><span class="c1">-- 1) Verifica che il parametro di connessione dblink sia impostato</span>
+<span class="w">    </span><span class="c1">----------------------------------------------------------------------</span>
+<span class="w">    </span><span class="k">BEGIN</span>
+<span class="w">        </span><span class="n">v_dblink_conn</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.dblink_log_connection&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">);</span>
+<span class="w">    </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">        </span><span class="n">v_dblink_conn</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="k">END</span><span class="p">;</span>
 
+<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_dblink_conn</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">v_dblink_conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">        </span><span class="n">RAISE</span><span class="w"> </span><span class="n">WARNING</span>
+<span class="w">            </span><span class="s1">&#39;dbops.fn_get_or_create_session_tx_id: parametro myapp.dblink_log_connection non impostato; uso uuidv7() locale come tx_id. &#39;</span>
+<span class="w">            </span><span class="s1">&#39;Impostare il parametro a livello DATABASE/ROLE o ALTER SYSTEM.&#39;</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">v_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">uuidv7</span><span class="p">();</span>
+<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">set_config</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_tx_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">false</span><span class="p">);</span>
+<span class="w">        </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_tx_id</span><span class="p">;</span>
+<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">----------------------------------------------------------------------</span>
+<span class="w">    </span><span class="c1">-- 2) Generazione tx_id tramite dblink verso il DB di log</span>
+<span class="w">    </span><span class="c1">----------------------------------------------------------------------</span>
+<span class="w">    </span><span class="k">BEGIN</span>
+<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="n">tx_id</span>
+<span class="w">        </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_tx_id</span>
+<span class="w">        </span><span class="k">FROM</span><span class="w"> </span><span class="n">dblink</span><span class="p">(</span>
+<span class="w">            </span><span class="n">v_dblink_conn</span><span class="p">,</span>
+<span class="w">            </span><span class="err">$</span><span class="n">gen$</span>
+<span class="w">                </span><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_generate_tx_id</span><span class="p">(</span>
+<span class="w">                    </span><span class="s1">&#39;dbops.fn_get_or_create_session_tx_id&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">,</span><span class="s1">&#39;fn_get_or_create&#39;</span><span class="p">)</span>
+<span class="w">                </span><span class="p">)</span>
+<span class="w">            </span><span class="err">$</span><span class="n">gen$</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">t</span><span class="p">(</span><span class="n">tx_id</span><span class="w"> </span><span class="n">uuid</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">-- Se dblink ha risposto ma con NULL, fallback + warning</span>
+<span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="n">v_tx_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">            </span><span class="n">RAISE</span><span class="w"> </span><span class="n">WARNING</span>
+<span class="w">                </span><span class="s1">&#39;dbops.fn_get_or_create_session_tx_id: dblink ha restituito NULL; uso uuidv7() locale come tx_id.&#39;</span><span class="p">;</span>
+<span class="w">            </span><span class="n">v_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">uuidv7</span><span class="p">();</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">        </span><span class="c1">-- Imposta SEMPRE la GUC di sessione</span>
+<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">set_config</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_tx_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">false</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">        </span><span class="c1">-- Errore dblink: warning + fallback locale</span>
+<span class="w">        </span><span class="n">RAISE</span><span class="w"> </span><span class="n">WARNING</span>
+<span class="w">            </span><span class="s1">&#39;dbops.fn_get_or_create_session_tx_id: errore durante la chiamata dblink a dbops.fn_generate_tx_id: %; uso uuidv7() locale come tx_id.&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="n">SQLERRM</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">v_tx_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">uuidv7</span><span class="p">();</span>
+<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">set_config</span><span class="p">(</span><span class="s1">&#39;dbops.tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_tx_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">false</span><span class="p">);</span>
+<span class="w">    </span><span class="k">END</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">----------------------------------------------------------------------</span>
+<span class="w">    </span><span class="c1">-- 3) Ritorna il tx_id (mai NULL)</span>
+<span class="w">    </span><span class="c1">----------------------------------------------------------------------</span>
+<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_tx_id</span><span class="p">;</span>
 <span class="k">END</span><span class="p">;</span>
 <span class="err">$</span><span class="k">function</span><span class="err">$</span>
 </code></pre></div>
