@@ -2625,17 +2625,19 @@
 <li>
 <p>Può essere creato <strong>indipendentemente</strong> dal cliente, anche in fase precontrattuale.</p>
 </li>
+<li>Viene sempre associato all'istanza (<code>istanza_utilities_id</code> NOT NULL).</li>
 <li>
-<p>Viene sempre associato all'istanza (<code>istanza_utilities_id</code> NOT NULL).</p>
+<p>Il campo utility_id deve ora essere coerente con quello che verrà utilizzato in clienti.</p>
 </li>
 <li>
 <p><strong>Creazione del cliente (clienti)</strong>:</p>
 </li>
 <li>
-<p>Avviene successivamente, con associazione all'istanza (<code>istanza_utilities_id</code> NOT NULL).</p>
+<p>Avviene successivamente, con associazione all'istanza (<code>istanza_utilities_id</code> NOT NULL) e ora deve riferirsi al billing_account generato per l’istanza.</p>
 </li>
+<li>Il cliente <strong>eredita</strong> l’account generato in fase di istanza, mantenendo coerenza tra fase precontrattuale e operativa.</li>
 <li>
-<p>Il cliente <strong>eredita</strong> l’account generato in fase di istanza, mantenendo coerenza tra fase precontrattuale e operativa.</p>
+<p>utility_id rimane presente per motivi operativi ma deve corrispondere a quello del billing_account. Un trigger lo tiene coerente con quello del billing account</p>
 </li>
 <li>
 <p><strong>Dati catastali</strong>:</p>
@@ -2674,7 +2676,16 @@
 <li>
 <p>Collegati all’indirizzo per evitare <strong>ridondanza</strong> tra più istanze nello stesso luogo.</p>
 </li>
-<li>È comunque possibile una <strong>versione legata all’istanza</strong>, utile per tracciabilità storica o variazioni temporali.</li>
+<li>
+<p>È comunque possibile una <strong>versione legata all’istanza</strong>, utile per tracciabilità storica o variazioni temporali.</p>
+</li>
+<li>
+<p><strong>Clienti e billingo_account</strong>:</p>
+</li>
+<li>
+<p>Aggiornamento: è stato introdotto un vincolo concettuale  per garantire che:
+   clienti.utility_id = billing_account.utility_id entrambi coerenti con istanze_utilities.</p>
+</li>
 </ul>
 <hr />
 <h2 id="best-practice">📌 Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h2>
@@ -2691,6 +2702,7 @@
 <li>Nessuna istanza può essere attiva contemporaneamente sullo stesso <code>indirizzo_dettaglio_id</code>.</li>
 <li>Un cliente non può esistere senza istanza (<code>istanza_utilities_id</code> obbligatorio).</li>
 <li><code>billing_account</code> richiede sempre un'istanza valida.</li>
+<li><code>utility_id</code> su clienti deve essere coerente con billing_account.utility_id.</li>
 </ul>
 <hr />
 <h2 id="trigger-e-funzioni-coinvolte">🛠️ Trigger e funzioni coinvolte<a class="headerlink" href="#trigger-e-funzioni-coinvolte" title="Permanent link">&para;</a></h2>
