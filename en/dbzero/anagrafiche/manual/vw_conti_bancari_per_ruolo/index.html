@@ -16,7 +16,7 @@
     
     
       
-        <title>⚙️ Funzione fn_get_conto_bancario_predefinito - Zero ERP Documentation</title>
+        <title>Vw conti bancari per ruolo - Zero ERP Documentation</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#funzione-fn_get_conto_bancario_predefinito" class="md-skip">
+        <a href="#documentazione-vista-anagrafichevw_conti_bancari_per_ruolo" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione fn_get_conto_bancario_predefinito
+              Vw conti bancari per ruolo
             
           </span>
         </div>
@@ -115,7 +115,7 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../../../../dbzero/anagrafiche/funzioni/fn_get_conto_bancario_predefinito/" hreflang="it" class="md-select__link">
+            <a href="../../../../../dbzero/anagrafiche/manual/vw_conti_bancari_per_ruolo/" hreflang="it" class="md-select__link">
               Italiano
             </a>
           </li>
@@ -2315,8 +2315,83 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-vista-anagrafichevw_conti_bancari_per_ruolo" class="md-nav__link">
+    <span class="md-ellipsis">
+      📘Documentazione Vista – anagrafiche.vw_conti_bancari_per_ruolo
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘Documentazione Vista – anagrafiche.vw_conti_bancari_per_ruolo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Scopo Principale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#struttura-logica-della-vista" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚙️ Struttura logica della vista
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#colonne-esposte" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔍 Colonne esposte
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comportamento-funzionale" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚙️ Comportamento funzionale
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempi-duso" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔖 Esempi d’uso
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#note-di-modellazione-e-best-practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      吝 Note di modellazione e best practice
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -2335,42 +2410,273 @@
   
 
 
-<h1 id="funzione-fn_get_conto_bancario_predefinito">⚙️ Funzione <code>fn_get_conto_bancario_predefinito</code><a class="headerlink" href="#funzione-fn_get_conto_bancario_predefinito" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_get_conto_bancario_predefinito</span><span class="p">(</span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span><span class="w"> </span><span class="n">p_uso</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">fn_get_conto_bancario_predefinito</span><span class="p">(</span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span><span class="w"> </span><span class="n">p_uso</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">)</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">TABLE</span><span class="p">(</span><span class="n">conto_bancario_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span><span class="w"> </span><span class="n">fonte</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span><span class="w"> </span><span class="n">soggetto_ruolo_conto_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span><span class="w"> </span><span class="n">soggetto_conto_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">)</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="w"> </span><span class="k">STABLE</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">DECLARE</span>
-<span class="w">  </span><span class="n">v_uso</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">p_uso</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;GENERICO&#39;</span><span class="p">);</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="c1">-- 1) Prova uso richiesto</span>
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="n">QUERY</span>
-<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">conto_bancario_id</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">fonte</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">soggetto_ruolo_conto_id</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">soggetto_conto_id</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">vw_conti_bancari_per_ruolo</span><span class="w"> </span><span class="n">v</span>
-<span class="w">   </span><span class="k">WHERE</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span>
-<span class="w">     </span><span class="k">AND</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">uso</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_uso</span>
-<span class="w">   </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">FOUND</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">RETURN</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+  <h1>Vw conti bancari per ruolo</h1>
 
-<span class="w">  </span><span class="c1">-- 2) Fallback a GENERICO (se l’uso richiesto non è GENERICO)</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_uso</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;GENERICO&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="n">QUERY</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">conto_bancario_id</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">fonte</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">soggetto_ruolo_conto_id</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">soggetto_conto_id</span>
-<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">vw_conti_bancari_per_ruolo</span><span class="w"> </span><span class="n">v</span>
-<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span>
-<span class="w">       </span><span class="k">AND</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">uso</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;GENERICO&#39;</span>
-<span class="w">     </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="k">END</span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
+<h2 id="documentazione-vista-anagrafichevw_conti_bancari_per_ruolo">📘Documentazione Vista – <code>anagrafiche.vw_conti_bancari_per_ruolo</code><a class="headerlink" href="#documentazione-vista-anagrafichevw_conti_bancari_per_ruolo" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimento Tabelle:</p>
+<ul>
+<li><a href="../../../../dbzero/anagrafiche/tabelle/conti_bancari">anagrafiche.conti_bancari</a></li>
+<li><a href="../../../../dbzero/anagrafiche/tabelle/soggetti">anagrafiche.soggetti</a></li>
+<li><a href="../../../../dbzero/anagrafiche/tabelle/soggetti_ruoli">anagrafiche.soggetti_ruoli</a></li>
+<li><a href="../../../../dbzero/anagrafiche/tabelle/soggetti_conti_bancari">anagrafiche.soggetti_conti_bancari</a></li>
+<li><a href="../../../../dbzero/anagrafiche/tabelle/soggetti_ruoli_conti_bancari">anagrafiche.soggetti_ruoli_conti_bancari</a></li>
+</ul>
+<p>Approfondimento funzioni:</p>
+<ul>
+<li><a href="../../../../dbzero/script/funzioni/fn_get_conto_bancario_predefinito">script.fn_get_conto_bancario_predefinito</a></li>
+</ul>
+</blockquote>
+<p>La vista <strong><code>anagrafiche.vw_conti_bancari_per_ruolo</code></strong> espone, per ogni <strong>ruolo di soggetto</strong> (<code>soggetto_ruolo_id</code>) e per ciascun <strong>uso del conto</strong> (<code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code>, <code>GENERICO</code>), <strong>al massimo un conto bancario selezionato</strong> secondo una logica di <strong>priorità RUOLO → SOGGETTO</strong>, tenendo conto di validità, blocchi e stato di attivazione del conto.</p>
+<p>È l’artefatto centrale per tutte le logiche applicative che devono recuperare “il conto corrente da usare ora” per un determinato ruolo.</p>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>Selezione unificata del conto per ruolo</strong>
+  Fornisce una vista già pre-filtrata e normalizzata con <strong>una sola riga per coppia <code>(soggetto_ruolo_id, uso)</code></strong>, scegliendo il miglior candidato tra:</p>
+</li>
+<li>
+<p>legami a livello <strong>ruolo</strong> (<code>soggetti_ruoli_conti_bancari</code>), e</p>
+</li>
+<li>
+<p>legami a livello <strong>soggetto</strong> (<code>soggetti_conti_bancari</code>).</p>
+</li>
+<li>
+<p><strong>Priorità di dominio: RUOLO → SOGGETTO</strong>
+  Quando esistono sia legami di ruolo che di soggetto per lo stesso <code>uso</code>, vengono preferiti <strong>sempre i legami di RUOLO</strong>. Solo in assenza di questi si passa ai legami di SOGGETTO.</p>
+</li>
+<li>
+<p><strong>Filtro su validità e stato</strong>
+  Espone soltanto conti:</p>
+</li>
+<li>
+<p><strong>attivi</strong> (<code>conti_bancari.attivo = TRUE</code>),</p>
+</li>
+<li><strong>non bloccati</strong> a livello di legame (<code>blocccato = FALSE</code>),</li>
+<li>con <strong>validità compatibile con la data odierna</strong> (<code>valido_dal/valido_al</code>).</li>
+</ul>
+<p>Questa vista è pensata per essere utilizzata direttamente oppure incapsulata in funzioni helper (es. <code>fn_get_conto_bancario_predefinito</code>).</p>
+<hr />
+<h3 id="struttura-logica-della-vista">⚙️ Struttura logica della vista<a class="headerlink" href="#struttura-logica-della-vista" title="Permanent link">&para;</a></h3>
+<p>La vista è costruita in più passi mediante CTE:</p>
+<ol>
+<li><strong><code>role_cand</code> – Candidate di RUOLO</strong></li>
+</ol>
+<p>Seleziona tutti i legami <strong>a livello ruolo</strong> (<code>anagrafiche.soggetti_ruoli_conti_bancari</code>) che rispettano:</p>
+<ul>
+<li>data odierna compresa tra <code>valido_dal</code> e <code>valido_al</code> (quando valorizzati),</li>
+<li><code>blocccato = FALSE</code> (o NULL trattato come FALSE),</li>
+<li>conto associato <code>attivo = TRUE</code> su <code>anagrafiche.conti_bancari</code>.</li>
+</ul>
+<p>Campi principali:</p>
+<ul>
+<li><code>soggetto_ruolo_id</code></li>
+<li><code>uso</code></li>
+<li><code>conto_bancario_id</code></li>
+<li><code>soggetto_ruolo_conto_id</code> (ID del legame ruolo↔conto)</li>
+<li><code>predefinito</code></li>
+<li><code>priority = 1</code> (per dare precedenza ai legami di ruolo)</li>
+<li>
+<p><code>fonte = 'RUOLO'</code></p>
+</li>
+<li>
+<p><strong><code>subj_cand</code> – Candidate di SOGGETTO</strong></p>
+</li>
+</ul>
+<p>Seleziona tutti i legami <strong>a livello soggetto</strong> (<code>anagrafiche.soggetti_conti_bancari</code>) compatibili con le stesse regole di validità/blocco/attivazione, “proiettandoli” sul <code>soggetto_ruolo_id</code> tramite <code>anagrafiche.soggetti_ruoli</code>.</p>
+<p>Campi principali:</p>
+<ul>
+<li><code>soggetto_ruolo_id</code> (derivato da <code>soggetti_ruoli</code>)</li>
+<li><code>uso</code></li>
+<li><code>conto_bancario_id</code></li>
+<li><code>soggetto_conto_id</code> (ID del legame soggetto↔conto)</li>
+<li><code>predefinito</code></li>
+<li><code>priority = 2</code> (perché il SOGGETTO è fallback rispetto al RUOLO)</li>
+<li>
+<p><code>fonte = 'SOGGETTO'</code></p>
+</li>
+<li>
+<p><strong><code>candidates</code> – Unione dei due insiemi</strong></p>
+</li>
+</ul>
+<p>Esegue <code>UNION ALL</code> tra <code>role_cand</code> e <code>subj_cand</code>, mantenendo per ogni riga:</p>
+<ul>
+<li><code>soggetto_ruolo_id</code>, <code>uso</code>, <code>conto_bancario_id</code></li>
+<li>identificativo del legame (<code>soggetto_ruolo_conto_id</code> / <code>soggetto_conto_id</code>)</li>
+<li><code>predefinito</code>, <code>priority</code>, <code>valido_dal</code>, <code>valido_al</code>, <code>data_update</code></li>
+<li>
+<p><code>fonte</code> (<code>'RUOLO'</code> o <code>'SOGGETTO'</code>)</p>
+</li>
+<li>
+<p><strong>Selezione finale con <code>DISTINCT ON</code></strong></p>
+</li>
+</ul>
+<p>La select finale applica:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">(</span><span class="n">soggetto_ruolo_id</span><span class="p">,</span><span class="w"> </span><span class="n">uso</span><span class="p">)</span>
+<span class="w">       </span><span class="n">soggetto_ruolo_id</span><span class="p">,</span>
+<span class="w">       </span><span class="n">uso</span><span class="p">,</span>
+<span class="w">       </span><span class="n">conto_bancario_id</span><span class="p">,</span>
+<span class="w">       </span><span class="n">soggetto_ruolo_conto_id</span><span class="p">,</span>
+<span class="w">       </span><span class="n">soggetto_conto_id</span><span class="p">,</span>
+<span class="w">       </span><span class="n">fonte</span><span class="p">,</span>
+<span class="w">       </span><span class="n">predefinito</span><span class="p">,</span>
+<span class="w">       </span><span class="n">valido_dal</span><span class="p">,</span>
+<span class="w">       </span><span class="n">valido_al</span><span class="p">,</span>
+<span class="w">       </span><span class="n">data_update</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">candidates</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">soggetto_ruolo_id</span><span class="p">,</span><span class="w"> </span><span class="n">uso</span><span class="p">,</span>
+<span class="w">         </span><span class="n">priority</span><span class="p">,</span>
+<span class="w">         </span><span class="n">predefinito</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span>
+<span class="w">         </span><span class="n">data_update</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span>
+<span class="w">         </span><span class="n">soggetto_ruolo_conto_id</span><span class="p">,</span>
+<span class="w">         </span><span class="n">soggetto_conto_id</span><span class="p">;</span>
+</code></pre></div>
+<p>Ordine di priorità:</p>
+<ol>
+<li><code>priority</code> → <strong>RUOLO prima di SOGGETTO</strong>.</li>
+<li><code>predefinito DESC</code> → tra i candidati compatibili, viene privilegiato il legame marcato come <strong>predefinito</strong>.</li>
+<li><code>data_update DESC</code> → in caso di più legami equivalenti, vince <strong>quello aggiornato più di recente</strong>.</li>
+<li>ID del legame (<code>soggetto_ruolo_conto_id</code>, <code>soggetto_conto_id</code>) per stabilizzare l’ordinamento.</li>
+</ol>
+<p>Il <code>DISTINCT ON (soggetto_ruolo_id, uso)</code> garantisce <strong>una sola riga</strong> per ogni combinazione <code>(ruolo, uso)</code>.</p>
+<hr />
+<h3 id="colonne-esposte">🔍 Colonne esposte<a class="headerlink" href="#colonne-esposte" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>soggetto_ruolo_id</code></td>
+<td><code>bigint</code></td>
+<td>Identificativo del ruolo per cui viene selezionato il conto.</td>
+</tr>
+<tr>
+<td><code>uso</code></td>
+<td><code>varchar</code></td>
+<td>Uso del conto: <code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code> o <code>GENERICO</code>.</td>
+</tr>
+<tr>
+<td><code>conto_bancario_id</code></td>
+<td><code>bigint</code></td>
+<td>Riferimento a <code>anagrafiche.conti_bancari.id</code> del conto selezionato.</td>
+</tr>
+<tr>
+<td><code>soggetto_ruolo_conto_id</code></td>
+<td><code>bigint</code></td>
+<td>ID del legame ruolo↔conto (<code>soggetti_ruoli_conti_bancari</code>), se la fonte è <code>RUOLO</code>.</td>
+</tr>
+<tr>
+<td><code>soggetto_conto_id</code></td>
+<td><code>bigint</code></td>
+<td>ID del legame soggetto↔conto (<code>soggetti_conti_bancari</code>), se la fonte è <code>SOGGETTO</code>.</td>
+</tr>
+<tr>
+<td><code>fonte</code></td>
+<td><code>varchar</code></td>
+<td>Origine della selezione: <code>'RUOLO'</code> oppure <code>'SOGGETTO'</code>.</td>
+</tr>
+<tr>
+<td><code>predefinito</code></td>
+<td><code>boolean</code></td>
+<td>Indica se il legame usato è marcato come <strong>predefinito</strong> per quel <code>(soggetto/ruolo, uso)</code>.</td>
+</tr>
+<tr>
+<td><code>valido_dal</code></td>
+<td><code>date</code></td>
+<td>Data di inizio validità del legame selezionato.</td>
+</tr>
+<tr>
+<td><code>valido_al</code></td>
+<td><code>date</code></td>
+<td>Data di fine validità del legame selezionato (può essere <code>NULL</code> per validità “open-ended”).</td>
+</tr>
+<tr>
+<td><code>data_update</code></td>
+<td><code>timestamptz</code></td>
+<td>Timestamp dell’ultimo aggiornamento del legame usato (utile per la prioritizzazione).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="comportamento-funzionale">⚙️ Comportamento funzionale<a class="headerlink" href="#comportamento-funzionale" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>Filtro temporale</strong>
+  Sono inclusi solo i legami per cui:</p>
+</li>
+<li>
+<p><code>valido_dal IS NULL OR valido_dal &lt;= CURRENT_DATE</code></p>
+</li>
+<li>
+<p><code>valido_al IS NULL OR valido_al &gt;= CURRENT_DATE</code></p>
+</li>
+<li>
+<p><strong>Filtro di sicurezza e stato</strong>
+  Vengono esclusi:</p>
+</li>
+<li>
+<p>legami con <code>bloccato = TRUE</code> (tipicamente per motivi di compliance/AML),</p>
+</li>
+<li>
+<p>conti con <code>attivo = FALSE</code> su <code>anagrafiche.conti_bancari</code>.</p>
+</li>
+<li>
+<p><strong>Priorità RUOLO → SOGGETTO</strong>
+  Se esiste un legame <strong>di ruolo</strong> per <code>(soggetto_ruolo_id, uso)</code> che rispetta i criteri sopra, questo sarà sempre preferito rispetto agli eventuali legami di SOGGETTO.</p>
+</li>
+<li>
+<p><strong>Gestione di più candidati</strong>
+  In presenza di più legami compatibili (es. più conti per lo stesso uso):</p>
+</li>
+<li>
+<p>viene scelto <strong>prima</strong> il legame con <code>predefinito = TRUE</code>;</p>
+</li>
+<li>a parità di predefinito, vince il legame con <code>data_update</code> più recente.</li>
+</ul>
+<hr />
+<h3 id="esempi-duso">🔖 Esempi d’uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
+<p><strong>1. Ottenere il conto d’incasso per un ruolo specifico</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">vw_conti_bancari_per_ruolo</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">p_soggetto_ruolo_id</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">uso</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;INCASSO&#39;</span><span class="p">;</span>
+</code></pre></div>
+<p><strong>2. Ottenere tutti i conti correnti “correnti” per un ruolo (tutti gli usi)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">vw_conti_bancari_per_ruolo</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">p_soggetto_ruolo_id</span><span class="p">;</span>
+</code></pre></div>
+<p><strong>3. Join con <code>conti_bancari</code> per leggere IBAN e dettagli</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="p">,</span>
+<span class="w">       </span><span class="n">v</span><span class="p">.</span><span class="n">uso</span><span class="p">,</span>
+<span class="w">       </span><span class="n">cb</span><span class="p">.</span><span class="n">iban</span><span class="p">,</span>
+<span class="w">       </span><span class="n">cb</span><span class="p">.</span><span class="n">bic_swift</span><span class="p">,</span>
+<span class="w">       </span><span class="n">v</span><span class="p">.</span><span class="n">fonte</span><span class="p">,</span>
+<span class="w">       </span><span class="n">v</span><span class="p">.</span><span class="n">predefinito</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">vw_conti_bancari_per_ruolo</span><span class="w"> </span><span class="n">v</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">conti_bancari</span><span class="w"> </span><span class="n">cb</span>
+<span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">conto_bancario_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">p_soggetto_ruolo_id</span><span class="p">;</span>
 </code></pre></div>
 <hr />
-<p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+<h3 id="note-di-modellazione-e-best-practice">吝 Note di modellazione e best practice<a class="headerlink" href="#note-di-modellazione-e-best-practice" title="Permanent link">&para;</a></h3>
+<ul>
+<li>La vista assume che tutta la logica di <strong>normalizzazione e validazione IBAN/BIC</strong>, nonché di <strong>gestione storicizzazione e flag <code>bloccato</code></strong>, sia già gestita a livello di tabelle e trigger (<code>*_guard</code>, <code>*_normalize</code>).</li>
+<li>È possibile avere <strong>più legami</strong> per lo stesso <code>(soggetto/ruolo, uso)</code>; la vista ne espone comunque <strong>uno solo</strong>, seguendo le priorità definite.</li>
+<li>Per l’uso applicativo è consigliato <strong>incapsulare la vista</strong> in funzioni di dominio (come <code>script.fn_get_conto_bancario_predefinito</code>) per ridurre la duplicazione di logica nelle query.</li>
+</ul>
+<hr />
+<blockquote>
+<p>🧠<strong>In sintesi:</strong>
+<code>anagrafiche.vw_conti_bancari_per_ruolo</code> fornisce una vista già “risolta” del conto da utilizzare per ciascun ruolo e uso, applicando automaticamente le priorità RUOLO → SOGGETTO, la selezione del predefinito e i vincoli di validità, blocco e attivazione.</p>
+</blockquote>
 
 
 

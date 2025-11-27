@@ -2217,6 +2217,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#raccomandazione-nota-del-25112025" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚠️ RACCOMANDAZIONE (nota del 25/11/2025):
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#tabelle-coinvolte" class="md-nav__link">
     <span class="md-ellipsis">
       🧩 Tabelle coinvolte
@@ -2488,6 +2497,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#raccomandazione-nota-del-25112025" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚠️ RACCOMANDAZIONE (nota del 25/11/2025):
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#tabelle-coinvolte" class="md-nav__link">
     <span class="md-ellipsis">
       🧩 Tabelle coinvolte
@@ -2621,6 +2639,19 @@
 <li><strong>Separazione dei domini</strong>: i <strong>mandati SEPA</strong> e i movimenti vivono nello schema <strong><code>pagamenti</code></strong>, mentre le anagrafiche stanno in <strong><code>anagrafiche</code></strong>.</li>
 </ul>
 <hr />
+<h2 id="raccomandazione-nota-del-25112025">⚠️ RACCOMANDAZIONE (nota del 25/11/2025):<a class="headerlink" href="#raccomandazione-nota-del-25112025" title="Permanent link">&para;</a></h2>
+<p>❌ Nessuna modifica al modello DB: l'attuale struttura è corretta e coerente con la guida.</p>
+<p>il modello consente più conti per lo stesso uso, ma
+  in esercizio è raccomandato avere un solo conto "corrente" per uso (attivo, valido oggi, non bloccato),
+  gli altri conti per lo stesso uso devono rappresentare casi particolari:</p>
+<ul>
+<li>storico (valido_al &lt; oggi),</li>
+<li>sostituzione pianificata (valido_dal &gt; oggi),</li>
+<li>esclusi dall’uso operativo (bloccato = true).</li>
+</ul>
+<p>⚙️ La VIEW e la FUNCTION restituiscono sempre una sola riga, quindi la logica operativa funziona comunque correttamente.</p>
+<p><strong>La regola applicativa (UI/API) deve eventualmente guidare l’utente a disattivare il conto precedente quando ne inserisce uno nuovo per lo stesso uso.</strong></p>
+<hr />
 <h2 id="tabelle-coinvolte">🧩 Tabelle coinvolte<a class="headerlink" href="#tabelle-coinvolte" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
@@ -2721,15 +2752,15 @@
 <p><strong>Normalizzazione/Audit</strong>:</p>
 </li>
 <li>
-<p><code>script.trgfn_conti_ins_upd_normalize()</code> su <code>conti_bancari</code>.</p>
+<p><code>anagrafiche.trgfn_conti_bancari_normalize()</code> su <code>conti_bancari</code>.</p>
 </li>
-<li><code>script.trgfn_soggetti_conti_guard()</code> / <code>script.trgfn_soggetti_ruoli_conti_bancari_guard()</code> per coerenza legami.</li>
-<li><code>dbops.trgfn_tx_id_managed()</code> e <code>script.trgfn_upd_audit_data_user_generic()</code> per audit/tx.</li>
+<li><code>anagrafiche.trgfn_soggetti_conti_banacari_guard()</code> / <code>anagrafiche.trgfn_soggetti_ruoli_conti_bancari_guard()</code> per coerenza legami.</li>
+<li><code>dbops.trgfn_tx_id_managed()</code> e <code>script.trgfn_audit_data_user_generic()</code> per audit/tx.</li>
 <li>
 <p><strong>Storico</strong>:</p>
 </li>
 <li>
-<p><code>script.trgfn_upd_dlt_storico_generic()</code> per snapshot su UPDATE/DELETE quando <code>storicizza=true</code>.</p>
+<p><code>script.trgfn_storico_generic()</code> per snapshot su UPDATE/DELETE quando <code>storicizza=true</code>.</p>
 </li>
 </ul>
 <hr />
