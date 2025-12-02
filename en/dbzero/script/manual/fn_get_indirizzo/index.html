@@ -2592,6 +2592,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-dei-contatti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione dei contatti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2764,10 +2792,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#firma" class="md-nav__link">
+  <a href="#firma-concettuale" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧩 Firma
+        🧩 Firma (concettuale)
       
     </span>
   </a>
@@ -2786,10 +2814,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#valori-restituiti" class="md-nav__link">
+  <a href="#valori-restituiti-principali" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📤 Valori restituiti
+        📤 Valori restituiti (principali)
       
     </span>
   </a>
@@ -2797,10 +2825,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#logica-di-estrazione-semplificata" class="md-nav__link">
+  <a href="#logica-di-estrazione-senza-dettagli-tecnici" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧠 Logica di estrazione (semplificata)
+        🧠 Logica di estrazione (senza dettagli tecnici)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-di-catena-di-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔁 Esempio di catena di fallback
       
     </span>
   </a>
@@ -2840,28 +2879,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#best-practice" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ✅ Best practice
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#commento-catalogo-sql" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        💬 Commento catalogo (SQL)
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -2892,46 +2909,56 @@
 <h2 id="documentazione-concettuale-funzione-scriptfn_get_indirizzo">📘 Documentazione Concettuale – Funzione <code>script.fn_get_indirizzo</code><a class="headerlink" href="#documentazione-concettuale-funzione-scriptfn_get_indirizzo" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p><strong>Approfondimento tabelle:</strong></p>
-<p>• <a href="../../../../dbzero/anagrafiche/tabelle/indirizzi">anagrafiche.indirizzi</a>
-• <a href="../../../../dbzero/anagrafiche/tabelle/indirizzi_dettaglio">anagrafiche.indirizzi_dettaglio</a>
-• <a href="../../../../dbzero/config/tabelle/tipi_indirizzi">config.tipi_indirizzi</a>
-• <a href="../../../../dbzero/config/tabelle/comuni">config.comuni</a>
-• <a href="../../../../dbzero/config/tabelle/codici_postali">config.codici_postali</a></p>
+<p><strong>Approfondimento tabelle:</strong>    </p>
+<p>• <a href="../../../../dbzero/anagrafiche/tabelle/indirizzi">anagrafiche.indirizzi</a> <br />
+• <a href="../../../../dbzero/anagrafiche/tabelle/indirizzi_dettaglio">anagrafiche.indirizzi_dettaglio</a>  <br />
+• <a href="../../../../dbzero/config/tabelle/tipi_indirizzi">config.tipi_indirizzi</a>  <br />
+• <a href="../../../../dbzero/config/tabelle/tipi_ruolo_tipi_indirizzo">config.tipi_ruolo_tipi_indirizzo</a>  <br />
+• <a href="../../../../dbzero/config/tabelle/comuni">config.comuni</a> <br />
+• <a href="../../../../dbzero/config/tabelle/codici_postali">config.codici_postali</a>  </p>
 <p><strong>Approfondimento funzioni:</strong></p>
-<p>• <a href="../../funzioni/fn_get_indirizzi_by_ruolo/"><code>script.fn_get_indirizzi_by_ruolo</code></a></p>
+<p>• <a href="../../funzioni/fn_get_indirizzi_by_ruolo/"><code>script.fn_get_indirizzi_by_ruolo</code></a>   </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Restituisce <strong>un singolo indirizzo completo e geolocalizzato</strong> relativo ad un determinato <code>soggetto_ruolo</code>, filtrando per <strong>tipo di indirizzo</strong> identificato dal <strong>codice interno</strong> (<code>config.tipi_indirizzi.codice_interno</code>).</p>
-<p>La funzione <strong>non replica la logica di composizione</strong>, bensì <strong>delegata a <code>script.fn_get_indirizzi_by_ruolo</code></strong>, garantendo coerenza e riusabilità.</p>
-<p>Restituisce il <strong>miglior indirizzo disponibile</strong> secondo le regole di priorità (normalizzato → libero nazionale → estero) e con geolocalizzazione preferita ove esistente.</p>
+<p>Restituisce <strong>il miglior indirizzo disponibile</strong> (uno o più record tecnici) relativo ad un determinato <code>soggetto_ruolo</code>, filtrando per <strong>tipo di indirizzo</strong> identificato dal <strong>codice interno</strong> (<code>config.tipi_indirizzi.codice_interno</code>).</p>
+<p>La funzione:</p>
+<ul>
+<li><strong>non replica</strong> la logica di composizione dell’indirizzo,</li>
+<li>ma la <strong>delegata a <code>script.fn_get_indirizzi_by_ruolo</code></strong>, garantendo coerenza e riusabilità,</li>
+<li>integra una logica di <strong>fallback multi-livello</strong> basata sulla matrice
+  <a href="../../../../dbzero/config/tabelle/tipi_ruolo_tipi_indirizzo"><code>config.tipi_ruolo_tipi_indirizzo</code></a>.</li>
+</ul>
+<p>In pratica:</p>
+<blockquote>
+<p>“Dammi l’indirizzo per questo tipo; se non esiste, segui la catena di fallback definita in <code>config.tipi_ruolo_tipi_indirizzo</code> finché trovi un indirizzo utilizzabile, o finché la catena termina.”</p>
+</blockquote>
 <hr />
-<h3 id="firma">🧩 Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
+<h3 id="firma-concettuale">🧩 Firma (concettuale)<a class="headerlink" href="#firma-concettuale" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>⚠️ La firma reale restituisce molti più campi (allineati a <code>fn_get_indirizzi_by_ruolo</code>).
+Qui è riportata una <strong>vista logica semplificata</strong> dei parametri principali.</p>
+</blockquote>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span>
-<span class="w">  </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="nb">integer</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_tipo_codice</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span>
+<span class="w">  </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_tipo_codice</span><span class="w">       </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span>
 <span class="p">)</span>
 <span class="k">RETURNS</span><span class="w"> </span><span class="k">TABLE</span><span class="p">(</span>
-<span class="w">  </span><span class="n">indirizzo_completo</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
-<span class="w">  </span><span class="n">geoloc</span><span class="w"> </span><span class="n">geometry</span><span class="p">,</span>
-<span class="w">  </span><span class="c1">-- Estensioni v2 (allineate alla funzione madre)</span>
-<span class="w">  </span><span class="n">comune_id</span><span class="w"> </span><span class="nb">integer</span><span class="p">,</span>
-<span class="w">  </span><span class="n">comune_descrizione</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
-<span class="w">  </span><span class="n">codice_postale</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
-<span class="w">  </span><span class="n">provincia</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
-<span class="w">  </span><span class="n">stato</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
-<span class="w">  </span><span class="n">is_normalizzato</span><span class="w"> </span><span class="nb">boolean</span>
+<span class="w">  </span><span class="n">indirizzo_completo</span><span class="w">   </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">geoloc</span><span class="w">               </span><span class="n">geometry</span><span class="p">,</span>
+<span class="w">  </span><span class="n">comune_id</span><span class="w">            </span><span class="nb">integer</span><span class="p">,</span>
+<span class="w">  </span><span class="n">comune_descrizione</span><span class="w">   </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">codice_postale</span><span class="w">       </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">provincia</span><span class="w">            </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">stato</span><span class="w">                </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">is_normalizzato</span><span class="w">      </span><span class="nb">boolean</span><span class="p">,</span>
+<span class="w">  </span><span class="c1">-- + tutti i campi tecnici restituiti da fn_get_indirizzi_by_ruolo</span>
+<span class="w">  </span><span class="p">...</span>
 <span class="p">)</span>
-<span class="k">LANGUAGE</span><span class="w"> </span><span class="k">sql</span>
-<span class="n">COST</span><span class="w"> </span><span class="mi">100</span>
+<span class="k">LANGUAGE</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">STABLE</span>
-<span class="n">PARALLEL</span><span class="w"> </span><span class="n">UNSAFE</span>
-<span class="k">ROWS</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span>
+<span class="n">PARALLEL</span><span class="w"> </span><span class="n">UNSAFE</span><span class="p">;</span>
 </code></pre></div>
-<blockquote>
-<p> <em>Estesa rispetto alla versione precedente per includere i campi territoriali e il flag <code>is_normalizzato</code>, in linea con la funzione madre <code>fn_get_indirizzi_by_ruolo</code>.</em></p>
-</blockquote>
 <hr />
 <h3 id="parametri-di-input">🔢 Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -2945,19 +2972,21 @@
 <tbody>
 <tr>
 <td><code>p_soggetto_ruolo_id</code></td>
-<td><code>integer</code></td>
+<td><code>bigint</code></td>
 <td>ID della relazione in <code>anagrafiche.soggetti_ruoli</code>.</td>
 </tr>
 <tr>
 <td><code>p_tipo_codice</code></td>
 <td><code>varchar</code></td>
-<td><strong>Codice interno</strong> del tipo indirizzo (<code>config.tipi_indirizzi.codice_interno</code>, es. <code>SEDE</code>, <code>FATT</code>, <code>DOMFISC</code>).</td>
+<td><strong>Codice interno</strong> del tipo indirizzo (<code>config.tipi_indirizzi.codice_interno</code>, es. <code>RES</code>, <code>FATT</code>, <code>SEDEOP</code>).</td>
 </tr>
 </tbody>
 </table>
-<p> <em>Non è richiesto l’ID della tabella <code>tipi_indirizzi</code>, ma il valore del campo <code>codice_interno</code>.</em></p>
+<blockquote>
+<p>🔹 <em>Non si passa l’ID del tipo indirizzo, ma il suo <code>codice_interno</code>, pensato come chiave funzionale stabile.</em></p>
+</blockquote>
 <hr />
-<h3 id="valori-restituiti">📤 Valori restituiti<a class="headerlink" href="#valori-restituiti" title="Permanent link">&para;</a></h3>
+<h3 id="valori-restituiti-principali">📤 Valori restituiti (principali)<a class="headerlink" href="#valori-restituiti-principali" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -2970,7 +2999,7 @@
 <tr>
 <td><code>indirizzo_completo</code></td>
 <td><code>text</code></td>
-<td>Indirizzo formattato “human-readable”, applicando le regole di priorità definite in <code>fn_get_indirizzi_by_ruolo</code>.</td>
+<td>Indirizzo formattato “human-readable”, applicando le regole A/B/C definite in <code>fn_get_indirizzi_by_ruolo</code>.</td>
 </tr>
 <tr>
 <td><code>geoloc</code></td>
@@ -2995,34 +3024,63 @@
 <tr>
 <td><code>provincia</code></td>
 <td><code>text</code></td>
-<td>Provincia (derivata dalla tabella <code>config.comuni</code>).</td>
+<td>Sigla / descrizione provincia (da <code>config.comuni</code> / <code>config.province</code>).</td>
 </tr>
 <tr>
 <td><code>stato</code></td>
 <td><code>text</code></td>
-<td>Stato del soggetto o dell’indirizzo (gestione futura per internazionale).</td>
+<td>Stato (derivato da <code>config.stati</code> via catena stato/regione/provincia/comune).</td>
 </tr>
 <tr>
 <td><code>is_normalizzato</code></td>
 <td><code>boolean</code></td>
-<td><code>TRUE</code> se derivato da <code>indirizzo_dettaglio</code>; <code>FALSE</code> se indirizzo libero o fallback internazionale.</td>
+<td><code>TRUE</code> se derivato da <code>indirizzo_dettaglio</code>; <code>FALSE</code> se indirizzo libero o estero.</td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p>ℹ️ In realtà la funzione restituisce anche tutti i campi tecnici (<code>indirizzo_id</code>, <code>tipo_indirizzo_id</code>, <code>stato_id</code>, ecc.), perché è direttamente basata sul result-set di <code>fn_get_indirizzi_by_ruolo</code>.</p>
+</blockquote>
 <hr />
-<h3 id="logica-di-estrazione-semplificata">🧠 Logica di estrazione (semplificata)<a class="headerlink" href="#logica-di-estrazione-semplificata" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">indirizzo_completo</span><span class="p">,</span><span class="w"> </span><span class="n">geoloc</span><span class="p">,</span><span class="w"> </span><span class="n">comune_id</span><span class="p">,</span><span class="w"> </span><span class="n">comune_descrizione</span><span class="p">,</span><span class="w"> </span><span class="n">codice_postale</span><span class="p">,</span>
-<span class="w">       </span><span class="n">provincia</span><span class="p">,</span><span class="w"> </span><span class="n">stato</span><span class="p">,</span><span class="w"> </span><span class="n">is_normalizzato</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzi_by_ruolo</span><span class="p">(</span><span class="n">p_soggetto_ruolo_id</span><span class="p">)</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">tipo_indirizzo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_tipo_codice</span>
-<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">geoloc</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">),</span><span class="w"> </span><span class="n">is_normalizzato</span><span class="w"> </span><span class="k">DESC</span>
-<span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</code></pre></div>
-<p> <em>Senza <code>ORDER BY</code>, non vi è determinismo se esistono più indirizzi dello stesso tipo.</em> La regola suggerita:</p>
-<ul>
-<li>1️⃣ privilegia indirizzi con <strong>geolocalizzazione valida</strong>,</li>
-<li>2️⃣ privilegia quelli <strong>normalizzati</strong> rispetto a liberi.</li>
-</ul>
+<h3 id="logica-di-estrazione-senza-dettagli-tecnici">🧠 Logica di estrazione (senza dettagli tecnici)<a class="headerlink" href="#logica-di-estrazione-senza-dettagli-tecnici" title="Permanent link">&para;</a></h3>
+<p>La logica può essere vista come una <strong>sequenza di tentativi</strong>:</p>
+<ol>
+<li><strong>Determina il tipo ruolo</strong> del <code>soggetto_ruolo</code>.</li>
+<li>
+<p><strong>Prova il tipo richiesto (<code>p_tipo_codice</code>)</strong> tramite <code>fn_get_indirizzi_by_ruolo</code>.</p>
+</li>
+<li>
+<p>Se trova almeno un indirizzo → <strong>restituisce e termina</strong>.</p>
+</li>
+<li>
+<p><strong>Altrimenti, cerca un fallback</strong> in <code>config.tipi_ruolo_tipi_indirizzo</code>.</p>
+</li>
+<li>
+<p>Prosegue seguendo la catena di fallback (multi-livello) finché non trova un indirizzo.</p>
+</li>
+<li>Protezione da <strong>loop</strong> nella catena (es. A→B→A): la funzione termina senza errori.</li>
+</ol>
+<hr />
+<h3 id="esempio-di-catena-di-fallback">🔁 Esempio di catena di fallback<a class="headerlink" href="#esempio-di-catena-di-fallback" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>tipo_indirizzo</th>
+<th>fallback_tipo_indirizzo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SEDEOP</td>
+<td>SEDELEG</td>
+</tr>
+<tr>
+<td>FORNITURA</td>
+<td>SEDEOP</td>
+</tr>
+</tbody>
+</table>
+<p>Effetto pratico: <code>fn_get_indirizzo(p_sr, 'FORNITURA')</code> → prova FORNITURA → SEDEOP → SEDELEG.</p>
 <hr />
 <h3 id="dipendenze-tecniche">🧷 Dipendenze tecniche<a class="headerlink" href="#dipendenze-tecniche" title="Permanent link">&para;</a></h3>
 <table>
@@ -3039,7 +3097,7 @@
 </tr>
 <tr>
 <td>Tabelle</td>
-<td><code>anagrafiche.indirizzi</code>, <code>anagrafiche.indirizzi_dettaglio</code>, <code>config.tipi_indirizzi</code>, <code>config.comuni</code>, <code>config.codici_postali</code></td>
+<td><code>anagrafiche.indirizzi</code>, <code>anagrafiche.indirizzi_dettaglio</code>, <code>anagrafiche.soggetti_ruoli</code>, <code>config.tipi_indirizzi</code>, <code>config.tipi_ruolo_tipi_indirizzo</code>, <code>config.comuni</code>, <code>config.codici_postali</code>, <code>config.province</code>, <code>config.regioni</code>, <code>config.stati</code></td>
 </tr>
 <tr>
 <td>Estensioni</td>
@@ -3061,55 +3119,36 @@
 <tr>
 <td>Stabilità</td>
 <td><code>STABLE</code></td>
-<td>Nessuna modifica ai dati.</td>
+<td>Non modifica i dati, ma legge configurazione/anagrafiche</td>
 </tr>
 <tr>
 <td>Parallelismo</td>
 <td><code>PARALLEL UNSAFE</code></td>
-<td>Per via del tipo <code>geometry</code> e funzioni non thread-safe.</td>
+<td>Uso di <code>geometry</code> e logica non sicura in parallel</td>
 </tr>
 <tr>
-<td>Rows (hint)</td>
-<td><code>1000</code></td>
-<td>Indicativo.</td>
-</tr>
-<tr>
-<td>Determinismo</td>
-<td>Consigliato <code>ORDER BY</code></td>
-<td>In caso di indirizzi multipli per tipo.</td>
+<td>Semantica</td>
+<td>“Best address with fallback”</td>
+<td>Può restituire più righe se anomalie (es. doppio indirizzo stesso tipo)</td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h3 id="esempi-duso">🧪 Esempi d’uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- 1) Indirizzo DOMFISC per il soggetto_ruolo 63</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- 1) Indirizzo SEDEOP per un Gestore, con fallback su SEDELEG se assente</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="mi">63</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;DOMFISC&#39;</span><span class="p">);</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="mi">63</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;SEDEOP&#39;</span><span class="p">);</span>
 
-<span class="c1">-- 2) Uso in JOIN laterale (estrazione dinamica)</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">ruolo</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">indirizzo_completo</span>
+<span class="c1">-- 2) Estrazione dinamica in JOIN laterale</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">soggetto_id</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">indirizzo_completo</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="n">sr</span>
-<span class="k">CROSS</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="k">LATERAL</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="n">sr</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;RES&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">f</span><span class="p">;</span>
+<span class="k">CROSS</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="k">LATERAL</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="n">sr</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;FATT&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">f</span><span class="p">;</span>
 
-<span class="c1">-- 3) Verifica indirizzo con geoloc disponibile</span>
+<span class="c1">-- 3) Solo indirizzi normalizzati con geoloc</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;FATT&#39;</span><span class="p">)</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">geoloc</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-</code></pre></div>
-<hr />
-<h3 id="best-practice">✅ Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Usare <strong>sempre codici interni standardizzati</strong> (non ID) per richiamare la funzione.</li>
-<li>Mantenere <strong>coerenza con <code>fn_get_indirizzi_by_ruolo</code></strong> per ogni modifica futura.</li>
-<li>In presenza di applicativi o API, valutare gestione esplicita <code>ORDER BY</code>.</li>
-<li>Validare sempre tramite test pgTAP in caso di modifiche a tabelle correlate.</li>
-</ul>
-<hr />
-<h3 id="commento-catalogo-sql">💬 Commento catalogo (SQL)<a class="headerlink" href="#commento-catalogo-sql" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">COMMENT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="nb">integer</span><span class="p">,</span><span class="w"> </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span>
-<span class="w">  </span><span class="s1">&#39;Restituisce un singolo indirizzo completo e geolocalizzato per soggetto_ruolo e codice tipo indirizzo, &#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="s1">&#39;delegando a fn_get_indirizzi_by_ruolo. Include campi territoriali e flag is_normalizzato. &#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="s1">&#39;La selezione è deterministica solo se definito un ORDER BY.&#39;</span><span class="p">;</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;FORNITURA&#39;</span><span class="p">)</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">is_normalizzato</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">geoloc</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
 </code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
