@@ -2515,6 +2515,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/soggetti-e-ruoli-anagrafici/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Soggetti e ruoli anagrafici
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/generazione-cliente/" class="md-nav__link">
         
   
@@ -2863,6 +2891,91 @@
 <li>Garantisce coerenza tra DB e validazione backend.</li>
 </ul>
 <hr />
+<h1 id="integrazione-tabella-configtipi_soggetto_dettaglio">📘 Integrazione – Tabella <code>config.tipi_soggetto_dettaglio</code><a class="headerlink" href="#integrazione-tabella-configtipi_soggetto_dettaglio" title="Permanent link">&para;</a></h1>
+<p><em>(Aggiornamento del 2025-12-03)</em></p>
+<p>Questa integrazione documenta le modifiche introdotte oggi sulla tabella <strong><code>config.tipi_soggetto_dettaglio</code></strong>, in particolare riguardo i formati CF/P.IVA e la coerenza con la policy sui dati societari.</p>
+<hr />
+<h2 id="nuovi-vincoli-introdotti">🆕 Nuovi Vincoli Introdotti<a class="headerlink" href="#nuovi-vincoli-introdotti" title="Permanent link">&para;</a></h2>
+<h3 id="1-formati-ammessi-per-cf-e-piva">1️⃣ Formati ammessi per CF e P.IVA<a class="headerlink" href="#1-formati-ammessi-per-cf-e-piva" title="Permanent link">&para;</a></h3>
+<p>Le colonne:</p>
+<ul>
+<li><code>formato_cf</code></li>
+<li><code>formato_piva</code></li>
+</ul>
+<p>non possono più essere <code>NULL</code> e devono rispettare uno dei seguenti formati:</p>
+<ul>
+<li><code>NON_APPLICABILE</code></li>
+<li><code>NUM_&lt;N&gt;</code>     → solo cifre, lunghezza N</li>
+<li><code>ALFA_&lt;N&gt;</code>    → solo lettere A–Z, lunghezza N</li>
+<li><code>ALFANUM_&lt;N&gt;</code> → lettere + cifre, lunghezza N</li>
+</ul>
+<p>Esempi validi:</p>
+<div class="highlight"><pre><span></span><code>NUM_11
+ALFANUM_16
+ALFA_10
+NON_APPLICABILE
+</code></pre></div>
+<p>Tali vincoli garantiscono che i pattern siano omogenei e validabili in modo generico.</p>
+<hr />
+<h2 id="2-coerenza-con-dati_societari_policy">2️⃣ Coerenza con <code>dati_societari_policy</code><a class="headerlink" href="#2-coerenza-con-dati_societari_policy" title="Permanent link">&para;</a></h2>
+<p>È stato introdotto il vincolo:</p>
+<ul>
+<li>Se <code>formato_piva = 'NON_APPLICABILE'</code> → <code>dati_societari_policy = 'NONE'</code></li>
+<li>Se <code>formato_piva &lt;&gt; 'NON_APPLICABILE'</code> → <code>dati_societari_policy ∈ ('OPTIONAL', 'REQUIRED')</code></li>
+</ul>
+<p>🔍 <strong>Significato funzionale:</strong></p>
+<ul>
+<li>Se un tipo soggetto non prevede la Partita IVA, allora i dati societari non possono essere richiesti.</li>
+<li>Se il tipo soggetto prevede una P.IVA (qualsiasi formato), allora i dati societari devono essere almeno opzionali.</li>
+</ul>
+<hr />
+<h2 id="3-implicazioni-funzionali">3️⃣ Implicazioni funzionali<a class="headerlink" href="#3-implicazioni-funzionali" title="Permanent link">&para;</a></h2>
+<h3 id="validazione-cfpiva">✔ Validazione CF/P.IVA<a class="headerlink" href="#validazione-cfpiva" title="Permanent link">&para;</a></h3>
+<p>La funzione:</p>
+<ul>
+<li><code>script.fn_validate_cf_piva_it()</code></li>
+</ul>
+<p>ora lavora utilizzando:</p>
+<ul>
+<li><code>formato_cf &lt;&gt; 'NON_APPLICABILE'</code></li>
+<li><code>formato_piva &lt;&gt; 'NON_APPLICABILE'</code></li>
+</ul>
+<p>come discriminante per l'attivazione della validazione.</p>
+<h3 id="controllo-paese">✔ Controllo Paese<a class="headerlink" href="#controllo-paese" title="Permanent link">&para;</a></h3>
+<p>La validazione rimane agganciata al dispatcher:</p>
+<ul>
+<li><code>anagrafiche.trgfn_soggetti_valida_cf_piva_dispatch</code></li>
+</ul>
+<p>che applica la validazione solo se <code>stato_iso2 = 'IT'</code>.</p>
+<hr />
+<h2 id="4-benefici-architetturali">4️⃣ Benefici Architetturali<a class="headerlink" href="#4-benefici-architetturali" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Eliminazione di valori improvvisati nei campi CF/P.IVA.</li>
+<li>Base solida per l'internazionalizzazione futura.</li>
+<li>Maggiore robustezza nelle validazioni fiscali.</li>
+<li>Pulizia semantica tra tipi soggetto, dettagli fiscali e contesto nazionale.</li>
+</ul>
+<hr />
+<h2 id="5-estratto-dei-vincoli-per-completezza">5️⃣ Estratto dei Vincoli (per completezza)<a class="headerlink" href="#5-estratto-dei-vincoli-per-completezza" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">formato_cf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;NON_APPLICABILE&#39;</span><span class="w"> </span><span class="k">OR</span>
+<span class="w">  </span><span class="n">formato_cf</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="s1">&#39;^(NUM|ALFA|ALFANUM)_[0-9]{1,2}$&#39;</span>
+<span class="p">);</span>
+
+<span class="k">CHECK</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">formato_piva</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;NON_APPLICABILE&#39;</span><span class="w"> </span><span class="k">OR</span>
+<span class="w">  </span><span class="n">formato_piva</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="s1">&#39;^(NUM|ALFA|ALFANUM)_[0-9]{1,2}$&#39;</span>
+<span class="p">);</span>
+
+<span class="k">CHECK</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="p">(</span><span class="n">formato_piva</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;NON_APPLICABILE&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">dati_societari_policy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;NONE&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">OR</span>
+<span class="w">  </span><span class="p">(</span><span class="n">formato_piva</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;NON_APPLICABILE&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">dati_societari_policy</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;OPTIONAL&#39;</span><span class="p">,</span><span class="s1">&#39;REQUIRED&#39;</span><span class="p">))</span>
+<span class="p">);</span>
+</code></pre></div>
+<hr />
+<h2 id="nota-finale">📌 Nota finale<a class="headerlink" href="#nota-finale" title="Permanent link">&para;</a></h2>
+<p>Queste modifiche rappresentano un consolidamento fondamentale per la gestione internazionale dei tipi di soggetto, rendendo il modello più controllato e predittivo.</p>
+<p>Se vuoi integrare anche esempi pratici o diagrammi ER aggiornati, posso prepararli subito.</p>
 
 
 

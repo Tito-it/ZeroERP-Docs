@@ -2515,6 +2515,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/soggetti-e-ruoli-anagrafici/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Soggetti e ruoli anagrafici
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/generazione-cliente/" class="md-nav__link">
         
   
@@ -2906,25 +2934,24 @@
 </ul>
 <p>Approfondimenti funzioni:   </p>
 <ul>
-<li><a href="../../../../dbzero/anagrafiche/funzioni/trgfn_gestori_ins_upd_check_ruolo_gestore">anagrafiche.trgfn_gestori_ins_upd_check_ruolo_gestore</a>   </li>
-<li><a href="../../../../dbzero/script/funzioni/fn_check_ins_soggetto_ruolo">script.fn_check_ins_soggetto_ruolo</a>  </li>
+<li><a href="../../../../dbzero/anagrafiche/funzioni/trgfn_gestori_guard_check_ruolo_gestore">anagrafiche.trgfn_gestori_guard_ruolo_gestore</a>   </li>
+<li><a href="../../../../dbzero/script/funzioni/fn_guard_soggetto_ruolo">script.fn_guard_soggetto_ruolo</a>  </li>
 </ul>
 </blockquote>
 <p>La tabella <strong><code>anagrafiche.gestori</code></strong> rappresenta l’azienda stessa che utilizza e amministra il sistema Zero ERP (“gestore”). Attualmente raccoglie le informazioni di base necessarie a identificare il gestore, ma è ancora in fase di definizione: in futuro potrà essere estesa per includere ulteriori parametri funzionali e di configurazione del software.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li>
-<p><strong>Identificare il gestore del sistema</strong><br />
+<p>(latest update 05-12-25)
+- <strong>Identificare il gestore del sistema</strong><br />
   Memorizzare la riga unica che corrisponde all’azienda proprietaria o amministratrice di Zero ERP, distinguendola da tutti gli altri soggetti (clienti, fornitori, partner, ecc.).</p>
-</li>
+<ul>
 <li>
 <p><strong>Collegare il gestore all’anagrafica generica</strong><br />
   Utilizzare il campo <code>soggetto_id</code> per riferirsi al record corrispondente in <code>anagrafiche.soggetti</code> (azienda di tipo giuridico), garantendo coerenza fra scheda anagrafica e scheda gestore.</p>
 </li>
 <li>
 <p><strong>Assicurare il ruolo corretto</strong><br />
-  Contribuire al rispetto della logica applicativa: il trigger <code>trg_gestori_ins_upd_check_ruolo_gestore</code> verifica che il record inserito o aggiornato faccia effettivamente riferimento a una relazione soggetto-ruolo di tipo “Gestore” (presente in <code>anagrafiche.soggetti_ruoli</code>).</p>
+  Contribuire al rispetto della logica applicativa: il trigger <code>trg_gestori_guard_ruolo_gestore_ins_upd</code> verifica che il record inserito o aggiornato faccia effettivamente riferimento a una relazione soggetto-ruolo di tipo “Gestore” (presente in <code>anagrafiche.soggetti_ruoli</code>).</p>
 </li>
 </ul>
 <hr />
@@ -2989,13 +3016,7 @@
 <li>
 <p><strong>Campi testuali obbligatori</strong>  </p>
 </li>
-<li>
-<p><code>descrizione</code> (50 caratteri) e <code>cd_prod_software</code> (20 caratteri) non possono essere nulli, al fine di fornire un’etichetta descrittiva e l’indicazione del prodotto software in uso.</p>
-</li>
-<li>
-<p><strong>IBAN obbligatorio</strong>  </p>
-</li>
-<li>Il campo <code>iban</code> (35 caratteri) è necessario per registrare il conto bancario del gestore.</li>
+<li><code>descrizione</code> (50 caratteri) e <code>cd_prod_software</code> (20 caratteri) non possono essere nulli, al fine di fornire un’etichetta descrittiva e l’indicazione del prodotto software in uso.</li>
 </ul>
 <hr />
 <h3 id="descrizione-dei-campi-principali">🔍 Descrizione dei Campi Principali<a class="headerlink" href="#descrizione-dei-campi-principali" title="Permanent link">&para;</a></h3>
@@ -3023,10 +3044,6 @@
 <li>
 <p><strong><code>valuta_id</code></strong><br />
   Riferimento a <code>config.valute(id)</code>, indica la valuta di default per prezzi, bilanci e reporting amministrativo (es. EUR, USD, GBP).</p>
-</li>
-<li>
-<p><strong><code>iban</code></strong><br />
-  Codice IBAN (35 caratteri) del conto corrente aziendale del gestore, utilizzato per operazioni bancarie e pagamento fatture.</p>
 </li>
 <li>
 <p><strong><code>user_insert</code>, <code>data_insert</code>, <code>user_update</code>, <code>data_update</code></strong><br />
@@ -3109,7 +3126,6 @@ erDiagram
         string   descrizione
         string   cd_prod_software
         int      valuta_id FK
-        string   iban
         string   user_insert
         string   user_update
         datetime data_insert

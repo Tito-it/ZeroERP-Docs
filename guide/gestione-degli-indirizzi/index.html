@@ -2519,6 +2519,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../soggetti-e-ruoli-anagrafici/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Soggetti e ruoli anagrafici
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../generazione-cliente/" class="md-nav__link">
         
   
@@ -3053,6 +3081,12 @@
 
 <h1 id="guida-alla-gestione-degli-indirizzi-in-zero-erp">Guida alla Gestione degli Indirizzi in Zero ERP<a class="headerlink" href="#guida-alla-gestione-degli-indirizzi-in-zero-erp" title="Permanent link">&para;</a></h1>
 <p>Questa guida illustra l’architettura, le scelte progettuali e i componenti coinvolti nella gestione degli indirizzi in Zero ERP.</p>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<ul>
+<li><a href="../../guide/soggetti-e-ruoli-anagrafici"><code>Guida Soggetti &amp; Ruoli</code></a>  </li>
+</ul>
+</blockquote>
 <hr />
 <h2 id="1-principi-progettuali">1. Principi Progettuali<a class="headerlink" href="#1-principi-progettuali" title="Permanent link">&para;</a></h2>
 <ol>
@@ -3072,13 +3106,13 @@
 <p><strong>Storicizzazione trasparente</strong></p>
 </li>
 <li>
-<p>Tutte le modifiche a <code>config.stradario</code> e <code>anagrafiche.indirizzi</code> sono salvate in <strong><code>storico.*</code></strong> con snapshot JSONB, tipi operazione (A/U/D) e transazione <strong>tx_id</strong>, tramite la trigger-function generica <a href="../../dbzero/script/funzioni/trgfn_upd_dlt_storico_generic"><code>script.trgfn_upd_dlt_storico_generic()</code></a>.</p>
+<p>Tutte le modifiche a <code>config.stradario</code> e <code>anagrafiche.indirizzi</code> sono salvate in <strong><code>storico.*</code></strong> con snapshot JSONB, tipi operazione (A/U/D) e transazione <strong>tx_id</strong>, tramite la trigger-function generica <a href="../../dbzero/script/funzioni/trgfn_storico_generic"><code>script.trgfn_storico_generic()</code></a>.</p>
 </li>
 <li>
 <p><strong>Clean &amp; Default centralizzati</strong></p>
 </li>
 <li>
-<p>Ogni tabella con normalizzazioni o default ha un trigger <code>trg_&lt;tabella&gt;_ins_upd_clean_fields</code> che richiama <code>trgfn_&lt;tabella&gt;_clean_fields()</code>. Esempio per <code>soggetti</code>:</p>
+<p>Ogni tabella con normalizzazioni o default ha un trigger <code>trg_&lt;tabella&gt;_clean_fields_ins_upd</code> che richiama <code>trgfn_&lt;tabella&gt;_clean_fields()</code>. Esempio per <code>soggetti</code>:</p>
 <ul>
 <li>Imposta <code>stato_id</code> di default (<code>script.state_iso_code3()</code>).</li>
 <li>Genera <code>codice(soggetto)</code> se mancante <a href="../../dbzero/script/funzioni/fn_generate_codice"><code>script.fn_generate_codice('soggetto')</code></a>.</li>
@@ -3156,7 +3190,7 @@
 <td>Genera codici progressivi da <code>sistema_codici</code></td>
 </tr>
 <tr>
-<td><a href="../../dbzero/script/funzioni/trgfn_upd_dlt_storico_generic">script.trgfn_upd_dlt_storico_generic()</a></td>
+<td><a href="../../dbzero/script/funzioni/trgfn_storico_generic">script.trgfn_storico_generic()</a></td>
 <td>trigger function</td>
 <td>Storicizzazione generica con JSONB snapshot</td>
 </tr>
@@ -3171,12 +3205,12 @@
 <td>Generica per <code>codice_&lt;entità&gt;</code>, usa <code>fn_generate_codice</code></td>
 </tr>
 <tr>
-<td><a href="../../dbzero/anagrafiche/funzioni/trgfn_indirizzi_dettaglio_ins_upd_norm_indirizzi_dettaglio">anagrafiche.trgfn_indirizzi_dettaglio_ins_upd_norm_indirizzi_dettaglio()</a></td>
+<td><a href="../../dbzero/anagrafiche/funzioni/trgfn_indirizzi_dettaglio_norm_indirizzi_dettaglio">anagrafiche.trgfn_indirizzi_dettaglio_norm_indirizzi_dettaglio()</a></td>
 <td>trigger function</td>
 <td>Normalizza <code>via_norm</code>, <code>civico_norm</code></td>
 </tr>
 <tr>
-<td><a href="../../dbzero/script/funzioni/fn_get_snapshot_as_of">anagrafiche.trgfn_soggetti_ins_upd_clean_fields()</a></td>
+<td><a href="../../dbzero/script/funzioni/fn_get_snapshot_as_of">anagrafiche.trgfn_soggetti_clean_fields()</a></td>
 <td>trigger function</td>
 <td>Default <code>stato_id</code>, generazione <code>codice(soggetto)</code>, pulizia testo</td>
 </tr>
@@ -3192,7 +3226,7 @@
 <li><strong>Inserimento</strong>: normalizzazione via trigger su <code>indirizzi_dettaglio</code> o inserimento di <code>indirizzo_libero</code>.</li>
 <li><strong>Associazione</strong>: <code>anagrafiche.indirizzi</code> collega soggetto/ruolo a riga di dettaglio o a indirizzo libero.</li>
 <li><strong>Clean &amp; Default</strong>: <code>clean_fields</code> imposta <code>stato_id</code>, genera codici, pulisce testo.</li>
-<li><strong>Storicizzazione</strong>: <code>trgfn_upd_dlt_storico_generic('indirizzi_id')</code> registra snapshot.</li>
+<li><strong>Storicizzazione</strong>: <code>trgfn_storico_generic('indirizzi_id')</code> registra snapshot.</li>
 <li><strong>Lettura storica</strong>: <code>fn_get_snapshot_as_of()</code>/<code>fn_get_record_id_as_of()</code> ricostruiscono lo stato di un record a una data.</li>
 </ol>
 <hr />
