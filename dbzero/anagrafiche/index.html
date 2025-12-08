@@ -2627,6 +2627,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../guide/gestione-delle-istanze-utility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione delle Istanze Utility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../guide/generazione-cliente/" class="md-nav__link">
         
   
@@ -2953,7 +2981,7 @@
 <li><a href="tabelle/indirizzi_dettaglio/">indirizzi_dettaglio</a> — * <strong>Dettagliare lo stradario</strong>     Associare a ciascuna via (memorizzata in <code>config.stradario</code>) le singole unità civiche (numeri civici, estensioni, palazzine, interni, piani), ottenendo così l’indirizzo completo e navigabile.   * <strong>Geolocalizzazione precisa</strong>     Il campo <code>civic_geoloc</code> memorizza il punto geografico corrispondente al singolo civico, mentre <code>street_geoloc</code> rappresenta la posizione media della via. Questi dati consentono ricerche spaziali e visualizzazioni GIS a livello di civico.   * <strong>Indirizzo normalizzato</strong>     Il campo calcolato <code>indirizzo_normalizzato</code> combina via, civico, palazzina, scala, piano e interno in un’unica stringa formattata in modo coerente, facilitando confronti testuali e ricerche full-text.</li>
 <li><a href="tabelle/istanze_dati_precontrattuali/">istanze_dati_precontrattuali</a> — La tabella <code>anagrafiche.istanze_dati_precontrattuali</code> raccoglie <strong>tutte le informazioni pre‑contrattuali</strong> relative ad una specifica <strong>istanza utility</strong> (fornitura/utenza). Il campo <strong><code>meta</code> (JSONB)</strong> consente di archiviare attributi <strong>specifici per tipo di utility</strong> (es. potenza impegnata, pressione, soglie tecniche, parametri di profilazione).</li>
 <li><a href="tabelle/istanze_utilities/">istanze_utilities</a> — * Registrare ogni <strong>attivazione</strong> di servizio (volta) per un soggetto su un punto di erogazione. * Gestire la <strong>gerarchia</strong> delle attivazioni successive (subentri/volture) tramite <code>parent_istanza_id</code>. * Supportare record <strong>fittizi</strong>, ossia senza indirizzo obbligatorio.</li>
-<li><a href="tabelle/pdp/">pdp</a> — <code>anagrafiche.pdp</code> rappresenta i <strong>Punti di Prelievo (PDP)</strong> come entità <strong>fisiche</strong> ancorate a un <strong>indirizzo</strong> (<code>indirizzo_dettaglio_id</code>), identificate da un <strong>codice univoco globale</strong> (campo <code>pdp</code>) e <strong>tipizzate</strong> rispetto a una <strong>utility</strong> (<code>utilities_id</code>, es. GAS, ENERGIA…). La tabella <strong>base</strong> contiene lo <strong>stato corrente</strong> (incluso il <strong>cliente attuale</strong> se presente). Questa scelta separa stato (qui) da storia (in storico.pdp), semplificando le query operative e garantendo audit completo.</li>
+<li><a href="tabelle/pdp/">pdp</a> — (latest revison 06-12-25) La tabella <strong><code>anagrafiche.pdp</code></strong> rappresenta i <strong>Punti di Prelievo (PDP)</strong>, entità fisiche ancorate a un indirizzo e identificate da un codice univoco globale (POD/PDR/altro). Ogni PDP appartiene a una utility (GAS, ENERGIA, ecc.) ed espone <strong>lo stato tecnico corrente</strong>, distinto dagli stati commerciali del cliente.</li>
 <li><a href="tabelle/resellers/">resellers</a></li>
 <li><a href="tabelle/soggetti/">soggetti</a> — - <strong>Coerenza dei dati</strong>     Garantire che ogni soggetto—persona fisica, giuridica o fisica forzata—sia identificato in modo univoco e validato secondo le regole aziendali.</li>
 <li><a href="tabelle/soggetti_conti_bancari/">soggetti_conti_bancari</a> — <code>anagrafiche.soggetti_conti_bancari</code> gestisce l’<strong>associazione tra un Soggetto</strong> (persona/azienda) e uno o più <strong>conti bancari (IBAN)</strong>, distinguendo l’<strong>uso</strong> del conto: <code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code>, <code>GENERICO</code>.</li>
@@ -2970,6 +2998,7 @@
 <li><a href="funzioni/trgfn_clienti_guard_ruolo_cliente/">trgfn_clienti_guard_ruolo_cliente</a> — (latest review 05-12-25) - <strong>Centralizzare l’assegnazione del ruolo “cliente”</strong>     Delegare a <code>script.fn_guard_soggetto_ruolo</code> la logica di inserimento o verifica del linking table, evitando duplicazioni di codice.</li>
 <li><a href="funzioni/trgfn_clienti_set_periodo/">trgfn_clienti_set_periodo</a></li>
 <li><a href="funzioni/trgfn_clienti_sync_pdp/">trgfn_clienti_sync_pdp</a></li>
+<li><a href="funzioni/trgfn_clienti_sync_stato_pdp/">trgfn_clienti_sync_stato_pdp</a></li>
 <li><a href="funzioni/trgfn_clienti_sync_utility_from_ba/">trgfn_clienti_sync_utility_from_ba</a></li>
 <li><a href="funzioni/trgfn_contatti_set_default_contatto/">trgfn_contatti_set_default_contatto</a> — (latest review 03-12-25) * <strong>Impostare il contatto default</strong>   Garantire che il primo contatto (o quello marcato explicitamente) diventi predefinito all’interno del suo contesto.</li>
 <li><a href="funzioni/trgfn_conti_bancari_normalize/">trgfn_conti_bancari_normalize</a></li>
@@ -2989,6 +3018,7 @@
 <li><a href="funzioni/trgfn_istanze_utilities_normalize/">trgfn_istanze_utilities_normalize</a> — Il trigger <code>anagrafiche.trgfn_istanze_utilities_ins_upd_clean_fields</code> è invocato <strong>prima di ogni INSERT o UPDATE</strong> su <code>anagrafiche.istanze_utilities</code> e ha i seguenti obiettivi:</li>
 <li><a href="funzioni/trgfn_istanze_utilities_protect_codice/">trgfn_istanze_utilities_protect_codice</a> — Il trigger <code>anagrafiche.trgfn_istanze_utilities_upd_protect_codice</code>, eseguito <strong>prima di ogni UPDATE</strong> su <code>anagrafiche.istanze_utilities</code>, impedisce modifiche non autorizzate al campo <strong><code>codice (istanza)</code></strong> una volta impostato.</li>
 <li><a href="funzioni/trgfn_pdp_protect_cols/">trgfn_pdp_protect_cols</a></li>
+<li><a href="funzioni/trgfn_pdp_set_default_stato/">trgfn_pdp_set_default_stato</a></li>
 <li><a href="funzioni/trgfn_resellers_guard_ruolo_reseller/">trgfn_resellers_guard_ruolo_reseller</a></li>
 <li><a href="funzioni/trgfn_resellers_normalize/">trgfn_resellers_normalize</a></li>
 <li><a href="funzioni/trgfn_resellers_protect_codice/">trgfn_resellers_protect_codice</a></li>
@@ -3008,6 +3038,8 @@
 <ul>
 <li><a href="views/vw_conti_bancari_per_ruolo/">vw_conti_bancari_per_ruolo</a> — (latest review 28-11-25) * <strong>Selezione unificata del conto per ruolo</strong>   Fornisce una vista già pre-filtrata e normalizzata con <strong>una sola riga per coppia <code>(soggetto_ruolo_id, uso)</code></strong>, scegliendo il miglior candidato tra:</li>
 <li><a href="views/vw_indirizzi_dettaglio/">vw_indirizzi_dettaglio</a> — (latest review 28-11-25) La vista <strong><code>anagrafiche.vw_indirizzi_dettaglio</code></strong> fornisce una rappresentazione "comoda" e già arricchita degli indirizzi di dettaglio, a partire dalla tabella sorgente <a href="../../../dbzero/anagrafiche/tabelle/indirizzi_dettaglio"><code>anagrafiche.indirizzi_dettaglio</code></a> collegata allo stradario <a href="../../../dbzero/config/tabelle/stradario"><code>config.stradario</code></a>.</li>
+<li><a href="views/vw_istanze_utilities_dettaglio/">vw_istanze_utilities_dettaglio</a></li>
+<li><a href="views/vw_pdp/">vw_pdp</a></li>
 </ul>
 
 
