@@ -3009,6 +3009,7 @@
 
 <h1 id="guida-tecnica-storicizzazione-delle-tabelle-in-zero-erp">📗 Guida Tecnica – Storicizzazione delle Tabelle in Zero ERP<a class="headerlink" href="#guida-tecnica-storicizzazione-delle-tabelle-in-zero-erp" title="Permanent link">&para;</a></h1>
 <blockquote>
+<p>(latest review 08-12-25)</p>
 <p>📋 <strong>Destinatari:</strong> sviluppatori database, sviluppatori backend</p>
 <p>👀 <strong>Vedi anche:</strong></p>
 <p>Per come applicare queste best practice nelle migrazioni, consulta il documento:</p>
@@ -3017,7 +3018,7 @@
 </ul>
 <p>Approfondimento funzioni:</p>
 <ul>
-<li><a href="../../dbzero/script/funzioni/trgfn_upd_dlt_storico_generic">script.trgfn_upd_dlt_storico_generic</a></li>
+<li><a href="../../dbzero/script/funzioni/trgfn_storico_generic">script.trgfn_storico_generic</a></li>
 <li><a href="../../dbzero/script/funzioni/fn_get_snapshot_as_of">script.fn_get_snapshot_as_of</a> <em>(restituisce lo snapshot JSONB a un dato istante)</em></li>
 <li><a href="../../dbzero/script/funzioni/fn_get_record_id_as_of">script.fn_get_record_id_as_of </a> <em>(restituisce solo l’ID del record storico a un dato istante)</em></li>
 </ul>
@@ -3029,7 +3030,7 @@
 <ul>
 <li><strong>Tracciabilità completa</strong> delle operazioni di <strong>INSERT</strong>, <strong>UPDATE</strong> e <strong>DELETE</strong> su tabelle chiave.</li>
 <li><strong>Flessibilità di schema</strong>: supportare evoluzioni future senza dover modificare la struttura dello storico.</li>
-<li><strong>Centralizzazione della logica</strong> di storicizzazione in una funzione generic (<code>trgfn_upd_dlt_storico_generic</code>).</li>
+<li><strong>Centralizzazione della logica</strong> di storicizzazione in una funzione generic (<code>trgfn_storico_generic</code>).</li>
 </ul>
 <hr />
 <h2 id="colonne-standard-per-le-tabelle-di-storico">🛠️ Colonne Standard per le Tabelle di Storico<a class="headerlink" href="#colonne-standard-per-le-tabelle-di-storico" title="Permanent link">&para;</a></h2>
@@ -3060,7 +3061,7 @@
 </blockquote>
 <hr />
 <h2 id="trigger-generic-di-storico">🔄 Trigger Generic di Storico<a class="headerlink" href="#trigger-generic-di-storico" title="Permanent link">&para;</a></h2>
-<p>La funzione <strong><code>script.trgfn_upd_dlt_storico_generic(fk_column)</code></strong> gestisce:</p>
+<p>La funzione <strong><code>script.trgfn_storico_generic(fk_column)</code></strong> gestisce:</p>
 <ol>
 <li><strong>Chiusura</strong> di eventuali snapshot aperti (<code>valid_to = CURRENT_DATE</code>).</li>
 <li><strong>Inserimento snapshot iniziale</strong> (solo se non esisteva) con <code>valid_from = '1950-01-01'</code>.</li>
@@ -3071,10 +3072,10 @@
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_storico_</span><span class="o">&lt;</span><span class="n">entita</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="k">AFTER</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">DELETE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="o">&lt;</span><span class="k">schema</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="n">entita</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">trgfn_upd_dlt_storico_generic</span><span class="p">(</span><span class="s1">&#39;&lt;entita&gt;_id&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">trgfn_storico_generic</span><span class="p">(</span><span class="s1">&#39;&lt;entita&gt;_id&#39;</span><span class="p">);</span>
 </code></pre></div>
 <blockquote>
-<p><strong>Importante Naming Convention</strong>: il trigger di storico deve chiamarsi con prefisso <code>trg_Z90&lt;schema&gt;_upd_dlt_storico</code> (es. <code>trg_Z90_stradario_upd_dlt_storico</code>). Questo garantisce:</p>
+<p><strong>Importante Naming Convention</strong>: il trigger di storico deve chiamarsi con prefisso <code>trg_Z90_&lt;tabella&gt;_storico_upd_dlt</code> (es. <code>trg_Z90_stradario_storico_upd_dlt</code>). Questo garantisce:</p>
 <ul>
 <li>Esecuzione per ultima, grazie all’ordinamento alfabetico.</li>
 <li>Compatibilità con gli altri trigger precedenti nell’ordine di firing.</li>
