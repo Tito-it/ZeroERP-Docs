@@ -23,7 +23,7 @@
     
     
       
-        <title>⚙️ Funzione trgfn_clienti_sync_stato_pdp - Zero ERP Documentation</title>
+        <title>Trgfn clienti sync stato pdp - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#funzione-trgfn_clienti_sync_stato_pdp" class="md-skip">
+        <a href="#documentazione-concettuale-funzione-anagrafichetrgfn_clienti_sync_stato_pdp" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione trgfn_clienti_sync_stato_pdp
+              Trgfn clienti sync stato pdp
             
           </span>
         </div>
@@ -2817,8 +2817,97 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Indice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-concettuale-funzione-anagrafichetrgfn_clienti_sync_stato_pdp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📘 Documentazione Concettuale – Funzione anagrafiche.trgfn_clienti_sync_stato_pdp()
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Funzione anagrafiche.trgfn_clienti_sync_stato_pdp()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Scopo Principale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contesto-e-campi-interessati" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧱 Contesto e campi interessati
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logica-di-funzionamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 Logica di funzionamento
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trigger-associato-schema-suggerito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔧 Trigger associato (schema suggerito)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benefici-del-disegno" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Benefici del disegno
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#funzione-trgfn_clienti_sync_stato_pdp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ Funzione trgfn_clienti_sync_stato_pdp
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -2838,6 +2927,191 @@
   
 
 
+<h2 id="documentazione-concettuale-funzione-anagrafichetrgfn_clienti_sync_stato_pdp">📘 Documentazione Concettuale – Funzione <code>anagrafiche.trgfn_clienti_sync_stato_pdp()</code><a class="headerlink" href="#documentazione-concettuale-funzione-anagrafichetrgfn_clienti_sync_stato_pdp" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p><strong>Approfondimeto tabelle:</strong></p>
+<p>• <a href="../../../../dbzero/anagrafiche/tabelle/clienti">anagrafiche.clienti</a><br />
+• <a href="../../../../dbzero/anagrafiche/tabelle/pdp">anagrafiche.pdp</a> <br />
+• <a href="../../../../dbzero/config/tabelle/stati_cliente">config.stati_cliente</a> <br />
+• <a href="../../../../dbzero/config/tabelle/stati_pdp">config.stati_pdp</a>   </p>
+<p><strong>Approfondimento funzioni:</strong>   </p>
+<p>• <a href="../../../../dbzero/anagrafiche/funzioni/trgfn_clienti_set_periodo"><code>anagrafiche.trgfn_clienti_set_periodo()</code></a>  <br />
+• <a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error"><code>script.fn_log_and_raise_error</code></a>  </p>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>(latest review 09-12-25)
+La funzione <code>anagrafiche.trgfn_clienti_sync_stato_pdp()</code> è una <strong>trigger function di dominio</strong> che sincronizza lo <strong>stato tecnico del PDP</strong> (<code>anagrafiche.pdp.stato_pdp_id</code>) in base al cambio di <strong>stato commerciale</strong> del cliente (<code>anagrafiche.clienti.stato_cliente_id</code>).</p>
+<p>In sintesi:</p>
+<ul>
+<li>quando un cliente diventa <strong>ATTIVO</strong> → il PDP passa in stato <strong>ATT</strong> (attivo);</li>
+<li>quando un cliente viene <strong>CHIUSO</strong> e non ci sono più clienti attivi su quel PDP (regola estendibile) → il PDP torna in stato <strong>DISP</strong> (disponibile);</li>
+<li>negli altri casi lo stato del PDP <strong>non viene toccato</strong>.</li>
+</ul>
+<p>La funzione è pensata per essere richiamata da un trigger <code>AFTER INSERT OR UPDATE</code> su <code>anagrafiche.clienti</code>.</p>
+<hr />
+<h3 id="contesto-e-campi-interessati">🧱 Contesto e campi interessati<a class="headerlink" href="#contesto-e-campi-interessati" title="Permanent link">&para;</a></h3>
+<p><strong>Tabella: <code>anagrafiche.clienti</code></strong></p>
+<p>Campi utilizzati direttamente:</p>
+<ul>
+<li><code>pdp_id</code>            → FK verso <code>anagrafiche.pdp(id)</code>; se NULL, non viene eseguita alcuna sincronizzazione.</li>
+<li><code>stato_cliente_id</code>  → FK verso <code>config.stati_cliente(id)</code>; determina la logica applicata.</li>
+<li><code>tx_id</code>             → identificativo di transazione per logging.</li>
+</ul>
+<blockquote>
+<p>☝️ Il legame fra cliente e PDP è mantenuto coerente a monte dalla funzione
+<code>anagrafiche.trgfn_clienti_sync_pdp()</code>.</p>
+</blockquote>
+<p><strong>Tabella: <code>config.stati_cliente</code></strong></p>
+<p>La funzione legge:</p>
+<ul>
+<li>
+<p><code>codice_interno</code> → per distinguere gli stati cliente, in particolare:</p>
+</li>
+<li>
+<p><code>AT</code> → cliente attivo;</p>
+</li>
+<li><code>CH</code> → cliente chiuso.</li>
+</ul>
+<p><strong>Tabella: <code>config.stati_pdp</code></strong></p>
+<p>La funzione utilizza i seguenti codici interni:</p>
+<ul>
+<li><code>ATT</code>  → PDP attivo (c’è almeno un cliente commerciale attivo);</li>
+<li><code>DISP</code> → PDP disponibile (nessun cliente commerciale attivo).</li>
+</ul>
+<p>Gli ID corrispondenti vengono risolti dinamicamente tramite query su <code>config.stati_pdp</code>.</p>
+<p><strong>Tabella: <code>anagrafiche.pdp</code></strong></p>
+<p>Campi aggiornati:</p>
+<ul>
+<li><code>id</code>            → identificatore del punto di prelievo;</li>
+<li><code>stato_pdp_id</code>  → FK verso <code>config.stati_pdp</code>, aggiornato in base allo stato cliente.</li>
+</ul>
+<hr />
+<h3 id="logica-di-funzionamento">🔍 Logica di funzionamento<a class="headerlink" href="#logica-di-funzionamento" title="Permanent link">&para;</a></h3>
+<p>0️⃣ Nessun PDP collegato</p>
+<p>Se <code>NEW.pdp_id IS NULL</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">pdp_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
+<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div>
+<p>➡️ La funzione <strong>non effettua alcuna sincronizzazione</strong>. Il cliente non è associato a un punto di prelievo, quindi non esiste uno stato tecnico da aggiornare.</p>
+<hr />
+<p>1️⃣ Recupero dello stato cliente</p>
+<p>La funzione deriva il codice interno dello stato cliente:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">codice_interno</span>
+<span class="k">INTO</span><span class="w"> </span><span class="n">v_cd_stato_cliente</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_cliente</span><span class="w"> </span><span class="n">sc</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">stato_cliente_id</span><span class="p">;</span>
+
+<span class="k">IF</span><span class="w"> </span><span class="n">v_cd_stato_cliente</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span><span class="w"> </span><span class="c1">-- stato non trovato → non interveniamo</span>
+<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div>
+<p>Se lo stato non è trovato (configurazione errata), la funzione <strong>non prosegue</strong> con la sincronizzazione.</p>
+<hr />
+<p>2️⃣ Stati cliente rilevanti</p>
+<p>Attualmente la funzione considera <strong>solo</strong> due stati cliente:</p>
+<ul>
+<li><code>AT</code> → attivo;</li>
+<li><code>CH</code> → chiuso.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">v_cd_stato_cliente</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;AT&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;CH&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
+<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div>
+<p>Tutti gli altri stati (<code>AN</code>, sospeso, voltura tecnica, ecc.) <strong>non modificano</strong> lo stato tecnico del PDP e sono gestiti da processi specifici.</p>
+<hr />
+<p>3️⃣ Risoluzione degli stati tecnici del PDP</p>
+<p>La funzione recupera gli ID corrispondenti ai codici:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_stato_att_id</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_pdp</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ATT&#39;</span><span class="p">;</span>
+
+<span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_stato_disp_id</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_pdp</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;DISP&#39;</span><span class="p">;</span>
+</code></pre></div>
+<p>Se uno dei due non è configurato, viene invocata <code>script.fn_log_and_raise_error</code> per segnalare un errore di configurazione:</p>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">v_stato_att_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">v_stato_disp_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">        </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;anagrafiche.trgfn_clienti_sync_stato_pdp&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;E_CODICE&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span>
+<span class="w">            </span><span class="s1">&#39;config.stati_pdp: stati tecnici ATT / DISP non configurati correttamente)&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="s1">&#39;att/disp missing&#39;</span>
+<span class="w">        </span><span class="p">),</span>
+<span class="w">        </span><span class="k">NEW</span><span class="p">.</span><span class="n">tx_id</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;ATT/DISP&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;config.stati_pdp&#39;</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+</code></pre></div>
+<p>Questo impedisce aggiornamenti inconsapevoli in presenza di configurazioni incomplete.</p>
+<hr />
+<p>4️⃣ Sincronizzazione vera e propria</p>
+<p>Caso A – Cliente <strong>ATTIVO</strong> (<code>AT</code>)</p>
+<p>Se <code>v_cd_stato_cliente = 'AT'</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">pdp</span><span class="w"> </span><span class="n">p</span>
+<span class="k">SET</span><span class="w"> </span><span class="n">stato_pdp_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_stato_att_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">pdp_id</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">stato_pdp_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">v_stato_att_id</span><span class="p">;</span>
+</code></pre></div>
+<ul>
+<li>Il PDP viene portato nello stato tecnico <strong>ATT</strong> (attivo).</li>
+<li>L’UPDATE è condizionato da <code>IS DISTINCT FROM</code> per evitare scritture inutili.</li>
+</ul>
+<blockquote>
+<p>💡 L’ipotesi di dominio è che l’attivazione del cliente implichi un PDP
+tecnicamente attivo, salvo casi particolari (es. dismissione tecnica) gestiti altrove.</p>
+</blockquote>
+<hr />
+<p>Caso B – Cliente <strong>CHIUSO</strong> (<code>CH</code>)</p>
+<p>Se <code>v_cd_stato_cliente = 'CH'</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">pdp</span><span class="w"> </span><span class="n">p</span>
+<span class="k">SET</span><span class="w"> </span><span class="n">stato_pdp_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_stato_disp_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">pdp_id</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">stato_pdp_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">v_stato_disp_id</span><span class="p">;</span>
+</code></pre></div>
+<ul>
+<li>Il PDP viene portato nello stato <strong>DISP</strong> (disponibile), indicando che dal punto di vista commerciale non ci sono più clienti attivi.</li>
+</ul>
+<blockquote>
+<p>🔎 Estensione possibile
+Nella versione corrente la funzione non verifica l’esistenza di altri clienti ATTIVI sullo stesso PDP.
+È però progettata (come da commenti iniziali) per essere estesa in futuro includendo un controllo del tipo:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">clienti</span><span class="w"> </span><span class="k">c</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_cliente</span><span class="w"> </span><span class="n">sc</span>
+<span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">stato_cliente_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">pdp_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">pdp_id</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;AT&#39;</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">id</span><span class="p">;</span>
+</code></pre></div>
+<p>In tal caso, il passaggio a <code>DISP</code> verrebbe effettuato <strong>solo se non esistono altri clienti attivi</strong>.</p>
+</blockquote>
+<hr />
+<h3 id="trigger-associato-schema-suggerito">🔧 Trigger associato (schema suggerito)<a class="headerlink" href="#trigger-associato-schema-suggerito" title="Permanent link">&para;</a></h3>
+<p>Esempio di collegamento della funzione:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_clienti_a20_sync_stato_pdp_aft_ins_upd</span>
+<span class="w">    </span><span class="k">AFTER</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">OF</span><span class="w"> </span><span class="n">stato_cliente_id</span><span class="p">,</span><span class="w"> </span><span class="n">pdp_id</span>
+<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">clienti</span>
+<span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
+<span class="w">    </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_clienti_sync_stato_pdp</span><span class="p">();</span>
+</code></pre></div>
+<blockquote>
+<p>⚠️ La scelta di <code>AFTER</code> è importante: consente alla funzione di vedere il record
+già validato da altri trigger (es. <code>trgfn_clienti_set_periodo</code>).</p>
+</blockquote>
+<hr />
+<h3 id="benefici-del-disegno">✅ Benefici del disegno<a class="headerlink" href="#benefici-del-disegno" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Mantiene <strong>allineati dominio commerciale e dominio tecnico</strong>: lo stato del PDP riflette le condizioni di attivazione/chiusura dei clienti.</li>
+<li>Centralizza le regole di mapping stato cliente → stato PDP in una singola funzione.</li>
+<li>Facilita l’evoluzione futura (es. gestione stati intermedi o multipli clienti) senza toccare la logica applicativa.</li>
+</ul>
+<p>In sintesi, <code>anagrafiche.trgfn_clienti_sync_stato_pdp()</code> è il punto di coordinamento fra il ciclo di vita del cliente e lo stato tecnico del punto di prelievo, garantendo coerenza fra i diversi livelli del modello Zero ERP.</p>
 <h1 id="funzione-trgfn_clienti_sync_stato_pdp">⚙️ Funzione <code>trgfn_clienti_sync_stato_pdp</code><a class="headerlink" href="#funzione-trgfn_clienti_sync_stato_pdp" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_clienti_sync_stato_pdp</span><span class="p">()</span>
 </code></pre></div>
