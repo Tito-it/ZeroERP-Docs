@@ -3141,11 +3141,13 @@
 
 <h1 id="guida-tecnica-generazione-di-un-cliente-in-zero-erp">🌱 Guida Tecnica – Generazione di un Cliente in Zero ERP<a class="headerlink" href="#guida-tecnica-generazione-di-un-cliente-in-zero-erp" title="Permanent link">&para;</a></h1>
 <blockquote>
+<p>(latest review 16-12-25)</p>
 <p>🧩 <strong>Destinatari:</strong> sviluppatori database, backend e analisti funzionali</p>
 <p>👀 <strong>Vedi anche</strong></p>
 <ul>
 <li><a href="../../guide/soggetti-e-ruoli-anagrafici"><code>Guida Soggetti &amp; Ruoli</code></a>  </li>
 </ul>
+<p><strong>All'interno si trova l'appendice per le funzionalità subentro cliente,chiusura e attivazione</strong> </p>
 </blockquote>
 <hr />
 <h2 id="introduzione-e-scopo">✅ Introduzione e scopo<a class="headerlink" href="#introduzione-e-scopo" title="Permanent link">&para;</a></h2>
@@ -3344,6 +3346,136 @@ erDiagram
     indirizzi              ||--o{ sto_indirizzi                       : history
     indirizzi_dettaglio    ||--o{ sto_indirizzi_dettaglio             : history</code></pre>
 <hr />
+<h1 id="appendice-gestione-del-subentro-cliente-continuita-tecnica-e-commerciale">📎 Appendice – Gestione del Subentro Cliente (continuità tecnica e commerciale)<a class="headerlink" href="#appendice-gestione-del-subentro-cliente-continuita-tecnica-e-commerciale" title="Permanent link">&para;</a></h1>
+<h2 id="obiettivo">🎯 Obiettivo<a class="headerlink" href="#obiettivo" title="Permanent link">&para;</a></h2>
+<p>Garantire il passaggio da un <strong>cliente uscente</strong> a un <strong>cliente entrante</strong> sullo stesso <strong>PDP / indirizzo</strong>, assicurando:</p>
+<ul>
+<li>❌ assenza di overlap commerciale tra clienti</li>
+<li>🔗 corretta catena tecnica delle istanze (<code>parent_istanza_id</code>)</li>
+<li>🧱 continuità dei dati <strong>catastali</strong> tramite clone controllato</li>
+<li>🗺️ allineamento automatico tra <strong>catasto</strong> e <strong>indirizzo</strong> (tabella ponte)</li>
+</ul>
+<hr />
+<h2 id="flusso-operativo-sintetico">🔄 Flusso operativo sintetico<a class="headerlink" href="#flusso-operativo-sintetico" title="Permanent link">&para;</a></h2>
+<h3 id="1-chiusura-preventiva-del-cliente-precedente">1️⃣ Chiusura preventiva del cliente precedente<a class="headerlink" href="#1-chiusura-preventiva-del-cliente-precedente" title="Permanent link">&para;</a></h3>
+<p>Prima di creare il nuovo cliente, viene sempre eseguita la funzione:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_subentro_cliente</span><span class="p">(</span><span class="n">p_pdp_id</span><span class="p">,</span><span class="w"> </span><span class="n">p_data_attivazione_nuovo</span><span class="p">);</span>
+</code></pre></div>
+<p>Effetti:</p>
+<ul>
+<li>individua il <strong>cliente attivo</strong> più recente sul PDP</li>
+<li>
+<p>imposta:</p>
+</li>
+<li>
+<p><code>data_chiusura = p_data_attivazione_nuovo - 1 giorno</code></p>
+</li>
+<li><code>stato_cliente = CH</code></li>
+<li>se non esiste alcun cliente precedente → ritorna <code>NULL</code></li>
+</ul>
+<p>👉 Questo step rende sicura la creazione del nuovo cliente rispetto ai vincoli di periodo.</p>
+<hr />
+<h3 id="2-creazione-della-nuova-istanza-tecnica">2️⃣ Creazione della nuova istanza tecnica<a class="headerlink" href="#2-creazione-della-nuova-istanza-tecnica" title="Permanent link">&para;</a></h3>
+<p>Viene creata una nuova riga in <code>anagrafiche.istanze_utilities</code>:</p>
+<ul>
+<li>stesso <code>pdp_id</code></li>
+<li>stesso <code>indirizzo_dettaglio_id</code></li>
+<li>soggetto differente (nuovo intestatario)</li>
+</ul>
+<p>Successivamente, il trigger:</p>
+<ul>
+<li><code>anagrafiche.trgfn_clienti_set_parent_istanza</code></li>
+</ul>
+<p>calcola e valorizza automaticamente:</p>
+<ul>
+<li><code>istanze_utilities.parent_istanza_id</code></li>
+</ul>
+<p>➡️ <strong>Questa è la fonte ufficiale</strong> della catena tecnica di subentro.</p>
+<hr />
+<h3 id="3-clone-dei-dati-catastali-dalla-parent-istanza">3️⃣ Clone dei dati catastali dalla parent istanza<a class="headerlink" href="#3-clone-dei-dati-catastali-dalla-parent-istanza" title="Permanent link">&para;</a></h3>
+<p>Quando <code>parent_istanza_id</code> viene impostato e la nuova istanza non ha ancora un catasto:</p>
+<ul>
+<li>
+<p>scatta il trigger:</p>
+</li>
+<li>
+<p><code>trg_iu_z50_clone_catasto_from_parent_aft_upd</code></p>
+</li>
+</ul>
+<p>che esegue:</p>
+<ul>
+<li><code>anagrafiche.trgfn_iu_clone_catasto_from_parent()</code></li>
+</ul>
+<p>Logica interna:</p>
+<ol>
+<li>individua il <strong>catasto sorgente</strong> tramite <code>script.fn_get_catasto_source_by_istanza</code></li>
+<li>crea un <strong>nuovo record</strong> in <code>anagrafiche.catasto_unita_immobiliari</code></li>
+<li>collega il nuovo catasto alla nuova istanza (<code>catasto_unita_immobiliare_id</code>)</li>
+</ol>
+<p>➡️ Il clone garantisce <strong>continuità storica</strong> senza condividere lo stesso record.</p>
+<hr />
+<h3 id="4-sincronizzazione-catasto-indirizzo">4️⃣ Sincronizzazione catasto ↔ indirizzo<a class="headerlink" href="#4-sincronizzazione-catasto-indirizzo" title="Permanent link">&para;</a></h3>
+<p>Quando l’istanza possiede entrambi:</p>
+<ul>
+<li><code>catasto_unita_immobiliare_id</code></li>
+<li><code>indirizzo_dettaglio_id</code></li>
+</ul>
+<p>il trigger:</p>
+<ul>
+<li><code>anagrafiche.trgfn_iu_sync_catasto_unita_indirizzo</code></li>
+</ul>
+<p>assicura l’inserimento <strong>idempotente</strong> nella tabella ponte:</p>
+<ul>
+<li><code>anagrafiche.catasto_unita_immobiliari_indirizzi</code></li>
+</ul>
+<p>(con vincolo <code>uq_catunitaindir</code>).</p>
+<hr />
+<h3 id="5-creazione-del-nuovo-cliente">5️⃣ Creazione del nuovo cliente<a class="headerlink" href="#5-creazione-del-nuovo-cliente" title="Permanent link">&para;</a></h3>
+<p>A valle della messa in sicurezza:</p>
+<ul>
+<li>viene creato il <code>billing_account</code> della nuova istanza</li>
+<li>
+<p>viene inserito il nuovo record in <code>anagrafiche.clienti</code> con:</p>
+</li>
+<li>
+<p><code>data_attivazione = p_data_attivazione_nuovo</code></p>
+</li>
+<li>stato iniziale <strong>ATTIVO</strong></li>
+</ul>
+<p>Eventuali trigger su <code>clienti</code> completano:</p>
+<ul>
+<li>normalizzazione periodo</li>
+<li>aggiornamento stato PDP</li>
+<li>storicizzazione</li>
+</ul>
+<hr />
+<h2 id="principi-chiave">🧠 Principi chiave<a class="headerlink" href="#principi-chiave" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Il <strong>subentro è sempre guidato dal PDP</strong>, non dall’indirizzo diretto</li>
+<li>La <strong>parent istanza</strong> è l’unica fonte per il recupero del catasto sorgente</li>
+<li>Il <strong>catasto non è mai condiviso</strong> tra istanze: viene sempre clonato</li>
+<li>La tabella ponte gestisce esclusivamente il legame territoriale</li>
+</ul>
+<hr />
+<h2 id="funzioni-e-trigger-coinvolti">🔎 Funzioni e trigger coinvolti<a class="headerlink" href="#funzioni-e-trigger-coinvolti" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../dbzero/anagrafiche/funzioni/trgfn_clienti_set_parent_istanza"><code>anagrafiche.trgfn_clienti_set_parent_istanza</code></a>   </li>
+<li><a href="../../dbzero/anagrafiche/funzioni/trgfn_iu_clone_catasto_from_parent"><code>anagrafiche.trgfn_iu_clone_catasto_from_parent</code></a>   </li>
+<li>
+<p><a href="../../dbzero/anagrafiche/funzioni/trgfn_iu_sync_catasto_unita_indirizzo"><code>anagrafiche.trgfn_iu_sync_catasto_unita_indirizzo</code></a>   </p>
+</li>
+<li>
+<p><a href="../../dbzero/script/funzioni/fn_subentro_cliente"><code>script.fn_subentro_cliente</code></a>   </p>
+</li>
+<li><a href="../../dbzero/script/funzioni/fn_get_catasto_source_by_istanza"><code>script.fn_get_catasto_source_by_istanza</code></a>   </li>
+<li><a href="../../dbzero/script/funzioni/fn_clone_catasto_from_parent_by_istanza"><code>script.fn_clone_catasto_from_parent_by_istanza</code></a>   </li>
+</ul>
+<hr />
+<h2 id="nota-finale">🧭 Nota finale<a class="headerlink" href="#nota-finale" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>Questo flusso è progettato per essere <strong>deterministico, idempotente e auditabile</strong>,
+ed è compatibile con subentri multipli nel tempo sullo stesso punto di erogazione.</p>
+</blockquote>
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
 
