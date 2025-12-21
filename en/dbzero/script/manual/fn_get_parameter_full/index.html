@@ -2828,12 +2828,12 @@
   <a href="#documentazione-concettuale-funzione-scriptfn_get_parameter_full" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📘 Documentazione Concettuale – Funzione script.fn_get_parameter_full
+        📘 Documentazione Concettuale – Funzione script.fn_get_parameter_full()
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Funzione script.fn_get_parameter_full">
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Funzione script.fn_get_parameter_full()">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2848,10 +2848,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#parametri-di-input" class="md-nav__link">
+  <a href="#firma-e-parametri-di-input-coerenti-con-il-codice-attuale" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🔍 Parametri di Input
+        🔍 Firma e Parametri di Input (coerenti con il codice attuale)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#precedenza-override-importante" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ Precedenza Override (IMPORTANTE)
       
     </span>
   </a>
@@ -2862,7 +2873,7 @@
   <a href="#flusso-logico" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ⚙️ Flusso Logico
+        🧠 Flusso Logico
       
     </span>
   </a>
@@ -2881,21 +2892,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#vantaggi-operativi" class="md-nav__link">
+  <a href="#note-operative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        💡 Vantaggi Operativi
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#firma-sql" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🔖 Firma SQL
+        💡 Note Operative
       
     </span>
   </a>
@@ -2929,40 +2929,56 @@
 
   <h1>Fn get parameter full</h1>
 
-<h2 id="documentazione-concettuale-funzione-scriptfn_get_parameter_full">📘 Documentazione Concettuale – Funzione <code>script.fn_get_parameter_full</code><a class="headerlink" href="#documentazione-concettuale-funzione-scriptfn_get_parameter_full" title="Permanent link">&para;</a></h2>
+<h2 id="documentazione-concettuale-funzione-scriptfn_get_parameter_full">📘 Documentazione Concettuale – Funzione <code>script.fn_get_parameter_full()</code><a class="headerlink" href="#documentazione-concettuale-funzione-scriptfn_get_parameter_full" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p>👀 <strong>Vedi anche</strong>  </p>
-<p>Approfondimento Tabelle:   </p>
+<p>👀 <strong>Vedi anche</strong></p>
+<p><strong>Approfondimento Tabelle:</strong></p>
 <ul>
-<li><a href="../../../../dbzero/config/tabelle/parameters">config.parameters</a>      </li>
-<li><a href="../../../../dbzero/config/tabelle/parameter_overrides">config.parameter_overrides</a>      </li>
+<li><a href="../../../../dbzero/config/tabelle/parameters">config.parameters</a>   </li>
+<li><a href="../../../../dbzero/config/tabelle/parameter_overrides">config.parameter_overrides</a>   </li>
 </ul>
-<p>Approfondimento funzioni :  <br />
-* <a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a>     </p>
+<p><strong>Approfondimento funzioni:</strong></p>
+<ul>
+<li><a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a>   </li>
+</ul>
 </blockquote>
-<p>La funzione <strong><code>script.fn_get_parameter_full(p_code TEXT, p_tenant_id INTEGER DEFAULT NULL, p_user_id INTEGER DEFAULT NULL, p_session_key TEXT DEFAULT NULL, p_function_name TEXT DEFAULT NULL) RETURNS TEXT</code></strong> restituisce il valore di un parametro, applicando una catena di override con priorità:</p>
-<ol>
-<li><strong>Function</strong> (<code>p_function_name</code>)</li>
-<li><strong>Session</strong> (<code>p_session_key</code>)</li>
-<li><strong>User</strong> (<code>p_user_id</code>)</li>
-<li><strong>Tenant</strong> (<code>p_tenant_id</code>)</li>
-<li><strong>Default</strong> (<code>config.parameters.default_value</code>)</li>
-</ol>
-<p>Se il parametro non esiste, viene loggato un errore e sollevata un’eccezione.</p>
+<hr />
+<p>La funzione <strong><code>script.fn_get_parameter_full(...) RETURNS TEXT</code></strong> restituisce il valore di un parametro applicando:</p>
+<ul>
+<li><strong>default</strong> da <code>config.parameters.default_value</code></li>
+<li>eventuali <strong>override</strong> da <code>config.parameter_overrides</code></li>
+</ul>
+<p>con una <strong>precedenza deterministica</strong>.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>(latest update 21-12-25)
+* <strong>Ricerca safe del parametro</strong>
+  Verifica l’esistenza del parametro in <code>config.parameters</code> e recupera <code>id</code> + <code>default_value</code>.</p>
 <ul>
-<li><strong>Ricerca safe del parametro</strong>
-  Verificare l’esistenza del parametro in <code>config.parameters</code> e recuperare il suo <code>default_value</code>.</li>
-<li><strong>Override gerarchico</strong>
-  Cercare eventuali override in <code>config.parameter_overrides</code> secondo la priorità: function → session → user → tenant.</li>
-<li><strong>Centralizzazione della logica</strong>
-  Un’unica funzione per gestire la complessità degli override, evitando duplicazioni nell’applicazione.</li>
-<li><strong>Gestione degli errori</strong>
-  Se <code>p_code</code> non è presente in <code>config.parameters</code>, viene chiamato <code>script.fn_log_and_raise_error</code> con codice <code>ERRORE_PARAMETRI_TABELLA</code>.</li>
+<li>
+<p><strong>Override gerarchico</strong>
+  Cerca un override in <code>config.parameter_overrides</code> secondo la precedenza implementata.</p>
+</li>
+<li>
+<p><strong>Centralizzazione</strong>
+  Un unico punto di verità per la risoluzione parametri, evitando duplicazioni nel codice DB/app.</p>
+</li>
+<li>
+<p><strong>Gestione errori</strong>
+  Se <code>p_code</code> non esiste in <code>config.parameters</code>, logga (<code>ERRORE_PARAMETRI_TABELLA</code>) e solleva eccezione.</p>
+</li>
 </ul>
 <hr />
-<h3 id="parametri-di-input">🔍 Parametri di Input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
+<h3 id="firma-e-parametri-di-input-coerenti-con-il-codice-attuale">🔍 Firma e Parametri di Input (coerenti con il codice attuale)<a class="headerlink" href="#firma-e-parametri-di-input-coerenti-con-il-codice-attuale" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">script</span><span class="p">.</span><span class="n">fn_get_parameter_full</span><span class="p">(</span>
+<span class="w">  </span><span class="n">p_code</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_tenant_id</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_django_user_id</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_group_ids</span><span class="w"> </span><span class="nb">integer</span><span class="p">[]</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_session_key</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="p">)</span><span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="nb">text</span>
+</code></pre></div>
 <table>
 <thead>
 <tr>
@@ -2975,121 +2991,96 @@
 <tbody>
 <tr>
 <td><code>p_code</code></td>
-<td><code>TEXT</code></td>
+<td><code>text</code></td>
 <td>—</td>
-<td>Codice del parametro da cercare in <code>config.parameters.code</code>.</td>
+<td>Codice parametro (<code>config.parameters.code</code>).</td>
 </tr>
 <tr>
 <td><code>p_tenant_id</code></td>
-<td><code>INTEGER</code></td>
+<td><code>integer</code></td>
 <td><code>NULL</code></td>
-<td>ID del tenant per override di scope <code>tenant</code>.</td>
+<td>Override scope tenant.</td>
 </tr>
 <tr>
-<td><code>p_user_id</code></td>
-<td><code>INTEGER</code></td>
+<td><code>p_django_user_id</code></td>
+<td><code>integer</code></td>
 <td><code>NULL</code></td>
-<td>ID dell’utente (es. da Django) per override di scope <code>user</code>.</td>
+<td>Override scope utente (Django).</td>
+</tr>
+<tr>
+<td><code>p_group_ids</code></td>
+<td><code>integer[]</code></td>
+<td><code>NULL</code></td>
+<td>Override scope gruppi (Django groups).</td>
 </tr>
 <tr>
 <td><code>p_session_key</code></td>
-<td><code>TEXT</code></td>
+<td><code>text</code></td>
 <td><code>NULL</code></td>
-<td>Chiave di sessione per override di scope <code>session</code>.</td>
+<td>Override scope sessione.</td>
 </tr>
 <tr>
 <td><code>p_function_name</code></td>
-<td><code>TEXT</code></td>
+<td><code>text</code></td>
 <td><code>NULL</code></td>
-<td>Nome della funzione per override di scope <code>function</code>.</td>
+<td>Override scope funzione/chiamante.</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h3 id="flusso-logico">⚙️ Flusso Logico<a class="headerlink" href="#flusso-logico" title="Permanent link">&para;</a></h3>
+<h3 id="precedenza-override-importante">⚙️ Precedenza Override (IMPORTANTE)<a class="headerlink" href="#precedenza-override-importante" title="Permanent link">&para;</a></h3>
+<p>La funzione seleziona <strong>al massimo un override</strong> e, in caso di più match, applica questa precedenza <strong>come da ORDER BY nel codice</strong>:</p>
 <ol>
-<li><strong>Recupero parametro base</strong></li>
+<li><strong>User</strong> (<code>django_user_id</code>)</li>
+<li><strong>Group</strong> (<code>django_group_id IN p_group_ids</code>)</li>
+<li><strong>Tenant</strong> (<code>tenant_id</code>)</li>
+<li><strong>Session</strong> (<code>session_key</code>)</li>
+<li><strong>Function</strong> (<code>function_name</code>)</li>
+<li><strong>Default</strong> (<code>config.parameters.default_value</code>)</li>
 </ol>
-<p><div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">default_value</span>
-<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_param_id</span><span class="p">,</span><span class="w"> </span><span class="n">v_default</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">parameters</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_code</span><span class="p">;</span>
-<span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">FOUND</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;fn_get_parameter_full&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;ERRORE_PARAMETRI_TABELLA&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">      </span><span class="s1">&#39;codice_parametro&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_code</span><span class="p">,</span>
-<span class="w">      </span><span class="s1">&#39;nome_tabella&#39;</span><span class="p">,</span><span class="w">      </span><span class="s1">&#39;config.parameters&#39;</span>
-<span class="w">    </span><span class="p">),</span>
-<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">p_code</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span>
-<span class="w">  </span><span class="p">);</span>
-<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-</code></pre></div>
-2. <strong>Ricerca override</strong></p>
-<p><div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">overridden_value</span>
-<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_override</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">parameter_overrides</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">parameter_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_param_id</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span>
-<span class="w">         </span><span class="p">(</span><span class="n">function_name</span><span class="w">   </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">function_name</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">p_function_name</span><span class="p">)</span>
-<span class="w">      </span><span class="k">OR</span><span class="w"> </span><span class="p">(</span><span class="n">session_key</span><span class="w">     </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">session_key</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">p_session_key</span><span class="p">)</span>
-<span class="w">      </span><span class="k">OR</span><span class="w"> </span><span class="p">(</span><span class="n">user_id</span><span class="w">         </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">user_id</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="n">p_user_id</span><span class="p">)</span>
-<span class="w">      </span><span class="k">OR</span><span class="w"> </span><span class="p">(</span><span class="n">tenant_id</span><span class="w">       </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">tenant_id</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">p_tenant_id</span><span class="p">)</span>
-<span class="w">       </span><span class="p">)</span>
-<span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">CASE</span>
-<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">function_name</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">p_function_name</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mf">1</span>
-<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">session_key</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">p_session_key</span><span class="w">   </span><span class="k">THEN</span><span class="w"> </span><span class="mf">2</span>
-<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">user_id</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="n">p_user_id</span><span class="w">       </span><span class="k">THEN</span><span class="w"> </span><span class="mf">3</span>
-<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">tenant_id</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">p_tenant_id</span><span class="w">     </span><span class="k">THEN</span><span class="w"> </span><span class="mf">4</span>
-<span class="w">            </span><span class="k">ELSE</span><span class="w"> </span><span class="mf">5</span>
-<span class="w">          </span><span class="k">END</span>
-<span class="w"> </span><span class="k">LIMIT</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
-</code></pre></div>
-3. <strong>Restituzione del valore</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">FOUND</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_override</span><span class="p">;</span>
-<span class="k">ELSE</span>
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_default</span><span class="p">;</span>
-<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-</code></pre></div>
+<blockquote>
+<p>📌 Questa gerarchia è quella effettivamente implementata: se vuoi un ordine diverso (es. function sopra user), va cambiato l’<code>ORDER BY</code>.</p>
+</blockquote>
+<hr />
+<h3 id="flusso-logico">🧠 Flusso Logico<a class="headerlink" href="#flusso-logico" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Recupero parametro base</strong> (<code>id</code>, <code>default_value</code>) da <code>config.parameters</code>.</li>
+<li>
+<p>Se non trovato:</p>
+</li>
+<li>
+<p><code>script.fn_log_and_raise_error(..., 'ERRORE_PARAMETRI_TABELLA', ...)</code></p>
+</li>
+<li><code>RAISE EXCEPTION ...</code> (ERRCODE <code>22023</code>).</li>
+<li>
+<p><strong>Ricerca override</strong> su <code>config.parameter_overrides</code> filtrando per <code>parameter_id</code> e per almeno uno tra:</p>
+</li>
+<li>
+<p><code>django_user_id = p_django_user_id</code></p>
+</li>
+<li><code>django_group_id = ANY(p_group_ids)</code></li>
+<li><code>tenant_id = p_tenant_id</code></li>
+<li><code>session_key = p_session_key</code></li>
+<li><code>function_name = p_function_name</code></li>
+<li>Se trovato override ⇒ ritorna <code>overridden_value</code>, altrimenti ritorna <code>default_value</code>.</li>
+</ol>
 <hr />
 <h3 id="valore-di-ritorno">🔒 Valore di Ritorno<a class="headerlink" href="#valore-di-ritorno" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong><code>TEXT</code></strong>
-  Valore dell’override più specifico trovato, o in assenza di override il <code>default_value</code> originale.</li>
+<li><strong><code>TEXT</code></strong>: valore override più specifico trovato, o <code>default_value</code> se nessun override applicabile.</li>
 </ul>
 <hr />
-<h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
+<h3 id="note-operative">💡 Note Operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Flessibilità multi-scope</strong>
-  Supporta override a livello di funzione, sessione, utente e tenant.</li>
-<li><strong>Sicurezza</strong>
-  Log e error handling centralizzato via <code>fn_log_and_raise_error</code> per parametri mancanti.</li>
-<li><strong>Semplificazione</strong>
-  Un’unica funzione evita di scrivere query multiple in applicazione.</li>
-<li><strong>Manutenibilità</strong>
-  Modifiche alla catena di override possono essere gestite in un solo punto.</li>
+<li><strong>Multi‑scope reale:</strong> supporta contemporaneamente user/group/tenant/session/function.</li>
+<li><strong>Determinismo:</strong> l’<code>ORDER BY</code> definisce una precedenza chiara anche quando più override matchano.</li>
+<li><strong>Performance:</strong> tipicamente usata frequentemente; utile mantenere indici adeguati su <code>config.parameter_overrides</code> (per <code>parameter_id</code> e colonne scope).</li>
 </ul>
 <hr />
-<h3 id="firma-sql">🔖 Firma SQL<a class="headerlink" href="#firma-sql" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_parameter_full</span><span class="p">(</span>
-<span class="w">  </span><span class="n">p_code</span><span class="w">          </span><span class="nb">TEXT</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_tenant_id</span><span class="w">     </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_user_id</span><span class="w">       </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_session_key</span><span class="w">   </span><span class="nb">TEXT</span><span class="w">    </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">TEXT</span><span class="w">    </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span>
-<span class="p">)</span>
-<span class="k">RETURNS</span><span class="w"> </span><span class="nb">TEXT</span>
-<span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
-<span class="c1">-- implementazione come sopra</span>
-<span class="err">$$</span><span class="p">;</span>
-</code></pre></div>
 <blockquote>
-<p>🧠 <strong>“Utilizzando <code>fn_get_parameter_full</code>, l’applicazione ottiene in modo deterministico il valore corretto di un parametro, rispettando una gerarchia di override chiaramente definita.”</strong></p>
+<p>🧠 <strong>“<code>fn_get_parameter_full</code> risolve in modo deterministico il valore di un parametro applicando override multi‑scope (user → group → tenant → session → function), mantenendo logging ed error handling centralizzati.”</strong></p>
 </blockquote>
+<p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
 
 

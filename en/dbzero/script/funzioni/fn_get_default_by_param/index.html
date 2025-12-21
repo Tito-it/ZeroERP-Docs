@@ -2859,6 +2859,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#parametri-di-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 Parametri di Input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#valore-di-ritorno" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔒 Valore di Ritorno
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flusso-logico-coerente-con-limplementazione-attuale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ Flusso Logico (coerente con l’implementazione attuale)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#note-operative" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2908,76 +2941,130 @@
 <h2 id="documentazione-concettuale-funzione-scriptfn_get_default_by_param">📘 Documentazione Concettuale – Funzione <code>script.fn_get_default_by_param()</code><a class="headerlink" href="#documentazione-concettuale-funzione-scriptfn_get_default_by_param" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p>Approfondimento Tabelle:</p>
+<p><strong>Approfondimento Tabelle:</strong></p>
 <ul>
-<li><a href="../../../../dbzero/config/tabelle/parameters">config.parameters</a></li>
-<li><a href="../../../../dbzero/config/tabelle/parameter_overrides">config.parameter_overrides</a></li>
+<li><a href="../../../../dbzero/config/tabelle/parameters">config.parameters</a>   </li>
+<li><a href="../../../../dbzero/config/tabelle/parameter_overrides">config.parameter_overrides</a>   </li>
 </ul>
-<p>Approfondimento funzioni:</p>
+<p><strong>Approfondimento funzioni:</strong></p>
 <ul>
-<li><a href="../../../../dbzero/script/funzioni/fn_get_parameter_full">script.fn_get_parameter_full</a></li>
-<li><a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a></li>
+<li><a href="../../../../dbzero/script/funzioni/fn_get_parameter_full">script.fn_get_parameter_full</a>    </li>
+<li><a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a>    </li>
 </ul>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Recuperare in modo dinamico un valore di <strong>PK</strong> (o altro identificativo) da qualsiasi tabella, basandosi su un <strong>codice parametro</strong>. La funzione:</p>
+<p>(latest update 21-12-25)
+Recuperare in modo dinamico un valore (tipicamente una <strong>PK</strong>) da una tabella qualsiasi, basandosi su un <strong>codice parametro</strong>.</p>
+<p>La funzione:</p>
 <ol>
-<li>Legge il <strong>valore testuale</strong> del parametro specificato (<code>p_param_code</code>) tramite <code>fn_get_parameter_full</code>.</li>
-<li>Esegue una <strong>query dinamica</strong> su <code>p_table_schema.p_table_name</code>, filtrando <code>p_filter_column = parametro_letto</code>, e restituisce il primo campo della riga (presumibile PK) sempre come TEXT.</li>
-<li>Se non trova alcun record, registra l’errore e solleva un’eccezione <code>E_DEFAULT_ERRATO</code> con <code>fn_log_and_raise_error</code>.</li>
+<li>Legge il <strong>valore testuale</strong> del parametro (<code>p_param_code</code>) tramite <code>script.fn_get_parameter_full()</code>.</li>
+<li>Determina dinamicamente la <strong>colonna PK</strong> della tabella target (<code>p_table_schema.p_table_name</code>) interrogando il catalogo di sistema.</li>
+<li>Esegue una <strong>query dinamica</strong> per ricavare l’ID:
+   <code>SELECT pk FROM schema.tabella WHERE filter_column::text = param_value LIMIT 1</code>
+   e restituisce il valore sempre come <code>TEXT</code>.</li>
+<li>Se non trova la PK (o non trova record), registra l’errore e solleva <code>E_DEFAULT_ERRATO</code> con <code>script.fn_log_and_raise_error()</code>.</li>
 </ol>
 <hr />
 <h3 id="collegamenti">🔗 Collegamenti<a class="headerlink" href="#collegamenti" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong><code>script.fn_get_parameter_full</code></strong> – recupera il valore di filtro (stringa) dai parametri tabellari.</li>
-<li><strong><code>script.fn_log_and_raise_error</code></strong> – gestisce il logging e il sollevamento dell’errore in caso di mancato riscontro.</li>
-<li><strong>pg_catalog.pg_attribute</strong>, <strong>pg_class</strong>, <strong>pg_namespace</strong> – utilizzati per ricavare dinamicamente il primo attributo (presumibile PK) della tabella target.</li>
+<li><strong><code>script.fn_get_parameter_full</code></strong> – risolve il valore di filtro (stringa) usando default + override.</li>
+<li><strong><code>script.fn_log_and_raise_error</code></strong> – logging + raise error standardizzato (<code>E_DEFAULT_ERRATO</code>).</li>
+<li><strong>Cataloghi PG:</strong> <code>pg_index</code>, <code>pg_class</code>, <code>pg_namespace</code>, <code>pg_attribute</code> – usati per ricavare il nome della colonna PK.</li>
 </ul>
+<hr />
+<h3 id="parametri-di-input">🔍 Parametri di Input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Nome</th>
+<th>Tipo</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>p_table_schema</code></td>
+<td><code>text</code></td>
+<td>Schema tabella target (es. <code>config</code>).</td>
+</tr>
+<tr>
+<td><code>p_table_name</code></td>
+<td><code>text</code></td>
+<td>Nome tabella target (es. <code>stati</code>).</td>
+</tr>
+<tr>
+<td><code>p_filter_column</code></td>
+<td><code>text</code></td>
+<td>Colonna di filtro (es. <code>codice_iso3</code>).</td>
+</tr>
+<tr>
+<td><code>p_param_code</code></td>
+<td><code>text</code></td>
+<td>Codice parametro in <code>config.parameters.code</code> (es. <code>state_code_iso3</code>).</td>
+</tr>
+<tr>
+<td><code>p_function_name</code></td>
+<td><code>text</code></td>
+<td>Contesto/funzione chiamante (usato nei log e nella risoluzione override).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="valore-di-ritorno">🔒 Valore di Ritorno<a class="headerlink" href="#valore-di-ritorno" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>TEXT</code></strong>: il valore della PK (o identificativo) trovato.
+  Il chiamante può fare cast a <code>INTEGER</code>, <code>UUID</code>, ecc.</li>
+</ul>
+<hr />
+<h3 id="flusso-logico-coerente-con-limplementazione-attuale">⚙️ Flusso Logico (coerente con l’implementazione attuale)<a class="headerlink" href="#flusso-logico-coerente-con-limplementazione-attuale" title="Permanent link">&para;</a></h3>
+<p><strong>1️⃣ Risoluzione del valore parametro</strong></p>
+<p>La funzione usa <code>script.fn_get_parameter_full()</code> passando:</p>
+<ul>
+<li><code>p_code = p_param_code</code></li>
+<li><code>p_session_key = current_setting('app.session_key', true)</code></li>
+<li><code>p_function_name = p_function_name</code></li>
+<li><code>p_group_ids = NULL::integer[]</code> (non gestiti in questa funzione)</li>
+</ul>
+<p>Esempio (call-site reale):</p>
+<div class="highlight"><pre><span></span><code><span class="n">v_param_val</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_get_parameter_full</span><span class="p">(</span>
+<span class="w">  </span><span class="n">p_param_code</span><span class="p">,</span>
+<span class="w">  </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">  </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">  </span><span class="k">NULL</span><span class="o">::</span><span class="nb">integer</span><span class="p">[],</span>
+<span class="w">  </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.session_key&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span>
+<span class="w">  </span><span class="n">p_function_name</span>
+<span class="p">);</span>
+</code></pre></div>
+<blockquote>
+<p>📌 Nota: l’uso posizionale richiede di rispettare l’ordine dei parametri. Se in futuro la firma evolvesse, è consigliato usare <strong>named parameters</strong>.</p>
+</blockquote>
+<hr />
+<p><strong>2️⃣ Identificazione della PK della tabella target</strong></p>
+<p>La funzione ricava il nome della colonna PK dalla primary key della tabella target; se non esiste PK, logga e solleva <code>E_DEFAULT_ERRATO</code>.</p>
+<hr />
+<p><strong>3️⃣ Lookup dinamico della riga</strong></p>
+<p>Esegue una query parametrizzata (anti-injection sul valore):</p>
+<div class="highlight"><pre><span></span><code><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span>
+<span class="w">  </span><span class="s1">&#39;SELECT %I::text FROM %I.%I WHERE %I::text = $1 LIMIT 1&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="n">v_pk_col</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_schema</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_name</span><span class="p">,</span><span class="w"> </span><span class="n">p_filter_column</span>
+<span class="p">)</span>
+<span class="k">INTO</span><span class="w"> </span><span class="n">v_lookup_id</span>
+<span class="k">USING</span><span class="w"> </span><span class="n">v_param_val</span><span class="p">;</span>
+</code></pre></div>
+<p>Se <code>v_lookup_id</code> è <code>NULL</code>, log + raise <code>E_DEFAULT_ERRATO</code>.</p>
 <hr />
 <h3 id="note-operative">💡 Note Operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>
-<p><strong>Parametri di input</strong>:</p>
-</li>
-<li>
-<p><code>p_table_schema</code>: schema di destinazione (es. <code>config</code>).</p>
-</li>
-<li><code>p_table_name</code>: nome della tabella (es. <code>states</code>).</li>
-<li><code>p_filter_column</code>: colonna su cui filtrare (es. <code>codice_iso3</code>).</li>
-<li><code>p_param_code</code>: codice parametro da leggere (es. <code>state_code_iso3</code>).</li>
-<li><code>p_function_name</code>: contesto/funzione chiamante, usato nel log.</li>
-<li>
-<p><strong>Output</strong>:</p>
-</li>
-<li>
-<p>Ritorna <strong>TEXT</strong> con il valore letto (ID), da castare dal chiamante se serve (INTEGER, UUID, ecc.).</p>
-</li>
-<li>
-<p><strong>Sicurezza</strong>:</p>
-</li>
-<li>
-<p>L’uso di <code>EXECUTE format(...) USING v_param_val</code> previene SQL injection sul filtro.</p>
-</li>
-<li>Viene sempre restiuito un singolo risultato (<code>LIMIT 1</code>).</li>
-<li>
-<p><strong>Error handling</strong>:</p>
-</li>
-<li>
-<p>Se la query non restituisce righe, la funzione chiama <code>fn_log_and_raise_error</code>, registrando contesto e messaggio personalizzato.</p>
-</li>
-<li>
-<p><strong>Uso consigliato</strong>:</p>
-</li>
-<li>
-<p>Attribuire valori di default a entità che fanno riferimento a codici esterni (es. <code>state_code_iso2</code> → <code>stati.id</code>).</p>
-</li>
-<li>Inserire all’interno di procedure o trigger prima delle operazioni che richiedono il lookup.</li>
+<li><strong>Sicurezza:</strong> la parte variabile nel <code>WHERE</code> usa <code>USING v_param_val</code> (parametro) e riduce rischi di injection sul valore.</li>
+<li><strong>Limite:</strong> ritorna sempre un solo valore (<code>LIMIT 1</code>). Se la tabella non garantisce unicità sul filtro, la scelta è non deterministica.</li>
+<li><strong>Uso tipico:</strong> risolvere default tecnici basati su parametri (es. codice ISO → ID tabella dominio).</li>
 </ul>
 <hr />
 <blockquote>
-<p>🧠 <strong>“<code>fn_get_default_by_param</code> semplifica il recupero dinamico di chiavi primarie basate su parametri di configurazione, garantendo sicurezza, logging e flessibilità schema‐agnostica.”</strong></p>
+<p>🧠 <strong>“<code>fn_get_default_by_param</code> standardizza il recupero di ID basati su parametri di configurazione, mantenendo la logica schema‑agnostica, tracciabile e con gestione errori uniforme.”</strong></p>
 </blockquote>
+<p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 <h1 id="funzione-fn_get_default_by_param">⚙️ Funzione <code>fn_get_default_by_param</code><a class="headerlink" href="#funzione-fn_get_default_by_param" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_get_default_by_param</span><span class="p">(</span><span class="n">p_table_schema</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_filter_column</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_param_code</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
 </code></pre></div>
@@ -2993,26 +3080,27 @@
 <span class="w">  </span><span class="n">v_pk_col</span><span class="w">     </span><span class="nb">text</span><span class="p">;</span>
 <span class="k">BEGIN</span>
 
+<span class="w">    </span><span class="c1">-- -----------------------------------------------------</span>
+<span class="w">    </span><span class="c1">-- Input</span>
+<span class="w">    </span><span class="c1">-- p_table_schema: schema della tabella da cui recuperare il valore</span>
+<span class="w">    </span><span class="c1">-- p_table_name: nome della tabella da cui recuperare il valore</span>
+<span class="w">    </span><span class="c1">-- p_filter_column: colonna della tabella da usare come filtro (presumibilmente una PK o indice univoco esempio: codice_iso3)</span>
+<span class="w">    </span><span class="c1">-- p_param_code: codice del parametro da cui recuperare il valore di filtro (esempio: &#39;state_code_iso3&#39;)</span>
+<span class="w">    </span><span class="c1">-- Output</span>
+<span class="w">    </span><span class="c1">-- v_lookup_id: valore trovato nella tabella, sempre come TEXT (caller deve castare in seguito) rappresenta id del record trovato.</span>
+<span class="w">    </span><span class="c1">-- -----------------------------------------------------</span>
 
-
-
-
-
-
-
-
-
-
-
+<span class="w">  </span><span class="c1">-- 1) Valore del parametro (session_key letta da GUC impostata dal middleware)</span>
 <span class="w">  </span><span class="n">v_param_val</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_parameter_full</span><span class="p">(</span>
 <span class="w">    </span><span class="n">p_param_code</span><span class="p">,</span>
-<span class="w">    </span><span class="k">NULL</span><span class="p">,</span><span class="w">                                     </span>
-<span class="w">    </span><span class="k">NULL</span><span class="p">,</span><span class="w">                                     </span>
-<span class="w">    </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.session_key&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span>
+<span class="w">    </span><span class="k">NULL</span><span class="p">,</span><span class="w">                                     </span><span class="c1">-- tenant_id</span>
+<span class="w">    </span><span class="k">NULL</span><span class="p">,</span><span class="w">                                     </span><span class="c1">-- user_id (se usi django_user_id, passalo qui)</span>
+<span class="w">    </span><span class="k">NULL</span><span class="p">::</span><span class="nb">integer</span><span class="p">[],</span><span class="w">                          </span><span class="c1">-- group id</span>
+<span class="w">    </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.session_key&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="c1">-- session_key</span>
 <span class="w">    </span><span class="n">p_function_name</span>
 <span class="w">  </span><span class="p">);</span>
 
-
+<span class="w">  </span><span class="c1">-- 1.1) Recupero della vera PK dalla catalog table</span>
 <span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">attname</span>
 <span class="w">    </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_pk_col</span>
 <span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_index</span><span class="w"> </span><span class="n">i</span>
@@ -3037,11 +3125,9 @@
 <span class="w">      </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
 <span class="w">      </span><span class="n">p_table_schema</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_name</span>
 <span class="w">    </span><span class="p">);</span>
-
-
 <span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
-
+<span class="w">  </span><span class="c1">-- 2) Lookup con cast a text sul filtro</span>
 <span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span>
 <span class="w">    </span><span class="s1">&#39;SELECT %I::text FROM %I.%I WHERE %I::text = $1 LIMIT 1&#39;</span><span class="p">,</span>
 <span class="w">    </span><span class="n">v_pk_col</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_schema</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_name</span><span class="p">,</span><span class="w"> </span><span class="n">p_filter_column</span>
@@ -3049,7 +3135,7 @@
 <span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_lookup_id</span>
 <span class="w">  </span><span class="k">USING</span><span class="w"> </span><span class="n">v_param_val</span><span class="p">;</span>
 
-
+<span class="w">  </span><span class="c1">-- 3) Se non trovato: log + raise (se la funzione di log non alza da sola)</span>
 <span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_lookup_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">      </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
@@ -3063,11 +3149,8 @@
 <span class="w">      </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
 <span class="w">        </span><span class="n">p_table_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">p_table_name</span><span class="p">,</span>
 <span class="w">        </span><span class="n">p_param_code</span><span class="p">,</span>
-<span class="w">        </span><span class="n">v_param_val</span>
-
+<span class="w">        </span><span class="n">v_param_val</span><span class="w">    </span>
 <span class="w">    </span><span class="p">);</span>
-
-
 
 <span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
