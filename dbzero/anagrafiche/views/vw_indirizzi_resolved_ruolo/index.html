@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -2954,8 +2954,8 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 20‑12‑25)</p>
-<p>La vista <strong><code>anagrafiche.vw_indirizzi_resolved_ruolo</code></strong> fornisce una rappresentazione <strong>unificata, pronta all’uso e semanticamente ricca</strong> degli indirizzi associati a uno <strong>specifico ruolo di un soggetto</strong> (es. cliente, fornitore, punto di fornitura).</p>
+<p>(latest review 20‑12‑25)
+La vista <strong><code>anagrafiche.vw_indirizzi_resolved_ruolo</code></strong> fornisce una rappresentazione <strong>unificata, pronta all’uso e semanticamente ricca</strong> degli indirizzi associati a uno <strong>specifico ruolo di un soggetto</strong> (es. cliente, fornitore, punto di fornitura).</p>
 <p>Gli obiettivi principali sono:</p>
 <ul>
 <li>Centralizzare in un unico oggetto SQL la <strong>risoluzione completa dell’indirizzo</strong> (normalizzato o libero).</li>
@@ -3122,47 +3122,53 @@
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 <h1 id="view-vw_indirizzi_resolved_ruolo">🔍 View <code>vw_indirizzi_resolved_ruolo</code><a class="headerlink" href="#view-vw_indirizzi_resolved_ruolo" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">vw_indirizzi_resolved_ruolo</span><span class="w"> </span><span class="k">AS</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="s1">&#39;RUOLO&#39;</span><span class="p">::</span><span class="nb">text</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">scope</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">indirizzo_id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">sr</span><span class="p">.</span><span class="n">soggetto_id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">tipo_indirizzo_id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">ti</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tipo_indirizzo_codice</span><span class="p">,</span>
-<span class="w">    </span><span class="n">ti</span><span class="p">.</span><span class="n">descrizione</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tipo_indirizzo_descrizione</span><span class="p">,</span>
-<span class="w">    </span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">indirizzo_dettaglio_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_normalizzato</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">indirizzo_dettaglio_id</span><span class="p">,</span>
-<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">vidd</span><span class="p">.</span><span class="n">indirizzo_normalizzato</span><span class="p">,</span><span class="w"> </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">btrim</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">indirizzo_libero</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">::</span><span class="nb">text</span><span class="p">),</span><span class="w"> </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">btrim</span><span class="p">(</span><span class="n">concat_ws</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">btrim</span><span class="p">((</span><span class="n">i</span><span class="p">.</span><span class="n">postal_box</span><span class="p">)::</span><span class="nb">text</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">::</span><span class="nb">text</span><span class="p">),</span><span class="w"> </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">btrim</span><span class="p">((</span><span class="n">i</span><span class="p">.</span><span class="n">sublocality</span><span class="p">)::</span><span class="nb">text</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">::</span><span class="nb">text</span><span class="p">),</span><span class="w"> </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">btrim</span><span class="p">((</span><span class="n">i</span><span class="p">.</span><span class="n">locality</span><span class="p">)::</span><span class="nb">text</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">::</span><span class="nb">text</span><span class="p">),</span><span class="w"> </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">btrim</span><span class="p">((</span><span class="n">i</span><span class="p">.</span><span class="n">administrative_area</span><span class="p">)::</span><span class="nb">text</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">::</span><span class="nb">text</span><span class="p">))),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">::</span><span class="nb">text</span><span class="p">))</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">indirizzo_display</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">indirizzo_libero</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">stato_id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">administrative_area</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">locality</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">sublocality</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">postal_box</span><span class="p">,</span>
-<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">vidd</span><span class="p">.</span><span class="n">comune_id</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">comune_id</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">comune_id</span><span class="p">,</span>
-<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">vidd</span><span class="p">.</span><span class="n">descrizione_comune</span><span class="p">,</span><span class="w"> </span><span class="n">ic</span><span class="p">.</span><span class="n">comune</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">comune_descrizione</span><span class="p">,</span>
-<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">vidd</span><span class="p">.</span><span class="n">cap</span><span class="p">,</span><span class="w"> </span><span class="n">ic</span><span class="p">.</span><span class="n">codice_postale</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">cap</span><span class="p">,</span>
-<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">vidd</span><span class="p">.</span><span class="n">provincia</span><span class="p">,</span><span class="w"> </span><span class="n">ic</span><span class="p">.</span><span class="n">provincia</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">provincia</span><span class="p">,</span>
-<span class="w">    </span><span class="n">vidd</span><span class="p">.</span><span class="n">stradario_id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">vidd</span><span class="p">.</span><span class="n">via_norm</span><span class="p">,</span>
-<span class="w">    </span><span class="n">vidd</span><span class="p">.</span><span class="n">civico</span><span class="p">,</span>
-<span class="w">    </span><span class="n">vidd</span><span class="p">.</span><span class="n">estensione_civico</span><span class="p">,</span>
-<span class="w">    </span><span class="n">vidd</span><span class="p">.</span><span class="n">palazzina</span><span class="p">,</span>
-<span class="w">    </span><span class="n">vidd</span><span class="p">.</span><span class="n">scala</span><span class="p">,</span>
-<span class="w">    </span><span class="n">vidd</span><span class="p">.</span><span class="n">piano</span><span class="p">,</span>
-<span class="w">    </span><span class="n">vidd</span><span class="p">.</span><span class="n">interno</span><span class="p">,</span>
-<span class="w">    </span><span class="n">vidd</span><span class="p">.</span><span class="n">altro</span><span class="p">,</span>
-<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">vidd</span><span class="p">.</span><span class="n">civic_geoloc</span><span class="p">,</span><span class="w"> </span><span class="n">vidd</span><span class="p">.</span><span class="n">street_geoloc</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">geoloc</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">geoloc</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">storicizza</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">tx_id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">data_insert</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">user_insert</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">data_update</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">user_update</span>
-<span class="w">   </span><span class="k">FROM</span><span class="w"> </span><span class="p">((((</span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">indirizzi</span><span class="w"> </span><span class="n">i</span>
-<span class="w">     </span><span class="k">JOIN</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="n">sr</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">((</span><span class="n">sr</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="p">)))</span>
-<span class="w">     </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">tipi_indirizzi</span><span class="w"> </span><span class="n">ti</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">((</span><span class="n">ti</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">tipo_indirizzo_id</span><span class="p">)))</span>
-<span class="w">     </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">vw_indirizzi_dettaglio</span><span class="w"> </span><span class="n">vidd</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">((</span><span class="n">vidd</span><span class="p">.</span><span class="n">indirizzo_dettaglio_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">indirizzo_dettaglio_id</span><span class="p">)))</span>
-<span class="w">     </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">vw_indirizzo_completo</span><span class="w"> </span><span class="n">ic</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">((</span><span class="n">ic</span><span class="p">.</span><span class="n">id_comune</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">comune_id</span><span class="p">)));</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">scope</span><span class="p">,</span>
+<span class="w">    </span><span class="n">indirizzo_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">soggetto_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">soggetto_ruolo_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tipo_indirizzo_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tipo_indirizzo_codice</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tipo_indirizzo_descrizione</span><span class="p">,</span>
+<span class="w">    </span><span class="n">is_normalizzato</span><span class="p">,</span>
+<span class="w">    </span><span class="n">indirizzo_dettaglio_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">indirizzo_display</span><span class="p">,</span>
+<span class="w">    </span><span class="n">indirizzo_libero</span><span class="p">,</span>
+<span class="w">    </span><span class="n">administrative_area</span><span class="p">,</span>
+<span class="w">    </span><span class="n">locality</span><span class="p">,</span>
+<span class="w">    </span><span class="n">sublocality</span><span class="p">,</span>
+<span class="w">    </span><span class="n">postal_box</span><span class="p">,</span>
+<span class="w">    </span><span class="n">comune_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">comune_descrizione</span><span class="p">,</span>
+<span class="w">    </span><span class="n">cap</span><span class="p">,</span>
+<span class="w">    </span><span class="n">provincia</span><span class="p">,</span>
+<span class="w">    </span><span class="n">provincia_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">provincia_sigla</span><span class="p">,</span>
+<span class="w">    </span><span class="n">provincia_descrizione</span><span class="p">,</span>
+<span class="w">    </span><span class="n">regione_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">regione_descrizione</span><span class="p">,</span>
+<span class="w">    </span><span class="n">stato_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">stato_descrizione</span><span class="p">,</span>
+<span class="w">    </span><span class="n">stato_iso2</span><span class="p">,</span>
+<span class="w">    </span><span class="n">codice_postale_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">cap_codice</span><span class="p">,</span>
+<span class="w">    </span><span class="n">stradario_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">via_norm</span><span class="p">,</span>
+<span class="w">    </span><span class="n">civico</span><span class="p">,</span>
+<span class="w">    </span><span class="n">estensione_civico</span><span class="p">,</span>
+<span class="w">    </span><span class="n">palazzina</span><span class="p">,</span>
+<span class="w">    </span><span class="n">scala</span><span class="p">,</span>
+<span class="w">    </span><span class="n">piano</span><span class="p">,</span>
+<span class="w">    </span><span class="n">interno</span><span class="p">,</span>
+<span class="w">    </span><span class="n">altro</span><span class="p">,</span>
+<span class="w">    </span><span class="n">geoloc</span><span class="p">,</span>
+<span class="w">    </span><span class="n">storicizza</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tx_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">data_insert</span><span class="p">,</span>
+<span class="w">    </span><span class="n">user_insert</span><span class="p">,</span>
+<span class="w">    </span><span class="n">data_update</span><span class="p">,</span>
+<span class="w">    </span><span class="n">user_update</span>
+<span class="w">   </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">vw_indirizzi_resolved_base</span>
+<span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="p">(</span><span class="k">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;RUOLO&#39;</span><span class="p">::</span><span class="nb">text</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
@@ -3215,10 +3221,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.sections", "navigation.expand"], "search": "../../../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copiato", "clipboard.copy": "Copia", "search.result.more.one": "1 altro in questa pagina", "search.result.more.other": "# altri in questa pagina", "search.result.none": "Nessun documento trovato", "search.result.one": "1 documento trovato", "search.result.other": "# documenti trovati", "search.result.placeholder": "Scrivi per iniziare a cercare", "search.result.term.missing": "Non presente", "select.version": "Seleziona la versione"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.sections", "navigation.expand"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiato", "clipboard.copy": "Copia", "search.result.more.one": "1 altro in questa pagina", "search.result.more.other": "# altri in questa pagina", "search.result.none": "Nessun documento trovato", "search.result.one": "1 documento trovato", "search.result.other": "# documenti trovati", "search.result.placeholder": "Scrivi per iniziare a cercare", "search.result.term.missing": "Non presente", "select.version": "Seleziona la versione"}, "version": null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

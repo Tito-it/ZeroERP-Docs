@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -3005,6 +3005,7 @@
 <li><a href="funzioni/trgfn_clienti_sync_utility_from_ba/">trgfn_clienti_sync_utility_from_ba</a> — (latest review 15-12-25) La trigger function <strong><code>anagrafiche.trgfn_clienti_sync_utility_from_ba()</code></strong> garantisce la <strong>coerenza</strong> tra:</li>
 <li><a href="funzioni/trgfn_contatti_set_default_contatto/">trgfn_contatti_set_default_contatto</a> — (latest review 03-12-25) * <strong>Impostare il contatto default</strong>   Garantire che il primo contatto (o quello marcato explicitamente) diventi predefinito all’interno del suo contesto.</li>
 <li><a href="funzioni/trgfn_conti_bancari_normalize/">trgfn_conti_bancari_normalize</a> — (latest review 15-12-26) La trigger function <strong><code>anagrafiche.trgfn_conti_bancari_normalize()</code></strong> normalizza i campi bancari principali prima della persistenza, applicando regole semplici e deterministicamente ripetibili:</li>
+<li><a href="funzioni/trgfn_dati_societari_guard_forma_giuridica/">trgfn_dati_societari_guard_forma_giuridica</a></li>
 <li><a href="funzioni/trgfn_dati_societari_guard_tipo_soggetto/">trgfn_dati_societari_guard_tipo_soggetto</a> — (latest review 03-12-25) Garantire che <em>solo</em> i soggetti autorizzati secondo le <strong>policy dati societari</strong> possano inserire o aggiornare una riga in <code>anagrafiche.dati_societari</code>.</li>
 <li><a href="funzioni/trgfn_emittenti_fiscali_guard_ruolo_emi_fis/">trgfn_emittenti_fiscali_guard_ruolo_emi_fis</a></li>
 <li><a href="funzioni/trgfn_emittenti_fiscali_normalize/">trgfn_emittenti_fiscali_normalize</a></li>
@@ -3046,9 +3047,10 @@
 <ul>
 <li><a href="views/vw_conti_bancari_per_ruolo/">vw_conti_bancari_per_ruolo</a> — (latest review 28-11-25) * <strong>Selezione unificata del conto per ruolo</strong>   Fornisce una vista già pre-filtrata e normalizzata con <strong>una sola riga per coppia <code>(soggetto_ruolo_id, uso)</code></strong>, scegliendo il miglior candidato tra:</li>
 <li><a href="views/vw_indirizzi_dettaglio/">vw_indirizzi_dettaglio</a> — (latest review 28-11-25) La vista <strong><code>anagrafiche.vw_indirizzi_dettaglio</code></strong> fornisce una rappresentazione "comoda" e già arricchita degli indirizzi di dettaglio, a partire dalla tabella sorgente <a href="../../../dbzero/anagrafiche/tabelle/indirizzi_dettaglio"><code>anagrafiche.indirizzi_dettaglio</code></a> collegata allo stradario <a href="../../../dbzero/config/tabelle/stradario"><code>config.stradario</code></a>.</li>
-<li><a href="views/vw_indirizzi_resolved_all/">vw_indirizzi_resolved_all</a> — (latest review 20-12-25)</li>
-<li><a href="views/vw_indirizzi_resolved_ruolo/">vw_indirizzi_resolved_ruolo</a> — (latest review 20‑12‑25)</li>
-<li><a href="views/vw_indirizzi_resolved_soggetto/">vw_indirizzi_resolved_soggetto</a> — (latest review 20-12-25)</li>
+<li><a href="views/vw_indirizzi_resolved_all/">vw_indirizzi_resolved_all</a> — (latest review 20-12-25) La vista <strong><code>anagrafiche.vw_indirizzi_resolved_all</code></strong> rappresenta il <strong>punto unico e canonico di lettura</strong> degli indirizzi in Zero ERP.</li>
+<li><a href="views/vw_indirizzi_resolved_base/">vw_indirizzi_resolved_base</a></li>
+<li><a href="views/vw_indirizzi_resolved_ruolo/">vw_indirizzi_resolved_ruolo</a> — (latest review 20‑12‑25) La vista <strong><code>anagrafiche.vw_indirizzi_resolved_ruolo</code></strong> fornisce una rappresentazione <strong>unificata, pronta all’uso e semanticamente ricca</strong> degli indirizzi associati a uno <strong>specifico ruolo di un soggetto</strong> (es. cliente, fornitore, punto di fornitura).</li>
+<li><a href="views/vw_indirizzi_resolved_soggetto/">vw_indirizzi_resolved_soggetto</a> — (latest review 20-12-25) La vista <strong><code>anagrafiche.vw_indirizzi_resolved_soggetto</code></strong> fornisce una rappresentazione <strong>normalizzata e pronta all’uso</strong> degli indirizzi <strong>associati direttamente a un soggetto</strong>, indipendentemente dai suoi ruoli.</li>
 <li><a href="views/vw_istanze_utilities_dettaglio/">vw_istanze_utilities_dettaglio</a></li>
 <li><a href="views/vw_pdp/">vw_pdp</a></li>
 </ul>
@@ -3101,10 +3103,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copiato", "clipboard.copy": "Copia", "search.result.more.one": "1 altro in questa pagina", "search.result.more.other": "# altri in questa pagina", "search.result.none": "Nessun documento trovato", "search.result.one": "1 documento trovato", "search.result.other": "# documenti trovati", "search.result.placeholder": "Scrivi per iniziare a cercare", "search.result.term.missing": "Non presente", "select.version": "Seleziona la versione"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiato", "clipboard.copy": "Copia", "search.result.more.one": "1 altro in questa pagina", "search.result.more.other": "# altri in questa pagina", "search.result.none": "Nessun documento trovato", "search.result.one": "1 documento trovato", "search.result.other": "# documenti trovati", "search.result.placeholder": "Scrivi per iniziare a cercare", "search.result.term.missing": "Non presente", "select.version": "Seleziona la versione"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../assets/javascripts/mermaid.min.js"></script>
       
