@@ -2599,34 +2599,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../guide/gestione-conti-bancari/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Gestione conti bancari
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../../guide/gestione-degli-indirizzi/" class="md-nav__link">
         
   
@@ -2663,6 +2635,34 @@
     
   
     Gestione dei contatti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-conti-bancari/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione conti bancari
   
 
     
@@ -3032,9 +3032,14 @@
 <li>
 <p><strong>Normalizzata</strong>: tramite <code>indirizzo_dettaglio_id</code>, collegata a <code>anagrafiche.indirizzi_dettaglio</code>.</p>
 </li>
-<li>
-<p><strong>Libera</strong>: tramite <code>indirizzo_libero</code> e campi geografici ausiliari, per indirizzi esteri o non normalizzati.</p>
-</li>
+<li><strong>Libera</strong>: tramite <code>indirizzo_libero</code> e campi geografici ausiliari, per indirizzi esteri o non normalizzati.</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>Nota Bene</strong><br />
+La modalità <strong>normalizzata</strong> è sempre preferibile.<br />
+L’inserimento di indirizzi <strong>liberi</strong> deve essere considerato <strong>solo come opzione estrema</strong> (es. migrazioni da altri database o casi non normalizzabili).</p>
+</blockquote>
+<ul>
 <li>
 <p><strong>Coerenza guidata da configurazione</strong>
   Il tipo di indirizzo ammesso non è hardcoded, ma validato tramite la matrice:</p>
@@ -3125,6 +3130,17 @@
 </ul>
 <p>ma <strong>mai entrambi</strong>.</p>
 <ul>
+<li>
+<p><strong>Completezza indirizzo libero</strong>
+  Se <code>indirizzo_dettaglio_id</code> è <code>NULL</code>:</p>
+</li>
+<li>
+<p><code>indirizzo_libero</code> e <code>stato_id</code> sono obbligatori;</p>
+</li>
+<li>
+<p>è richiesto <strong>o</strong> (<code>comune_id</code> + <code>codice_postale_id</code>) <strong>oppure</strong> (<code>locality</code> + <code>postal_box</code>),
+    con almeno uno tra <code>administrative_area</code> e <code>sublocality</code>.</p>
+</li>
 <li>
 <p><strong>Unicità soggetto + tipo indirizzo</strong>
   <code>UNIQUE (soggetto_id, tipo_indirizzo_id)</code>
@@ -3300,6 +3316,11 @@ erDiagram
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>CHECK</td>
+<td>chk_indirizzi_soggetti_free_requirements</td>
+<td></td>
+</tr>
 <tr>
 <td>CHECK</td>
 <td>chk_indirizzi_soggetti_xor_norm_libero</td>

@@ -2599,34 +2599,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../guide/gestione-conti-bancari/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Gestione conti bancari
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../../guide/gestione-degli-indirizzi/" class="md-nav__link">
         
   
@@ -2663,6 +2635,34 @@
     
   
     Gestione dei contatti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-conti-bancari/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione conti bancari
   
 
     
@@ -3008,12 +3008,19 @@
 <ul>
 <li><strong>Supporto per due modalità</strong>  </li>
 <li><strong>Normalizzata</strong>: tramite <code>indirizzo_dettaglio_id</code>, si collega a una via e civico specifici (con geolocalizzazione puntuale e struttura gerarchica).</li>
+<li><strong>Libera</strong>: tramite <code>indirizzo_libero</code>, con campi ausiliari (<code>comune_id</code>, <code>stato_id</code>, <code>locality</code>, <code>postal_box</code>, ecc.), utile per indirizzi internazionali o non standardizzati.</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>Nota Bene</strong><br />
+La modalità <strong>normalizzata</strong> è sempre preferibile.<br />
+L’inserimento di indirizzi <strong>liberi</strong> deve essere considerato <strong>solo come opzione estrema</strong> (es. migrazioni da altri database o casi non normalizzabili).</p>
+</blockquote>
+<ul>
+<li><strong>Controllo di coerenza</strong><br />
+  Tramite vincoli <code>CHECK</code>, è garantita l’alternatività tra le due modalità (o normalizzata o libera) e la completezza minima dei dati se si usa la modalità libera:</li>
+<li>se <code>indirizzo_dettaglio_id</code> è <code>NULL</code> → <code>indirizzo_libero</code> e <code>stato_id</code> sono obbligatori;</li>
 <li>
-<p><strong>Libera</strong>: tramite <code>indirizzo_libero</code>, con campi ausiliari (<code>comune_id</code>, <code>stato_id</code>, <code>locality</code>, <code>postal_box</code>, ecc.), utile per indirizzi internazionali o non standardizzati.</p>
-</li>
-<li>
-<p><strong>Controllo di coerenza</strong><br />
-  Tramite vincoli <code>CHECK</code>, è garantita l’alternatività tra le due modalità (o normalizzata o libera) e la completezza minima dei dati se si usa la modalità libera.</p>
+<p>modalità libera: o <strong><code>comune_id</code> + <code>codice_postale_id</code></strong>, oppure <strong><code>locality</code> + <code>postal_box</code></strong> con almeno uno tra <code>administrative_area</code> e <code>sublocality</code>.</p>
 </li>
 <li>
 <p><strong>Tracciabilità e storicizzazione</strong><br />
@@ -3227,6 +3234,11 @@ erDiagram
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>CHECK</td>
+<td>chk_indirizzi_free_requirements</td>
+<td></td>
+</tr>
 <tr>
 <td>CHECK</td>
 <td>chk_indirizzi_xor_norm_libero</td>
