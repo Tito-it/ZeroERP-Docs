@@ -2965,6 +2965,10 @@
 <h2 id="documentazione-concettuale-funzione-dbopsfn_run_automations_storico">📘 Documentazione Concettuale – Funzione <code>dbops.fn_run_automations_storico</code><a class="headerlink" href="#documentazione-concettuale-funzione-dbopsfn_run_automations_storico" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
+<p>Guide:</p>
+<ul>
+<li><a href="../../../../guide/automazione-db">Automazione DB</a></li>
+</ul>
 <p>Approfondimento tabelle:</p>
 <ul>
 <li><a href="../../../../dbzero/dbops/tabelle/automation_rules_tbl">dbops.automation_rules_tbl</a></li>
@@ -2974,12 +2978,13 @@
 <li><a href="../../../../dbzero/dbops/funzioni/fn_run_automations">dbops.fn_run_automations</a></li>
 <li><a href="../../../../dbzero/dbops/funzioni/fn_resolve_scope">dbops.fn_resolve_scope</a></li>
 <li><a href="../../../../dbzero/dbops/funzioni/fn_get_override_col">dbops.fn_get_override_col</a></li>
-<li><a href="../../../../dbzero/dbops/funzioni/trgfn_upd_dlt_storico_generic">script.trgfn_upd_dlt_storico_generic</a></li>
+<li><a href="../../../../dbzero/script/funzioni/trgfn_storico_generic">script.trgfn_storico_generic</a></li>
 </ul>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>La funzione <strong><code>dbops.fn_run_automations_storico(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza la creazione (o la simulazione) del <strong>trigger unico di storicizzazione</strong> <code>BEFORE UPDATE OR DELETE</code> per le tabelle applicative, delegando la logica alla funzione <code>script.trgfn_upd_dlt_storico_generic</code>. È uno dei moduli orchestrati da <code>fn_run_automations</code>.</p>
+<p>(latest review 26-12-25)
+La funzione <strong><code>dbops.fn_run_automations_storico(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza la creazione (o la simulazione) del <strong>trigger unico di storicizzazione</strong> <code>BEFORE UPDATE OR DELETE</code> per le tabelle applicative, delegando la logica alla funzione <code>script.trgfn_storico_generic</code>. È uno dei moduli orchestrati da <code>fn_run_automations</code>.</p>
 <hr />
 <h3 id="parametri-di-input">🔍 Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -3022,7 +3027,7 @@
 <li><strong>Scansione tabelle</strong>: per ogni tabella in scope e in <code>fn_table_in_scope</code>, verifica che esista la <strong>tabella omologa</strong> nello schema <code>storico</code>.</li>
 <li><strong>Regole</strong>: seleziona da <code>automation_rules_tbl</code> le regole abilitate con <code>rule_type='STORICO'</code>, rispettando <code>exec_mode</code>, priorità e target (schema/tabella).</li>
 <li><strong>Risoluzione FK storico</strong>: calcola il nome della FK verso lo storico con <code>fn_get_override_col(...,'STORICO_FK', '{table}_id')</code>.</li>
-<li><strong>Naming trigger</strong>: usa <code>name_template</code> (default: <code>trg_z90_{table}_upd_dlt_storico</code>) tramite <code>fn_name_from_template</code>.</li>
+<li><strong>Naming trigger</strong>: usa <code>name_template</code> (default: <code>trg_z90_{table}_storico_upd_dlt</code>) tramite <code>fn_name_from_template</code>.</li>
 <li><strong>Strategia esistenza</strong>: controlla esistenza <strong>per nome</strong> e/o <strong>per funzione</strong> secondo <code>existence_strategy</code> (<code>BY_NAME</code>, <code>BY_FUNCTION</code>, <code>BOTH</code>).</li>
 <li>
 <p><strong>Azione</strong>:</p>
@@ -3030,7 +3035,7 @@
 <li>
 <p><code>p_dry_run=true</code> → registra evento <code>DRYRUN_CREATE_TRIGGER_UD</code> con <code>fn_audit_log_once</code>.</p>
 </li>
-<li><code>p_dry_run=false</code> → esegue <code>CREATE TRIGGER ... EXECUTE FUNCTION script.trgfn_upd_dlt_storico_generic(fk_col)</code>; gestisce duplicate con log <code>SKIP_EXISTS</code>.</li>
+<li><code>p_dry_run=false</code> → esegue <code>CREATE TRIGGER ... EXECUTE FUNCTION script.trgfn_storico_generic(fk_col)</code>; gestisce duplicate con log <code>SKIP_EXISTS</code>.</li>
 <li><strong>Pulizia legacy (opz.)</strong>: se <code>params-&gt;&gt;'drop_legacy_ud' = true</code>, rimuove eventuali vecchi trigger separati <code>upd/dlt</code>.</li>
 </ol>
 <hr />
@@ -3068,7 +3073,7 @@
 </ul>
 <hr />
 <blockquote>
-<p>🧠 <strong>In sintesi</strong>: <code>fn_run_automations_storico</code> è il modulo che standardizza la <strong>storicizzazione</strong> in Zero ERP, creando in modo idempotente il trigger unico <code>UPDATE OR DELETE</code> basato su <code>trgfn_upd_dlt_storico_generic</code>.</p>
+<p>🧠 <strong>In sintesi</strong>: <code>fn_run_automations_storico</code> è il modulo che standardizza la <strong>storicizzazione</strong> in Zero ERP, creando in modo idempotente il trigger unico <code>UPDATE OR DELETE</code> basato su <code>trgfn_storico_generic</code>.</p>
 </blockquote>
 
 
