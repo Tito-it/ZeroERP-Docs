@@ -3113,6 +3113,57 @@ La funzione <strong><code>dbops.fn_run_automations_tx_id(p_exec_mode, p_schemas,
 <span class="w">  </span><span class="n">trg_name</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
 <span class="w">  </span><span class="n">exist_strat</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
 <span class="k">BEGIN</span>
+
+
+<span class="cm">/*</span>
+<span class="cm">  Scopo</span>
+<span class="cm">  -----</span>
+<span class="cm">  Esegue l&#39;automazione di provisioning dei trigger &quot;TX_ID managed&quot; sulle tabelle in scope,</span>
+<span class="cm">  applicando le regole abilitate in dbops.automation_rules_tbl di tipo &#39;TX_ID&#39;.</span>
+
+<span class="cm">  La funzione:</span>
+<span class="cm">  1) risolve lo scope degli schemi (dbops.fn_resolve_scope),</span>
+<span class="cm">  2) scorre tutte le tabelle fisiche (pg_class.relkind=&#39;r&#39;) degli schemi target</span>
+<span class="cm">    filtrate da dbops.fn_table_in_scope(schema, table),</span>
+<span class="cm">  3) per ogni tabella applica le regole TX_ID compatibili con:</span>
+<span class="cm">    - enabled = true</span>
+<span class="cm">    - rule_type = &#39;TX_ID&#39;</span>
+<span class="cm">    - exec_mode = &#39;AUTO&#39; oppure exec_mode = p_exec_mode</span>
+<span class="cm">    - match su schema (dbops.fn_schema_match)</span>
+<span class="cm">    - match su tabella: &#39;*ALL&#39; oppure pattern ILIKE su r.target_table</span>
+<span class="cm">  4) verifica la pre-condizione tecnica: la tabella deve avere una colonna tx_id di tipo uuid</span>
+<span class="cm">    (information_schema.columns).</span>
+<span class="cm">    Se la colonna non esiste, la tabella viene ignorata (non crea colonne, crea solo trigger).</span>
+
+<span class="cm">  Trigger generato</span>
+<span class="cm">  ----------------</span>
+<span class="cm">  Per le tabelle idonee, la funzione assicura l&#39;esistenza del trigger:</span>
+<span class="cm">    BEFORE INSERT OR UPDATE</span>
+<span class="cm">    EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</span>
+<span class="cm">  Il nome del trigger è derivato da un template:</span>
+<span class="cm">    - rrule.name_template (default: &#39;trg_{table}_gen_tx_id_ins_upd&#39;)</span>
+<span class="cm">    - dbops.fn_name_from_template per generare un nome coerente e standardizzato.</span>
+
+<span class="cm">  Esistenza trigger / strategie</span>
+<span class="cm">  -----------------------------</span>
+<span class="cm">  La creazione del trigger è condizionata da rrule.existence_strategy (default &#39;BY_NAME&#39;):</span>
+<span class="cm">  - BY_NAME     : verifica esistenza per nome trigger</span>
+<span class="cm">  - BY_FUNCTION : verifica esistenza per funzione trigger (dbops.trgfn_tx_id_managed)</span>
+<span class="cm">  - BOTH        : considera presente se esiste per nome OR per funzione</span>
+<span class="cm">  Questo consente migrazioni controllate e previene duplicazioni.</span>
+
+<span class="cm">  Modalità DRY RUN</span>
+<span class="cm">  ---------------</span>
+<span class="cm">  Se p_dry_run=true non esegue DDL (CREATE TRIGGER) e registra invece un audit</span>
+<span class="cm">  con dbops.fn_audit_log_once indicando cosa verrebbe creato.</span>
+
+<span class="cm">  Error handling</span>
+<span class="cm">  --------------</span>
+<span class="cm">  In caso di errore nella creazione del trigger, log strutturato e rilancio tramite</span>
+<span class="cm">  script.fn_log_and_raise_error includendo tabella, contesto (&#39;TX_ID&#39;) e SQLERRM.</span>
+<span class="cm">*/</span>
+
+
 <span class="w">  </span><span class="n">v_schemas</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_resolve_scope</span><span class="p">(</span><span class="n">p_schemas</span><span class="p">);</span><span class="w"> </span>
 <span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="n">rtab</span><span class="w"> </span><span class="k">IN</span>
 <span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
@@ -3132,7 +3183,7 @@ La funzione <strong><code>dbops.fn_run_automations_tx_id(p_exec_mode, p_schemas,
 <span class="w">      </span><span class="k">WHERE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">enabled</span>
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">rule_type</span><span class="o">=</span><span class="s1">&#39;TX_ID&#39;</span>
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_schema_match</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">)</span>
-<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
+<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">UPPER</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;*ALL&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="s1">&#39;AUTO&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="n">p_exec_mode</span><span class="p">)</span>
 <span class="w">      </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">priority</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">id</span>
 <span class="w">    </span><span class="n">LOOP</span>
@@ -3159,7 +3210,7 @@ La funzione <strong><code>dbops.fn_run_automations_tx_id(p_exec_mode, p_schemas,
 <span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
 <span class="w">                  </span><span class="n">p_function_name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;dbops.fn_run_automations&#39;</span><span class="p">,</span>
 <span class="w">                  </span><span class="n">p_status</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;DRYRUN&#39;</span><span class="p">,</span>
-<span class="w">                  </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;TX_ID&#39;</span><span class="p">,</span>
+<span class="w">                  </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;E_TX_ID&#39;</span><span class="p">,</span>
 <span class="w">                  </span><span class="n">p_exec_mode</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p_exec_mode</span><span class="p">,</span>
 <span class="w">                  </span><span class="n">p_parts</span><span class="w">         </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;TX_ID&#39;</span><span class="p">],</span>
 <span class="w">                  </span><span class="n">p_dry_run</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">true</span><span class="p">,</span>

@@ -3047,6 +3047,37 @@
 <span class="w">  </span><span class="n">v_ix_fk_name</span><span class="w">  </span><span class="nb">text</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;ix_%s_%s_fk&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span><span class="p">,</span><span class="w"> </span><span class="n">p_fk_col</span><span class="p">);</span>
 <span class="w">  </span><span class="n">v_ix_gin_name</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;ix_%s_snapshot_gin&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span><span class="p">);</span>
 <span class="k">BEGIN</span>
+
+<span class="w">      </span><span class="cm">/*</span>
+<span class="cm">      Scopo</span>
+<span class="cm">      -----</span>
+<span class="cm">      Provisioning &quot;on demand&quot; della tabella di storico (schema: storico) associata a una tabella base.</span>
+<span class="cm">      Crea la tabella storico SOLO se non esiste, con struttura standard (id seriale, fk logica, snapshot jsonb,</span>
+<span class="cm">      metadati di audit e finestre di validità).</span>
+
+<span class="cm">      Convenzioni</span>
+<span class="cm">      ----------</span>
+<span class="cm">      - Tabella storico: schema fisso &#39;storico&#39;, nome = stesso nome della tabella base.</span>
+<span class="cm">      - PK storico: BIGSERIAL &#39;id&#39; (indipendente dalla PK del padre).</span>
+<span class="cm">      - Collegamento al padre: colonna p_fk_col (tipizzata come PK del padre, se determinabile).</span>
+<span class="cm">      - FK fisica verso la tabella base: NON creata volutamente (evita blocchi su delete/cleanup e vincoli operativi).</span>
+
+<span class="cm">      Input / Parametri</span>
+<span class="cm">      -----------------</span>
+<span class="cm">      - p_schema_base: schema della tabella base (es. &#39;anagrafiche&#39;).</span>
+<span class="cm">      - p_table_base : nome tabella base.</span>
+<span class="cm">      - p_fk_col     : nome della colonna nella tabella storico che conterrà l&#39;id logico del record padre.</span>
+<span class="cm">      - p_create_gin_index: se true crea indice GIN su snapshot.</span>
+<span class="cm">      - p_dry_run    : se true non esegue DDL, ma registra audit &quot;would be created&quot;.</span>
+
+<span class="cm">      Note operative</span>
+<span class="cm">      --------------</span>
+<span class="cm">      - La tipizzazione della colonna fk logica tenta di leggere la PK monocampo del padre; fallback su &#39;id&#39;.</span>
+<span class="cm">      - In caso di errore DDL viene loggato e rilanciato tramite script.fn_log_and_raise_error.</span>
+<span class="cm">    */</span>
+
+
+
 <span class="w">  </span><span class="c1">-- esiste già la tabella storico?&lt;— esci</span>
 <span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">(</span>
 <span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="mi">1</span>
@@ -3094,7 +3125,7 @@
 <span class="w">        </span><span class="s1">&#39;E_STORICO_PARENT_PK_NOT_FOUND&#39;</span><span class="p">,</span>
 <span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;schema&#39;</span><span class="p">,</span><span class="n">p_schema_base</span><span class="p">,</span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="n">p_table_base</span><span class="p">),</span>
 <span class="w">        </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">        </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;Impossibile determinare PK o tipo per tabella padre&#39;</span><span class="p">]</span>
+<span class="w">        </span><span class="n">p_schema_base</span><span class="p">,</span><span class="w"> </span><span class="n">p_table_base</span>
 <span class="w">      </span><span class="p">);</span>
 <span class="w">      </span><span class="k">RETURN</span><span class="p">;</span>
 <span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
@@ -3121,10 +3152,10 @@
 <span class="w">    </span><span class="k">COMMENT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="o">%</span><span class="n">s</span><span class="p">.</span><span class="n">tipo_operazione</span>
 <span class="w">      </span><span class="k">IS</span><span class="w"> </span><span class="s1">&#39;Tipo operazione (1=insert, 2=update, 3=delete)&#39;</span><span class="p">;</span>
 
-<span class="w">   </span><span class="c1">-- non si genera più la fk perchè bloccerebbe la cancellazione delle righe della tabella e non è corretto</span>
-<span class="w">   </span><span class="c1">-- si crea solo l&#39;indice.</span>
-<span class="w">   </span><span class="c1">-- ALTER TABLE %s</span>
-<span class="w">   </span><span class="c1">--   ADD CONSTRAINT %I FOREIGN KEY (%I) REFERENCES %s(%I);</span>
+<span class="w">  </span><span class="c1">-- non si genera più la fk perchè bloccerebbe la cancellazione delle righe della tabella e non è corretto</span>
+<span class="w">  </span><span class="c1">-- si crea solo l&#39;indice.</span>
+<span class="w">  </span><span class="c1">-- ALTER TABLE %s</span>
+<span class="w">  </span><span class="c1">--   ADD CONSTRAINT %I FOREIGN KEY (%I) REFERENCES %s(%I);</span>
 
 <span class="w">    </span><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="o">%</span><span class="n">I</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="o">%</span><span class="n">s</span><span class="w"> </span><span class="p">(</span><span class="o">%</span><span class="n">I</span><span class="p">);</span>
 <span class="w">  </span><span class="err">$</span><span class="n">ddl$</span><span class="p">,</span>
@@ -3140,7 +3171,7 @@
 
 <span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">p_create_gin_index</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">    </span><span class="n">v_sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_sql</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="n">E</span><span class="s1">&#39;\nCREATE INDEX IF NOT EXISTS %I ON %s USING GIN (snapshot);\n&#39;</span><span class="p">,</span>
-<span class="w">                             </span><span class="n">v_ix_gin_name</span><span class="p">,</span><span class="w"> </span><span class="n">v_full_sto</span><span class="p">);</span>
+<span class="w">                            </span><span class="n">v_ix_gin_name</span><span class="p">,</span><span class="w"> </span><span class="n">v_full_sto</span><span class="p">);</span>
 <span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 
 <span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span>
@@ -3177,7 +3208,7 @@
 <span class="w">        </span><span class="s1">&#39;fk&#39;</span><span class="p">,</span><span class="w">     </span><span class="n">p_fk_col</span>
 <span class="w">      </span><span class="p">),</span>
 <span class="w">      </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">      </span><span class="nb">ARRAY</span><span class="p">[</span><span class="n">SQLERRM</span><span class="p">]</span>
+<span class="w">      </span><span class="n">SQLERRM</span>
 <span class="w">    </span><span class="p">);</span>
 <span class="w">  </span><span class="k">END</span><span class="p">;</span>
 <span class="k">END</span><span class="p">;</span>

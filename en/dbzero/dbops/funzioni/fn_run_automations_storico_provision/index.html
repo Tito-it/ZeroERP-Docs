@@ -3097,6 +3097,20 @@ La funzione <strong><code>dbops.fn_run_automations_storico_provision(p_exec_mode
 <span class="w">      </span><span class="k">BEGIN</span>
 <span class="w">        </span><span class="n">v_schemas</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_resolve_scope</span><span class="p">(</span><span class="n">p_schemas</span><span class="p">);</span>
 
+<span class="w">        </span><span class="cm">/*</span>
+<span class="cm">          Scopo:</span>
+<span class="cm">          - Scansiona le tabelle degli schemi in scope (risolti da fn_resolve_scope), escludendo lo schema storico.</span>
+<span class="cm">          - Per ogni tabella, applica le regole abilitate con rule_type = &#39;&#39;STORICO_PROVISION&#39;&#39; compatibili con exec_mode e target schema/table.</span>
+<span class="cm">          - Se la tabella espone una colonna di flag storicizza (default &#39;&#39;storicizza&#39;&#39;, override tramite automation_overrides_cols: key &#39;&#39;STORICIZZA_COL&#39;&#39;),</span>
+<span class="cm">            invoca fn_ensure_storico_table per creare/aggiornare la corrispondente tabella in storico.*.</span>
+<span class="cm">          - La colonna FK nello storico è calcolata come &lt;table_name&gt;_id (override tramite automation_overrides_cols: key &#39;&#39;STORICO_FK&#39;&#39;).</span>
+<span class="cm">          - Parametro create_gin_index (in params JSON della regola) abilita la creazione dell&#39;&#39;indice GIN sullo snapshot nello storico.</span>
+
+<span class="cm">          Parametri:</span>
+<span class="cm">          - p_exec_mode: modalità di esecuzione (es. &#39;&#39;AUTO&#39;&#39;, &#39;&#39;MANUAL&#39;&#39;); una regola è applicata se exec_mode = &#39;&#39;AUTO&#39;&#39; oppure exec_mode = p_exec_mode.</span>
+<span class="cm">          - p_schemas: lista schemi target; può includere scope/wildcard risolti da fn_resolve_scope.</span>
+<span class="cm">          - p_dry_run: se TRUE, esegue in modalità simulata (nessun DDL effettivo), demandando la gestione al helper fn_ensure_storico_table.</span>
+<span class="cm">        */</span>
 
 
 <span class="w">        </span><span class="c1">-- loop tabelle degli schemi target</span>
@@ -3116,7 +3130,7 @@ La funzione <strong><code>dbops.fn_run_automations_storico_provision(p_exec_mode
 <span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">rule_type</span><span class="o">=</span><span class="s1">&#39;STORICO_PROVISION&#39;</span>
 <span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="s1">&#39;AUTO&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="n">p_exec_mode</span><span class="p">)</span>
 <span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_schema_match</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">)</span>
-<span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
+<span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">UPPER</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;*ALL&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
 <span class="w">          </span><span class="n">LOOP</span>
 <span class="w">            </span><span class="c1">--  parametri regola</span>
 <span class="w">            </span><span class="n">create_gin</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">((</span><span class="n">rrule</span><span class="p">.</span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;create_gin_index&#39;</span><span class="p">)::</span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="k">false</span><span class="p">);</span>

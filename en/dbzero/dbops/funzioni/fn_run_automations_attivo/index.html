@@ -3154,16 +3154,82 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 <span class="w">  </span><span class="n">handled_block</span><span class="w">    </span><span class="nb">boolean</span><span class="p">;</span>
 <span class="k">BEGIN</span>
 
-<span class="w">  </span><span class="c1">-- ======================================================================</span>
-<span class="w">  </span><span class="c1">-- dbops.run_automations_attivo(p_exec_mode, p_schemas, p_dry_run)</span>
-<span class="w">  </span><span class="c1">-- Applica regole ATTIVO/soft-delete su FK con ON DELETE RESTRICT:</span>
-<span class="w">  </span><span class="c1">--   - CASO A (padre&amp;figlio con attivo): </span>
-<span class="w">  </span><span class="c1">--       * padre AFTER UPDATE OF attivo → dbops.trgfn_soft_delete_cascade()</span>
-<span class="w">  </span><span class="c1">--       * figlio CONSTRAINT DEFERRABLE → dbops.trgfn_child_requires_active_parent()</span>
-<span class="w">  </span><span class="c1">--   - CASO B (solo padre con attivo):</span>
-<span class="w">  </span><span class="c1">--       * padre BEFORE UPDATE OF attivo → dbops.trgfn_prevent_deactivate_if_children()</span>
-<span class="w">  </span><span class="c1">-- Usa naming parametrico (3 template JSON: cascade/require/block).</span>
-<span class="w">  </span><span class="c1">-- ======================================================================</span>
+<span class="w">    </span><span class="cm">/*</span>
+<span class="cm">        Scopo</span>
+<span class="cm">        -----</span>
+<span class="cm">        Automazione ATTIVO: applica (o riconcilia) i trigger che implementano le regole di</span>
+<span class="cm">        &quot;soft-delete / attivo&quot; su relazioni FK con ON DELETE RESTRICT o NO ACTION, in base</span>
+<span class="cm">        alla presenza della colonna attivo su tabella padre e/o figlio.</span>
+
+<span class="cm">        Ambito e selezione</span>
+<span class="cm">        ------------------</span>
+<span class="cm">        - Risolve lo scope degli schemi con dbops.fn_resolve_scope(p_schemas).</span>
+<span class="cm">        - Applica solo regole abilitate in dbops.automation_rules_tbl con:</span>
+<span class="cm">            rule_type = &#39;ATTIVO&#39;</span>
+<span class="cm">            exec_mode = &#39;AUTO&#39; oppure = p_exec_mode</span>
+<span class="cm">            target_schema compatibile con lo scope (dbops.fn_schema_in_scope / fn_schema_match)</span>
+<span class="cm">            target_table = &#39;*ALL&#39; oppure pattern ILIKE su parent/child table</span>
+<span class="cm">        - Considera SOLO FK (pg_constraint contype=&#39;f&#39;) con confdeltype IN (&#39;r&#39;,&#39;a&#39;):</span>
+<span class="cm">            &#39;r&#39; = RESTRICT, &#39;a&#39; = NO ACTION</span>
+<span class="cm">          e con padre + figlio entrambi nello scope e in table_in_scope.</span>
+<span class="cm">        - Esclude sempre lo schema &#39;storico&#39; e rispetta dbops.automation_fk_exclusions.</span>
+
+<span class="cm">        Colonna attivo</span>
+<span class="cm">        --------------</span>
+<span class="cm">        - Determina il nome della colonna attivo su parent e child tramite override:</span>
+<span class="cm">            dbops.fn_get_override_col(&lt;schema&gt;,&lt;table&gt;,&#39;ATTIVO_COL&#39;,&#39;attivo&#39;)</span>
+<span class="cm">        - Verifica esistenza delle colonne con dbops.fn_col_exists.</span>
+<span class="cm">        - Determina la colonna FK del figlio (fk_col) dal vincolo con dbops.fn_get_child_fk_col(conoid).</span>
+
+<span class="cm">        Casi gestiti</span>
+<span class="cm">        ------------</span>
+<span class="cm">        CASO A: padre e figlio hanno colonna attivo</span>
+<span class="cm">          1) Sul PADRE:</span>
+<span class="cm">            - trigger AFTER UPDATE OF &lt;attivo_parent&gt;</span>
+<span class="cm">            - funzione: dbops.trgfn_soft_delete_cascade(child_schema, child_table, fk_col)</span>
+<span class="cm">            - effetto: disattivando il padre (attivo=false) disattiva a cascata i figli collegati.</span>
+<span class="cm">          2) Sul FIGLIO:</span>
+<span class="cm">            - CONSTRAINT TRIGGER DEFERRABLE INITIALLY DEFERRED</span>
+<span class="cm">            - AFTER INSERT OR UPDATE OF (&lt;attivo_child&gt;, &lt;fk_col&gt;)</span>
+<span class="cm">            - funzione: dbops.trgfn_child_requires_active_parent(parent_schema, parent_table, attivo_parent_col, fk_col)</span>
+<span class="cm">            - effetto: impedisce che il figlio risulti attivo se il padre è disattivo (vincolo differibile).</span>
+
+<span class="cm">        CASO B: solo il padre ha colonna attivo (figlio senza attivo)</span>
+<span class="cm">          - trigger BEFORE UPDATE OF &lt;attivo_parent&gt;</span>
+<span class="cm">          - funzione: dbops.trgfn_prevent_deactivate_if_children(child_schema, child_table, fk_col)</span>
+<span class="cm">          - effetto: blocca la disattivazione del padre se esistono record figlio collegati.</span>
+
+<span class="cm">        Naming e strategie di esistenza</span>
+<span class="cm">        -------------------------------</span>
+<span class="cm">        - I nomi dei trigger sono generati da template (rrule.name_template) in formato JSON con 3 chiavi:</span>
+<span class="cm">            cascade / require / block</span>
+<span class="cm">          con default:</span>
+<span class="cm">            cascade = &#39;trg_soft_del_{parent}_{child}_{fkcol}&#39;</span>
+<span class="cm">            require = &#39;trg_chk_{child}_parent_{fkcol}&#39;</span>
+<span class="cm">            block   = &#39;trg_block_deact_{parent}_{child}&#39;</span>
+<span class="cm">        - La creazione è condizionata da rrule.existence_strategy (default &#39;BY_NAME&#39;):</span>
+<span class="cm">            BY_NAME     : verifica esistenza per nome trigger</span>
+<span class="cm">            BY_FUNCTION : verifica esistenza &quot;per argomenti&quot; (funzioni helper fn_trigger_exists_*_by_args)</span>
+<span class="cm">            BOTH        : presente se esiste per nome OR per argomenti</span>
+<span class="cm">          Serve a evitare duplicazioni e a supportare migrazioni/riconciliazioni progressive.</span>
+
+<span class="cm">        Riconciliazione (reconcile_on_change)</span>
+<span class="cm">        -------------------------------------</span>
+<span class="cm">        Se params-&gt;&gt;&#39;reconcile_on_change&#39; è true (default true):</span>
+<span class="cm">          - quando si passa al CASO A, vengono rimossi eventuali trigger di BLOCK pre-esistenti sul padre;</span>
+<span class="cm">          - quando si passa al CASO B, vengono rimossi eventuali trigger CASCADE (padre) e REQUIRE (figlio).</span>
+<span class="cm">        Questo mantiene coerente il set di trigger con la situazione reale delle colonne attivo.</span>
+
+<span class="cm">        Modalità DRY RUN</span>
+<span class="cm">        ---------------</span>
+<span class="cm">        Se p_dry_run=true non esegue DDL (CREATE/DROP trigger) e registra audit con dbops.fn_audit_log_once</span>
+<span class="cm">        indicando le azioni che verrebbero eseguite (CREATE o DROP di trigger).</span>
+
+<span class="cm">        Error handling</span>
+<span class="cm">        --------------</span>
+<span class="cm">        In caso di errore nella creazione dei trigger, log strutturato e rilancio tramite</span>
+<span class="cm">        script.fn_log_and_raise_error includendo contesto (ATTIVO_*), tabella/e coinvolte, fk_col e SQLERRM.</span>
+<span class="cm">      */</span>
 
 <span class="w">  </span><span class="n">v_schemas</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_resolve_scope</span><span class="p">(</span><span class="n">p_schemas</span><span class="p">);</span>
 <span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="n">rrule</span><span class="w"> </span><span class="k">IN</span>
@@ -3205,13 +3271,13 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="p">(</span><span class="n">v_schemas</span><span class="p">)</span>
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_table_in_scope</span><span class="p">(</span><span class="n">nc</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="n">cc</span><span class="p">.</span><span class="n">relname</span><span class="p">)</span>
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_table_in_scope</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="n">cp</span><span class="p">.</span><span class="n">relname</span><span class="p">)</span><span class="w">        </span>
-<span class="w">         </span><span class="c1">-- *** Match rule (rispetta *all) ***</span>
+<span class="w">        </span><span class="c1">-- *** Match rule (rispetta *all) ***</span>
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span>
-<span class="w">           </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_schema_match</span><span class="p">(</span><span class="n">rrule</span><span class="p">.</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">nspname</span><span class="p">)</span><span class="w">      </span><span class="c1">-- parent schema</span>
-<span class="w">           </span><span class="k">OR</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_schema_match</span><span class="p">(</span><span class="n">rrule</span><span class="p">.</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">nc</span><span class="p">.</span><span class="n">nspname</span><span class="p">)</span><span class="w">      </span><span class="c1">-- child  schema</span>
-<span class="w">  </span><span class="p">)</span>
+<span class="w">          </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_schema_match</span><span class="p">(</span><span class="n">rrule</span><span class="p">.</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">nspname</span><span class="p">)</span><span class="w">      </span><span class="c1">-- parent schema</span>
+<span class="w">          </span><span class="k">OR</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_schema_match</span><span class="p">(</span><span class="n">rrule</span><span class="p">.</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">nc</span><span class="p">.</span><span class="n">nspname</span><span class="p">)</span><span class="w">      </span><span class="c1">-- child  schema</span>
+<span class="w">       </span><span class="p">)</span>
 <span class="w">        </span><span class="c1">-- target_table applicata a child OPPURE parent</span>
-<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">rrule</span><span class="p">.</span><span class="n">target_table</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">cc</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="n">rrule</span><span class="p">.</span><span class="n">target_table</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">cp</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="n">rrule</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
+<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">UPPER</span><span class="p">(</span><span class="n">rrule</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;*ALL&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">cc</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="n">rrule</span><span class="p">.</span><span class="n">target_table</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">cp</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="n">rrule</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
 <span class="w">        </span><span class="c1">-- *** Escludi sempre storico (padre &amp; figlio) ***</span>
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">nc</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;storico&#39;</span><span class="w">  </span><span class="c1">-- child</span>
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;storico&#39;</span><span class="w">  </span><span class="c1">-- parent (by safety)</span>
@@ -3296,13 +3362,13 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 <span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
 <span class="w">                    </span><span class="n">p_function_name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;dbops.fn_run_automations&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">p_status</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;DRYRUN&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;ATTIVO_cascade&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;ATTIVO_CASCADE&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">p_exec_mode</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p_exec_mode</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">p_parts</span><span class="w">         </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;ATTIVO_cascade&#39;</span><span class="p">],</span>
+<span class="w">                    </span><span class="n">p_parts</span><span class="w">         </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;ATTIVO_CASCADE&#39;</span><span class="p">],</span>
 <span class="w">                    </span><span class="n">p_dry_run</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">true</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">p_params</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">jsonb_build_object</span><span class="p">(</span>
 <span class="w">                                        </span><span class="s1">&#39;action&#39;</span><span class="p">,</span><span class="s1">&#39;DRYRUN_CREATE_TRIGGER&#39;</span><span class="p">,</span>
-<span class="w">                                       </span><span class="s1">&#39;rule&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_cascade&#39;</span><span class="p">,</span>
+<span class="w">                                      </span><span class="s1">&#39;rule&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_CASCADE&#39;</span><span class="p">,</span>
 <span class="w">                                        </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span>
 <span class="w">                                        </span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="n">tname_parent_cascade</span><span class="p">,</span><span class="s1">&#39;fk&#39;</span><span class="p">,</span><span class="n">fk_col</span>
 <span class="w">                                      </span><span class="p">),</span>
@@ -3320,12 +3386,12 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 <span class="w">              </span><span class="err">$</span><span class="n">f$</span><span class="p">,</span><span class="w"> </span><span class="n">tname_parent_cascade</span><span class="p">,</span><span class="w"> </span><span class="n">col_attivo_parent</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">child_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">child_table</span><span class="p">,</span><span class="w"> </span><span class="n">fk_col</span><span class="p">);</span>
 <span class="w">            </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">others</span><span class="w"> </span><span class="k">THEN</span>
 
-<span class="w">               </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">              </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">                    </span><span class="s1">&#39;dbops&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="s1">&#39;run_automations&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="s1">&#39;E_ATTIVO_cascade&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="s1">&#39;E_ATTIVO_CASCADE&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">                      </span><span class="s1">&#39;where&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_cascade&#39;</span><span class="p">,</span>
+<span class="w">                      </span><span class="s1">&#39;where&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_CASCADE&#39;</span><span class="p">,</span>
 <span class="w">                      </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
 <span class="w">                      </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span>
 <span class="w">                      </span><span class="s1">&#39;error&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">SQLERRM</span>
@@ -3352,13 +3418,13 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 <span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
 <span class="w">                    </span><span class="n">p_function_name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;dbops.fn_run_automations&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">p_status</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;DRYRUN&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;ATTIVO_require&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;ATTIVO_REQUIRE&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">p_exec_mode</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p_exec_mode</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">p_parts</span><span class="w">         </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;ATTIVO_require&#39;</span><span class="p">],</span>
+<span class="w">                    </span><span class="n">p_parts</span><span class="w">         </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;ATTIVO_REQUIRE&#39;</span><span class="p">],</span>
 <span class="w">                    </span><span class="n">p_dry_run</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">true</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">p_params</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">jsonb_build_object</span><span class="p">(</span>
 <span class="w">                                        </span><span class="s1">&#39;action&#39;</span><span class="p">,</span><span class="s1">&#39;DRYRUN_CREATE_TRIGGER&#39;</span><span class="p">,</span>
-<span class="w">                                       </span><span class="s1">&#39;rule&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_require&#39;</span><span class="p">,</span>
+<span class="w">                                      </span><span class="s1">&#39;rule&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_REQUIRE&#39;</span><span class="p">,</span>
 <span class="w">                                        </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="n">rfk</span><span class="p">.</span><span class="n">child_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rfk</span><span class="p">.</span><span class="n">child_table</span><span class="p">,</span>
 <span class="w">                                        </span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="n">tname_child_require</span><span class="p">,</span><span class="s1">&#39;fk&#39;</span><span class="p">,</span><span class="n">fk_col</span>
 <span class="w">                                      </span><span class="p">),</span>
@@ -3376,14 +3442,14 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 <span class="w">                  </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span><span class="w"> </span><span class="n">col_attivo_parent</span><span class="p">,</span><span class="w"> </span><span class="n">fk_col</span><span class="p">);</span>
 <span class="w">            </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">others</span><span class="w"> </span><span class="k">THEN</span>
 
-<span class="w">                 </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">                </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">                    </span><span class="s1">&#39;dbops&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="s1">&#39;run_automations&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="s1">&#39;E_ATTIVO_require&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="s1">&#39;E_ATTIVO_REQUIRE&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">                      </span><span class="s1">&#39;where&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_require&#39;</span><span class="p">,</span>
+<span class="w">                      </span><span class="s1">&#39;where&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_REQUIRE&#39;</span><span class="p">,</span>
 <span class="w">                      </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span>
-<span class="w">                       </span><span class="s1">&#39;error&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">SQLERRM</span>
+<span class="w">                      </span><span class="s1">&#39;error&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">SQLERRM</span>
 <span class="w">                    </span><span class="p">)</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">SQLERRM</span>
 <span class="w">                  </span><span class="p">);</span><span class="w"> </span>
 
@@ -3435,16 +3501,16 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 
 <span class="w">          </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span>
 
-<span class="w">             </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
+<span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_log_once</span><span class="p">(</span>
 <span class="w">                    </span><span class="n">p_function_name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;dbops.fn_run_automations&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">p_status</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;DRYRUN&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;ATTIVO_block&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">p_rule_type</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;ATTIVO_BLOCK&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">p_exec_mode</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">p_exec_mode</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">p_parts</span><span class="w">         </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;ATTIVO_block&#39;</span><span class="p">],</span>
+<span class="w">                    </span><span class="n">p_parts</span><span class="w">         </span><span class="o">=&gt;</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;ATTIVO_BLOCK&#39;</span><span class="p">],</span>
 <span class="w">                    </span><span class="n">p_dry_run</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">true</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">p_params</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">jsonb_build_object</span><span class="p">(</span>
 <span class="w">                                        </span><span class="s1">&#39;action&#39;</span><span class="p">,</span><span class="s1">&#39;DRYRUN_CREATE_TRIGGER&#39;</span><span class="p">,</span>
-<span class="w">                                       </span><span class="s1">&#39;rule&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_block&#39;</span><span class="p">,</span>
+<span class="w">                                      </span><span class="s1">&#39;rule&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_BLOCK&#39;</span><span class="p">,</span>
 <span class="w">                                        </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span>
 <span class="w">                                        </span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="n">tname_parent_block</span><span class="p">,</span><span class="s1">&#39;fk&#39;</span><span class="p">,</span><span class="n">fk_col</span>
 <span class="w">                                      </span><span class="p">),</span>
@@ -3463,9 +3529,9 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 <span class="w">                </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
 <span class="w">                    </span><span class="s1">&#39;dbops&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="s1">&#39;run_automations&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="s1">&#39;E_ATTIVO_block&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="s1">&#39;E_ATTIVO_BLOCK&#39;</span><span class="p">,</span>
 <span class="w">                    </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">                      </span><span class="s1">&#39;where&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_block&#39;</span><span class="p">,</span>
+<span class="w">                      </span><span class="s1">&#39;where&#39;</span><span class="p">,</span><span class="s1">&#39;ATTIVO_BLOCK&#39;</span><span class="p">,</span>
 <span class="w">                      </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="o">||</span><span class="s1">&#39;.&#39;</span><span class="o">||</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span>
 <span class="w">                      </span><span class="s1">&#39;error&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">SQLERRM</span>
 <span class="w">                    </span><span class="p">)</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="n">SQLERRM</span>

@@ -3111,6 +3111,63 @@ La funzione <strong><code>dbops.fn_run_automations_audit_update(p_exec_mode, p_s
 <span class="w">      </span><span class="n">trg_name</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
 <span class="w">      </span><span class="n">exist_strat</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
 <span class="w">    </span><span class="k">BEGIN</span>
+
+<span class="w">      </span><span class="cm">/*</span>
+<span class="cm">        Scopo</span>
+<span class="cm">        -----</span>
+<span class="cm">        Esegue l&#39;automazione di provisioning dei trigger &quot;AUDIT_UPDATE&quot; sulle tabelle in scope,</span>
+<span class="cm">        applicando le regole abilitate in dbops.automation_rules_tbl (rule_type = &#39;AUDIT_UPDATE&#39;).</span>
+
+<span class="cm">        Obiettivo del trigger:</span>
+<span class="cm">        - mantenere aggiornati i campi &quot;data_update&quot; e &quot;user_update&quot; (o equivalenti) ad ogni UPDATE,</span>
+<span class="cm">          secondo la convenzione di audit del database.</span>
+
+<span class="cm">        Flusso operativo</span>
+<span class="cm">        ----------------</span>
+<span class="cm">        1) Risolve lo scope degli schemi con dbops.fn_resolve_scope(p_schemas).</span>
+<span class="cm">        2) Scorre tutte le tabelle fisiche (pg_class.relkind=&#39;r&#39;) degli schemi target, filtrate da:</span>
+<span class="cm">          - dbops.fn_table_in_scope(schema, table)</span>
+<span class="cm">        3) Per ogni tabella applica le regole AUDIT_UPDATE compatibili con:</span>
+<span class="cm">          - enabled = true</span>
+<span class="cm">          - exec_mode = &#39;AUTO&#39; oppure exec_mode = p_exec_mode</span>
+<span class="cm">          - match su schema (dbops.fn_schema_match)</span>
+<span class="cm">          - match su tabella (r.target_table): se NULL vale per tutte; altrimenti pattern LIKE</span>
+<span class="cm">        4) Determina i nomi delle colonne audit da gestire:</span>
+<span class="cm">          - colonna timestamp (default: &#39;data_update&#39;, overridabile via rrule.params-&gt;&gt;&#39;audit_ts&#39; e/o override &#39;AUDIT_TS&#39;)</span>
+<span class="cm">          - colonna utente     (default: &#39;user_update&#39;, overridabile via rrule.params-&gt;&gt;&#39;audit_user&#39; e/o override &#39;AUDIT_USER&#39;)</span>
+<span class="cm">        5) Verifica le pre-condizioni tecniche:</span>
+<span class="cm">          - crea trigger solo se entrambe le colonne esistono (dbops.fn_col_exists).</span>
+<span class="cm">          - non crea colonne: gestisce solo trigger.</span>
+
+<span class="cm">        Trigger generato</span>
+<span class="cm">        ----------------</span>
+<span class="cm">        Se la tabella è idonea e il trigger non esiste già (secondo existence_strategy),</span>
+<span class="cm">        crea un trigger:</span>
+<span class="cm">          BEFORE UPDATE</span>
+<span class="cm">          EXECUTE FUNCTION script.trgfn_audit_data_user_generic()</span>
+
+<span class="cm">        Nome trigger ed esistenza (existence_strategy)</span>
+<span class="cm">        ----------------------------------------------</span>
+<span class="cm">        Il nome è derivato da rrule.name_template (default &#39;trg_{table}_audit_data_user_upd&#39;)</span>
+<span class="cm">        tramite dbops.fn_name_from_template.</span>
+<span class="cm">        La creazione è condizionata da rrule.existence_strategy (default &#39;BY_NAME&#39;):</span>
+<span class="cm">        - BY_NAME     : verifica esistenza per nome trigger</span>
+<span class="cm">        - BY_FUNCTION : verifica esistenza per funzione trigger (script.trgfn_upd_audit_data_user_generic / generic)</span>
+<span class="cm">        - BOTH        : presente se esiste per nome OR per funzione</span>
+<span class="cm">        Serve a evitare duplicazioni e a supportare migrazioni graduali.</span>
+
+<span class="cm">        Modalità DRY RUN</span>
+<span class="cm">        ---------------</span>
+<span class="cm">        Se p_dry_run=true non esegue DDL (CREATE TRIGGER) e registra un audit con</span>
+<span class="cm">        dbops.fn_audit_log_once indicando cosa verrebbe creato.</span>
+
+<span class="cm">        Error handling</span>
+<span class="cm">        --------------</span>
+<span class="cm">        In caso di errore nella creazione del trigger, log strutturato e rilancio tramite</span>
+<span class="cm">        script.fn_log_and_raise_error con contesto (&#39;AUDIT_UPDATE&#39;) e SQLERRM.</span>
+<span class="cm">      */</span>
+
+
 <span class="w">      </span><span class="n">v_schemas</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_resolve_scope</span><span class="p">(</span><span class="n">p_schemas</span><span class="p">);</span>
 <span class="w">      </span><span class="k">FOR</span><span class="w"> </span><span class="n">rtab</span><span class="w"> </span><span class="k">IN</span>
 <span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
@@ -3130,7 +3187,7 @@ La funzione <strong><code>dbops.fn_run_automations_audit_update(p_exec_mode, p_s
 <span class="w">          </span><span class="k">WHERE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">enabled</span>
 <span class="w">            </span><span class="k">AND</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">rule_type</span><span class="o">=</span><span class="s1">&#39;AUDIT_UPDATE&#39;</span>
 <span class="w">            </span><span class="k">AND</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_schema_match</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">)</span>
-<span class="w">            </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
+<span class="w">            </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">UPPER</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;*ALL&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
 <span class="w">            </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="s1">&#39;AUTO&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="n">p_exec_mode</span><span class="p">)</span>
 <span class="w">          </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">priority</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">id</span>
 <span class="w">        </span><span class="n">LOOP</span>

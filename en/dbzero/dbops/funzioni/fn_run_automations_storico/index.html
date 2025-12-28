@@ -3104,6 +3104,61 @@ La funzione <strong><code>dbops.fn_run_automations_storico(p_exec_mode, p_schema
 <span class="w">  </span><span class="n">exist_strat</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
 <span class="k">BEGIN</span>
 
+<span class="w">      </span><span class="cm">/*</span>
+<span class="cm">        Scopo</span>
+<span class="cm">        -----</span>
+<span class="cm">        Esegue l&#39;automazione di provisioning dei trigger di storico sulle tabelle &quot;in scope&quot;,</span>
+<span class="cm">        applicando le regole abilitate in dbops.automation_rules_tbl di tipo &#39;STORICO&#39;.</span>
+
+<span class="cm">        La funzione:</span>
+<span class="cm">        1) risolve lo scope degli schemi (dbops.fn_resolve_scope),</span>
+<span class="cm">        2) scorre tutte le tabelle (relkind=&#39;r&#39;) degli schemi target (escluso &#39;storico&#39;),</span>
+<span class="cm">          filtrate da dbops.fn_table_in_scope(schema, table),</span>
+<span class="cm">        3) per ogni tabella applica le regole STORICO compatibili con:</span>
+<span class="cm">          - enabled = true</span>
+<span class="cm">          - exec_mode = &#39;AUTO&#39; oppure exec_mode = p_exec_mode</span>
+<span class="cm">          - match su schema (dbops.fn_schema_match)</span>
+<span class="cm">          - match su tabella: &#39;*ALL&#39; oppure pattern ILIKE su r.target_table</span>
+<span class="cm">        4) se esiste la tabella storico corrispondente (storico.&lt;table_name&gt;),</span>
+<span class="cm">          assicura la presenza del trigger UPDATE+DELETE sulla tabella base usando:</span>
+<span class="cm">          - nome trigger derivato da template (rrule.name_template, default &#39;trg_z90_{table}_storico_upd_dlt&#39;)</span>
+<span class="cm">          - funzione trigger generica script.trgfn_storico_generic(fk_col)</span>
+
+<span class="cm">        Esistenza trigger / strategie</span>
+<span class="cm">        -----------------------------</span>
+<span class="cm">        La creazione del trigger è condizionata da rrule.existence_strategy (default &#39;BY_NAME&#39;):</span>
+<span class="cm">        - BY_NAME     : verifica esistenza per nome trigger</span>
+<span class="cm">        - BY_FUNCTION : verifica esistenza per funzione trigger</span>
+<span class="cm">        - BOTH        : considera presente se esiste per nome OR per funzione</span>
+<span class="cm">        Questo evita duplicazioni e permette migrazioni graduali da trigger legacy a trigger generici.</span>
+
+<span class="cm">        Colonna FK logica (fk_col)</span>
+<span class="cm">        --------------------------</span>
+<span class="cm">        Determina la colonna FK logica passata alla funzione trigger tramite:</span>
+<span class="cm">        - override (dbops.fn_get_override_col) con chiave &#39;STORICO_FK&#39;</span>
+<span class="cm">        - fallback: &lt;table_name&gt;_id</span>
+
+<span class="cm">        Legacy triggers</span>
+<span class="cm">        ---------------</span>
+<span class="cm">        Se rrule.params-&gt;&gt;&#39;drop_legacy_ud&#39; è true, elimina eventuali trigger legacy</span>
+<span class="cm">        (pattern trg_{table}_upd_storico e trg_{table}_dlt_storico) dopo aver gestito</span>
+<span class="cm">        la creazione/validazione del trigger generico.</span>
+
+<span class="cm">        Modalità DRY RUN</span>
+<span class="cm">        ---------------</span>
+<span class="cm">        Se p_dry_run=true non esegue DDL (CREATE TRIGGER/DROP TRIGGER) e registra invece</span>
+<span class="cm">        un audit con dbops.fn_audit_log_once indicando cosa verrebbe creato.</span>
+
+<span class="cm">        Error handling</span>
+<span class="cm">        --------------</span>
+<span class="cm">        - duplicate_object: logga SKIP_EXISTS su audit (trigger già presente)</span>
+<span class="cm">        - altri errori: log strutturato e rilancio tramite script.fn_log_and_raise_error</span>
+<span class="cm">          includendo tabella e messaggio SQLERRM.</span>
+<span class="cm">      */</span>
+
+
+
+
 <span class="n">v_schemas</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_resolve_scope</span><span class="p">(</span><span class="n">p_schemas</span><span class="p">);</span>
 
 <span class="k">FOR</span><span class="w"> </span><span class="n">rtab</span><span class="w"> </span><span class="k">IN</span>
@@ -3124,7 +3179,7 @@ La funzione <strong><code>dbops.fn_run_automations_storico(p_exec_mode, p_schema
 <span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">rule_type</span><span class="o">=</span><span class="s1">&#39;STORICO&#39;</span>
 <span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="s1">&#39;AUTO&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="n">p_exec_mode</span><span class="p">)</span>
 <span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_schema_match</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">)</span>
-<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
+<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">UPPER</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;*ALL&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
 
 <span class="w">      </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">priority</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">id</span>
 <span class="w">    </span><span class="n">LOOP</span>
@@ -3141,11 +3196,9 @@ La funzione <strong><code>dbops.fn_run_automations_storico(p_exec_mode, p_schema
 <span class="w">      </span><span class="k">IF</span><span class="w"> </span><span class="n">has_sto</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">        </span><span class="n">fk_col</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_override_col</span><span class="p">(</span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;STORICO_FK&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="o">||</span><span class="s1">&#39;_id&#39;</span><span class="p">);</span>
 
-
 <span class="w">        </span><span class="n">tmpl</span><span class="w">     </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">rrule</span><span class="p">.</span><span class="n">name_template</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;trg_z90_{table}_storico_upd_dlt&#39;</span><span class="p">);</span>
 <span class="w">        </span><span class="n">trg_name</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_name_from_template</span><span class="p">(</span><span class="n">tmpl</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="k">NULL</span><span class="p">,</span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;upd_dlt&#39;</span><span class="p">);</span>
 <span class="w">        </span><span class="n">exist_strat</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">rrule</span><span class="p">.</span><span class="n">existence_strategy</span><span class="p">,</span><span class="s1">&#39;BY_NAME&#39;</span><span class="p">);</span>
-
 
 <span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="p">(</span><span class="n">exist_strat</span><span class="o">=</span><span class="s1">&#39;BY_NAME&#39;</span><span class="w">     </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_trigger_exists_by_name</span><span class="p">(</span><span class="n">rtab</span><span class="p">.</span><span class="n">rel</span><span class="p">,</span><span class="w"> </span><span class="n">trg_name</span><span class="p">))</span>
 <span class="w">        </span><span class="k">OR</span><span class="w"> </span><span class="p">(</span><span class="n">exist_strat</span><span class="o">=</span><span class="s1">&#39;BY_FUNCTION&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_trigger_exists_by_function</span><span class="p">(</span><span class="n">rtab</span><span class="p">.</span><span class="n">rel</span><span class="p">,</span><span class="s1">&#39;script&#39;</span><span class="p">,</span><span class="s1">&#39;trgfn_upd_dlt_storico_generic&#39;</span><span class="p">))</span>
@@ -3176,7 +3229,6 @@ La funzione <strong><code>dbops.fn_run_automations_storico(p_exec_mode, p_schema
 <span class="w">            </span><span class="k">END</span><span class="p">;</span>
 <span class="w">          </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 <span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
 
 <span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">((</span><span class="n">rrule</span><span class="p">.</span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;drop_legacy_ud&#39;</span><span class="p">)::</span><span class="nb">boolean</span><span class="p">,</span><span class="k">false</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">          </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;DROP TRIGGER IF EXISTS %I ON %I.%I&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_name_from_template</span><span class="p">(</span><span class="s1">&#39;trg_{table}_upd_storico&#39;</span><span class="p">,</span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="k">NULL</span><span class="p">,</span><span class="k">NULL</span><span class="p">,</span><span class="k">NULL</span><span class="p">,</span><span class="k">NULL</span><span class="p">),</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="p">);</span>
