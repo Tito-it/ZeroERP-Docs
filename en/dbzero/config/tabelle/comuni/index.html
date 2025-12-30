@@ -2966,21 +2966,25 @@
 <li><a href="../../../../dbzero/storico/tabelle/comuni">storico.comuni</a>  </li>
 </ul>
 <p>Approfondimento funzione: <br />
-* <a href="../../../../dbzero/script/funzioni/trgfn_upd_dlt_storico_generic">script.trgfn_upd_dlt_storico_generic</a>   </p>
+<em> <a href="../../../../dbzero/config/funzioni/trgfn_comuni_protect_update">config.trgfn_comuni_protect_update</a> <br />
+</em> <a href="../../../../dbzero/script/funzioni/trgfn_storico_generic">script.trgfn_storico_generic</a>   </p>
 </blockquote>
 <p>La tabella <strong><code>config.comuni</code></strong> censisce i comuni (italiani ed esteri) all’interno di uno stato, fornendo la base per la geolocalizzazione degli indirizzi e per l’associazione con lo stradario.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Censimento dei comuni</strong>
-  Elenco dei comuni presenti in ciascuno stato, identificati da nome e collegamento gerarchico a provincia e stato.</li>
-<li><strong>Attributi specifici per stato</strong>
-  La colonna <code>extra_country</code> (JSONB) permette di memorizzare dati aggiuntivi specifici per ogni paese (per l’Italia: codice catastale, codice ISTAT, fascia climatica, ecc.).</li>
-<li><strong>Integrazione con lo stradario</strong>
+<p>(last review 30-12-25)
+* <strong>Censimento dei comuni</strong>
+  Elenco dei comuni presenti in ciascuno stato, identificati da nome e collegamento gerarchico a provincia e stato.
+* <strong>Attributi specifici per stato</strong>
+  La colonna <code>extra_country</code> (JSONB) permette di memorizzare dati aggiuntivi specifici per ogni paese (per l’Italia: codice catastale, codice ISTAT, fascia climatica, ecc.).
+* <strong>Integrazione con lo stradario</strong>
   L’associazione tra <code>config.stradario_generale</code> (prefissi e nomi delle vie) e <code>config.comuni</code> genera la tabella <code>config.stradario</code>, che contiene l’indirizzo completo con la localizzazione geografica sul comune di appartenenza.
-  Utilizzata per associare i record di <strong><code>config.stradario</code></strong> al comune di appartenenza, completa il percorso di indirizzamento.</li>
-<li><strong>Storicizzazione</strong>
-  Il campo <code>storicizza</code> se true attiva il trigger per la storicizzazione delle informazioni sulla tabella <code>storico.comuni</code>. Il front-end dovrà sempre impostare a true il valore, solo per funzioni administrator si potrà non gestire a true.</li>
+  Utilizzata per associare i record di <strong><code>config.stradario</code></strong> al comune di appartenenza, completa il percorso di indirizzamento.
+* <strong>Storicizzazione</strong>
+  Il campo <code>storicizza</code> se true attiva il trigger per la storicizzazione delle informazioni sulla tabella <code>storico.comuni</code>. Il front-end dovrà sempre impostare a true il valore, solo per funzioni administrator si potrà non gestire a true.</p>
+<ul>
+<li><strong>Protezione aggiornamenti quando in uso</strong>
+  Se il comune e' gia' utilizzato in <code>config.stradario</code>, la modifica dei campi chiave e' bloccata dal guard <code>config.trgfn_comuni_protect_update()</code>.</li>
 </ul>
 <hr />
 <h3 id="collegamenti-con-altre-tabelle">🔗 Collegamenti con Altre Tabelle<a class="headerlink" href="#collegamenti-con-altre-tabelle" title="Permanent link">&para;</a></h3>
@@ -3134,6 +3138,12 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>trg_comuni_a10_protect_update_upd</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION config.trgfn_comuni_protect_update()</code></td>
+</tr>
 <tr>
 <td>trg_comuni_audit_data_user_generic_upd</td>
 <td>BEFORE</td>

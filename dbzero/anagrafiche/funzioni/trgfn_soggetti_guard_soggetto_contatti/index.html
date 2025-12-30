@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_soggetti_ins_upd_check_soggetto_contatti" class="md-skip">
+        <a href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_soggetti_guard_soggetto_contatti" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -2825,15 +2825,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_soggetti_ins_upd_check_soggetto_contatti" class="md-nav__link">
+  <a href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_soggetti_guard_soggetto_contatti" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📘 Documentazione Concettuale – Trigger Function anagrafiche.trgfn_soggetti_ins_upd_check_soggetto_contatti
+        📘 Documentazione Concettuale – Trigger Function anagrafiche.trgfn_soggetti_guard_soggetto_contatti
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Trigger Function anagrafiche.trgfn_soggetti_ins_upd_check_soggetto_contatti">
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Trigger Function anagrafiche.trgfn_soggetti_guard_soggetto_contatti">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2927,7 +2927,7 @@
   
 
 
-<h2 id="documentazione-concettuale-trigger-function-anagrafichetrgfn_soggetti_ins_upd_check_soggetto_contatti">📘 Documentazione Concettuale – Trigger Function <code>anagrafiche.trgfn_soggetti_ins_upd_check_soggetto_contatti</code><a class="headerlink" href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_soggetti_ins_upd_check_soggetto_contatti" title="Permanent link">&para;</a></h2>
+<h2 id="documentazione-concettuale-trigger-function-anagrafichetrgfn_soggetti_guard_soggetto_contatti">📘 Documentazione Concettuale – Trigger Function <code>anagrafiche.trgfn_soggetti_guard_soggetto_contatti</code><a class="headerlink" href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_soggetti_guard_soggetto_contatti" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
 <p>Approfondimento tabelle:    </p>
@@ -2940,14 +2940,13 @@
 <li><a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a>     </li>
 </ul>
 </blockquote>
-<p>La trigger function <strong><code>anagrafiche.trgfn_soggetti_ins_upd_check_soggetto_contatti()</code></strong> verifica, al termine dell’inserimento o aggiornamento di un record in <code>anagrafiche.soggetti</code>, che il soggetto associato abbia almeno un contatto valido. Se non trova contatti con <code>is_default = TRUE</code> o almeno un canale valorizzato (email, telefono, cellulare, PEC), registra l’evento e solleva un’eccezione centralizzata.</p>
+<p>La trigger function <strong><code>anagrafiche.trgfn_soggetti_guard_soggetto_contatti()</code></strong> verifica, al termine dell’inserimento o aggiornamento di un record in <code>anagrafiche.soggetti</code>, che il soggetto associato abbia almeno un contatto valido. Se non trova contatti con <code>is_default = TRUE</code> o almeno un canale valorizzato (email, telefono, cellulare, PEC), registra l’evento e solleva un’eccezione centralizzata.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li>
-<p><strong>Validazione di integrità</strong>
+<p>(latest review 28-12-25)
+* <strong>Validazione di integrità</strong>
   Garantire che ogni soggetto disponga di almeno un contatto predefinito o dotato di un canale attivo.</p>
-</li>
+<ul>
 <li>
 <p><strong>Log e gestione errori centralizzata</strong>
   Utilizzare <code>script.fn_log_and_raise_error</code> per tracciare l’anomalia e segnalare l’errore con un codice specifico (<code>E_SOGGETTO_NO_CONTATTI</code>).</p>
@@ -2962,11 +2961,11 @@
 <ul>
 <li><strong>Trigger associato</strong>: <code>AFTER INSERT OR UPDATE</code> su <code>anagrafiche.soggetti</code>, definito come:</li>
 </ul>
-<p><div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_soggetti_ins_upd_check_soggetto_contatti</span>
+<p><div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_soggetti_guard_soggetto_contatti_ins_upd</span>
 <span class="w">  </span><span class="k">AFTER</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti</span>
 <span class="w">  </span><span class="k">DEFERRABLE</span><span class="w"> </span><span class="k">INITIALLY</span><span class="w"> </span><span class="k">DEFERRED</span>
 <span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_soggetti_ins_upd_check_soggetto_contatti</span><span class="p">();</span>
+<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_soggetti_guard_soggetto_contatti</span><span class="p">();</span>
 </code></pre></div>
 * <strong>Deferrable</strong>: permette di posticipare la verifica fino alla fine della transazione per includere eventuali operazioni correlate su <code>anagrafiche.contatti</code>.</p>
 <hr />

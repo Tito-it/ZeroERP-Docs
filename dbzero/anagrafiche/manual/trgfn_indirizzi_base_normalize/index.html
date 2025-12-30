@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_ins_upd_clean_fields" class="md-skip">
+        <a href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_base_normalize" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -2825,15 +2825,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_ins_upd_clean_fields" class="md-nav__link">
+  <a href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_base_normalize" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📘 Documentazione Concettuale – Trigger Function anagrafiche.trgfn_indirizzi_ins_upd_clean_fields()
+        📘 Documentazione Concettuale – Trigger Function anagrafiche.trgfn_indirizzi_base_normalize()
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Trigger Function anagrafiche.trgfn_indirizzi_ins_upd_clean_fields()">
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Trigger Function anagrafiche.trgfn_indirizzi_base_normalize()">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2841,6 +2841,17 @@
     <span class="md-ellipsis">
       
         🎯 Scopo Principale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#come-funziona" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Come Funziona
       
     </span>
   </a>
@@ -2883,9 +2894,10 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
+    <nav class="md-nav" aria-label="🔗 Trigger Associato">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#note-operative" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2893,6 +2905,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2918,50 +2935,63 @@
 
   <h1>Trgfn indirizzi base normalize</h1>
 
-<h2 id="documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_ins_upd_clean_fields">📘 Documentazione Concettuale – Trigger Function <code>anagrafiche.trgfn_indirizzi_ins_upd_clean_fields()</code><a class="headerlink" href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_ins_upd_clean_fields" title="Permanent link">&para;</a></h2>
+<h2 id="documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_base_normalize">📘 Documentazione Concettuale – Trigger Function <code>anagrafiche.trgfn_indirizzi_base_normalize()</code><a class="headerlink" href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_base_normalize" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p>Approfondimento Tabelle:  </p>
+<p>👀 <strong>Vedi anche</strong></p>
+<p><strong>Approfondimento Tabelle:</strong>  </p>
 <ul>
 <li><a href="../../../../dbzero/anagrafiche/tabelle/indirizzi">anagrafiche.indirizzi</a>      </li>
-<li>
-<p><a href="../../../../dbzero/anagrafiche/tabelle/indirizzi_dettaglio">anagrafiche.indirizzi_dettaglio</a>      </p>
-</li>
-<li>
-<p>Pulisce i campi di fallback di <code>anagrafiche.indirizzi</code> quando è presente un <code>indirizzo_dettaglio_id</code>.</p>
+<li><a href="../../../../dbzero/anagrafiche/tabelle/indirizzi_dettaglio">anagrafiche.indirizzi_dettaglio</a>      </li>
+</ul>
+<p><strong>Approfondimento Funzioni:</strong>   </p>
+<ul>
+<li><a href="../../../../dbzero/script/funzioni/fn_get_default_by_param">script.fn_get_default_by_param</a> <br />
 </li>
 </ul>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Assicura che, in modalità <strong>indirizzo normalizzato</strong>, tutti i campi alternativi utilizzati per gli <strong>indirizzi liberi</strong> siano resettati a <code>NULL</code>. In questo modo si evita la coesistenza di dati incongruenti tra indirizzo normalizzato e indirizzo libero.</p>
+<p>(latest review 28-12-25)
+Normalizzare i campi base di <code>anagrafiche.indirizzi</code> in base alla presenza del collegamento a <code>indirizzi_dettaglio</code>.</p>
+<p>Quando <code>indirizzo_dettaglio_id</code> e' valorizzato, la funzione ripulisce tutti i campi di fallback/indirizzo libero. Quando non e' valorizzato, applica un default minimo su <code>stato_id</code> se assente.</p>
+<hr />
+<h3 id="come-funziona">🧩 Come Funziona<a class="headerlink" href="#come-funziona" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Caso normalizzato</strong> (<code>NEW.indirizzo_dettaglio_id IS NOT NULL</code>):</li>
+<li>Azzeramento dei campi di fallback (<code>stato_id</code>, <code>indirizzo_libero</code>, <code>comune_id</code>, <code>codice_postale_id</code>, <code>administrative_area</code>, <code>locality</code>, <code>sublocality</code>, <code>postal_box</code>).</li>
+<li>Azzeramento di <code>geoloc</code> per forzare la derivazione dal dettaglio civico.</li>
+<li><strong>Caso libero/internazionale</strong> (<code>indirizzo_dettaglio_id IS NULL</code>):</li>
+<li>Se <code>stato_id</code> e' NULL, viene impostato con <code>script.fn_get_default_by_param('config','stati','codice_iso3','state_code_iso3', TG_NAME)</code>.</li>
+</ol>
 <hr />
 <h3 id="parametri-del-trigger">Parametri del Trigger<a class="headerlink" href="#parametri-del-trigger" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>NEW</code>: record in fase di INSERT o UPDATE di <code>anagrafiche.indirizzi</code>.</li>
-<li><code>OLD</code>: record precedente alla modifica (non utilizzato).</li>
+<li><code>OLD</code>: record precedente (non usato).</li>
 </ul>
+<hr />
 <h3 id="valore-di-ritorno">Valore di Ritorno<a class="headerlink" href="#valore-di-ritorno" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong><code>NEW</code></strong>: record modificato, con i campi di fallback (<code>stato_id</code>, <code>indirizzo_libero</code>, <code>comune_id</code>, <code>codice_postale_id</code>, <code>administrative_area</code>, <code>locality</code>, <code>sublocality</code>, <code>postal_box</code>, <code>geoloc</code>) azzerati se <code>indirizzo_dettaglio_id</code> è valorizzato.</li>
+<li><strong><code>NEW</code></strong>: record modificato e coerente con la modalita' di indirizzo scelta.</li>
 </ul>
 <hr />
 <h2 id="trigger-associato">🔗 Trigger Associato<a class="headerlink" href="#trigger-associato" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_indirizzi_ins_upd_clean_fields</span>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_indirizzi_base_normalize</span>
 <span class="w">  </span><span class="k">BEFORE</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span>
 <span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">indirizzi</span>
 <span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_indirizzi_ins_upd_clean_fields</span><span class="p">();</span>
+<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_indirizzi_base_normalize</span><span class="p">();</span>
 </code></pre></div>
 <hr />
-<h2 id="note-operative">💡 Note Operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h2>
+<h3 id="note-operative">💡 Note Operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Garantisce la <strong>mutua esclusione</strong> tra modalità normalizzata e libera.</li>
-<li>Previene l’inserimento di dati superflui o incongruenti quando si usa il dettaglio civico.</li>
-<li>La pulizia è estesa per azzerare anche <code>geoloc</code>, si preferisce derivare sempre da <code>indirizzi_dettaglio</code>.</li>
+<li>Evita la coesistenza di dati normalizzati e liberi nello stesso record.</li>
+<li><code>geoloc</code> viene sempre ricalcolato a partire dal dettaglio civico quando presente.</li>
+<li>Il default di <code>stato_id</code> e' guidato dai parametri di configurazione.</li>
 </ul>
 <hr />
 <blockquote>
-<p>🧠 <strong>“Mantieni coerenza tra indirizzo normalizzato e campi di fallback: pulizia automatica e sicura.”</strong></p>
+<p>🧠 <strong>"Coerenza indirizzi: o normalizzato con dettaglio civico, o libero con default minimo."</strong></p>
 </blockquote>
 
 

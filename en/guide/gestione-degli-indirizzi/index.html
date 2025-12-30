@@ -2769,10 +2769,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#caso-a-cambio-nome-completo-della-via-stesso-tracciato" class="md-nav__link">
+  <a href="#policy-operativa-unica" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Caso A: cambio nome completo della via (stesso tracciato)
+        ✅ Policy operativa unica
       
     </span>
   </a>
@@ -2780,10 +2780,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#caso-b-cambio-nome-parziale-della-via-solo-un-tratto" class="md-nav__link">
+  <a href="#esempi-applicativi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Caso B: cambio nome parziale della via (solo un tratto)
+        Esempi applicativi
       
     </span>
   </a>
@@ -3206,10 +3206,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#caso-a-cambio-nome-completo-della-via-stesso-tracciato" class="md-nav__link">
+  <a href="#policy-operativa-unica" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Caso A: cambio nome completo della via (stesso tracciato)
+        ✅ Policy operativa unica
       
     </span>
   </a>
@@ -3217,10 +3217,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#caso-b-cambio-nome-parziale-della-via-solo-un-tratto" class="md-nav__link">
+  <a href="#esempi-applicativi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Caso B: cambio nome parziale della via (solo un tratto)
+        Esempi applicativi
       
     </span>
   </a>
@@ -3502,21 +3502,26 @@
 </ul>
 <hr />
 <h2 id="6-riclassificazione-vie-caso-ab">6. Riclassificazione Vie (Caso A/B)<a class="headerlink" href="#6-riclassificazione-vie-caso-ab" title="Permanent link">&para;</a></h2>
-<p>Questa sezione descrive come gestire variazioni di nome via mantenendo tracciabilita storica e coerenza dei civici.</p>
-<h3 id="caso-a-cambio-nome-completo-della-via-stesso-tracciato">Caso A: cambio nome completo della via (stesso tracciato)<a class="headerlink" href="#caso-a-cambio-nome-completo-della-via-stesso-tracciato" title="Permanent link">&para;</a></h3>
+<p>Questa sezione descrive una <strong>policy unica</strong> per gestire variazioni di vie/comuni mantenendo coerenza dei dati e storicizzazione completa.</p>
+<h3 id="policy-operativa-unica">✅ Policy operativa unica<a class="headerlink" href="#policy-operativa-unica" title="Permanent link">&para;</a></h3>
+<p>Per tutte le casistiche (rinomina parziale, rinomina totale, fusione vie, variazioni comuni) si adotta la stessa logica:</p>
 <ol>
-<li>Aggiornare il nome in <code>config.stradario_generale</code> oppure l’associazione in <code>config.stradario</code> verso il nuovo <code>stradario_generale_id</code>.</li>
-<li>Verificare che <code>config.stradario.storicizza = TRUE</code> per tracciare la modifica.</li>
-<li>Non modificare <code>anagrafiche.indirizzi_dettaglio</code>: il <code>stradario_id</code> resta invariato.</li>
-<li>Per audit “as of”, usare <code>script.fn_get_snapshot_as_of()</code> su <code>storico.stradario</code>.</li>
+<li><strong>Creare il nuovo riferimento in configurazione</strong></li>
+<li>Vie: nuova riga in <code>config.stradario_generale</code> e relativo record in <code>config.stradario</code>.</li>
+<li>Comuni: nuovo riferimento in <code>config.comuni</code> (o aggiornamento coerente con le regole di dominio).</li>
+<li><strong>Allineare gli indirizzi coinvolti</strong></li>
+<li>Aggiornare <strong>solo</strong> le righe di <code>anagrafiche.indirizzi_dettaglio</code> interessate, puntandole al nuovo riferimento.</li>
+<li><strong>Rinormalizzare</strong></li>
+<li>I trigger di normalizzazione aggiornano <code>via_norm</code> e <code>indirizzo_normalizzato</code>.</li>
+<li><strong>Storico garantito</strong></li>
+<li>Le modifiche sono tracciate in <code>storico.stradario</code> e in <code>storico.indirizzi_dettaglio</code> (e, se rilevante, nello storico dei comuni).</li>
 </ol>
-<h3 id="caso-b-cambio-nome-parziale-della-via-solo-un-tratto">Caso B: cambio nome parziale della via (solo un tratto)<a class="headerlink" href="#caso-b-cambio-nome-parziale-della-via-solo-un-tratto" title="Permanent link">&para;</a></h3>
-<ol>
-<li>Creare una nuova via in <code>config.stradario_generale</code> e il relativo record in <code>config.stradario</code> per il tratto riclassificato.</li>
-<li>Aggiornare <code>anagrafiche.indirizzi_dettaglio.stradario_id</code> solo per i civici interessati.</li>
-<li>Verificare <code>storicizza = TRUE</code> su <code>config.stradario</code> e su <code>anagrafiche.indirizzi_dettaglio</code> per avere tracciabilita completa.</li>
-<li>Per audit “as of”, combinare <code>storico.indirizzi_dettaglio</code> con <code>storico.stradario</code>.</li>
-</ol>
+<h3 id="esempi-applicativi">Esempi applicativi<a class="headerlink" href="#esempi-applicativi" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Rinomina totale via</strong>: nuova via + riallineamento di tutti i civici collegati al vecchio <code>stradario_id</code>.</li>
+<li><strong>Rinomina parziale via</strong>: nuova via + riallineamento solo dei civici del tratto interessato.</li>
+<li><strong>Fusione vie</strong>: riallineamento dei civici su un unico <code>stradario_id</code>.</li>
+</ul>
 <hr />
 <p><em>Questa guida copre l’intero ciclo di vita e le componenti software per la gestione degli indirizzi in Zero ERP: dalla tabella geografica di base, al dettaglio civico, fino alle funzioni di audit e storicizzazione.</em></p>
 <hr />
