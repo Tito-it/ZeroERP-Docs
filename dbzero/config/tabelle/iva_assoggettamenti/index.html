@@ -2974,6 +2974,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#trigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚨 Trigger
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3206,6 +3217,31 @@ Viene referenziato da <code>config.iva.assoggettamento_id</code> e, opzionalment
 <tr>
 <td>uq_cfg_iva_assoggettamenti_codice</td>
 <td><code>CREATE UNIQUE INDEX uq_cfg_iva_assoggettamenti_codice ON config.iva_assoggettamenti USING btree (codice)</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="trigger">🚨 Trigger<a class="headerlink" href="#trigger" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Nome</th>
+<th>Timing</th>
+<th>Evento</th>
+<th>Azione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>trg_block_deact_iva_assoggettamenti_iva</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION dbops.trgfn_prevent_deactivate_if_children('config', 'iva', 'assoggettamento_id', 'id')</code></td>
+</tr>
+<tr>
+<td>trg_block_deact_iva_assoggettamenti_iva_stati</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION dbops.trgfn_prevent_deactivate_if_children('config', 'iva_stati', 'assoggettamento_id_override', 'id')</code></td>
 </tr>
 </tbody>
 </table>

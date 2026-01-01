@@ -2848,6 +2848,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#gestione-attivoinattivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Gestione attivo/inattivo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regola-di-manutenzione-coerente-con-la-policy-indirizzi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Regola di manutenzione (coerente con la policy indirizzi)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2954,18 +2976,30 @@
 <li><a href="../../../../dbzero/config/tabelle/stradario">config.stradario</a>        </li>
 <li><a href="../../../../dbzero/config/tabelle/stradario_generale">config.stradario_generale</a>  </li>
 </ul>
+<p>Approfondimento Funzione:  </p>
+<ul>
+<li><a href="../../../../dbzero/config/funzioni/trgfn_toponomastica_bump_normalize">config.trgfn_toponomastica_bump_normalize</a>   </li>
+<li><a href="../../../../dbzero/config/funzioni/trgfn_toponomastica_protect_update">config.trgfn_toponomastica_protect_update</a>   </li>
+</ul>
 </blockquote>
 <p>La tabella <strong><code>config.toponomastica</code></strong> raccoglie i tipi di toponimi utilizzati per la composizione degli indirizzi: è la base per lo <strong><code>stradario_generale</code></strong>, dove ogni record di toponimo si combina con un nome specifico per generare l’indirizzo completo.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Censimento dei toponimi</strong>
-  Elenco delle tipologie di vie, strade, piazze, viali, ecc., utilizzate come prefisso negli indirizzi.</li>
-<li><strong>Fondamentale per lo stradario</strong>
-  Fornisce i prefissi standardizzati che, uniti al nome (es. "Garibaldi", "Roma"), generano i record di <strong><code>stradario_generale</code></strong>.</li>
-<li><strong>Integrazione con lo stato geografico</strong>
-  Collegato alla tabella <code>config.stati</code> per associare ogni tipo di toponimo all’area amministrativa di riferimento.</li>
-</ul>
+<p>(latest review 31-12-25)
+* <strong>Censimento dei toponimi</strong>
+  Elenco delle tipologie di vie, strade, piazze, viali, ecc., utilizzate come prefisso negli indirizzi.
+* <strong>Fondamentale per lo stradario</strong>
+  Fornisce i prefissi standardizzati che, uniti al nome (es. "Garibaldi", "Roma"), generano i record di <strong><code>stradario_generale</code></strong>.
+* <strong>Integrazione con lo stato geografico</strong>
+  Collegato alla tabella <code>config.stati</code> per associare ogni tipo di toponimo all’area amministrativa di riferimento.</p>
+<hr />
+<h3 id="gestione-attivoinattivo">✅ Gestione attivo/inattivo<a class="headerlink" href="#gestione-attivoinattivo" title="Permanent link">&para;</a></h3>
+<p>La colonna <code>attivo</code> permette di <strong>disattivare</strong> i toponimi non piu' utilizzati senza eliminarli, evitando che vengano proposti in nuove configurazioni.</p>
+<hr />
+<h3 id="regola-di-manutenzione-coerente-con-la-policy-indirizzi">🧩 Regola di manutenzione (coerente con la policy indirizzi)<a class="headerlink" href="#regola-di-manutenzione-coerente-con-la-policy-indirizzi" title="Permanent link">&para;</a></h3>
+<p>Se un toponimo e' <strong>in uso</strong> nello <code>stradario_generale</code>, la modifica della descrizione e' bloccata dal guard.<br />
+In caso di correzioni (es. refusi), si crea un <strong>nuovo</strong> toponimo e si riallineano i record di <code>config.stradario_generale</code> interessati.<br />
+Il trigger <code>trgfn_toponomastica_bump_normalize</code> riallinea <code>indirizzo_normalizzato</code> sui record collegati.</p>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
@@ -3034,6 +3068,12 @@
 <td>NO</td>
 <td>CURRENT_USER</td>
 </tr>
+<tr>
+<td>attivo</td>
+<td>boolean</td>
+<td>NO</td>
+<td>true</td>
+</tr>
 </tbody>
 </table>
 <h2 id="vincoli">🔒 Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h2>
@@ -3098,16 +3138,22 @@
 </thead>
 <tbody>
 <tr>
-<td>trg_toponomastica_aft_bump_normalize_upd</td>
-<td>AFTER</td>
+<td>trg_block_deact_toponomastica_stradario_generale</td>
+<td>BEFORE</td>
 <td>UPDATE</td>
-<td><code>EXECUTE FUNCTION config.trgfn_toponomastica_bump_normalize()</code></td>
+<td><code>EXECUTE FUNCTION dbops.trgfn_prevent_deactivate_if_children('config', 'stradario_generale', 'toponomastica_id', 'id')</code></td>
 </tr>
 <tr>
 <td>trg_toponomastica_audit_data_user_generic_upd</td>
 <td>BEFORE</td>
 <td>UPDATE</td>
 <td><code>EXECUTE FUNCTION script.trgfn_audit_data_user_generic()</code></td>
+</tr>
+<tr>
+<td>trg_toponomastica_bump_normalize_aft_upd</td>
+<td>AFTER</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION config.trgfn_toponomastica_bump_normalize()</code></td>
 </tr>
 <tr>
 <td>trg_toponomastica_protect_update_upd</td>

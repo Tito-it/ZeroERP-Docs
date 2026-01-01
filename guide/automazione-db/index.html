@@ -3119,21 +3119,36 @@
 
 <h1 id="guida-tecnica-automazioni-db-aggiornata">📗 Guida Tecnica – Automazioni DB (aggiornata)<a class="headerlink" href="#guida-tecnica-automazioni-db-aggiornata" title="Permanent link">&para;</a></h1>
 <blockquote>
+<p>(latest review 01-01-26)</p>
 <p><strong>Scope:</strong> aggiorna la guida esistente con le novità su wildcard <code>*all</code> e gli ultimi affinamenti senza stravolgere la struttura.</p>
-<p><strong>Riferimenti chiave</strong>: </p>
+<p><strong>Riferimenti chiave</strong>:</p>
 <blockquote>
 <ul>
-<li><a href="../../dbzero/dbops/tabelle/automation_rules_tbl">dbops.automation_rules_tbl</a>      </li>
-<li><a href="../../dbzero/dbops/tabelle/automation_fk_exclusions">dbops.automation_fk_exclusions</a>      </li>
-<li><a href="../../dbzero/dbops/tabelle/automation_overrides_cols">dbops.automation_overrides_cols</a></li>
-<li><a href="../../dbzero/dbops/tabelle/automation_scope">dbops.automation_scope</a></li>
-<li><a href="../../dbzero/dbops/tabelle/audit_log">dbops.audit_log</a></li>
+<li><a href="../../dbzero/dbops/tabelle/automation_rules_tbl">dbops.automation_rules_tbl</a></li>
 </ul>
 </blockquote>
 <ul>
-<li>Orchestratori: </li>
+<li>
+<p><a href="../../dbzero/dbops/tabelle/automation_fk_exclusions">dbops.automation_fk_exclusions</a></p>
+</li>
+<li>
+<p><a href="../../dbzero/dbops/tabelle/automation_overrides_cols">dbops.automation_overrides_cols</a></p>
+</li>
+<li>
+<p><a href="../../dbzero/dbops/tabelle/automation_scope">dbops.automation_scope</a></p>
+</li>
+<li>
+<p><a href="../../dbzero/dbops/tabelle/audit_log">dbops.audit_log</a></p>
+</li>
+<li>
+<p>Orchestratori:</p>
+</li>
 </ul>
-<p><a href="../../dbzero/dbops/funzioni/fn_run_automations">dbops.fn_run_automations</a>, <a href="../../dbzero/dbops/funzioni/fn_run_automations_tx_id">dbops.fn_run_automations_tx_id</a>, <a href="../../dbzero/dbops/funzioni/fn_run_automations_audit_update">dbops.run_automations_audit_update</a>, <a href="../../dbzero/dbops/funzioni/fn_run_automations_storico">dbops.run_automations_storico</a>, <a href="../../dbzero/dbops/funzioni/fn_run_automations_attivo">dbops.fn_run_automations_attivo</a></p>
+<p><a href="../../dbzero/dbops/funzioni/fn_run_automations">dbops.fn_run_automations</a>,<br />
+<a href="../../dbzero/dbops/funzioni/fn_run_automations_tx_id">dbops.fn_run_automations_tx_id</a>,<br />
+<a href="../../dbzero/dbops/funzioni/fn_run_automations_audit_update">dbops.run_automations_audit_update</a>,<br />
+<a href="../../dbzero/dbops/funzioni/fn_run_automations_storico">dbops.run_automations_storico</a>, <br />
+<a href="../../dbzero/dbops/funzioni/fn_run_automations_attivo">dbops.fn_run_automations_attivo</a>  </p>
 </blockquote>
 <hr />
 <h2 id="1-perche-un-framework-di-automazione">1) 🎯 Perché un framework di automazione<a class="headerlink" href="#1-perche-un-framework-di-automazione" title="Permanent link">&para;</a></h2>
@@ -3142,7 +3157,7 @@
 <h2 id="2-architettura-sintesi">2) 🧩 Architettura (sintesi)<a class="headerlink" href="#2-architettura-sintesi" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Scope</strong> (<code>automation_scope</code> + <code>fn_resolve_scope</code> / parametro): delimita gli schemi/tabelle.</li>
-<li><strong>Rules</strong> (<code>automation_rules_tbl</code>): regole per schema/tabella (TX_ID, AUDIT_UPDATE, STORICO, ATTIVO, + STORICO_PROVISION).</li>
+<li><strong>Rules</strong> (<code>automation_rules_tbl</code>): regole per schema/tabella (TX_ID, AUDIT_UPDATE, STORICO, + STORICO_PROVISION).</li>
 <li><strong>Overrides/Exclusions</strong>: colonne non standard e FK da saltare.</li>
 <li><strong>Orchestratori</strong>: <code>fn_run_automations_*</code> per ogni area.</li>
 <li><strong>Audit</strong>: <code>audit_log</code> (anche out‑of‑tx via dblink opzionale).</li>
@@ -3164,10 +3179,32 @@
 <li>Crea <code>storico.&lt;tabella&gt;</code> se mancante con struttura standard (FK → PK padre, <code>snapshot</code> JSONB, <code>change_type</code>, <code>tipo_operazione</code>, ecc.).</li>
 <li>Param opzionale: <code>create_gin_index</code> su <code>snapshot</code>.</li>
 </ul>
-<p><strong>3.5 ATTIVO (soft‑delete funzionale)</strong></p>
+<p><strong>3.5 ATTIVO (soft‑delete funzionale – policy conservativa)</strong></p>
+<p>L’automazione <strong>ATTIVO</strong> implementa una politica <strong>BLOCK-ONLY</strong> finalizzata a garantire la coerenza logica tra record padre e figli collegati tramite FK.</p>
+<p><strong>Regola applicata</strong></p>
 <ul>
-<li>FK <code>RESTRICT</code> <strong>o</strong> <code>NO ACTION</code> (anche DEFERRABLE): cascade/require/block come da design originale.</li>
+<li>La disattivazione (<code>attivo = false</code>) di un <strong>record PADRE</strong> è consentita <strong>solo se NON esistono record FIGLI collegati</strong>.</li>
+<li><strong>Non viene applicata alcuna cascata automatica</strong> sui figli.</li>
+<li><strong>Non viene creato alcun vincolo REQUIRE</strong> sul figlio.</li>
+<li>La regola si applica esclusivamente se il <strong>PADRE possiede la colonna <code>attivo</code></strong>.</li>
+<li>Le FK considerate sono <code>RESTRICT</code> e <code>NO ACTION</code> (anche <code>DEFERRABLE</code>).</li>
 </ul>
+<p><strong>Trigger generato</strong></p>
+<ul>
+<li><strong>Tabella</strong>: PADRE</li>
+<li><strong>Evento</strong>: <code>BEFORE UPDATE OF attivo</code></li>
+<li><strong>Funzione</strong>:
+  <code>dbops.trgfn_prevent_deactivate_if_children(child_schema, child_table, fk_col [, pk_col])</code></li>
+</ul>
+<p><strong>Effetto</strong></p>
+<p>Se:</p>
+<ul>
+<li><code>OLD.attivo = true</code></li>
+<li><code>NEW.attivo = false</code></li>
+<li>esistono record figli collegati tramite FK</li>
+</ul>
+<p>➡️ l’operazione viene <strong>bloccata con errore</strong>.</p>
+<p>L’automazione <strong>non modifica mai automaticamente i record figli</strong>.</p>
 <hr />
 <h2 id="4-configurazione">4) ⚙️ Configurazione<a class="headerlink" href="#4-configurazione" title="Permanent link">&para;</a></h2>
 <p><strong>4.1 <code>automation_rules_tbl</code> (novità <code>*all</code>)</strong></p>
@@ -3235,14 +3272,19 @@
 <li><strong>STORICO</strong> separato da <strong>STORICO_PROVISION</strong>: meno ambiguità tra provisioning e trigger.</li>
 <li><strong>Storico table</strong>: stesso nome della base, schema <code>storico</code> (niente <code>_storico</code>).</li>
 <li><strong>Trigger storico</strong>: unificato <strong>UPDATE+DELETE</strong> con default <code>trgx_z90_{table}_upd_dlt_storico</code>.</li>
-<li><strong>ATTIVO</strong>: copre FK <code>RESTRICT</code> e <code>NO ACTION</code> (DEFERRABLE consigliato).</li>
+<li>
+<p><strong>ATTIVO</strong>: adottata una <strong>policy conservativa BLOCK-ONLY</strong>:</p>
+</li>
+<li>
+<p>nessuna cascata automatica;</p>
+</li>
+<li>nessun vincolo REQUIRE sul figlio;</li>
+<li>un record padre può essere disattivato <strong>solo se privo di figli FK</strong>;</li>
+<li>eventuali strategie più aggressive (cascata, archiviazione figli) sono demandate a operazioni esplicite.</li>
 <li>Runner aggiornati: <code>fn_resolve_scope</code>, <code>fn_table_in_scope</code>, <code>fn_schema_match('*all', ...)</code>.</li>
 <li>Guard globale: schema <code>storico</code> escluso dai runner di storico.</li>
 </ul>
 <hr />
-<blockquote>
-<p><strong>In sintesi</strong>: con <code>*all</code> su rules/scope, provisioning separato e trigger storico unificato, l’onboarding è più veloce, prevedibile e governabile da config. Conserviamo dry‑run, audit e naming standard per un rollout sicuro.</p>
-</blockquote>
 <h2 id="10-esempi-di-configurazione-automation_rules_tbl">10) 🧪 Esempi di configurazione (<code>automation_rules_tbl</code>)<a class="headerlink" href="#10-esempi-di-configurazione-automation_rules_tbl" title="Permanent link">&para;</a></h2>
 <p>Di seguito insert <strong>idempotenti</strong> (usano <code>WHERE NOT EXISTS</code>) per le regole più comuni. Adatta <code>target_schema</code>/<code>target_table</code> alle tue esigenze.</p>
 <p><strong>10.1 TX_ID</strong></p>
@@ -3304,21 +3346,26 @@
 <span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="k">true</span><span class="p">,</span><span class="s1">&#39;STORICO_PROVISION&#39;</span><span class="p">,</span><span class="s1">&#39;catalogo&#39;</span><span class="p">,</span><span class="s1">&#39;articoli_%&#39;</span><span class="p">,</span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span>
 <span class="w">        </span><span class="k">NULL</span><span class="p">,</span><span class="s1">&#39;BOTH&#39;</span><span class="p">,</span><span class="s1">&#39;{&quot;create_gin_index&quot;: true}&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="s1">&#39;storico: prov catalogo&#39;</span><span class="p">);</span>
 </code></pre></div>
-<p><strong>10.5 ATTIVO (soft‑delete/consistenza funzionale)</strong></p>
+<p><strong>10.5 ATTIVO (soft-delete / consistenza funzionale – BLOCK-ONLY)</strong></p>
 <div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automation_rules_tbl</span>
 <span class="p">(</span><span class="n">enabled</span><span class="p">,</span><span class="w"> </span><span class="n">rule_type</span><span class="p">,</span><span class="w"> </span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">target_table</span><span class="p">,</span><span class="w"> </span><span class="n">exec_mode</span><span class="p">,</span>
 <span class="w"> </span><span class="n">name_template</span><span class="p">,</span><span class="w"> </span><span class="n">existence_strategy</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">priority</span><span class="p">,</span><span class="w"> </span><span class="n">note</span><span class="p">)</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="s1">&#39;ATTIVO&#39;</span><span class="p">,</span><span class="s1">&#39;*all&#39;</span><span class="p">,</span><span class="k">NULL</span><span class="p">,</span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span>
-<span class="w">       </span><span class="s1">&#39;{&quot;cascade&quot;:&quot;trg_soft_del_{parent}__{child}__{fk}&quot;,</span>
-<span class="s1">         &quot;require&quot;:&quot;trg_chk_{child}_parent_{fk}&quot;,</span>
-<span class="s1">         &quot;block&quot;:&quot;trg_block_deact_{parent}__{child}&quot;}&#39;</span><span class="p">,</span>
-<span class="w">       </span><span class="s1">&#39;BOTH&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{&quot;include_no_action&quot;: true}&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span>
-<span class="w">       </span><span class="mi">100</span><span class="p">,</span><span class="s1">&#39;attivo: RESTRICT/NO ACTION&#39;</span>
+<span class="w">       </span><span class="s1">&#39;{&quot;block&quot;:&quot;trg_block_deact_{parent}__{child}&quot;}&#39;</span><span class="p">,</span>
+<span class="w">       </span><span class="s1">&#39;BOTH&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{}&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span>
+<span class="w">       </span><span class="mi">100</span><span class="p">,</span><span class="s1">&#39;attivo: blocco disattivazione padre se esistono figli&#39;</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automation_rules_tbl</span>
 <span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="n">rule_type</span><span class="o">=</span><span class="s1">&#39;ATTIVO&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">target_schema</span><span class="o">=</span><span class="s1">&#39;*all&#39;</span>
 <span class="p">);</span>
 </code></pre></div>
+<p><strong>Comportamento</strong>:</p>
+<ul>
+<li>crea <strong>solo</strong> trigger di BLOCCO sul PADRE;</li>
+<li>nessuna cascata;</li>
+<li>nessun trigger REQUIRE sul figlio;</li>
+<li>applicabile a FK <code>RESTRICT</code> e <code>NO ACTION</code>.</li>
+</ul>
 <p><strong>10.6 Esempi di override (colonne non standard)</strong></p>
 <blockquote>
 <p>La tabella <code>automation_overrides_cols</code> permette di definire nomi custom per colonna per tabella.</p>
@@ -3375,7 +3422,12 @@
 </ul>
 <p><div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations</span><span class="p">(</span><span class="s1">&#39;CI&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;lab&#39;</span><span class="p">],</span><span class="w"> </span><span class="k">false</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[</span><span class="s1">&#39;TX_ID&#39;</span><span class="p">]);</span>
 </code></pre></div>
-* [ ] In caso di <strong>ATTIVO</strong>, ricordati che copre FK <code>NO ACTION</code> e <code>RESTRICT</code>.</p>
+* [ ] In caso di <strong>ATTIVO</strong>:</p>
+<ul>
+<li>è attiva <strong>solo la policy BLOCK-ONLY</strong>;</li>
+<li>il padre può essere disattivato <strong>solo se non esistono figli FK</strong>;</li>
+<li>non avvengono cascata né modifiche automatiche sui figli.</li>
+</ul>
 <h2 id="verifica-postapply">Verifica post‑apply<a class="headerlink" href="#verifica-postapply" title="Permanent link">&para;</a></h2>
 <ul>
 <li>[ ] Trigger presenti:</li>
@@ -3392,7 +3444,7 @@
 <li><strong>TX_ID</strong>: insert/update → <code>tx_id</code> non nullo.</li>
 <li><strong>AUDIT_UPDATE</strong>: update → <code>data_update/user_update</code> aggiornati.</li>
 <li><strong>STORICO</strong>: update/delete → riga in <code>storico.&lt;t&gt;_storico</code>.</li>
-<li><strong>ATTIVO</strong>: set padre <code>attivo=false</code> → cascade/block/require coerenti.</li>
+<li><strong>ATTIVO</strong>: set padre <code>attivo=false</code> → disattivazione consentita solo se privo di figli FK.</li>
 </ul>
 <h2 id="osservabilita-log">Osservabilità &amp; log<a class="headerlink" href="#osservabilita-log" title="Permanent link">&para;</a></h2>
 <ul>
