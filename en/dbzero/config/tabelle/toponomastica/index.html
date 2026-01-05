@@ -2870,6 +2870,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#default-stato_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Default stato_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2985,7 +2996,7 @@
 <p>La tabella <strong><code>config.toponomastica</code></strong> raccoglie i tipi di toponimi utilizzati per la composizione degli indirizzi: è la base per lo <strong><code>stradario_generale</code></strong>, dove ogni record di toponimo si combina con un nome specifico per generare l’indirizzo completo.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 31-12-25)
+<p>(latest review 02-01-26)
 * <strong>Censimento dei toponimi</strong>
   Elenco delle tipologie di vie, strade, piazze, viali, ecc., utilizzate come prefisso negli indirizzi.
 * <strong>Fondamentale per lo stradario</strong>
@@ -3000,6 +3011,11 @@
 <p>Se un toponimo e' <strong>in uso</strong> nello <code>stradario_generale</code>, la modifica della descrizione e' bloccata dal guard.<br />
 In caso di correzioni (es. refusi), si crea un <strong>nuovo</strong> toponimo e si riallineano i record di <code>config.stradario_generale</code> interessati.<br />
 Il trigger <code>trgfn_toponomastica_bump_normalize</code> riallinea <code>indirizzo_normalizzato</code> sui record collegati.</p>
+<p>In alternativa, per manutenzioni controllate, utilizzare <code>maintenance.proc_bump_toponomastica(...)</code> che abilita la GUC di manutenzione e applica la correzione con riallineamento.</p>
+<hr />
+<h3 id="default-stato_id">🧩 Default stato_id<a class="headerlink" href="#default-stato_id" title="Permanent link">&para;</a></h3>
+<p>Se <code>stato_id</code> non e' valorizzato, viene impostato da parametro (<code>state_code_iso3</code>) tramite <code>script.fn_get_default_by_param</code>.<br />
+Se il parametro non e' configurato e <code>stato_id</code> resta NULL, l'operazione va in errore.</p>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
@@ -3154,6 +3170,18 @@ Il trigger <code>trgfn_toponomastica_bump_normalize</code> riallinea <code>indir
 <td>AFTER</td>
 <td>UPDATE</td>
 <td><code>EXECUTE FUNCTION config.trgfn_toponomastica_bump_normalize()</code></td>
+</tr>
+<tr>
+<td>trg_toponomastica_normalize_ins_upd</td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>EXECUTE FUNCTION config.trgfn_toponomastica_normalize()</code></td>
+</tr>
+<tr>
+<td>trg_toponomastica_normalize_ins_upd</td>
+<td>BEFORE</td>
+<td>UPDATE</td>
+<td><code>EXECUTE FUNCTION config.trgfn_toponomastica_normalize()</code></td>
 </tr>
 <tr>
 <td>trg_toponomastica_protect_update_upd</td>

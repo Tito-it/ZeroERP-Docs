@@ -2923,9 +2923,9 @@
 <p>La trigger function <strong><code>config.trgfn_toponomastica_protect_update()</code></strong> impedisce modifiche non consentite sul catalogo delle toponomastiche, bloccando l’<strong>UPDATE</strong> di <code>descrizione</code> quando la voce è già in uso in <strong><code>config.stradario_generale</code></strong>.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 31-12-25)
+<p>(latest review 02-01-26)
 * <strong>Protezione semantica</strong>: garantire coerenza tra topografia e stradario evitando rinominazioni dirette di toponomastiche già in uso.
-* <strong>Decisione di design</strong>: anziché storicizzare o consentire modifiche parziali, obbligare alla creazione di nuove topografìe per cambiare descrizione.
+* <strong>Manutenzione controllata</strong>: consentire correzioni solo tramite GUC di manutenzione e procedura dedicata.
 * <strong>Centralizzazione</strong>: concentrare la logica di blocco in una sola funzione trigger per ridurre complessità applicativa.</p>
 <hr />
 <h3 id="parametri-e-contesto">🔍 Parametri e Contesto<a class="headerlink" href="#parametri-e-contesto" title="Permanent link">&para;</a></h3>
@@ -2942,6 +2942,10 @@
 </ul>
 <hr />
 <h3 id="flusso-di-esecuzione-dettagliato">⚙️ Flusso di Esecuzione Dettagliato<a class="headerlink" href="#flusso-di-esecuzione-dettagliato" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Bypass in manutenzione</strong></li>
+</ol>
+<p>Se la GUC <code>zeroerp.maintenance_toponomastica</code> e' impostata a <code>on</code>, l'UPDATE e' consentito.</p>
 <ol>
 <li><strong>Verifica utilizzo</strong></li>
 </ol>
@@ -2978,7 +2982,7 @@
 <ul>
 <li><strong>Integrità referenziale logica</strong>: impedendo modifiche di descrizioni in uso, si evita la discrepanza tra entità generali e record associati.</li>
 <li><strong>Chiarezza operativa</strong>: chiara segnalazione dell’errore con payload JSON specifico, facilita debug e supporto.</li>
-<li><strong>Strategia di manutenzione</strong>: per modificare la descrizione di una toponomastica esistente, è necessario creare un nuovo record, preservando la storia e evitando side effect.</li>
+<li><strong>Strategia di manutenzione</strong>: per modificare la descrizione di una toponomastica esistente, è necessario usare la procedura di manutenzione oppure creare un nuovo record, preservando la storia e evitando side effect.</li>
 <li><strong>Leggerezza</strong>: rispetto alla storicizzazione completa, questo approccio è più semplice e leggero quando la modifica non è prevista come operazione comune.</li>
 </ul>
 <hr />

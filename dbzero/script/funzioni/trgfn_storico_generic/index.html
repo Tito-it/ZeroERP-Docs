@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#documentazione-concettuale-trigger-function-scripttrgfn_upd_dlt_storico_generic" class="md-skip">
+        <a href="#documentazione-concettuale-trigger-function-scripttrgfn_storico_generic" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -2825,15 +2825,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#documentazione-concettuale-trigger-function-scripttrgfn_upd_dlt_storico_generic" class="md-nav__link">
+  <a href="#documentazione-concettuale-trigger-function-scripttrgfn_storico_generic" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📘 Documentazione Concettuale – Trigger Function script.trgfn_upd_dlt_storico_generic()
+        📘 Documentazione Concettuale – Trigger Function script.trgfn_storico_generic()
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Trigger Function script.trgfn_upd_dlt_storico_generic()">
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Trigger Function script.trgfn_storico_generic()">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2916,7 +2916,7 @@
   
 
 
-<h2 id="documentazione-concettuale-trigger-function-scripttrgfn_upd_dlt_storico_generic">📘 Documentazione Concettuale – Trigger Function <code>script.trgfn_upd_dlt_storico_generic()</code><a class="headerlink" href="#documentazione-concettuale-trigger-function-scripttrgfn_upd_dlt_storico_generic" title="Permanent link">&para;</a></h2>
+<h2 id="documentazione-concettuale-trigger-function-scripttrgfn_storico_generic">📘 Documentazione Concettuale – Trigger Function <code>script.trgfn_storico_generic()</code><a class="headerlink" href="#documentazione-concettuale-trigger-function-scripttrgfn_storico_generic" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
 <p>Approfondimento funzioni:    </p>
@@ -2928,7 +2928,7 @@
 <li><a href="../../../../linee-guida-sql">Linee Guida SQL</a> per convenzioni di changeSet e commenti SQL  </li>
 </ul>
 </blockquote>
-<p>La trigger function <strong><code>script.trgfn_upd_dlt_storico_generic()</code></strong> centralizza la logica di storicizzazione in qualunque tabella del layer <code>storico</code>, gestendo:</p>
+<p>La trigger function <strong><code>script.trgfn_storico_generic()</code></strong> centralizza la logica di storicizzazione in qualunque tabella del layer <code>storico</code>, gestendo:</p>
 <ul>
 <li>Chiusura automatica degli snapshot aperti (<code>valid_to IS NULL</code>).</li>
 <li>Creazione di uno snapshot iniziale con <code>valid_from</code> fisso (<code>1950-01-01</code>) se non esistevano record storici.</li>
@@ -2938,11 +2938,10 @@
 </ul>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Unificazione logica</strong>: evitare duplicazioni del codice di storicizzazione in diverse funzioni trigger.</li>
-<li><strong>Flessibilità</strong>: applicabile a qualsiasi tabella storica semplicemente specificando il parametro <code>TG_ARGV[0]</code> con il nome della colonna di riferimento.</li>
-<li><strong>Robustezza</strong>: gestione completa degli errori con logging, senza interrompere il flusso DML principale.</li>
-</ul>
+<p>(latest review 02-02-26)
+* <strong>Unificazion- logica</strong>: evitare duplicazioni del codice di storicizzazione in diverse funzioni trigger.
+* <strong>Flessibilità</strong>: applicabile a qualsiasi tabella storica semplicemente specificando il parametro <code>TG_ARGV[0]</code> con il nome della colonna di riferimento.
+* <strong>Robustezza</strong>: gestione completa degli errori con logging, senza interrompere il flusso DML principale.</p>
 <hr />
 <h3 id="parametri-e-contesto">🔍 Parametri e Contesto<a class="headerlink" href="#parametri-e-contesto" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2957,7 +2956,7 @@
 <p><div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_storico</span>
 <span class="w">  </span><span class="k">AFTER</span><span class="w"> </span><span class="k">UPDATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">DELETE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="o">&lt;</span><span class="k">schema</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="n">tabella_origine</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">trgfn_upd_dlt_storico_generic</span><span class="p">(</span><span class="s1">&#39;&lt;colonna_fk&gt;&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">trgfn_storico_generic</span><span class="p">(</span><span class="s1">&#39;&lt;colonna_fk&gt;&#39;</span><span class="p">);</span>
 </code></pre></div>
 * <strong>Dipendenze</strong>:</p>
 <ul>
@@ -3031,7 +3030,7 @@
 </ul>
 <hr />
 <blockquote>
-<p>🧠 <strong>“Con <code>trgfn_upd_dlt_storico_generic</code>, Zero ERP ha una soluzione unica e versatile per versionare ogni entità storica, riducendo complessità e aumentando l’affidabilità.”</strong></p>
+<p>🧠 <strong>“Con <code>trgfn_storico_generic</code>, Zero ERP ha una soluzione unica e versatile per versionare ogni entità storica, riducendo complessità e aumentando l’affidabilità.”</strong></p>
 </blockquote>
 <h1 id="funzione-trgfn_storico_generic">⚙️ Funzione <code>trgfn_storico_generic</code><a class="headerlink" href="#funzione-trgfn_storico_generic" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_storico_generic</span><span class="p">()</span>

@@ -2801,6 +2801,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#manutenzione-straordinaria-riclassificazione-controllata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚠️ Manutenzione straordinaria (riclassificazione controllata)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3249,6 +3260,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#manutenzione-straordinaria-riclassificazione-controllata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚠️ Manutenzione straordinaria (riclassificazione controllata)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3366,7 +3388,7 @@
 <h1 id="guida-alla-gestione-degli-indirizzi">🌱 Guida alla Gestione degli Indirizzi<a class="headerlink" href="#guida-alla-gestione-degli-indirizzi" title="Permanent link">&para;</a></h1>
 <p>Questa guida illustra l’architettura, le scelte progettuali e i componenti coinvolti nella gestione degli indirizzi in Zero ERP.</p>
 <blockquote>
-<p>(latest review 23-12-25)</p>
+<p>(latest review 02-01-26)</p>
 <p>👀 <strong>Vedi anche</strong></p>
 <ul>
 <li><a href="../../guide/soggetti-e-ruoli-anagrafici"><code>Guida Soggetti &amp; Ruoli</code></a><br />
@@ -3393,17 +3415,6 @@
 </li>
 <li>
 <p>Tutte le modifiche a <code>config.stradario</code> e <code>anagrafiche.indirizzi</code> sono salvate in <strong><code>storico.*</code></strong> con snapshot JSONB, tipi operazione (A/U/D) e transazione <strong>tx_id</strong>, tramite la trigger-function generica <a href="../../dbzero/script/funzioni/trgfn_storico_generic"><code>script.trgfn_storico_generic()</code></a>.</p>
-</li>
-<li>
-<p><strong>Clean &amp; Default centralizzati</strong></p>
-</li>
-<li>
-<p>Ogni tabella con normalizzazioni o default ha un trigger <code>trg_&lt;tabella&gt;_clean_fields_ins_upd</code> che richiama <code>trgfn_&lt;tabella&gt;_clean_fields()</code>. Esempio per <code>soggetti</code>:</p>
-<ul>
-<li>Imposta <code>stato_id</code> di default (<code>script.state_iso_code3()</code>).</li>
-<li>Genera <code>codice(soggetto)</code> se mancante <a href="../../dbzero/script/funzioni/fn_generate_codice"><code>script.fn_generate_codice('soggetto')</code></a>.</li>
-<li>Pulisce campi testo (<code>TRIM</code>/<code>UPPER</code>).</li>
-</ul>
 </li>
 <li>
 <p><strong>Fallback storico/originario</strong></p>
@@ -3491,27 +3502,17 @@
 <td>Generica per <code>codice_&lt;entità&gt;</code>, usa <code>fn_generate_codice</code></td>
 </tr>
 <tr>
-<td><a href="../../dbzero/anagrafiche/funzioni/trgfn_indirizzi_dettaglio_norm_indirizzi_dettaglio">anagrafiche.trgfn_indirizzi_dettaglio_norm_indirizzi_dettaglio()</a></td>
+<td><a href="../../dbzero/anagrafiche/funzioni/trgfn_indirizzi_dettaglio_normalize">anagrafiche.trgfn_indirizzi_dettaglio_normalize()</a></td>
 <td>trigger function</td>
 <td>Normalizza <code>via_norm</code>, <code>civico_norm</code></td>
 </tr>
-<tr>
-<td><a href="../../dbzero/script/funzioni/fn_get_snapshot_as_of">anagrafiche.trgfn_soggetti_clean_fields()</a></td>
-<td>trigger function</td>
-<td>Default <code>stato_id</code>, generazione <code>codice(soggetto)</code>, pulizia testo</td>
-</tr>
-<tr>
-<td>---</td>
-<td></td>
-<td></td>
-</tr>
 </tbody>
 </table>
+<hr />
 <h2 id="4-flusso-di-vita-di-un-indirizzo">4. Flusso di Vita di un Indirizzo<a class="headerlink" href="#4-flusso-di-vita-di-un-indirizzo" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Inserimento</strong>: normalizzazione via trigger su <code>indirizzi_dettaglio</code> o inserimento di <code>indirizzo_libero</code>.</li>
 <li><strong>Associazione</strong>: <code>anagrafiche.indirizzi</code> collega soggetto/ruolo a riga di dettaglio o a indirizzo libero.</li>
-<li><strong>Clean &amp; Default</strong>: <code>clean_fields</code> imposta <code>stato_id</code>, genera codici, pulisce testo.</li>
 <li><strong>Storicizzazione</strong>: <code>trgfn_storico_generic('indirizzi_id')</code> registra snapshot.</li>
 <li><strong>Lettura storica</strong>: <code>fn_get_snapshot_as_of()</code>/<code>fn_get_record_id_as_of()</code> ricostruiscono lo stato di un record a una data.</li>
 </ol>
@@ -3538,6 +3539,7 @@
 <li><strong>Storico garantito</strong></li>
 <li>Le modifiche sono tracciate in <code>storico.stradario</code> e in <code>storico.indirizzi_dettaglio</code> (e, se rilevante, nello storico dei comuni).</li>
 </ol>
+<p>Per la riclassificazione e' prevista la procedura <code>maintenance.proc_bump_indirizzi_dettaglio(...)</code>, che abilita la manutenzione e forza la rinormalizzazione degli indirizzi collegati.</p>
 <h3 id="esempi-applicativi">Esempi applicativi<a class="headerlink" href="#esempi-applicativi" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Rinomina totale via</strong>: nuova via + riallineamento di tutti i civici collegati al vecchio <code>stradario_id</code>.</li>
@@ -3547,6 +3549,12 @@
 <h3 id="nota-su-manutenzione-toponomastica">🧩 Nota su manutenzione toponomastica<a class="headerlink" href="#nota-su-manutenzione-toponomastica" title="Permanent link">&para;</a></h3>
 <p>La correzione di un toponimo non avviene modificando la riga in uso:<br />
 si crea una <strong>nuova</strong> voce in <code>config.toponomastica</code>, si riallineano i record di <code>config.stradario_generale</code> interessati e si lascia che la normalizzazione aggiorni <code>indirizzo_normalizzato</code>.</p>
+<h3 id="manutenzione-straordinaria-riclassificazione-controllata">⚠️ Manutenzione straordinaria (riclassificazione controllata)<a class="headerlink" href="#manutenzione-straordinaria-riclassificazione-controllata" title="Permanent link">&para;</a></h3>
+<p>Le seguenti procedure sono riservate a <strong>manutenzione straordinaria</strong> e vanno usate solo in contesti controllati:</p>
+<ul>
+<li><code>maintenance.proc_bump_toponomastica(...)</code> — correzione toponimo con riallineamento automatico di <code>stradario_generale</code>.</li>
+<li><code>maintenance.proc_bump_indirizzi_dettaglio(...)</code> — riallineamento degli indirizzi civici dopo riclassificazione.</li>
+</ul>
 <hr />
 <p><em>Questa guida copre l’intero ciclo di vita e le componenti software per la gestione degli indirizzi in Zero ERP: dalla tabella geografica di base, al dettaglio civico, fino alle funzioni di audit e storicizzazione.</em></p>
 <hr />
