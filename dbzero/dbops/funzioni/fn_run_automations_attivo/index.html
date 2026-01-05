@@ -3247,7 +3247,7 @@ un record può essere disattivato <strong>solo quando è logicamente libero da d
 <span class="cm">        confdeltype IN (&#39;r&#39;,&#39;a&#39;)  -- RESTRICT o NO ACTION</span>
 <span class="cm">      padre+figlio nello scope e in fn_table_in_scope</span>
 <span class="cm">      esclusione schema &#39;storico&#39;</span>
-<span class="cm">      rispetto dbops.automation_fk_exclusions</span>
+<span class="cm">      rispetto dbops.automation_fk_exclusions  </span>
 
 <span class="cm">    Colonna attivo sul padre</span>
 <span class="cm">    ------------------------</span>
@@ -3322,15 +3322,16 @@ un record può essere disattivato <strong>solo quando è logicamente libero da d
 <span class="w">          </span><span class="k">UPPER</span><span class="p">(</span><span class="n">btrim</span><span class="p">(</span><span class="n">rrule</span><span class="p">.</span><span class="n">target_table</span><span class="p">))</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;*ALL&#39;</span>
 <span class="w">          </span><span class="k">OR</span><span class="w"> </span><span class="n">cc</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="n">rrule</span><span class="p">.</span><span class="n">target_table</span>
 <span class="w">          </span><span class="k">OR</span><span class="w"> </span><span class="n">cp</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="n">rrule</span><span class="p">.</span><span class="n">target_table</span>
-<span class="w">        </span><span class="p">)</span>
-<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">nc</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;storico&#39;</span>
-<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">np</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;storico&#39;</span>
-<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">(</span>
-<span class="w">          </span><span class="k">SELECT</span><span class="w"> </span><span class="mi">1</span>
-<span class="w">          </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automation_fk_exclusions</span><span class="w"> </span><span class="n">e</span>
-<span class="w">          </span><span class="k">WHERE</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">parent_schema</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">parent_table</span><span class="o">=</span><span class="n">cp</span><span class="p">.</span><span class="n">relname</span>
-<span class="w">            </span><span class="k">AND</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">child_schema</span><span class="o">=</span><span class="n">nc</span><span class="p">.</span><span class="n">nspname</span><span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">child_table</span><span class="o">=</span><span class="n">cc</span><span class="p">.</span><span class="n">relname</span>
-<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span>
+<span class="w">         </span><span class="cm">/*   Non eseguito non più utilizzato </span>
+<span class="cm">         AND nc.nspname &lt;&gt; &#39;storico&#39;</span>
+<span class="cm">         AND np.nspname &lt;&gt; &#39;storico&#39;</span>
+<span class="cm">         AND NOT EXISTS (</span>
+<span class="cm">          SELECT 1</span>
+<span class="cm">          FROM dbops.automation_fk_exclusions e</span>
+<span class="cm">          WHERE e.parent_schema=np.nspname AND e.parent_table=cp.relname</span>
+<span class="cm">            AND e.child_schema=nc.nspname  AND e.child_table=cc.relname</span>
+<span class="cm">         )   */</span>
 <span class="w">    </span><span class="n">LOOP</span>
 <span class="w">      </span><span class="c1">-- 1) serve attivo sul PADRE</span>
 <span class="w">      </span><span class="n">col_attivo_parent</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_override_col</span><span class="p">(</span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rfk</span><span class="p">.</span><span class="n">parent_table</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ATTIVO_COL&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;attivo&#39;</span><span class="p">);</span>
