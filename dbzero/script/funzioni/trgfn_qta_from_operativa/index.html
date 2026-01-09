@@ -2979,17 +2979,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#funzione-trgfn_qta_from_operativa" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Funzione trgfn_qta_from_operativa
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -3009,6 +2998,8 @@
   
   
 
+
+  <h1>Trgfn qta from operativa</h1>
 
 <h2 id="funzione-scripttrgfn_qta_from_operativa">⚙️  Funzione <code>script.trgfn_qta_from_operativa()</code><a class="headerlink" href="#funzione-scripttrgfn_qta_from_operativa" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">trgfn_qta_from_operativa</span><span class="p">()</span>
@@ -3218,184 +3209,6 @@
 <li>L’errore viene sempre <strong>loggato</strong> in <code>dbops.error_log</code> tramite <code>fn_log_and_raise_error</code>, con <code>context</code> e chiavi (<code>table</code>, <code>column</code>, ecc.).</li>
 <li>Progettata per essere <strong>riusabile</strong> su più tabelle (DDT, Ordini, ecc.) tramite <code>TG_ARGV</code> e presenza condizionale delle colonne (<code>uom_id</code>, <code>factor_to_base</code>).</li>
 </ul>
-<h1 id="funzione-trgfn_qta_from_operativa">⚙️ Funzione <code>trgfn_qta_from_operativa</code><a class="headerlink" href="#funzione-trgfn_qta_from_operativa" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_qta_from_operativa</span><span class="p">()</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">trgfn_qta_from_operativa</span><span class="p">()</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">DECLARE</span>
-<span class="w">  </span><span class="c1">-- Parametri</span>
-<span class="w">  </span><span class="n">v_fill_factor_to_base</span><span class="w"> </span><span class="nb">boolean</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
-<span class="w">  </span><span class="n">v_fill_uom_id_base</span><span class="w">    </span><span class="nb">boolean</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">-- Mapping/policy</span>
-<span class="w">  </span><span class="n">v_factor_map</span><span class="w">   </span><span class="nb">numeric</span><span class="p">;</span>
-<span class="w">  </span><span class="n">v_qty_step</span><span class="w">     </span><span class="nb">numeric</span><span class="p">;</span>
-<span class="w">  </span><span class="n">v_max_dec</span><span class="w">      </span><span class="nb">int</span><span class="p">;</span>
-<span class="w">  </span><span class="n">v_forbid_frac</span><span class="w">  </span><span class="nb">boolean</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">-- Fattore effettivo usato per i calcoli (rispetta snapshot se presente)</span>
-<span class="w">  </span><span class="n">v_factor_used</span><span class="w">  </span><span class="nb">numeric</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-
-
-<span class="w">  </span><span class="k">BEGIN</span>
-
-<span class="w">  </span><span class="c1">-- ------------------------------------------------------------</span>
-<span class="w">  </span><span class="c1">-- script.trgfn_qta_from_operativa()</span>
-<span class="w">  </span><span class="c1">-- Sorgente unica: UoM/quantità OPERATIVA.</span>
-<span class="w">  </span><span class="c1">-- Se uom_operativa_id e qta_operativa sono entrambi valorizzati -&gt; NON ricalcola.</span>
-<span class="w">  </span><span class="c1">-- Se manca uno dei due -&gt; ricompone l&#39;operativa e poi ricalcola sempre la base.</span>
-<span class="w">  </span><span class="c1">--</span>
-<span class="w">  </span><span class="c1">-- TG_ARGV (opzionali):</span>
-<span class="w">  </span><span class="c1">--   [0] fill_factor_to_base :: boolean  (default FALSE)</span>
-<span class="w">  </span><span class="c1">--       Se TRUE e NEW.factor_to_base è NULL, salva lo snapshot del fattore usato.</span>
-<span class="w">  </span><span class="c1">--   [1] fill_uom_id_base    :: boolean  (default FALSE)</span>
-<span class="w">  </span><span class="c1">--       Se TRUE, copia NEW.uom_operativa_id in NEW.uom_id (usare solo dove la colonna esiste).</span>
-<span class="w">  </span><span class="c1">-- ------------------------------------------------------------</span>
-
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-<span class="w">  </span><span class="c1">-- 3) Se entrambe le variabili operative CI SONO, NON ricalcolo nulla</span>
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">qta_operativa</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-
-<span class="w">  </span><span class="c1">-- 0) Parametri</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">TG_NARGS</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="n">v_fill_factor_to_base</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">lower</span><span class="p">(</span><span class="k">coalesce</span><span class="p">(</span><span class="n">TG_ARGV</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;true&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;yes&#39;</span><span class="p">);</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">TG_NARGS</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="n">v_fill_uom_id_base</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">lower</span><span class="p">(</span><span class="k">coalesce</span><span class="p">(</span><span class="n">TG_ARGV</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;true&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="s1">&#39;yes&#39;</span><span class="p">);</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">-- Errore solo se null</span>
-<span class="w">  </span><span class="c1">-- Errore solo se qta_operativa è NULL</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">qta_operativa</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">      </span><span class="s1">&#39;application&#39;</span><span class="p">,</span>
-<span class="w">      </span><span class="s1">&#39;script.trgfn_qta_from_operativa&#39;</span><span class="p">,</span>
-<span class="w">      </span><span class="s1">&#39;E_QTA_MISSING&#39;</span><span class="p">,</span>
-<span class="w">      </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">        </span><span class="s1">&#39;schema&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">TG_TABLE_SCHEMA</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="w">  </span><span class="n">TG_TABLE_NAME</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;qualified_table&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">TG_TABLE_SCHEMA</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">TG_TABLE_NAME</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;articolo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">articolo_id</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;uom_operativa_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span>
-<span class="w">      </span><span class="p">),</span>
-<span class="w">      </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">      </span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="w">  </span><span class="n">TG_TABLE_SCHEMA</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">TG_TABLE_NAME</span><span class="p">,</span>
-<span class="w">      </span><span class="s1">&#39;column&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;qta_operativa&#39;</span>
-<span class="w">    </span><span class="p">);</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-<span class="w">  </span><span class="c1">-- 1) UoM operativa: se manca, fallback a UoM base articolo</span>
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">uom_id</span>
-<span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli</span><span class="w"> </span><span class="n">a</span>
-<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">articolo_id</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">-- Errore solo se, dopo il fallback, è ancora NULL</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">      </span><span class="s1">&#39;application&#39;</span><span class="p">,</span><span class="s1">&#39;script.trgfn_qta_from_operativa&#39;</span><span class="p">,</span>
-<span class="w">      </span><span class="s1">&#39;E_UOM_MISSING&#39;</span><span class="p">,</span>
-<span class="w">      </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;articolo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">articolo_id</span><span class="p">),</span>
-<span class="w">      </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">      </span><span class="s1">&#39;articolo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">articolo_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">);</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">-- Opzionale: copia uom base in NEW.uom_id (se la colonna esiste nella tabella)</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_fill_uom_id_base</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-<span class="w">  </span><span class="c1">-- 2) Decidere se serve leggere il mapping</span>
-<span class="w">  </span><span class="c1">--    Serve se: dobbiamo fare snapshot factor OR dobbiamo calcolare (ricostruzione/computo)</span>
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">aum</span><span class="p">.</span><span class="n">factor_to_base</span><span class="p">,</span>
-<span class="w">          </span><span class="n">aum</span><span class="p">.</span><span class="n">qty_step</span><span class="p">,</span>
-<span class="w">          </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">aum</span><span class="p">.</span><span class="n">max_decimals</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span>
-<span class="w">          </span><span class="n">aum</span><span class="p">.</span><span class="n">forbid_fraction</span>
-<span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_factor_map</span><span class="p">,</span><span class="w"> </span><span class="n">v_qty_step</span><span class="p">,</span><span class="w"> </span><span class="n">v_max_dec</span><span class="p">,</span><span class="w"> </span><span class="n">v_forbid_frac</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli_uom_operativa</span><span class="w"> </span><span class="n">aum</span>
-<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">aum</span><span class="p">.</span><span class="n">articolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">articolo_id</span>
-<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="n">aum</span><span class="p">.</span><span class="n">uom_id</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span>
-<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="n">aum</span><span class="p">.</span><span class="n">attivo</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span>
-<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">aum</span><span class="p">.</span><span class="n">valido_dal</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">aum</span><span class="p">.</span><span class="n">valido_dal</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="k">CURRENT_DATE</span><span class="p">)</span>
-<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">aum</span><span class="p">.</span><span class="n">valido_al</span><span class="w">  </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">aum</span><span class="p">.</span><span class="n">valido_al</span><span class="w">  </span><span class="o">&gt;=</span><span class="w"> </span><span class="k">CURRENT_DATE</span><span class="p">)</span>
-<span class="w">    </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">v_factor_map</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">v_factor_map</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">-- Fattore effettivo: rispetta snapshot se già presente</span>
-<span class="w">    </span><span class="n">v_factor_used</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">factor_to_base</span><span class="p">,</span><span class="w"> </span><span class="n">v_factor_map</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">-- Snapshot opzionale (solo se richiesto e assente)</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_fill_factor_to_base</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">factor_to_base</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="k">NEW</span><span class="p">.</span><span class="n">factor_to_base</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_factor_used</span><span class="p">;</span>
-<span class="w">      </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-<span class="w">  </span><span class="c1">-- 3) Policy su quantità operativa (solo se valorizzata/coinvolta)</span>
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_forbid_frac</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">TRUE</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">qta_operativa</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">TRUNC</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">qta_operativa</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">        </span><span class="s1">&#39;database&#39;</span><span class="p">,</span><span class="s1">&#39;script.trgfn_qta_from_operativa&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;E_QTA_OPERATIVA_NON_INTERA&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">          </span><span class="s1">&#39;articolo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">articolo_id</span><span class="p">,</span>
-<span class="w">          </span><span class="s1">&#39;uom_operativa_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span><span class="p">,</span>
-<span class="w">          </span><span class="s1">&#39;qta_operativa&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">qta_operativa</span>
-<span class="w">        </span><span class="p">),</span>
-<span class="w">        </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;articolo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">articolo_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;uom_operativa_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span><span class="p">::</span><span class="nb">text</span>
-<span class="w">      </span><span class="p">);</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_qty_step</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">v_qty_step</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="k">IF</span><span class="w"> </span><span class="k">abs</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">qta_operativa</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">v_qty_step</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ROUND</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">qta_operativa</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">v_qty_step</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">9</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">          </span><span class="s1">&#39;database&#39;</span><span class="p">,</span><span class="s1">&#39;script.trgfn_qta_from_operativa&#39;</span><span class="p">,</span>
-<span class="w">          </span><span class="s1">&#39;E_QTA_OPER_STEP_INVALIDO&#39;</span><span class="p">,</span>
-<span class="w">          </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">            </span><span class="s1">&#39;articolo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">articolo_id</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;uom_operativa_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;qta_operativa&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">qta_operativa</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;qty_step&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_qty_step</span>
-<span class="w">          </span><span class="p">),</span>
-<span class="w">          </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">          </span><span class="s1">&#39;articolo_id&#39;</span><span class="p">,</span><span class="k">NEW</span><span class="p">.</span><span class="n">articolo_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span>
-<span class="w">          </span><span class="s1">&#39;uom_operativa_id&#39;</span><span class="p">,</span><span class="k">NEW</span><span class="p">.</span><span class="n">uom_operativa_id</span><span class="p">::</span><span class="nb">text</span>
-<span class="w">        </span><span class="p">);</span>
-<span class="w">      </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-<span class="w">  </span><span class="c1">-- 4) Calcolo finale della base</span>
-<span class="w">  </span><span class="c1">--------------------------------------------------------------------</span>
-
-<span class="w">  </span><span class="k">NEW</span><span class="p">.</span><span class="n">qta</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">ROUND</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">qta_operativa</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v_factor_used</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">);</span>
-
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

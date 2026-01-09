@@ -2946,17 +2946,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#funzione-fn_sync_functions_owner" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Funzione fn_sync_functions_owner
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2976,6 +2965,8 @@
   
   
 
+
+  <h1>Fn sync functions owner</h1>
 
 <h2 id="documentazione-concettuale-funzione-dbopsfn_sync_functions_owner">📘 Documentazione Concettuale – Funzione <code>dbops.fn_sync_functions_owner()</code><a class="headerlink" href="#documentazione-concettuale-funzione-dbopsfn_sync_functions_owner" title="Permanent link">&para;</a></h2>
 <blockquote>
@@ -3144,116 +3135,6 @@
 </blockquote>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
-<h1 id="funzione-fn_sync_functions_owner">⚙️ Funzione <code>fn_sync_functions_owner</code><a class="headerlink" href="#funzione-fn_sync_functions_owner" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_sync_functions_owner</span><span class="p">()</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_sync_functions_owner</span><span class="p">()</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="w"> </span><span class="k">SECURITY</span><span class="w"> </span><span class="k">DEFINER</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">DECLARE</span>
-<span class="w">    </span><span class="n">r</span><span class="w">              </span><span class="n">dbops</span><span class="p">.</span><span class="n">sec_functions_owner</span><span class="o">%</span><span class="n">ROWTYPE</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_regproc</span><span class="w">      </span><span class="n">regprocedure</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_owner_oid</span><span class="w">    </span><span class="n">oid</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_owner_name</span><span class="w">   </span><span class="nb">text</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_required_oid</span><span class="w"> </span><span class="n">oid</span><span class="p">;</span>
-<span class="k">BEGIN</span>
-
-<span class="c1">-- ------------------------------------------------------------</span>
-<span class="c1">-- dbops.fn_sync_functions_owner()</span>
-<span class="c1">-- Sincronizza l&#39;owner delle funzioni &quot;sensibili&quot; in base alla</span>
-<span class="c1">-- tabella dbops.sec_functions_owner.</span>
-<span class="c1">--</span>
-<span class="c1">-- NOTE:</span>
-<span class="c1">--  - Va idealmente posseduta da postgres e SECURITY DEFINER</span>
-<span class="c1">--    per poter cambiare owner ad altre funzioni.</span>
-<span class="c1">-- ------------------------------------------------------------</span>
-
-
-<span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="k">IN</span>
-<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="w">        </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">sec_functions_owner</span>
-<span class="w">        </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">function_name</span><span class="p">,</span><span class="w"> </span><span class="n">arg_types</span>
-<span class="w">    </span><span class="n">LOOP</span>
-<span class="w">        </span><span class="c1">-- Costruisco la signature per to_regprocedure:</span>
-<span class="w">        </span><span class="c1">-- se arg_types = &#39;&#39; → nessun argomento</span>
-<span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">arg_types</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="n">v_regproc</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">to_regprocedure</span><span class="p">(</span>
-<span class="w">                </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;%I.%I()&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">r</span><span class="p">.</span><span class="n">function_name</span><span class="p">)</span>
-<span class="w">            </span><span class="p">);</span>
-<span class="w">        </span><span class="k">ELSE</span>
-<span class="w">            </span><span class="n">v_regproc</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">to_regprocedure</span><span class="p">(</span>
-<span class="w">                </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;%I.%I(%s)&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">r</span><span class="p">.</span><span class="n">function_name</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">r</span><span class="p">.</span><span class="n">arg_types</span><span class="p">)</span>
-<span class="w">            </span><span class="p">);</span>
-<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="n">v_regproc</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="n">RAISE</span><span class="w"> </span><span class="n">WARNING</span>
-<span class="w">                </span><span class="s1">&#39;fn_sync_functions_owner: funzione non trovata: %.%(%).&#39;</span><span class="p">,</span>
-<span class="w">                </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">function_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">arg_types</span><span class="p">;</span>
-<span class="w">            </span><span class="k">CONTINUE</span><span class="p">;</span>
-<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">        </span><span class="c1">-- Owner corrente</span>
-<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">proowner</span><span class="p">,</span><span class="w"> </span><span class="n">pg_get_userbyid</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">proowner</span><span class="p">)</span>
-<span class="w">        </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_owner_oid</span><span class="p">,</span><span class="w"> </span><span class="n">v_owner_name</span>
-<span class="w">        </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_proc</span><span class="w"> </span><span class="n">p</span>
-<span class="w">        </span><span class="k">WHERE</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_regproc</span><span class="p">;</span>
-
-<span class="w">        </span><span class="c1">-- Owner richiesto</span>
-<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="n">oid</span>
-<span class="w">        </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_required_oid</span>
-<span class="w">        </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_roles</span>
-<span class="w">        </span><span class="k">WHERE</span><span class="w"> </span><span class="n">rolname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">required_owner</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="n">v_required_oid</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="n">RAISE</span><span class="w"> </span><span class="n">WARNING</span>
-<span class="w">                </span><span class="s1">&#39;fn_sync_functions_owner: ruolo richiesto &quot;%&quot; non esiste (%.%(%)).&#39;</span><span class="p">,</span>
-<span class="w">                </span><span class="n">r</span><span class="p">.</span><span class="n">required_owner</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">function_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">arg_types</span><span class="p">;</span>
-<span class="w">            </span><span class="k">CONTINUE</span><span class="p">;</span>
-<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">        </span><span class="c1">-- Se già coincide → niente da fare</span>
-<span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="n">v_owner_oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_required_oid</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="k">CONTINUE</span><span class="p">;</span>
-<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">        </span><span class="c1">-- TENTO ALTER FUNCTION OWNER TO ...</span>
-<span class="w">        </span><span class="k">BEGIN</span>
-<span class="w">            </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span>
-<span class="w">                </span><span class="s1">&#39;ALTER FUNCTION %s OWNER TO %I&#39;</span><span class="p">,</span>
-<span class="w">                </span><span class="n">v_regproc</span><span class="p">,</span>
-<span class="w">                </span><span class="n">r</span><span class="p">.</span><span class="n">required_owner</span>
-<span class="w">            </span><span class="p">);</span>
-
-<span class="w">            </span><span class="n">RAISE</span><span class="w"> </span><span class="n">NOTICE</span>
-<span class="w">                </span><span class="s1">&#39;fn_sync_functions_owner: cambiato owner funzione %.%(%): % -&gt; %.&#39;</span><span class="p">,</span>
-<span class="w">                </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">function_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">arg_types</span><span class="p">,</span>
-<span class="w">                </span><span class="n">v_owner_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">required_owner</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">EXCEPTION</span>
-<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">insufficient_privilege</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">                </span><span class="n">RAISE</span><span class="w"> </span><span class="n">WARNING</span>
-<span class="w">                    </span><span class="s1">&#39;fn_sync_functions_owner: privilegi insufficienti per ALTER FUNCTION %.%(%): owner attuale %, richiesto %.&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">function_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">arg_types</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">v_owner_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">required_owner</span><span class="p">;</span>
-<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">others</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">                </span><span class="n">RAISE</span><span class="w"> </span><span class="n">WARNING</span>
-<span class="w">                    </span><span class="s1">&#39;fn_sync_functions_owner: errore inatteso su funzione %.%(%): % %.&#39;</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">function_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">arg_types</span><span class="p">,</span>
-<span class="w">                    </span><span class="k">SQLSTATE</span><span class="p">,</span><span class="w"> </span><span class="n">SQLERRM</span><span class="p">;</span>
-<span class="w">        </span><span class="k">END</span><span class="p">;</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

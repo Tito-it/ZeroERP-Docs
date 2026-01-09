@@ -2941,17 +2941,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#funzione-trgfn_indirizzi_dettaglio_normalize" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Funzione trgfn_indirizzi_dettaglio_normalize
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2971,6 +2960,8 @@
   
   
 
+
+  <h1>Trgfn indirizzi dettaglio normalize</h1>
 
 <h2 id="documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_dettaglio_normalize">📘 Documentazione Concettuale – Trigger Function <code>anagrafiche.trgfn_indirizzi_dettaglio_normalize()</code><a class="headerlink" href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_indirizzi_dettaglio_normalize" title="Permanent link">&para;</a></h2>
 <blockquote>
@@ -3031,66 +3022,6 @@ Normalizzare i campi dell'indirizzo dettaglio per garantire coerenza su via, civ
 <blockquote>
 <p>🧠 <strong>"Indirizzi coerenti e confrontabili: normalizzazione centralizzata a livello DB."</strong></p>
 </blockquote>
-<h1 id="funzione-trgfn_indirizzi_dettaglio_normalize">⚙️ Funzione <code>trgfn_indirizzi_dettaglio_normalize</code><a class="headerlink" href="#funzione-trgfn_indirizzi_dettaglio_normalize" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_indirizzi_dettaglio_normalize</span><span class="p">()</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_indirizzi_dettaglio_normalize</span><span class="p">()</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="c1">-- 1) Normalizzazione della descrizione della via:</span>
-<span class="w">  </span><span class="c1">-- Recupera la descrizione dello stradario dalla view script.vw_indirizzo_completo                  -- Applica TRIM per rimuovere spazi iniziali/finali e UPPER per convertire in maiuscolo</span>
-<span class="w">  </span><span class="c1">-- STRICT garantisce che la query deve restituire esattamente una riga</span>
-<span class="w">     </span><span class="k">SELECT</span><span class="w"> </span><span class="k">UPPER</span><span class="p">(</span><span class="k">TRIM</span><span class="p">(</span><span class="n">iv</span><span class="p">.</span><span class="n">tipo_toponimo</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">iv</span><span class="p">.</span><span class="n">nome_strada</span><span class="p">))</span>
-<span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="k">STRICT</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">via_norm</span>
-<span class="w">     </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">vw_indirizzo_completo</span><span class="w"> </span><span class="n">iv</span>
-<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">iv</span><span class="p">.</span><span class="n">id_stradario</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">stradario_id</span>
-<span class="w">     </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">-- 2) Normalizzazione del numero civico con eventuale estensione:</span>
-<span class="w">  </span><span class="c1">-- Processa solo se il civico è valorizzato</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">civico</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">civico</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="c1">-- Se esiste un&#39;estensione del civico (es: &quot;A&quot; in &quot;12/A&quot;)</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">estensione_civico</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">estensione_civico</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="c1">-- Assicura che l&#39;estensione inizi con &quot;/&quot; (aggiunge se mancante)</span>
-<span class="w">      </span><span class="k">IF</span><span class="w"> </span><span class="k">LEFT</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">estensione_civico</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="k">NEW</span><span class="p">.</span><span class="n">estensione_civico</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">estensione_civico</span><span class="p">;</span>
-<span class="w">      </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">      </span><span class="c1">-- Combina civico ed estensione (es: &quot;12&quot; + &quot;/A&quot; =&gt; &quot;12/A&quot;)</span>
-<span class="w">      </span><span class="k">NEW</span><span class="p">.</span><span class="n">civico_norm</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">UPPER</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">civico</span><span class="p">::</span><span class="nb">TEXT</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">estensione_civico</span><span class="p">);</span>
-<span class="w">    </span><span class="k">ELSE</span>
-<span class="w">      </span><span class="c1">-- Solo civico senza estensione (conversione in maiuscolo)</span>
-<span class="w">      </span><span class="k">NEW</span><span class="p">.</span><span class="n">civico_norm</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">UPPER</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">civico</span><span class="p">::</span><span class="nb">TEXT</span><span class="p">);</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="k">ELSE</span>
-<span class="w">    </span><span class="c1">-- Civico non valorizzato</span>
-<span class="w">    </span><span class="k">NEW</span><span class="p">.</span><span class="n">civico_norm</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;SNC&#39;</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">-- 3) Costruzione dell&#39;indirizzo completo normalizzato:</span>
-<span class="w">  </span><span class="c1">-- Crea una stringa unica concatenando tutti i componenti dell&#39;indirizzo</span>
-<span class="w">  </span><span class="c1">-- TRIM rimuove spazi iniziali/finali dal risultato finale</span>
-<span class="w">  </span><span class="c1">-- Ogni componente è aggiunto solo se valorizzato, preceduto da un separatore appropriato</span>
-<span class="w">  </span><span class="k">NEW</span><span class="p">.</span><span class="n">indirizzo_normalizzato</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">TRIM</span><span class="p">(</span><span class="k">BOTH</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="p">(</span>
-<span class="w">      </span><span class="k">NEW</span><span class="p">.</span><span class="n">via_norm</span><span class="w">  </span><span class="c1">-- Via già normalizzata</span>
-<span class="w">    </span><span class="o">||</span><span class="w"> </span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">civico_norm</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">civico_norm</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">END</span><span class="w">  </span><span class="c1">-- Civico (es: &quot;, 12/A&quot;)</span>
-<span class="w">    </span><span class="o">||</span><span class="w"> </span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">palazzina</span><span class="w">   </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">palazzina</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span>
-<span class="w">            </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;, Pal.&#39;</span><span class="w">   </span><span class="o">||</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">palazzina</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">END</span><span class="w">  </span><span class="c1">-- Palazzina (es: &quot;, Pal.B&quot;)</span>
-<span class="w">    </span><span class="o">||</span><span class="w"> </span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">scala</span><span class="w">        </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">scala</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span>
-<span class="w">            </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;, Scala &#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">scala</span><span class="w">      </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">END</span><span class="w">  </span><span class="c1">-- Scala (es: &quot;, Scala 2&quot;)</span>
-<span class="w">    </span><span class="o">||</span><span class="w"> </span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">piano</span><span class="w">        </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">piano</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span>
-<span class="w">            </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;, Piano &#39;</span><span class="w">     </span><span class="o">||</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">piano</span><span class="w">      </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">END</span><span class="w">  </span><span class="c1">-- Piano (es: &quot;, P3&quot;)</span>
-<span class="w">    </span><span class="o">||</span><span class="w"> </span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">interno</span><span class="w">      </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">interno</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span>
-<span class="w">            </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;, Int.&#39;</span><span class="w">  </span><span class="o">||</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">interno</span><span class="w">    </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">END</span><span class="w">  </span><span class="c1">-- Interno (es: &quot;, Int.5&quot;)</span>
-<span class="w">  </span><span class="p">));</span>
-
-<span class="w">  </span><span class="c1">-- Restituisce il record modificato con i campi normalizzati</span>
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

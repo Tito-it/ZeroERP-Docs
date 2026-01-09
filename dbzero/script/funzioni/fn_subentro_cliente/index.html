@@ -3012,17 +3012,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#funzione-fn_subentro_cliente" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Funzione fn_subentro_cliente
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -3042,6 +3031,8 @@
   
   
 
+
+  <h1>Fn subentro cliente</h1>
 
 <h2 id="documentazione-concettuale-funzione-scriptfn_subentro_cliente">📘 Documentazione Concettuale – Funzione <code>script.fn_subentro_cliente()</code><a class="headerlink" href="#documentazione-concettuale-funzione-scriptfn_subentro_cliente" title="Permanent link">&para;</a></h2>
 <blockquote>
@@ -3351,160 +3342,6 @@ nel modello Zero ERP:</p>
 <li>assicura il rispetto dei vincoli di non sovrapposizione e delle regole “1 cliente attivo per PDP”
   e “1 istanza ⇄ 1 cliente`.</li>
 </ul>
-<h1 id="funzione-fn_subentro_cliente">⚙️ Funzione <code>fn_subentro_cliente</code><a class="headerlink" href="#funzione-fn_subentro_cliente" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_subentro_cliente</span><span class="p">(</span><span class="n">p_pdp_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span><span class="w"> </span><span class="n">p_data_attivazione</span><span class="w"> </span><span class="nb">date</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_subentro_cliente</span><span class="p">(</span><span class="n">p_pdp_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span><span class="w"> </span><span class="n">p_data_attivazione</span><span class="w"> </span><span class="nb">date</span><span class="p">)</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="nb">bigint</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">DECLARE</span>
-<span class="w">    </span><span class="c1">--v_cliente_precedente_id bigint;</span>
-<span class="w">    </span><span class="c1">--v_stato_chiuso_id       integer;</span>
-<span class="w">    </span><span class="c1">--v_codice_chiuso         text := &#39;CH&#39;;</span>
-<span class="w">    </span><span class="n">v_cliente_precedente_id</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">clienti</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_stato_chiuso_id</span><span class="w">       </span><span class="n">config</span><span class="p">.</span><span class="n">stati_cliente</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_codice_chiuso</span><span class="w">         </span><span class="n">config</span><span class="p">.</span><span class="n">stati_cliente</span><span class="p">.</span><span class="n">codice_interno</span><span class="o">%</span><span class="k">TYPE</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CH&#39;</span><span class="p">;</span><span class="w">  </span>
-
-<span class="k">BEGIN</span>
-<span class="c1">-- ------------------------------------------------------------</span>
-<span class="c1">-- Funzione: script.fn_subentro_cliente</span>
-<span class="c1">--</span>
-<span class="c1">-- Scopo:</span>
-<span class="c1">--   - Dato un PDP e una data di attivazione del nuovo cliente,</span>
-<span class="c1">--     chiude (se esiste) il cliente precedente su quel PDP</span>
-<span class="c1">--     per evitare overlap del periodo commerciale.</span>
-<span class="c1">--</span>
-<span class="c1">--   - Logica:</span>
-<span class="c1">--       * Cerca il cliente più recente su p_pdp_id con:</span>
-<span class="c1">--           - stato_cliente.codice_interno &lt;&gt; &#39;AN&#39;</span>
-<span class="c1">--           - data_attivazione NOT NULL</span>
-<span class="c1">--           - data_attivazione &lt; p_data_attivazione</span>
-<span class="c1">--           - data_chiusura IS NULL oppure &gt;= p_data_attivazione</span>
-<span class="c1">--       * Se trovato:</span>
-<span class="c1">--           - imposta data_chiusura = p_data_attivazione - 1 giorno</span>
-<span class="c1">--           - imposta stato_cliente a &#39;CH&#39;</span>
-<span class="c1">--         (il trigger trg_clienti_set_periodo normalizzerà periodo)</span>
-<span class="c1">--</span>
-<span class="c1">--   - Ritorna:</span>
-<span class="c1">--       * id del cliente chiuso</span>
-<span class="c1">--       * NULL se nessun cliente da chiudere (primo cliente sul PDP)</span>
-<span class="c1">--</span>
-<span class="c1">-- NOTE:</span>
-<span class="c1">--   - Non crea la nuova istanza né il nuovo cliente: questo</span>
-<span class="c1">--     viene fatto dal frontend / servizio applicativo subito dopo.</span>
-<span class="c1">--   - Va tipicamente chiamata in transazione:</span>
-<span class="c1">--       1) SELECT script.fn_subentro_cliente(...)</span>
-<span class="c1">--       2) INSERT nuovo cliente sullo stesso PDP</span>
-<span class="c1">--     in modo da rispettare il vincolo ex_clienti_no_overlap_stesso_pdp.</span>
-<span class="c1">-- ------------------------------------------------------------</span>
-
-
-
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="c1">-- Validazioni minime parametri</span>
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">p_pdp_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-
-<span class="w">         </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">                          </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;script.fn_subentro_cliente&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;ERRORE_PARAMETRI&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">                              </span><span class="s1">&#39;p_pdp_id non può essere NULL&#39;</span><span class="p">,</span><span class="w"> </span>
-<span class="w">                              </span><span class="s1">&#39;indicare un valore valido&#39;</span><span class="w">  </span>
-<span class="w">                          </span><span class="p">),</span>
-<span class="w">                          </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;Non è stato fornito un valore per pdp_id&#39;</span>
-<span class="w">                      </span><span class="p">);</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">p_data_attivazione</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">                          </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;script.fn_subentro_cliente&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;ERRORE_PARAMETRI&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">                              </span><span class="s1">&#39;fn_subentro_cliente: p_data_attivazione non può essere NULL&#39;</span><span class="p">,</span><span class="w"> </span>
-<span class="w">                              </span><span class="s1">&#39;indicare un valore valido&#39;</span><span class="w">  </span>
-<span class="w">                          </span><span class="p">),</span>
-<span class="w">                          </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;Non è stato fornito un valore per data_attivazione&#39;</span>
-<span class="w">                      </span><span class="p">);</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="c1">-- Recupero ID stato_cliente &quot;CH&quot; (Chiuso)</span>
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">id</span>
-<span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_stato_chiuso_id</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_cliente</span><span class="w"> </span><span class="n">sc</span>
-<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_codice_chiuso</span>
-<span class="w">    </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_stato_chiuso_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">                          </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;script.fn_subentro_cliente&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;ERRORE_PARAMETRI&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">                                  </span><span class="s1">&#39;codice id_cliente&#39;</span><span class="p">,</span>
-<span class="w">                                  </span><span class="n">v_codice_chiuso</span>
-<span class="w">                          </span><span class="p">),</span>
-<span class="w">                          </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;stato_cliente con id_cliente&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">v_codice_chiuso</span><span class="p">::</span><span class="nb">text</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39; non trovato&#39;</span>
-<span class="w">                      </span><span class="p">);</span><span class="w">               </span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="c1">-- Seleziono il cliente precedente da chiudere:</span>
-<span class="w">    </span><span class="c1">--   - stesso PDP</span>
-<span class="w">    </span><span class="c1">--   - non ANNULLATO</span>
-<span class="w">    </span><span class="c1">--   - con data_attivazione &lt; nuova data attivazione</span>
-<span class="w">    </span><span class="c1">--   - con periodo ancora “aperto” rispetto alla nuova data</span>
-<span class="w">    </span><span class="c1">--   - prendo il più recente (data_attivazione DESC, id DESC)</span>
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span>
-<span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_cliente_precedente_id</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">clienti</span><span class="w"> </span><span class="k">c</span>
-<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_cliente</span><span class="w"> </span><span class="n">sc</span>
-<span class="w">         </span><span class="k">ON</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">stato_cliente_id</span>
-<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">pdp_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_pdp_id</span>
-<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;AN&#39;</span>
-<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">data_attivazione</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
-<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">data_attivazione</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">p_data_attivazione</span>
-<span class="w">      </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">data_chiusura</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">data_chiusura</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">p_data_attivazione</span><span class="p">)</span>
-<span class="w">    </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">data_attivazione</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span>
-<span class="w">             </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">DESC</span>
-<span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="k">UPDATE</span>
-<span class="w">    </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="c1">-- Se non c&#39;è nessun cliente da chiudere → primo cliente sul PDP</span>
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_cliente_precedente_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="c1">-- Chiusura del cliente precedente:</span>
-<span class="w">    </span><span class="c1">--   - data_chiusura = p_data_attivazione - 1 giorno</span>
-<span class="w">    </span><span class="c1">--   - stato_cliente  = CH</span>
-<span class="w">    </span><span class="c1">--</span>
-<span class="w">    </span><span class="c1">-- I trigger sulla tabella clienti si occupano di:</span>
-<span class="w">    </span><span class="c1">--   - normalizzare periodo (trg_clienti_set_periodo)</span>
-<span class="w">    </span><span class="c1">--   - aggiornare storico, stato PDP, ecc.</span>
-<span class="w">    </span><span class="c1">----------------------------------------------------------------</span>
-<span class="w">    </span><span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">clienti</span><span class="w"> </span><span class="k">c</span>
-<span class="w">       </span><span class="k">SET</span><span class="w"> </span><span class="n">data_chiusura</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">p_data_attivazione</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">INTERVAL</span><span class="w"> </span><span class="s1">&#39;1 day&#39;</span><span class="p">,</span>
-<span class="w">           </span><span class="n">stato_cliente_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_stato_chiuso_id</span>
-<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_cliente_precedente_id</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_cliente_precedente_id</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

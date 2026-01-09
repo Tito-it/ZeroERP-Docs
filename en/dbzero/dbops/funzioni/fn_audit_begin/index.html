@@ -2924,17 +2924,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#funzione-fn_audit_begin" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Funzione fn_audit_begin
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2954,6 +2943,8 @@
   
   
 
+
+  <h1>Fn audit begin</h1>
 
 <h2 id="documentazione-funzione-dbopsfn_audit_begin">📘 Documentazione Funzione –  <code>dbops.fn_audit_begin</code><a class="headerlink" href="#documentazione-funzione-dbopsfn_audit_begin" title="Permanent link">&para;</a></h2>
 <hr />
@@ -2997,67 +2988,6 @@
 <hr />
 <h3 id="esempio-pratico">💡 Esempio pratico<a class="headerlink" href="#esempio-pratico" title="Permanent link">&para;</a></h3>
 <p>Durante l’avvio di un batch di caricamento dati, <code>fn_audit_begin</code> registra l’inizio del processo e genera un ID di audit. Tutti gli step collegati scriveranno log riferiti a questo ID, garantendo tracciabilità completa.</p>
-<h1 id="funzione-fn_audit_begin">⚙️ Funzione <code>fn_audit_begin</code><a class="headerlink" href="#funzione-fn_audit_begin" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_audit_begin</span><span class="p">(</span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_params</span><span class="w"> </span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="n">p_exec_mode</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_parts</span><span class="w"> </span><span class="nb">text</span><span class="p">[],</span><span class="w"> </span><span class="n">p_rule_type</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="n">p_host</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_app_version</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_audit_begin</span><span class="p">(</span><span class="n">p_function_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_params</span><span class="w"> </span><span class="n">jsonb</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="s1">&#39;{}&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="n">p_exec_mode</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_parts</span><span class="w"> </span><span class="nb">text</span><span class="p">[]</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">text</span><span class="p">[],</span><span class="w"> </span><span class="n">p_rule_type</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="n">p_host</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_app_version</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">text</span><span class="p">)</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="nb">bigint</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">DECLARE</span>
-<span class="w">  </span><span class="n">v_id</span><span class="w">        </span><span class="nb">bigint</span><span class="p">;</span>
-<span class="w">  </span><span class="n">v_use_dbk</span><span class="w">   </span><span class="nb">boolean</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.log_with_dblink&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)</span><span class="o">=</span><span class="s1">&#39;on&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">false</span><span class="p">);</span>
-<span class="w">  </span><span class="n">v_has_dbk</span><span class="w">   </span><span class="nb">boolean</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_extension</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">extname</span><span class="o">=</span><span class="s1">&#39;dblink&#39;</span><span class="p">);</span>
-<span class="w">  </span><span class="n">v_can_use</span><span class="w">   </span><span class="nb">boolean</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
-<span class="w">  </span><span class="n">v_sql</span><span class="w">       </span><span class="nb">text</span><span class="p">;</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="c1">-- BEGIN: inserisce START (usa dblink/logconn se attivo), ritorna id</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_use_dbk</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">v_has_dbk</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="c1">-- prova ad aprire/riusare &#39;logconn&#39; (tua funzione)</span>
-<span class="w">    </span><span class="k">BEGIN</span>
-<span class="w">      </span><span class="k">EXECUTE</span><span class="w"> </span><span class="s1">&#39;SELECT script.fn_ensure_logconn()&#39;</span><span class="p">;</span>
-<span class="w">    </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">undefined_function</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="n">v_use_dbk</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span><span class="w">  </span><span class="c1">-- funzione non presente → fallback</span>
-<span class="w">    </span><span class="k">WHEN</span><span class="w"> </span><span class="n">others</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="n">v_use_dbk</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span><span class="w">  </span><span class="c1">-- qualsiasi errore → fallback</span>
-<span class="w">    </span><span class="k">END</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_use_dbk</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">v_has_dbk</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="n">v_can_use</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;logconn&#39;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="w"> </span><span class="p">(</span><span class="k">COALESCE</span><span class="p">(</span><span class="k">public</span><span class="p">.</span><span class="n">dblink_get_connections</span><span class="p">(),</span><span class="w"> </span><span class="nb">ARRAY</span><span class="p">[]::</span><span class="nb">text</span><span class="p">[]));</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_can_use</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="c1">-- out-of-tx</span>
-<span class="w">    </span><span class="n">v_sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span>
-<span class="w">      </span><span class="s1">&#39;INSERT INTO dbops.audit_log(function_name, params, status, exec_mode, parts, rule_type, dry_run, host, app_version)</span>
-<span class="s1">       VALUES (%L, %L::jsonb, %L, %L, %L::text[], %L, %s, %L, %L)</span>
-<span class="s1">       RETURNING id&#39;</span><span class="p">,</span>
-<span class="w">       </span><span class="n">p_function_name</span><span class="p">,</span>
-<span class="w">       </span><span class="k">COALESCE</span><span class="p">((</span><span class="n">p_params</span><span class="p">)::</span><span class="nb">text</span><span class="p">,</span><span class="s1">&#39;null&#39;</span><span class="p">),</span>
-<span class="w">       </span><span class="s1">&#39;START&#39;</span><span class="p">,</span>
-<span class="w">       </span><span class="n">p_exec_mode</span><span class="p">,</span>
-<span class="w">       </span><span class="k">COALESCE</span><span class="p">((</span><span class="n">p_parts</span><span class="p">)::</span><span class="nb">text</span><span class="p">,</span><span class="s1">&#39;null&#39;</span><span class="p">),</span>
-<span class="w">       </span><span class="n">p_rule_type</span><span class="p">,</span>
-<span class="w">       </span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;NULL&#39;</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="p">(</span><span class="n">p_dry_run</span><span class="p">::</span><span class="nb">text</span><span class="p">)</span><span class="w"> </span><span class="k">END</span><span class="p">,</span>
-<span class="w">       </span><span class="n">p_host</span><span class="p">,</span>
-<span class="w">       </span><span class="n">p_app_version</span>
-<span class="w">    </span><span class="p">);</span>
-<span class="w">    </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="err">$</span><span class="n">q$</span>
-<span class="w">      </span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dblink</span><span class="p">(</span><span class="s1">&#39;logconn&#39;</span><span class="p">,</span><span class="w"> </span><span class="o">%</span><span class="n">L</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">t</span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">)</span>
-<span class="w">    </span><span class="err">$</span><span class="n">q$</span><span class="p">,</span><span class="w"> </span><span class="n">v_sql</span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_id</span><span class="p">;</span>
-<span class="w">  </span><span class="k">ELSE</span>
-<span class="w">    </span><span class="c1">-- locale (in transazione)</span>
-<span class="w">    </span><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">audit_log</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">exec_mode</span><span class="p">,</span><span class="w"> </span><span class="n">parts</span><span class="p">,</span><span class="w"> </span><span class="n">rule_type</span><span class="p">,</span><span class="w"> </span><span class="n">dry_run</span><span class="p">,</span><span class="w"> </span><span class="k">host</span><span class="p">,</span><span class="w"> </span><span class="n">app_version</span><span class="p">)</span>
-<span class="w">    </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="n">p_function_name</span><span class="p">,</span><span class="w"> </span><span class="n">p_params</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;START&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_exec_mode</span><span class="p">,</span><span class="w"> </span><span class="n">p_parts</span><span class="p">,</span><span class="w"> </span><span class="n">p_rule_type</span><span class="p">,</span><span class="w"> </span><span class="n">p_dry_run</span><span class="p">,</span><span class="w"> </span><span class="n">p_host</span><span class="p">,</span><span class="w"> </span><span class="n">p_app_version</span><span class="p">)</span>
-<span class="w">    </span><span class="n">RETURNING</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_id</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_id</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

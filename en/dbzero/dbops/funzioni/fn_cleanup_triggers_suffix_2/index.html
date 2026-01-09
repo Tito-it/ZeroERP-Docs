@@ -23,7 +23,7 @@
     
     
       
-        <title>⚙️ Funzione fn_cleanup_triggers_suffix_2 - Zero ERP Documentation</title>
+        <title>Fn cleanup triggers suffix 2 - Zero ERP Documentation</title>
       
     
     
@@ -63,11 +63,6 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
-        
-        <a href="#funzione-fn_cleanup_triggers_suffix_2" class="md-skip">
-          Skip to content
-        </a>
-      
     </div>
     <div data-md-component="announce">
       
@@ -100,7 +95,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione fn_cleanup_triggers_suffix_2
+              Fn cleanup triggers suffix 2
             
           </span>
         </div>
@@ -2845,8 +2840,6 @@
   
   
   
-    
-  
   
 </nav>
                   </div>
@@ -2866,122 +2859,8 @@
   
 
 
-<h1 id="funzione-fn_cleanup_triggers_suffix_2">⚙️ Funzione <code>fn_cleanup_triggers_suffix_2</code><a class="headerlink" href="#funzione-fn_cleanup_triggers_suffix_2" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_cleanup_triggers_suffix_2</span><span class="p">(</span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="n">p_schema</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_cleanup_triggers_suffix_2</span><span class="p">(</span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="n">p_schema</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">text</span><span class="p">)</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">TABLE</span><span class="p">(</span><span class="k">schema_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">old_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">new_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">action</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="w">  </span><span class="k">DECLARE</span>
-<span class="w">    </span><span class="n">r</span><span class="w"> </span><span class="n">record</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_relid</span><span class="w">     </span><span class="n">oid</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_base_oid</span><span class="w">  </span><span class="n">oid</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_def_sfx</span><span class="w">   </span><span class="nb">text</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_def_base</span><span class="w">  </span><span class="nb">text</span><span class="p">;</span>
-<span class="w">    </span><span class="n">v_sql</span><span class="w">       </span><span class="nb">text</span><span class="p">;</span>
-<span class="w">  </span><span class="k">BEGIN</span>
-<span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="k">IN</span>
-<span class="w">      </span><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w">  </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">            </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w">  </span><span class="k">AS</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">            </span><span class="n">t</span><span class="p">.</span><span class="n">tgname</span><span class="w">   </span><span class="k">AS</span><span class="w"> </span><span class="n">old_name</span><span class="p">,</span>
-<span class="w">            </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">tgname</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;_2$&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">base_name</span><span class="p">,</span>
-<span class="w">            </span><span class="n">t</span><span class="p">.</span><span class="n">oid</span><span class="w">      </span><span class="k">AS</span><span class="w"> </span><span class="n">tg_oid</span>
-<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_trigger</span><span class="w"> </span><span class="n">t</span>
-<span class="w">      </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="k">c</span><span class="w">     </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgrelid</span>
-<span class="w">      </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relnamespace</span>
-<span class="w">      </span><span class="k">WHERE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgisinternal</span>
-<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgname</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="s1">&#39;.*_2$&#39;</span>
-<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">p_schema</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_schema</span><span class="p">)</span>
-<span class="w">      </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span>
-<span class="w">    </span><span class="n">LOOP</span>
+  <h1>Fn cleanup triggers suffix 2</h1>
 
-<span class="w">      </span><span class="k">SELECT</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_relid</span>
-<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="k">c</span>
-<span class="w">      </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relnamespace</span>
-<span class="w">      </span><span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">;</span>
-
-
-<span class="w">      </span><span class="k">SELECT</span><span class="w"> </span><span class="n">t2</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_base_oid</span>
-<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_trigger</span><span class="w"> </span><span class="n">t2</span>
-<span class="w">      </span><span class="k">WHERE</span><span class="w"> </span><span class="n">t2</span><span class="p">.</span><span class="n">tgrelid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_relid</span>
-<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">t2</span><span class="p">.</span><span class="n">tgname</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">base_name</span><span class="p">;</span>
-
-<span class="w">      </span><span class="k">IF</span><span class="w"> </span><span class="n">v_base_oid</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-
-<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="n">regexp_replace</span><span class="p">(</span><span class="k">lower</span><span class="p">(</span><span class="n">pg_get_triggerdef</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">tg_oid</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)),</span><span class="w">   </span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_def_sfx</span><span class="p">;</span>
-<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="n">regexp_replace</span><span class="p">(</span><span class="k">lower</span><span class="p">(</span><span class="n">pg_get_triggerdef</span><span class="p">(</span><span class="n">v_base_oid</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)),</span><span class="w"> </span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_def_base</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="n">v_def_sfx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_def_base</span><span class="w"> </span><span class="k">THEN</span>
-
-<span class="w">          </span><span class="n">v_sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;DROP TRIGGER %I ON %I.%I;&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">old_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">);</span>
-
-<span class="w">          </span><span class="k">schema_name</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">;</span>
-<span class="w">          </span><span class="k">table_name</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-<span class="w">          </span><span class="n">old_name</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">old_name</span><span class="p">;</span>
-<span class="w">          </span><span class="n">new_name</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-<span class="w">          </span><span class="n">notes</span><span class="w">       </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Base trigger presente con definizione identica: &#39;</span><span class="o">||</span><span class="n">r</span><span class="p">.</span><span class="n">base_name</span><span class="p">;</span>
-
-<span class="w">          </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="n">action</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVIEW_DROP&#39;</span><span class="p">;</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_sql</span><span class="p">;</span><span class="w"> </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">          </span><span class="k">ELSE</span>
-<span class="w">            </span><span class="k">BEGIN</span>
-<span class="w">              </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">v_sql</span><span class="p">;</span><span class="w"> </span><span class="n">action</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;DROPPED&#39;</span><span class="p">;</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_sql</span><span class="p">;</span><span class="w"> </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">            </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">              </span><span class="n">action</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;SKIP_ERROR&#39;</span><span class="p">;</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="o">||</span><span class="s1">&#39; | &#39;</span><span class="o">||</span><span class="n">SQLERRM</span><span class="p">;</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_sql</span><span class="p">;</span><span class="w"> </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">            </span><span class="k">END</span><span class="p">;</span>
-<span class="w">          </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">ELSE</span>
-
-<span class="w">          </span><span class="k">schema_name</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">;</span>
-<span class="w">          </span><span class="k">table_name</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-<span class="w">          </span><span class="n">old_name</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">old_name</span><span class="p">;</span>
-<span class="w">          </span><span class="n">new_name</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">base_name</span><span class="p">;</span>
-<span class="w">          </span><span class="n">action</span><span class="w">      </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;SKIP_CONFLICT&#39;</span><span class="p">;</span>
-<span class="w">          </span><span class="n">notes</span><span class="w">       </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Esiste già &#39;</span><span class="o">||</span><span class="n">r</span><span class="p">.</span><span class="n">base_name</span><span class="o">||</span><span class="s1">&#39; con definizione diversa; nessuna azione.&#39;</span><span class="p">;</span>
-<span class="w">          </span><span class="k">sql</span><span class="w">         </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-<span class="w">          </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">      </span><span class="k">ELSE</span>
-
-<span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="k">length</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">base_name</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">63</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">          </span><span class="k">schema_name</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">;</span>
-<span class="w">          </span><span class="k">table_name</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-<span class="w">          </span><span class="n">old_name</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">old_name</span><span class="p">;</span>
-<span class="w">          </span><span class="n">new_name</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">base_name</span><span class="p">;</span>
-<span class="w">          </span><span class="n">action</span><span class="w">      </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;SKIP_ERROR&#39;</span><span class="p">;</span>
-<span class="w">          </span><span class="n">notes</span><span class="w">       </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Nome base supera 63 caratteri: rinomina manuale richiesta.&#39;</span><span class="p">;</span>
-<span class="w">          </span><span class="k">sql</span><span class="w">         </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-<span class="w">          </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">        </span><span class="n">v_sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;ALTER TRIGGER %I ON %I.%I RENAME TO %I;&#39;</span><span class="p">,</span>
-<span class="w">                        </span><span class="n">r</span><span class="p">.</span><span class="n">old_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">base_name</span><span class="p">);</span>
-
-<span class="w">        </span><span class="k">schema_name</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">;</span>
-<span class="w">        </span><span class="k">table_name</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-<span class="w">        </span><span class="n">old_name</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">old_name</span><span class="p">;</span>
-<span class="w">        </span><span class="n">new_name</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">base_name</span><span class="p">;</span>
-<span class="w">        </span><span class="n">notes</span><span class="w">       </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Base non presente: rinomina a nome base.&#39;</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">          </span><span class="n">action</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVIEW_RENAME&#39;</span><span class="p">;</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_sql</span><span class="p">;</span><span class="w"> </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">        </span><span class="k">ELSE</span>
-<span class="w">          </span><span class="k">BEGIN</span>
-<span class="w">            </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">v_sql</span><span class="p">;</span><span class="w"> </span><span class="n">action</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;RENAMED&#39;</span><span class="p">;</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_sql</span><span class="p">;</span><span class="w"> </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">          </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">            </span><span class="n">action</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;SKIP_ERROR&#39;</span><span class="p">;</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">notes</span><span class="o">||</span><span class="s1">&#39; | &#39;</span><span class="o">||</span><span class="n">SQLERRM</span><span class="p">;</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_sql</span><span class="p">;</span><span class="w"> </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">          </span><span class="k">END</span><span class="p">;</span>
-<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">      </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="p">;</span>
-<span class="w">  </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

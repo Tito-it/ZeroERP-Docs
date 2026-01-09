@@ -2952,17 +2952,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#funzione-trgfn_sepa_mandati_guard" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Funzione trgfn_sepa_mandati_guard
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2982,6 +2971,8 @@
   
   
 
+
+  <h1>Trgfn sepa mandati guard</h1>
 
 <h2 id="documentazione-concettuale-trigger-function-anagrafichetrgfn_sepa_mandati_guard">📘 Documentazione Concettuale – Trigger Function <code>anagrafiche.trgfn_sepa_mandati_guard()</code><a class="headerlink" href="#documentazione-concettuale-trigger-function-anagrafichetrgfn_sepa_mandati_guard" title="Permanent link">&para;</a></h2>
 <blockquote>
@@ -3058,61 +3049,6 @@ Garantire che un mandato SEPA sia coerente quando e' in stato <strong>ATTIVO</st
 <blockquote>
 <p>🧠 <strong>"Un mandato SEPA attivo deve avere data valida; UMR e IBAN vengono sempre normalizzati."</strong></p>
 </blockquote>
-<h1 id="funzione-trgfn_sepa_mandati_guard">⚙️ Funzione <code>trgfn_sepa_mandati_guard</code><a class="headerlink" href="#funzione-trgfn_sepa_mandati_guard" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_sepa_mandati_guard</span><span class="p">()</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_sepa_mandati_guard</span><span class="p">()</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">BEGIN</span>
-
-<span class="w">  </span><span class="cm">/*</span>
-<span class="cm">    Guard trigger per pagamenti.sepa_mandati.</span>
-
-<span class="cm">    Responsabilità</span>
-<span class="cm">    --------------</span>
-<span class="cm">    1) Validazione di coerenza stato/dati:</span>
-<span class="cm">      - se NEW.stato = &#39;ATTIVO&#39; allora NEW.data_attivazione deve essere valorizzata.</span>
-<span class="cm">      - in caso contrario genera errore applicativo (vincolo logico / check-like).</span>
-
-<span class="cm">    2) Normalizzazione campi testuali (pre-insert / pre-update):</span>
-<span class="cm">      - UMR: rimuove tutti gli spazi (whitespace) per garantire confronto e univocità consistenti.</span>
-<span class="cm">      - IBAN snapshot: rimuove whitespace e forza uppercase (standard IBAN).</span>
-
-<span class="cm">    Note tecniche</span>
-<span class="cm">    ------------</span>
-<span class="cm">    - Trigger tipicamente da usare BEFORE INSERT OR UPDATE, così può modificare NEW.</span>
-<span class="cm">  */</span>
-
-
-<span class="w">  </span><span class="c1">-- Stato ATTIVO richiede data_attivazione</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">stato</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ATTIVO&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">data_attivazione</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">                        </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">                        </span><span class="s1">&#39;trgfn_sepa_mandati_guard&#39;</span><span class="p">,</span>
-<span class="w">                        </span><span class="s1">&#39;E_DATA_ERRATA&#39;</span><span class="p">,</span>
-<span class="w">                        </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">                          </span><span class="s1">&#39;tabella&#39;</span><span class="p">,</span><span class="s1">&#39;pagamenti.sepa_mandati&#39;</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;data_attivazione&#39;</span><span class="p">,</span><span class="w">  </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">                          </span><span class="s1">&#39;error&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">SQLERRM</span>
-<span class="w">                        </span><span class="p">)</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;data attivazione per stato ATTIVO&#39;</span>
-<span class="w">                      </span><span class="p">);</span><span class="w"> </span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">-- Normalizzazione UMR e IBAN snapshot</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">umr</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">NEW</span><span class="p">.</span><span class="n">umr</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">regexp_replace</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">umr</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">);</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">iban_snapshot</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">NEW</span><span class="p">.</span><span class="n">iban_snapshot</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">upper</span><span class="p">(</span><span class="n">regexp_replace</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">iban_snapshot</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">));</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="k">END</span>
-<span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

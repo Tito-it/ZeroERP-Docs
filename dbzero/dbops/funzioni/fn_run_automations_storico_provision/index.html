@@ -2968,17 +2968,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#funzione-fn_run_automations_storico_provision" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Funzione fn_run_automations_storico_provision
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2998,6 +2987,8 @@
   
   
 
+
+  <h1>Fn run automations storico provision</h1>
 
 <h2 id="documentazione-concettuale-funzione-dbopsfn_run_automations_storico_provision">📘 Documentazione Concettuale – Funzione <code>dbops.fn_run_automations_storico_provision</code><a class="headerlink" href="#documentazione-concettuale-funzione-dbopsfn_run_automations_storico_provision" title="Permanent link">&para;</a></h2>
 <blockquote>
@@ -3106,84 +3097,6 @@ La funzione <strong><code>dbops.fn_run_automations_storico_provision(p_exec_mode
 <blockquote>
 <p>🧠 <strong>In sintesi</strong>: <code>fn_run_automations_storico_provision</code> prepara in modo sistematico l’infrastruttura di storicizzazione, assicurando che ogni tabella con <code>storicizza</code> abbia la propria omologa nello schema <code>storico</code>, con FK e (opzionalmente) indice GIN dove previsto.</p>
 </blockquote>
-<h1 id="funzione-fn_run_automations_storico_provision">⚙️ Funzione <code>fn_run_automations_storico_provision</code><a class="headerlink" href="#funzione-fn_run_automations_storico_provision" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_run_automations_storico_provision</span><span class="p">(</span><span class="n">p_exec_mode</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_schemas</span><span class="w"> </span><span class="nb">text</span><span class="p">[],</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations_storico_provision</span><span class="p">(</span><span class="n">p_exec_mode</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_schemas</span><span class="w"> </span><span class="nb">text</span><span class="p">[],</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="p">)</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="w">      </span><span class="k">DECLARE</span>
-<span class="w">        </span><span class="n">rtab</span><span class="w"> </span><span class="n">record</span><span class="p">;</span>
-<span class="w">        </span><span class="n">rrule</span><span class="w"> </span><span class="n">record</span><span class="p">;</span>
-<span class="w">        </span><span class="n">v_schemas</span><span class="w"> </span><span class="nb">text</span><span class="p">[]</span><span class="w"> </span><span class="p">;</span>
-<span class="w">        </span><span class="n">has_flag</span><span class="w"> </span><span class="nb">boolean</span><span class="p">;</span>
-<span class="w">        </span><span class="n">storicizza_col</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
-<span class="w">        </span><span class="n">fk_col</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
-<span class="w">        </span><span class="n">create_gin</span><span class="w"> </span><span class="nb">boolean</span><span class="p">;</span>
-<span class="w">      </span><span class="k">BEGIN</span>
-<span class="w">        </span><span class="n">v_schemas</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_resolve_scope</span><span class="p">(</span><span class="n">p_schemas</span><span class="p">);</span>
-
-<span class="w">        </span><span class="cm">/*</span>
-<span class="cm">          Scopo:</span>
-<span class="cm">          - Scansiona le tabelle degli schemi in scope (risolti da fn_resolve_scope), escludendo lo schema storico.</span>
-<span class="cm">          - Per ogni tabella, applica le regole abilitate con rule_type = &#39;&#39;STORICO_PROVISION&#39;&#39; compatibili con exec_mode e target schema/table.</span>
-<span class="cm">          - Se la tabella espone una colonna di flag storicizza (default &#39;&#39;storicizza&#39;&#39;, override tramite automation_overrides_cols: key &#39;&#39;STORICIZZA_COL&#39;&#39;),</span>
-<span class="cm">            invoca fn_ensure_storico_table per creare/aggiornare la corrispondente tabella in storico.*.</span>
-<span class="cm">          - La colonna FK nello storico è calcolata come &lt;table_name&gt;_id (override tramite automation_overrides_cols: key &#39;&#39;STORICO_FK&#39;&#39;).</span>
-<span class="cm">          - Parametro create_gin_index (in params JSON della regola) abilita la creazione dell&#39;&#39;indice GIN sullo snapshot nello storico.</span>
-
-<span class="cm">          Parametri:</span>
-<span class="cm">          - p_exec_mode: modalità di esecuzione (es. &#39;&#39;AUTO&#39;&#39;, &#39;&#39;MANUAL&#39;&#39;); una regola è applicata se exec_mode = &#39;&#39;AUTO&#39;&#39; oppure exec_mode = p_exec_mode.</span>
-<span class="cm">          - p_schemas: lista schemi target; può includere scope/wildcard risolti da fn_resolve_scope.</span>
-<span class="cm">          - p_dry_run: se TRUE, esegue in modalità simulata (nessun DDL effettivo), demandando la gestione al helper fn_ensure_storico_table.</span>
-<span class="cm">        */</span>
-
-
-<span class="w">        </span><span class="c1">-- loop tabelle degli schemi target</span>
-<span class="w">        </span><span class="k">FOR</span><span class="w"> </span><span class="n">rtab</span><span class="w"> </span><span class="k">IN</span>
-<span class="w">          </span><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">table_name</span>
-<span class="w">          </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="k">c</span>
-<span class="w">          </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="o">=</span><span class="k">c</span><span class="p">.</span><span class="n">relnamespace</span>
-<span class="w">          </span><span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relkind</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="p">(</span><span class="n">v_schemas</span><span class="p">)</span>
-<span class="w">          </span><span class="k">AND</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;storico&#39;</span><span class="w">   </span>
-<span class="w">          </span><span class="k">AND</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_table_in_scope</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="p">)</span>
-<span class="w">        </span><span class="n">LOOP</span>
-<span class="w">          </span><span class="c1">-- regole &#39;STORICO_PROVISION&#39; pertinenti (schema match con wildcard *all + target_table)</span>
-<span class="w">          </span><span class="k">FOR</span><span class="w"> </span><span class="n">rrule</span><span class="w"> </span><span class="k">IN</span>
-<span class="w">            </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="w">            </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automation_rules_tbl</span><span class="w"> </span><span class="n">r</span>
-<span class="w">            </span><span class="k">WHERE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">enabled</span>
-<span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">rule_type</span><span class="o">=</span><span class="s1">&#39;STORICO_PROVISION&#39;</span>
-<span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="s1">&#39;AUTO&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">exec_mode</span><span class="o">=</span><span class="n">p_exec_mode</span><span class="p">)</span>
-<span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_schema_match</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">)</span>
-<span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">UPPER</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;*ALL&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">target_table</span><span class="p">)</span>
-<span class="w">          </span><span class="n">LOOP</span>
-<span class="w">            </span><span class="c1">--  parametri regola</span>
-<span class="w">            </span><span class="n">create_gin</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">((</span><span class="n">rrule</span><span class="p">.</span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;create_gin_index&#39;</span><span class="p">)::</span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="k">false</span><span class="p">);</span>
-
-<span class="w">            </span><span class="cm">/*IF COALESCE((rrule.params-&gt;&gt;&#39;auto_provision&#39;)::boolean, false) IS NOT TRUE THEN</span>
-<span class="cm">              CONTINUE;</span>
-<span class="cm">            END IF; */</span>
-
-<span class="w">            </span><span class="c1">-- colonna storicizza (override: STORICIZZA_COL)</span>
-<span class="w">            </span><span class="n">storicizza_col</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_override_col</span><span class="p">(</span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;STORICIZZA_COL&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;storicizza&#39;</span><span class="p">);</span>
-<span class="w">            </span><span class="n">has_flag</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_col_exists</span><span class="p">(</span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">storicizza_col</span><span class="p">);</span>
-<span class="w">            </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">has_flag</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">              </span><span class="k">CONTINUE</span><span class="p">;</span>
-<span class="w">            </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">            </span><span class="c1">-- calcolo FK colonna storico (override: STORICO_FK)</span>
-<span class="w">            </span><span class="n">fk_col</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_override_col</span><span class="p">(</span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;STORICO_FK&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="o">||</span><span class="s1">&#39;_id&#39;</span><span class="p">);</span>
-
-<span class="w">            </span><span class="c1">-- crea tabella storico se manca (dry-run / ok / error handling già dentro helper)</span>
-<span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_ensure_storico_table</span><span class="p">(</span><span class="n">rtab</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">rtab</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">fk_col</span><span class="p">,</span><span class="w"> </span><span class="n">create_gin</span><span class="p">,</span><span class="w"> </span><span class="n">p_dry_run</span><span class="p">);</span>
-<span class="w">          </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
-<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
-<span class="w">      </span><span class="k">END</span><span class="p">;</span>
-<span class="w">      </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

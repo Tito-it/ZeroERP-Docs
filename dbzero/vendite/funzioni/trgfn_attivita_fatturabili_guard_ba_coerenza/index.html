@@ -23,7 +23,7 @@
     
     
       
-        <title>⚙️ Funzione trgfn_attivita_fatturabili_guard_ba_coerenza - Zero ERP Documentation</title>
+        <title>Trgfn attivita fatturabili guard ba coerenza - Zero ERP Documentation</title>
       
     
     
@@ -63,11 +63,6 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
-        
-        <a href="#funzione-trgfn_attivita_fatturabili_guard_ba_coerenza" class="md-skip">
-          Vai al contenuto
-        </a>
-      
     </div>
     <div data-md-component="announce">
       
@@ -100,7 +95,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione trgfn_attivita_fatturabili_guard_ba_coerenza
+              Trgfn attivita fatturabili guard ba coerenza
             
           </span>
         </div>
@@ -2845,8 +2840,6 @@
   
   
   
-    
-  
   
 </nav>
                   </div>
@@ -2866,59 +2859,8 @@
   
 
 
-<h1 id="funzione-trgfn_attivita_fatturabili_guard_ba_coerenza">⚙️ Funzione <code>trgfn_attivita_fatturabili_guard_ba_coerenza</code><a class="headerlink" href="#funzione-trgfn_attivita_fatturabili_guard_ba_coerenza" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_attivita_fatturabili_guard_ba_coerenza</span><span class="p">()</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">trgfn_attivita_fatturabili_guard_ba_coerenza</span><span class="p">()</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="w">   </span><span class="k">DECLARE</span><span class="w"> </span><span class="n">v_iu_id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">;</span>
-<span class="w">   </span><span class="k">BEGIN</span>
+  <h1>Trgfn attivita fatturabili guard ba coerenza</h1>
 
-
-<span class="w">     </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">billing_account_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">       </span><span class="k">SELECT</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">istanza_utility_id</span>
-<span class="w">         </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_iu_id</span>
-<span class="w">       </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">billing_account</span><span class="w"> </span><span class="n">b</span>
-<span class="w">       </span><span class="k">WHERE</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">billing_account_id</span><span class="p">;</span>
-
-<span class="w">       </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">FOUND</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">           </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">           </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">           </span><span class="s1">&#39;attivita_fatturabili&#39;</span><span class="p">,</span>
-<span class="w">           </span><span class="s1">&#39;E_PARAMETRI_TABELLA&#39;</span><span class="p">,</span>
-<span class="w">           </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">             </span><span class="s1">&#39;context&#39;</span><span class="p">,</span><span class="s1">&#39;validazione billing_account_id&#39;</span><span class="p">,</span>
-<span class="w">             </span><span class="s1">&#39;billing_account_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">billing_account_id</span><span class="w">     </span>
-<span class="w">           </span><span class="p">),</span>
-<span class="w">         </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">         </span><span class="s1">&#39;billing_account&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">billing_account_id</span>
-<span class="w">         </span><span class="p">);</span>
-<span class="w">       </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">       </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">istanza_utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">v_iu_id</span><span class="w"> </span><span class="k">THEN</span>
-
-
-<span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">           </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">           </span><span class="s1">&#39;attivita_fatturabili&#39;</span><span class="p">,</span>
-<span class="w">           </span><span class="s1">&#39;E_COERENZA_ID&#39;</span><span class="p">,</span>
-<span class="w">           </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">             </span><span class="s1">&#39;context&#39;</span><span class="p">,</span><span class="s1">&#39;validazione istanza_utility_id&#39;</span><span class="p">,</span>
-<span class="w">             </span><span class="s1">&#39;istanza_utility_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">istanza_utility_id</span><span class="p">,</span>
-<span class="w">             </span><span class="s1">&#39;billing_account_id&#39;</span><span class="p">,</span><span class="n">v_iu_id</span>
-<span class="w">           </span><span class="p">),</span>
-<span class="w">         </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">         </span><span class="s1">&#39;istanza_utility_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">istanza_utility_id</span><span class="p">,</span>
-<span class="w">         </span><span class="s1">&#39;billing_account&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">billing_account_id</span>
-<span class="w">         </span><span class="p">);</span>
-
-<span class="w">       </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">     </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">     </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="w"> </span><span class="k">END</span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

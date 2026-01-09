@@ -2913,17 +2913,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#view-vw_duplicate_indexes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🔍 View vw_duplicate_indexes
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2943,6 +2932,8 @@
   
   
 
+
+  <h1>Vw duplicate indexes</h1>
 
 <h2 id="documentazione-concettuale-view-dbopsvw_duplicate_indexes">📘 Documentazione Concettuale – View <code>dbops.vw_duplicate_indexes</code><a class="headerlink" href="#documentazione-concettuale-view-dbopsvw_duplicate_indexes" title="Permanent link">&para;</a></h2>
 <blockquote>
@@ -3039,35 +3030,6 @@
 <blockquote>
 <p>🧠 <strong>“Con <code>vw_duplicate_indexes</code>, tenere sotto controllo gli indici duplicati diventa semplice, supportando azioni di consolidamento per ottimizzare il database.”</strong></p>
 </blockquote>
-<h1 id="view-vw_duplicate_indexes">🔍 View <code>vw_duplicate_indexes</code><a class="headerlink" href="#view-vw_duplicate_indexes" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_duplicate_indexes</span><span class="w"> </span><span class="k">AS</span>
-<span class="k">WITH</span><span class="w"> </span><span class="n">index_cols</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
-<span class="w">         </span><span class="k">SELECT</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">index_oid</span><span class="p">,</span>
-<span class="w">            </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">            </span><span class="n">t</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">            </span><span class="n">i</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">index_name</span><span class="p">,</span>
-<span class="w">            </span><span class="n">ix</span><span class="p">.</span><span class="n">indisunique</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_unique</span><span class="p">,</span>
-<span class="w">            </span><span class="n">ix</span><span class="p">.</span><span class="n">indisprimary</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_primary</span><span class="p">,</span>
-<span class="w">            </span><span class="n">array_agg</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">attname</span><span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="k">ordinality</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">cols</span>
-<span class="w">           </span><span class="k">FROM</span><span class="w"> </span><span class="p">(((((</span><span class="n">pg_index</span><span class="w"> </span><span class="n">ix</span>
-<span class="w">             </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">((</span><span class="n">i</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indexrelid</span><span class="p">)))</span>
-<span class="w">             </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">((</span><span class="n">t</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indrelid</span><span class="p">)))</span>
-<span class="w">             </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">((</span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">relnamespace</span><span class="p">)))</span>
-<span class="w">             </span><span class="k">JOIN</span><span class="w"> </span><span class="k">LATERAL</span><span class="w"> </span><span class="k">unnest</span><span class="p">(</span><span class="n">ix</span><span class="p">.</span><span class="n">indkey</span><span class="p">)</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="k">ORDINALITY</span><span class="w"> </span><span class="n">x</span><span class="p">(</span><span class="n">attnum</span><span class="p">,</span><span class="w"> </span><span class="k">ordinality</span><span class="p">)</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">(</span><span class="k">true</span><span class="p">))</span>
-<span class="w">             </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_attribute</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">(((</span><span class="n">a</span><span class="p">.</span><span class="n">attrelid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">oid</span><span class="p">)</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">attnum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">attnum</span><span class="p">))))</span>
-<span class="w">          </span><span class="k">WHERE</span><span class="w"> </span><span class="p">((</span><span class="k">NOT</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indisprimary</span><span class="p">)</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">relkind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;i&#39;</span><span class="p">::</span><span class="ss">&quot;char&quot;</span><span class="p">))</span>
-<span class="w">          </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">oid</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">relname</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">relname</span><span class="p">,</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indisunique</span><span class="p">,</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indisprimary</span>
-<span class="w">        </span><span class="p">)</span>
-<span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">    </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">cols</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">index_columns</span><span class="p">,</span>
-<span class="w">    </span><span class="n">array_agg</span><span class="p">(</span><span class="n">index_name</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">duplicate_index_names</span><span class="p">,</span>
-<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">count_of_indexes</span>
-<span class="w">   </span><span class="k">FROM</span><span class="w"> </span><span class="n">index_cols</span>
-<span class="w">  </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">cols</span>
-<span class="w"> </span><span class="k">HAVING</span><span class="w"> </span><span class="p">(</span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
-<span class="w">  </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">))</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

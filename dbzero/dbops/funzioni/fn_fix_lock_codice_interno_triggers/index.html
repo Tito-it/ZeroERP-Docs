@@ -23,7 +23,7 @@
     
     
       
-        <title>⚙️ Funzione fn_fix_lock_codice_interno_triggers - Zero ERP Documentation</title>
+        <title>Fn fix lock codice interno triggers - Zero ERP Documentation</title>
       
     
     
@@ -63,11 +63,6 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
-        
-        <a href="#funzione-fn_fix_lock_codice_interno_triggers" class="md-skip">
-          Vai al contenuto
-        </a>
-      
     </div>
     <div data-md-component="announce">
       
@@ -100,7 +95,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ⚙️ Funzione fn_fix_lock_codice_interno_triggers
+              Fn fix lock codice interno triggers
             
           </span>
         </div>
@@ -2845,8 +2840,6 @@
   
   
   
-    
-  
   
 </nav>
                   </div>
@@ -2866,142 +2859,8 @@
   
 
 
-<h1 id="funzione-fn_fix_lock_codice_interno_triggers">⚙️ Funzione <code>fn_fix_lock_codice_interno_triggers</code><a class="headerlink" href="#funzione-fn_fix_lock_codice_interno_triggers" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_fix_lock_codice_interno_triggers</span><span class="p">(</span><span class="n">p_target_schema</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="n">p_drop_old</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="n">p_align_with_first_arg</span><span class="w"> </span><span class="nb">boolean</span><span class="p">,</span><span class="w"> </span><span class="n">p_force_update_column</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_fix_lock_codice_interno_triggers</span><span class="p">(</span><span class="n">p_target_schema</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="nb">boolean</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="n">p_drop_old</span><span class="w"> </span><span class="nb">boolean</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="n">p_align_with_first_arg</span><span class="w"> </span><span class="nb">boolean</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="n">p_force_update_column</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">text</span><span class="p">)</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">TABLE</span><span class="p">(</span><span class="n">object_schema</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">object_table</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">old_trigger</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">new_trigger</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">update_column</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">action</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="nb">text</span><span class="p">)</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="w">  </span><span class="k">DECLARE</span>
-<span class="w">      </span><span class="n">r</span><span class="w"> </span><span class="n">record</span><span class="p">;</span>
-<span class="w">      </span><span class="n">v_fn_call</span><span class="w">   </span><span class="nb">text</span><span class="p">;</span><span class="w">    </span><span class="c1">-- es: script.trgfn_lock_columns(&#39;codice_interno&#39;,&#39;MSG&#39;)</span>
-<span class="w">      </span><span class="n">v_fn_name</span><span class="w">   </span><span class="nb">text</span><span class="p">;</span><span class="w">    </span><span class="c1">-- es: script.trgfn_lock_columns</span>
-<span class="w">      </span><span class="n">v_fn_args</span><span class="w">   </span><span class="nb">text</span><span class="p">;</span><span class="w">    </span><span class="c1">-- es: &#39;codice_interno&#39;,&#39;MSG&#39;</span>
-<span class="w">      </span><span class="n">v_first_arg</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span><span class="w">    </span><span class="c1">-- colonna dedotta dal 1° argomento</span>
-<span class="w">      </span><span class="n">v_upd_col</span><span class="w">   </span><span class="nb">text</span><span class="p">;</span><span class="w">    </span><span class="c1">-- colonna effettiva da usare per UPDATE OF</span>
-<span class="w">      </span><span class="n">v_new_trigger</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span><span class="w">  </span><span class="c1">-- nuovo nome</span>
-<span class="w">      </span><span class="n">v_create</span><span class="w">    </span><span class="nb">text</span><span class="p">;</span>
-<span class="w">      </span><span class="n">v_drop</span><span class="w">      </span><span class="nb">text</span><span class="p">;</span>
-<span class="w">  </span><span class="k">BEGIN</span>
-<span class="w">      </span><span class="k">FOR</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="k">IN</span>
-<span class="w">          </span><span class="k">SELECT</span>
-<span class="w">              </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w">  </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">              </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w">  </span><span class="k">AS</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">              </span><span class="n">t</span><span class="p">.</span><span class="n">tgname</span><span class="w">   </span><span class="k">AS</span><span class="w"> </span><span class="k">trigger_name</span><span class="p">,</span>
-<span class="w">              </span><span class="n">pg_get_triggerdef</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">oid</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">trigger_def</span>
-<span class="w">          </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_trigger</span><span class="w"> </span><span class="n">t</span>
-<span class="w">          </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w">   </span><span class="k">c</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgrelid</span>
-<span class="w">          </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relnamespace</span>
-<span class="w">          </span><span class="k">WHERE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgisinternal</span>
-<span class="w">            </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">tgname</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="s1">&#39;%upd_lock_codiceinterno%&#39;</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgname</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="s1">&#39;%codice_interno%&#39;</span><span class="p">)</span>
-<span class="w">            </span><span class="k">AND</span><span class="w"> </span><span class="n">pg_get_triggerdef</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">oid</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)</span><span class="w"> </span><span class="k">ILIKE</span><span class="w"> </span><span class="s1">&#39;%trgfn_lock_columns%&#39;</span>
-<span class="w">            </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">p_target_schema</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_target_schema</span><span class="p">)</span>
-<span class="w">          </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgname</span>
-<span class="w">      </span><span class="n">LOOP</span>
-<span class="w">          </span><span class="c1">-- Estrai &quot;EXECUTE FUNCTION nome(args)&quot;</span>
-<span class="w">          </span><span class="n">v_fn_call</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">trigger_def</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;.*EXECUTE FUNCTION\s+([^(]+\([^)]*\)).*&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\1&#39;</span><span class="p">);</span>
-<span class="w">          </span><span class="n">v_fn_name</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-<span class="w">          </span><span class="n">v_fn_args</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
+  <h1>Fn fix lock codice interno triggers</h1>
 
-<span class="w">          </span><span class="k">IF</span><span class="w"> </span><span class="n">v_fn_call</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">              </span><span class="n">v_fn_name</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">v_fn_call</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;^\s*([^(]+)\s*\(.*$&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\1&#39;</span><span class="p">);</span>
-<span class="w">              </span><span class="n">v_fn_args</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">v_fn_call</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;^[^(]*\(\s*(.*)\s*\)\s*$&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\1&#39;</span><span class="p">);</span>
-<span class="w">          </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">          </span><span class="c1">-- Deduci la 1ª colonna passata a trgfn_lock_columns (se testuale: &#39;colonna&#39; o E&#39;colonna&#39;)</span>
-<span class="w">          </span><span class="n">v_first_arg</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-<span class="w">          </span><span class="k">IF</span><span class="w"> </span><span class="n">v_fn_args</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">              </span><span class="c1">-- cerca prima una stringa singola quotata</span>
-<span class="w">              </span><span class="n">v_first_arg</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">v_fn_args</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;^\s*E?&#39;&#39;([^&#39;&#39;]+)&#39;&#39;.*$&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\1&#39;</span><span class="p">);</span>
-<span class="w">              </span><span class="c1">-- se non era una stringa ma un identificatore non quotato (raro): &quot;colonna, ...&quot;</span>
-<span class="w">              </span><span class="k">IF</span><span class="w"> </span><span class="n">v_first_arg</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">v_first_arg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_fn_args</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">                  </span><span class="n">v_first_arg</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">v_fn_args</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*(,.*)?$&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\1&#39;</span><span class="p">);</span>
-<span class="w">                  </span><span class="c1">-- se l&#39;intera v_fn_args coincide, prova ancora con identificatore tra doppi apici</span>
-<span class="w">                  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_first_arg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_fn_args</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">                      </span><span class="n">v_first_arg</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">v_fn_args</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;^\s*&quot;([^&quot;]+)&quot;\s*(,.*)?$&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\1&#39;</span><span class="p">);</span>
-<span class="w">                  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">              </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">          </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">          </span><span class="c1">-- Decidi la colonna su cui legare l&#39;UPDATE OF</span>
-<span class="w">          </span><span class="k">IF</span><span class="w"> </span><span class="n">p_align_with_first_arg</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">v_first_arg</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">v_first_arg</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">              </span><span class="n">v_upd_col</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_first_arg</span><span class="p">;</span>
-<span class="w">          </span><span class="k">ELSIF</span><span class="w"> </span><span class="n">p_force_update_column</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">p_force_update_column</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">              </span><span class="n">v_upd_col</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">p_force_update_column</span><span class="p">;</span>
-<span class="w">          </span><span class="k">ELSE</span>
-<span class="w">              </span><span class="c1">-- fallback sicuro: prova &#39;codice_interno&#39;, altrimenti mantieni comportamento &quot;generico&quot; (UPDATE senza OF)</span>
-<span class="w">              </span><span class="n">v_upd_col</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;codice_interno&#39;</span><span class="p">;</span>
-<span class="w">          </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">          </span><span class="c1">-- Nome nuovo trigger standard</span>
-<span class="w">          </span><span class="n">v_new_trigger</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;trg_a10_upd_%s_lock_%s&#39;</span><span class="p">,</span>
-<span class="w">                                  </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">                                  </span><span class="k">replace</span><span class="p">(</span><span class="k">lower</span><span class="p">(</span><span class="n">v_upd_col</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">));</span>
-
-<span class="w">          </span><span class="c1">-- Costruisci DDL CREATE con UPDATE OF &lt;col&gt;</span>
-<span class="w">          </span><span class="n">v_create</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span>
-<span class="w">              </span><span class="s1">&#39;CREATE TRIGGER %I BEFORE UPDATE OF %I ON %I.%I</span>
-<span class="s1">              FOR EACH ROW</span>
-<span class="s1">              WHEN (OLD.%I IS DISTINCT FROM NEW.%I)</span>
-<span class="s1">              EXECUTE FUNCTION %s(%s);&#39;</span><span class="p">,</span>
-<span class="w">              </span><span class="n">v_new_trigger</span><span class="p">,</span><span class="w"> </span><span class="n">v_upd_col</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">              </span><span class="n">v_upd_col</span><span class="p">,</span><span class="w"> </span><span class="n">v_upd_col</span><span class="p">,</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">v_fn_name</span><span class="p">,</span><span class="s1">&#39;script.trgfn_lock_columns&#39;</span><span class="p">),</span>
-<span class="w">              </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">v_fn_args</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-<span class="w">            </span><span class="p">);</span>
-
-<span class="w">          </span><span class="n">v_drop</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;DROP TRIGGER IF EXISTS %I ON %I.%I;&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">trigger_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">);</span>
-
-<span class="w">          </span><span class="k">IF</span><span class="w"> </span><span class="n">p_dry_run</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">              </span><span class="k">IF</span><span class="w"> </span><span class="n">p_drop_old</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">                  </span><span class="n">object_schema</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">object_table</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">old_trigger</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">trigger_name</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">new_trigger</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_new_trigger</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">update_column</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_upd_col</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">action</span><span class="w">        </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;DROP_OLD&#39;</span><span class="p">;</span>
-<span class="w">                  </span><span class="k">sql</span><span class="w">           </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_drop</span><span class="p">;</span>
-<span class="w">                  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">              </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">              </span><span class="n">object_schema</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">;</span>
-<span class="w">              </span><span class="n">object_table</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-<span class="w">              </span><span class="n">old_trigger</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">trigger_name</span><span class="p">;</span>
-<span class="w">              </span><span class="n">new_trigger</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_new_trigger</span><span class="p">;</span>
-<span class="w">              </span><span class="n">update_column</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_upd_col</span><span class="p">;</span>
-<span class="w">              </span><span class="n">action</span><span class="w">        </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CREATE_NEW&#39;</span><span class="p">;</span>
-<span class="w">              </span><span class="k">sql</span><span class="w">           </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_create</span><span class="p">;</span>
-<span class="w">              </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">          </span><span class="k">ELSE</span>
-<span class="w">              </span><span class="k">IF</span><span class="w"> </span><span class="n">p_drop_old</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">                  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">v_drop</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">object_schema</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">object_table</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">old_trigger</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">trigger_name</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">new_trigger</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_new_trigger</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">update_column</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_upd_col</span><span class="p">;</span>
-<span class="w">                  </span><span class="n">action</span><span class="w">        </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;DROPPED&#39;</span><span class="p">;</span>
-<span class="w">                  </span><span class="k">sql</span><span class="w">           </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_drop</span><span class="p">;</span>
-<span class="w">                  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">              </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">              </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">v_create</span><span class="p">;</span>
-<span class="w">              </span><span class="n">object_schema</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">schema_name</span><span class="p">;</span>
-<span class="w">              </span><span class="n">object_table</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-<span class="w">              </span><span class="n">old_trigger</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="k">trigger_name</span><span class="p">;</span>
-<span class="w">              </span><span class="n">new_trigger</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_new_trigger</span><span class="p">;</span>
-<span class="w">              </span><span class="n">update_column</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_upd_col</span><span class="p">;</span>
-<span class="w">              </span><span class="n">action</span><span class="w">        </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CREATED&#39;</span><span class="p">;</span>
-<span class="w">              </span><span class="k">sql</span><span class="w">           </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_create</span><span class="p">;</span>
-<span class="w">              </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEXT</span><span class="p">;</span>
-<span class="w">          </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">      </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
-
-<span class="w">      </span><span class="k">RETURN</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="p">;</span>
-<span class="w">  </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

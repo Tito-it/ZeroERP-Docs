@@ -2924,17 +2924,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#funzione-trgfn_iva_guard_conti_iva" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Funzione trgfn_iva_guard_conti_iva
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2954,6 +2943,8 @@
   
   
 
+
+  <h1>Trgfn iva guard conti iva</h1>
 
 <h2 id="documentazione-concettuale-function-configtrgfn_iva_ins_upd_check_conti_iva">📘 Documentazione Concettuale – Function <code>config.trgfn_iva_ins_upd_check_conti_iva</code><a class="headerlink" href="#documentazione-concettuale-function-configtrgfn_iva_ins_upd_check_conti_iva" title="Permanent link">&para;</a></h2>
 <blockquote>
@@ -3031,65 +3022,6 @@ END IF;
 <blockquote>
 <p>🧠 <strong>“Con una trigger function dedicata alla validazione dei conti IVA si garantisce che ogni codice IVA sia sempre accoppiato al conto corretto, riducendo i rischi di anomalie contabili.”</strong></p>
 </blockquote>
-<h1 id="funzione-trgfn_iva_guard_conti_iva">⚙️ Funzione <code>trgfn_iva_guard_conti_iva</code><a class="headerlink" href="#funzione-trgfn_iva_guard_conti_iva" title="Permanent link">&para;</a></h1>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_iva_guard_conti_iva</span><span class="p">()</span>
-</code></pre></div>
-<p><strong>Definizione completa:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">trgfn_iva_guard_conti_iva</span><span class="p">()</span>
-<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
-<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
-<span class="k">DECLARE</span>
-<span class="w">  </span><span class="n">v_tipo_acq</span><span class="w"> </span><span class="nb">CHAR</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="w">  </span><span class="n">v_tipo_ven</span><span class="w"> </span><span class="nb">CHAR</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="c1">-- </span>
-<span class="w">  </span><span class="c1">-- Constraint trigger per validare i conti IVA in config.iva</span>
-<span class="w">  </span><span class="c1">--    conto_iva_acquisti deve riferirsi a un conto di tipo A</span>
-<span class="w">  </span><span class="c1">--    conto_iva_vendita deve riferirsi a un conto di tipo V</span>
-<span class="w">  </span><span class="c1">-- Usa messaggi centralizzati in config.messaggi_errore</span>
-<span class="w">  </span><span class="c1">-- Schema: config</span>
-<span class="w">  </span><span class="c1">-- </span>
-
-<span class="w">  </span><span class="c1">-- Validazione conto acquisti</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">conto_iva_acquisti_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">tipo_conto</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_tipo_acq</span>
-<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">conti_contabili</span>
-<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">conto_iva_acquisti_id</span><span class="p">;</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_tipo_acq</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="s1">&#39;A&#39;</span><span class="w"> </span><span class="k">THEN</span>
-
-<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">          </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">          </span><span class="n">TG_NAME</span><span class="p">,</span>
-<span class="w">          </span><span class="s1">&#39;E_IVA_CONTO_ACQ_ERR&#39;</span><span class="p">,</span>
-<span class="w">          </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;column&#39;</span><span class="p">,</span><span class="s1">&#39;conto_iva_acquisti_id&#39;</span><span class="p">,</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="k">NEW</span><span class="p">.</span><span class="n">conto_iva_acquisti_id</span><span class="p">),</span>
-<span class="w">          </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">          </span><span class="k">NEW</span><span class="p">.</span><span class="n">conto_iva_acquisti_id</span><span class="p">::</span><span class="nb">text</span>
-<span class="w">        </span><span class="p">);</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">-- Validazione conto vendita</span>
-<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">conto_iva_vendita_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">tipo_conto</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_tipo_ven</span>
-<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">conti_contabili</span>
-<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">conto_iva_vendita_id</span><span class="p">;</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_tipo_ven</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="s1">&#39;V&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">        </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">TG_NAME</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;E_IVA_CONTO_VEN_ERR&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;column&#39;</span><span class="p">,</span><span class="s1">&#39;conto_iva_vendita_id&#39;</span><span class="p">,</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="k">NEW</span><span class="p">.</span><span class="n">conto_iva_vendita_id</span><span class="p">),</span>
-<span class="w">        </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span>
-<span class="w">        </span><span class="k">NEW</span><span class="p">.</span><span class="n">conto_iva_vendita_id</span><span class="p">::</span><span class="nb">text</span>
-<span class="w">      </span><span class="p">);</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="err">$</span><span class="k">function</span><span class="err">$</span>
-</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
