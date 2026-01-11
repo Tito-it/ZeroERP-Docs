@@ -3007,13 +3007,14 @@
 <li><a href="../../../../dbzero/dbops/funzioni/fn_run_automations_tx_id">dbops.fn_run_automations_tx_id</a></li>
 <li><a href="../../../../dbzero/dbops/funzioni/fn_run_automations_audit_update">dbops.fn_run_automations_audit_update</a></li>
 <li><a href="../../../../dbzero/dbops/funzioni/fn_run_automations_storico">dbops.fn_run_automations_storico</a></li>
+<li><a href="../../../../dbzero/dbops/funzioni/fn_run_automations_lock_columns">dbops.fn_run_automations_lock_columns</a></li>
 <li><a href="../../../../dbzero/dbops/funzioni/fn_run_automations_attivo">dbops.fn_run_automations_attivo</a></li>
 </ul>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 26-12-25)
-La funzione <strong><code>dbops.fn_run_automations</code></strong> è l’<strong>orchestratore principale</strong> del framework di automazioni. Coordina l’applicazione delle regole di sistema (Tx ID, aggiornamento audit, storico, gestione flag attivo) sugli schemi e tabelle in scope.</p>
+<p>(latest review 10-01-26)
+La funzione <strong><code>dbops.fn_run_automations</code></strong> è l’<strong>orchestratore principale</strong> del framework di automazioni. Coordina l’applicazione delle regole di sistema (Tx ID, aggiornamento audit, storico, lock colonne, gestione flag attivo) sugli schemi e tabelle in scope.</p>
 <hr />
 <h3 id="parametri-di-input">🔍 Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -3047,8 +3048,8 @@ La funzione <strong><code>dbops.fn_run_automations</code></strong> è l’<stron
 <tr>
 <td><code>p_parts</code></td>
 <td>text[]</td>
-<td>['TX_ID','AUDIT_UPDATE','STORICO','ATTIVO']</td>
-<td>Moduli da eseguire. Supporta anche la keyword 'TABLE_RULES' per includere i tre moduli tabellari.</td>
+<td>['TX_ID','AUDIT_UPDATE','STORICO','LOCK_COLUMNS','ATTIVO']</td>
+<td>Moduli da eseguire. Supporta anche la keyword 'TABLE_RULES' per includere i moduli tabellari.</td>
 </tr>
 </tbody>
 </table>
@@ -3059,7 +3060,7 @@ La funzione <strong><code>dbops.fn_run_automations</code></strong> è l’<stron
 <h3 id="flusso-logico">⚙️ Flusso logico<a class="headerlink" href="#flusso-logico" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Determina lo <strong>scope degli schemi</strong>: usa <code>p_schemas</code>, oppure <code>automation_scope</code>, oppure fallback a tutti gli schemi utente.</li>
-<li>Valuta se abilitare la modalità compatibile <code>TABLE_RULES</code> → esegue i tre moduli tabellari (TX_ID, AUDIT_UPDATE, STORICO).</li>
+<li>Valuta se abilitare la modalità compatibile <code>TABLE_RULES</code> → esegue i moduli tabellari (TX_ID, AUDIT_UPDATE, STORICO, LOCK_COLUMNS).</li>
 <li>
 <p>Esegue i moduli richiesti:</p>
 </li>
@@ -3068,6 +3069,7 @@ La funzione <strong><code>dbops.fn_run_automations</code></strong> è l’<stron
 </li>
 <li><code>fn_run_automations_audit_update</code></li>
 <li><code>fn_run_automations_storico</code></li>
+<li><code>fn_run_automations_lock_columns</code></li>
 <li><code>fn_run_automations_attivo</code></li>
 <li>Ogni modulo applica trigger/funzioni sulle tabelle target secondo le regole.</li>
 </ol>
@@ -3106,7 +3108,7 @@ La funzione <strong><code>dbops.fn_run_automations</code></strong> è l’<stron
 </ul>
 <hr />
 <blockquote>
-<p>🧠 <strong>In sintesi</strong>: <code>fn_run_automations</code> è il cuore del sistema di automazione, che assicura l’applicazione coerente e modulare delle policy (Tx ID, audit, storico, attivo) su tutti gli schemi gestiti.</p>
+<p>🧠 <strong>In sintesi</strong>: <code>fn_run_automations</code> è il cuore del sistema di automazione, che assicura l’applicazione coerente e modulare delle policy (Tx ID, audit, storico, lock colonne, attivo) su tutti gli schemi gestiti.</p>
 </blockquote>
 
 

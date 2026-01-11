@@ -2920,17 +2920,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#trigger-e-funzioni-coinvolte" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Trigger e Funzioni coinvolte
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#query-tipiche" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3015,12 +3004,12 @@
 • <a href="../../../../dbzero/script/funzioni/fn_get_conto_bancario_predefinito">script.fn_get_conto_bancario_predefinito</a>   </p>
 <p><strong>Approfondimento Trigger/Funzioni generiche</strong> <br />
 • <a href="../../../../dbzero/dbops/funzioni/trgfn_tx_id_managed">dbops.trgfn_tx_id_managed</a> <br />
-• <a href="../../../../dbzero/script/funzioni/trgfn_upd_audit_data_user_generic">script.trgfn_upd_audit_data_user_generic</a> <br />
-• <a href="../../../../dbzero/script/funzioni/trgfn_upd_dlt_storico_generic">script.trgfn_upd_dlt_storico_generic</a>   </p>
+• <a href="../../../../dbzero/script/funzioni/trgfn_audit_data_user_generic">script.trgfn_audit_data_user_generic</a> <br />
+• <a href="../../../../dbzero/script/funzioni/trgfn_storico_generic">script.trgfn_storico_generic</a>   </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(lateste review 01-12-25)
+<p>(latest review 10-01-26)
 <code>anagrafiche.soggetti_conti_bancari</code> gestisce l’<strong>associazione tra un Soggetto</strong> (persona/azienda) e uno o più <strong>conti bancari (IBAN)</strong>, distinguendo l’<strong>uso</strong> del conto: <code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code>, <code>GENERICO</code>.</p>
 <p>Questa tabella rappresenta il <strong>fallback di default</strong> per il soggetto: se per un dato <strong>Ruolo</strong> (es. Cliente/Fornitore/Gestore) non è definito un conto specifico, verrà usato il <strong>predefinito</strong> definito qui, grazie alla <strong>VIEW</strong> e alla <strong>FUNCTION</strong> di selezione.</p>
 <hr />
@@ -3083,44 +3072,6 @@
 <li><code>ix_soggetti_conti_bancari_conto_bancario_id (conto_bancario_id)</code></li>
 <li><code>ix_soggetti_conti_bancari_predef_per_uso (soggetto_id, uso) WHERE predefinito</code> <em>(unique)</em></li>
 </ul>
-<hr />
-<h3 id="trigger-e-funzioni-coinvolte">⚙️ Trigger e Funzioni coinvolte<a class="headerlink" href="#trigger-e-funzioni-coinvolte" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Nome</th>
-<th>Tipo</th>
-<th>Scopo</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>trg_soggetti_conti_bancari_ins_upd_guard</code></td>
-<td>Trigger (BEFORE INSERT/UPDATE)</td>
-<td>Impedisce collegamenti a conti disattivati; normalizza audit base</td>
-</tr>
-<tr>
-<td><code>trg_soggetti_conti_bancari_ins_upd_gen_tx_id</code></td>
-<td>Trigger</td>
-<td>Assegna <code>tx_id</code> se nullo</td>
-</tr>
-<tr>
-<td><code>trg_upd_soggetti_conti_bancari_audit_data_user</code></td>
-<td>Trigger</td>
-<td>Mantiene <code>data_update</code>/<code>user_update</code></td>
-</tr>
-<tr>
-<td><code>trg_z90_soggetti_conti_bancari_upd_dlt_storico</code></td>
-<td>Trigger</td>
-<td>Snapshot storico su UPDATE/DELETE se <code>storicizza=true</code></td>
-</tr>
-<tr>
-<td><code>script.trgfn_soggetti_conti_guard()</code></td>
-<td>Funzione</td>
-<td>Guard‑rail richiamata dal trigger di tabella</td>
-</tr>
-</tbody>
-</table>
 <hr />
 <h3 id="query-tipiche">🔎 Query tipiche<a class="headerlink" href="#query-tipiche" title="Permanent link">&para;</a></h3>
 <p><strong>1) Predefinito d’incasso per un soggetto (oggi valido)</strong></p>
