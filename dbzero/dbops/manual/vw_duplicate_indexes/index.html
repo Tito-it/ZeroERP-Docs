@@ -2887,17 +2887,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ddl-della-view" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🔖 DDL della View
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2947,14 +2936,13 @@
 <p>La view <strong><code>dbops.vw_duplicate_indexes</code></strong> identifica gli <strong>indici duplicati</strong> all’interno dello stesso schema e tabella, cioè quegli indici che coprono esattamente lo stesso insieme di colonne (<code>cols</code>). Per ciascun gruppo di colonne con più indici, la view restituisce i nomi degli indici coinvolti e il numero totale di occorrenze.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Individuare indici ridondanti</strong>
-  Scoprire indici che hanno lo stesso set di colonne e possono quindi essere unificati o rimossi.</li>
-<li><strong>Ottimizzazione dello storage e delle performance</strong>
-  Ridurre overhead di manutenzione e migliorare le prestazioni di scrittura eliminando duplicazioni.</li>
-<li><strong>Governance della struttura</strong>
-  Supportare analisi periodiche per mantenere lo schema pulito e coerente.</li>
-</ul>
+<p>(latest review 10-01-26)
+* <strong>Individuare indici ridondanti</strong>
+  Scoprire indici che hanno lo stesso set di colonne e possono quindi essere unificati o rimossi.
+* <strong>Ottimizzazione dello storage e delle performance</strong>
+  Ridurre overhead di manutenzione e migliorare le prestazioni di scrittura eliminando duplicazioni.
+* <strong>Governance della struttura</strong>
+  Supportare analisi periodiche per mantenere lo schema pulito e coerente.</p>
 <hr />
 <h3 id="flusso-di-costruzione">⚙️ Flusso di Costruzione<a class="headerlink" href="#flusso-di-costruzione" title="Permanent link">&para;</a></h3>
 <ol>
@@ -2983,42 +2971,6 @@
 </ul>
 </li>
 </ol>
-<hr />
-<h3 id="ddl-della-view">🔖 DDL della View<a class="headerlink" href="#ddl-della-view" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_duplicate_indexes</span><span class="w"> </span><span class="k">AS</span>
-<span class="k">WITH</span><span class="w"> </span><span class="n">index_cols</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="k">SELECT</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">oid</span><span class="w">                    </span><span class="k">AS</span><span class="w"> </span><span class="n">index_oid</span><span class="p">,</span>
-<span class="w">    </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w">                </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">t</span><span class="p">.</span><span class="n">relname</span><span class="w">                </span><span class="k">AS</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">i</span><span class="p">.</span><span class="n">relname</span><span class="w">                </span><span class="k">AS</span><span class="w"> </span><span class="n">index_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">ix</span><span class="p">.</span><span class="n">indisunique</span><span class="w">           </span><span class="k">AS</span><span class="w"> </span><span class="n">is_unique</span><span class="p">,</span>
-<span class="w">    </span><span class="n">ix</span><span class="p">.</span><span class="n">indisprimary</span><span class="w">          </span><span class="k">AS</span><span class="w"> </span><span class="n">is_primary</span><span class="p">,</span>
-<span class="w">    </span><span class="n">array_agg</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">attname</span><span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="k">ordinality</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">cols</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_index</span><span class="w"> </span><span class="n">ix</span>
-<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="n">i</span><span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indexrelid</span>
-<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="n">t</span><span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indrelid</span>
-<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">relnamespace</span>
-<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="k">LATERAL</span><span class="w"> </span><span class="k">unnest</span><span class="p">(</span><span class="n">ix</span><span class="p">.</span><span class="n">indkey</span><span class="p">)</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="k">ORDINALITY</span><span class="w"> </span><span class="n">x</span><span class="p">(</span><span class="n">attnum</span><span class="p">,</span><span class="w"> </span><span class="k">ordinality</span><span class="p">)</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">true</span>
-<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_attribute</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">attrelid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">attnum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">attnum</span>
-<span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indisprimary</span><span class="w">    </span><span class="c1">-- escludi indici PK</span>
-<span class="w">    </span><span class="k">AND</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">relkind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;i&#39;</span><span class="w">         </span><span class="c1">-- solo indici</span>
-<span class="w">  </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">oid</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">relname</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">relname</span><span class="p">,</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indisunique</span><span class="p">,</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indisprimary</span>
-<span class="p">)</span>
-<span class="k">SELECT</span>
-<span class="w">  </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">cols</span><span class="w">                 </span><span class="k">AS</span><span class="w"> </span><span class="n">index_columns</span><span class="p">,</span>
-<span class="w">  </span><span class="n">array_agg</span><span class="p">(</span><span class="n">index_name</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">duplicate_index_names</span><span class="p">,</span>
-<span class="w">  </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w">             </span><span class="k">AS</span><span class="w"> </span><span class="n">count_of_indexes</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">index_cols</span>
-<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">cols</span>
-<span class="k">HAVING</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span>
-<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">count_of_indexes</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
-
-<span class="k">COMMENT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_duplicate_indexes</span><span class="w"> </span><span class="k">IS</span>
-<span class="w">  </span><span class="s1">&#39;Elenca gli indici duplicati (stesso insieme di colonne) per schema e tabella, mostrando i nomi degli indici e il conteggio.&#39;</span><span class="p">;</span>
-</code></pre></div>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
