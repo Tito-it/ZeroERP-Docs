@@ -2920,17 +2920,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#trigger-e-funzioni-coinvolte" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Trigger e Funzioni coinvolte
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#query-tipiche" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3010,12 +2999,13 @@
 <p><strong>Approfondimento Trigger/Funzioni</strong>
 • <a href="../../../../dbzero/dbops/funzioni/trgfn_tx_id_managed"><code>dbops.trgfn_tx_id_managed</code></a> <br />
 • <a href="../../../../dbzero/dbops/funzioni/trgfn_child_requires_active_parent"><code>dbops.trgfn_child_requires_active_parent</code></a> <br />
-• <a href="../../../../dbzero/script/funzioni/trgfn_upd_audit_data_user_generic"><code>script.trgfn_upd_audit_data_user_generic</code></a> <br />
-• <a href="../../../../dbzero/script/funzioni/trgfn_upd_dlt_storico_generic"><code>script.trgfn_upd_dlt_storico_generic</code></a>  </p>
+• <a href="../../../../dbzero/script/funzioni/trgfn_audit_data_user_generic"><code>script.trgfn_audit_data_user_generic</code></a> <br />
+• <a href="../../../../dbzero/script/funzioni/trgfn_storico_generic"><code>script.trgfn_storico_generic</code></a>  </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p><code>catalogo.articoli_componenti</code> rappresenta la <strong>distinta base (BoM)</strong> lato <strong>vendita</strong>, con <strong>versionamento temporale</strong>: ogni riga lega un <strong>prodotto</strong> a un <strong>componente</strong> con una finestra di validità (<code>valid_from</code>..<code>valid_to</code>).</p>
+<p>(latest review 13-01-26)
+<code>catalogo.articoli_componenti</code> rappresenta la <strong>distinta base (BoM)</strong> lato <strong>vendita</strong>, con <strong>versionamento temporale</strong>: ogni riga lega un <strong>prodotto</strong> a un <strong>componente</strong> con una finestra di validità (<code>valid_from</code>..<code>valid_to</code>).</p>
 <p>Supporta:</p>
 <ul>
 <li><strong>quantità/coefficiente</strong> per unità di prodotto (<code>coeff_qta</code>),</li>
@@ -3082,44 +3072,6 @@
 <li><code>ix_articoli_componenti_componente_from_to (componente_id, valid_from, valid_to)</code> → “dove è usato” il componente.</li>
 <li><strong>Exclusion</strong> GiST per prevenire <strong>overlap</strong> temporali (vedi sopra).</li>
 </ul>
-<hr />
-<h3 id="trigger-e-funzioni-coinvolte">⚙️ Trigger e Funzioni coinvolte<a class="headerlink" href="#trigger-e-funzioni-coinvolte" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Nome</th>
-<th>Tipo</th>
-<th>Scopo</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>trg_articoli_componenti_ins_upd_gen_tx_id</code></td>
-<td>BEFORE INS/UPD</td>
-<td>Assegna <code>tx_id</code> se nullo</td>
-</tr>
-<tr>
-<td><code>trg_chk_articoli_componenti_parent_fk_articoli_component_388af3</code></td>
-<td>AFTER INS/UPD OF <code>prodotto_id, attivo</code> (DEFERRABLE)</td>
-<td>Impone <strong>articolo padre attivo</strong></td>
-</tr>
-<tr>
-<td><code>trg_chk_articoli_componenti_parent_fk_articoli_component_86ae92</code></td>
-<td>AFTER INS/UPD OF <code>componente_id, attivo</code> (DEFERRABLE)</td>
-<td>Impone <strong>componente attivo</strong></td>
-</tr>
-<tr>
-<td><code>trg_upd_articoli_componenti_audit_data_user</code></td>
-<td>BEFORE UPDATE</td>
-<td>Aggiorna <code>data_update</code>/<code>user_update</code></td>
-</tr>
-<tr>
-<td><code>trg_z90_articoli_componenti_upd_dlt_storico</code></td>
-<td>BEFORE UPDATE/DELETE</td>
-<td>Snapshot storico (se <code>storicizza=true</code>)</td>
-</tr>
-</tbody>
-</table>
 <hr />
 <h3 id="query-tipiche">🔎 Query tipiche<a class="headerlink" href="#query-tipiche" title="Permanent link">&para;</a></h3>
 <p><strong>1) Distinta valida per una data</strong></p>

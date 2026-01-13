@@ -2931,15 +2931,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#regola-applicata-unica" class="md-nav__link">
+  <a href="#regole-applicate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧩 Regola applicata (unica)
+        🧩 Regole applicate
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="🧩 Regola applicata (unica)">
+    <nav class="md-nav" aria-label="🧩 Regole applicate">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2947,6 +2947,17 @@
     <span class="md-ellipsis">
       
         🅱️ BLOCCO della disattivazione del padre
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#require-sul-figlio-padre-attivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🅱️ REQUIRE sul figlio (padre attivo)
       
     </span>
   </a>
@@ -3061,12 +3072,13 @@
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <p><em>(latest review 13‑11‑2026)</em>
-La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas, p_dry_run)</code></strong> applica in modo automatico e coerente le <strong>regole di gestione del campo <code>attivo</code></strong> (soft‑delete / stato di validità) <strong>sulle relazioni di chiave esterna</strong>, creando e riconciliando <strong>esclusivamente trigger di BLOCCO sul padre</strong>.</p>
+La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas, p_dry_run)</code></strong> applica in modo automatico e coerente le <strong>regole di gestione del campo <code>attivo</code></strong> (soft‑delete / stato di validità) <strong>sulle relazioni di chiave esterna</strong>, creando e riconciliando <strong>trigger di BLOCCO sul padre</strong> e <strong>trigger REQUIRE sul figlio</strong>.</p>
 <p>L’automazione opera <strong>a livello di relazione FK</strong>, non sulla singola tabella isolata, ed è progettata secondo un principio <strong>conservativo e sicuro</strong>:</p>
 <blockquote>
-<p>🔒 <strong>Un record padre può essere disattivato (<code>attivo = false</code>) solo se NON esistono record figli attivi collegati tramite FK (o figli in generale se il figlio non ha <code>attivo</code>).</strong></p>
+<p>🔒 <strong>Un record padre può essere disattivato (<code>attivo = false</code>) solo se NON esistono record figli attivi collegati tramite FK (o figli in generale se il figlio non ha <code>attivo</code>).</strong>
+Inoltre, un record figlio puo' essere inserito/aggiornato <strong>solo se il padre e' attivo</strong>.</p>
 </blockquote>
-<p>Non viene applicata alcuna cascata automatica né alcun vincolo sul figlio.</p>
+<p>Non viene applicata alcuna cascata automatica.</p>
 <hr />
 <h3 id="ambito-di-applicazione">🔍 Ambito di applicazione<a class="headerlink" href="#ambito-di-applicazione" title="Permanent link">&para;</a></h3>
 <p>La funzione considera:</p>
@@ -3125,7 +3137,7 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 <li>determina la <strong>colonna FK del figlio</strong>;</li>
 <li>calcola la <strong>PK monocolonna del padre</strong> (fallback <code>id</code>);</li>
 <li>verifica l’esistenza del trigger di blocco secondo la strategia configurata.</li>
-<li>Se necessario, <strong>crea o riconcilia</strong> il trigger di blocco sul padre.</li>
+<li>Se necessario, <strong>crea o riconcilia</strong> il trigger di blocco sul padre e il trigger require sul figlio.</li>
 </ol>
 <hr />
 <h3 id="condizione-fondamentale">🧠 Condizione fondamentale<a class="headerlink" href="#condizione-fondamentale" title="Permanent link">&para;</a></h3>
@@ -3135,7 +3147,7 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 <p>Se il padre non ha la colonna <code>attivo</code>, la relazione FK viene <strong>ignorata</strong>.</p>
 <p>Il caso <strong>“solo il figlio ha <code>attivo</code>”</strong> non è gestito ed è considerato <strong>SKIP intenzionale</strong>.</p>
 <hr />
-<h3 id="regola-applicata-unica">🧩 Regola applicata (unica)<a class="headerlink" href="#regola-applicata-unica" title="Permanent link">&para;</a></h3>
+<h3 id="regole-applicate">🧩 Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
 <h4 id="blocco-della-disattivazione-del-padre">🅱️ BLOCCO della disattivazione del padre<a class="headerlink" href="#blocco-della-disattivazione-del-padre" title="Permanent link">&para;</a></h4>
 <ul>
 <li><strong>Trigger</strong>: <code>BEFORE UPDATE OF attivo</code></li>
@@ -3149,11 +3161,24 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 </ul>
 <p>➡️ l’operazione viene <strong>bloccata con errore</strong>.</p>
 <p>Nessuna modifica automatica viene applicata ai figli.</p>
+<h4 id="require-sul-figlio-padre-attivo">🅱️ REQUIRE sul figlio (padre attivo)<a class="headerlink" href="#require-sul-figlio-padre-attivo" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Trigger</strong>: <code>AFTER INSERT OR UPDATE OF &lt;fk_col&gt;[, attivo]</code> (constraint, DEFERRABLE)</li>
+<li><strong>Tabella</strong>: FIGLIO</li>
+<li><strong>Funzione</strong>: <code>dbops.trgfn_child_requires_active_parent(parent_schema, parent_table, attivo_parent_col, fk_col)</code></li>
+</ul>
+<p><strong>Effetto</strong>:</p>
+<ul>
+<li>se il figlio ha <code>attivo</code>, il controllo si applica quando <code>attivo = true</code>;</li>
+<li>il padre referenziato deve risultare <strong>attivo</strong>.</li>
+</ul>
+<p>➡️ l’operazione viene <strong>bloccata con errore</strong> se il padre non è attivo.</p>
 <hr />
 <h3 id="naming-dei-trigger">🏷️ Naming dei trigger<a class="headerlink" href="#naming-dei-trigger" title="Permanent link">&para;</a></h3>
-<p>I nomi dei trigger sono generati tramite template JSON (<code>automation_rules_tbl.name_template</code>), utilizzando la chiave <code>block</code>:</p>
+<p>I nomi dei trigger sono generati tramite template JSON (<code>automation_rules_tbl.name_template</code>), utilizzando le chiavi <code>block</code> e <code>require</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;block&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;trg_{parent}_a10_{child}_block_deact_upd&quot;</span>
+<span class="w">  </span><span class="nt">&quot;block&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;trg_{parent}_a10_{child}_block_deact_upd&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;require&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;trg_{child}_a10_{parent}_require_attivo_ins_upd&quot;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Il nome finale è risolto tramite <code>dbops.fn_name_from_template</code>.</p>
@@ -3197,8 +3222,8 @@ La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas
 </ul>
 <hr />
 <blockquote>
-<p>🧠 <strong>In sintesi</strong>: <code>fn_run_automations_attivo</code> implementa una politica ATTIVO volutamente conservativa:
-un record può essere disattivato <strong>solo quando è logicamente libero da dipendenze FK attive</strong>, lasciando ogni altra scelta (cascate, archiviazioni, riallocazioni) a operazioni esplicite e consapevoli.</p>
+<p>🧠 <strong>In sintesi</strong>: <code>fn_run_automations_attivo</code> implementa una politica ATTIVO conservativa:
+il padre si disattiva <strong>solo quando è libero da dipendenze FK attive</strong>, e il figlio può puntare al padre <strong>solo se attivo</strong>.</p>
 </blockquote>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>

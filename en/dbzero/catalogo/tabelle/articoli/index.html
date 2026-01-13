@@ -2920,17 +2920,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#trigger-e-funzioni-coinvolte" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Trigger e Funzioni coinvolte
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#query-tipiche" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3003,10 +2992,8 @@
 • <em>(opz.)</em> <a href="../../../../dbzero/catalogo/tabelle/articoli_componenti"><code>catalogo.articoli_componenti</code></a> – per gli articoli compositi   </p>
 <p><strong>Approfondimento Trigger/Funzioni</strong> <br />
 • <a href="../../../../dbzero/dbops/funzioni/trgfn_tx_id_managed"><code>dbops.trgfn_tx_id_managed</code></a>  <br />
-• <a href="../../../../dbzero/dbops/funzioni/trgfn_child_requires_active_parent"><code>dbops.trgfn_child_requires_active_parent</code></a> <br />
-• <a href="../../../../dbzero/dbops/funzioni/trgfn_soft_delete_cascade"><code>dbops.trgfn_soft_delete_cascade</code></a>  <br />
-• <a href="../../../../dbzero/script/funzioni/trgfn_upd_audit_data_user_generic"><code>script.trgfn_upd_audit_data_user_generic</code></a> <br />
-• <a href="../../../../dbzero/script/funzioni/trgfn_upd_dlt_storico_generic"><code>script.trgfn_upd_dlt_storico_generic</code></a>   </p>
+• <a href="../../../../dbzero/script/funzioni/trgfn_audit_data_user_generic"><code>script.trgfn_audit_data_user_generic</code></a> <br />
+• <a href="../../../../dbzero/script/funzioni/trgfn_storico_generic"><code>script.trgfn_storico_generic</code></a>   </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
@@ -3064,16 +3051,8 @@
 <td><code>config.conti_contabili(id)</code> ← <code>conto_contabile_acquisto_id</code></td>
 <td>Conto acquisti</td>
 </tr>
-<tr>
-<td>(trigger)</td>
-<td><code>catalogo.articoli_componenti</code></td>
-<td>Soft‑delete cascade su <code>attivo</code> (sia prodotto sia componente)</td>
-</tr>
 </tbody>
 </table>
-<blockquote>
-<p><strong>Nota:</strong> il trigger <code>trg_chk_articoli_parent_fk_articoli_unita_misura</code> garantisce che l’<strong>unità di misura</strong> collegata sia <strong>attiva</strong>.</p>
-</blockquote>
 <hr />
 <h3 id="struttura-logica-campi-chiave">🧱 Struttura logica (campi chiave)<a class="headerlink" href="#struttura-logica-campi-chiave" title="Permanent link">&para;</a></h3>
 <ul>
@@ -3090,7 +3069,6 @@
 <li><strong>Univocità</strong>: <code>uq_articoli_codice (codice)</code> → un codice per articolo.</li>
 <li><strong>Integrità referenziale</strong>: tutte le FK sono <code>ON UPDATE CASCADE</code> / <code>ON DELETE NO ACTION</code>.</li>
 <li><strong>Coerenza UoM attiva</strong>: trigger <strong>constraint</strong> (deferrable) impedisce legami con UoM disattive.</li>
-<li><strong>Soft‑delete componenti</strong>: al cambio di <code>attivo</code> sull’articolo, i legami su <code>catalogo.articoli_componenti</code> vengono aggiornati via trigger (<code>dbops.trgfn_soft_delete_cascade</code>).</li>
 </ul>
 <blockquote>
 <p>🔒 Consigliato: proteggere l’<strong>immutabilità</strong> del <code>codice</code> con un trigger <code>BEFORE UPDATE</code> dedicato (se è business‑key) e con GRANT mirati.</p>
@@ -3102,43 +3080,6 @@
 <li><em>(Valuta se necessario)</em> indici su FK usate spesso in filtro: <code>tipo_voce_id</code>, <code>gruppo_voce_id</code>, <code>spesa_id</code>, <code>iva_id</code>, <code>attivo</code>.</li>
 </ul>
 <hr />
-<h3 id="trigger-e-funzioni-coinvolte">⚙️ Trigger e Funzioni coinvolte<a class="headerlink" href="#trigger-e-funzioni-coinvolte" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Nome</th>
-<th>Tipo</th>
-<th>Scopo</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>trg_articoli_ins_upd_gen_tx_id</code></td>
-<td>BEFORE INS/UPD</td>
-<td>Assegna <code>tx_id</code> se nullo (tracciamento transazioni)</td>
-</tr>
-<tr>
-<td><code>trg_chk_articoli_parent_fk_articoli_unita_misura</code></td>
-<td>AFTER INS/UPD OF <code>uom_id, attivo</code> (DEFERRABLE)</td>
-<td>Impone UoM <strong>attiva</strong> sul legame</td>
-</tr>
-<tr>
-<td><code>trg_soft_del_*articoli_componenti*</code> (2x)</td>
-<td>AFTER UPDATE OF <code>attivo</code></td>
-<td>Propaga soft‑delete su tabella componenti (come <strong>prodotto</strong> e come <strong>componente</strong>)</td>
-</tr>
-<tr>
-<td><code>trg_upd_articoli_audit_data_user</code></td>
-<td>BEFORE UPDATE</td>
-<td>Aggiorna <code>data_update</code>/<code>user_update</code></td>
-</tr>
-<tr>
-<td><code>trg_z90_articoli_upd_dlt_storico</code></td>
-<td>BEFORE UPDATE/DELETE</td>
-<td>Snapshot storico (se <code>storicizza=true</code>)</td>
-</tr>
-</tbody>
-</table>
 <hr />
 <h3 id="query-tipiche">🔎 Query tipiche<a class="headerlink" href="#query-tipiche" title="Permanent link">&para;</a></h3>
 <p><strong>1) Ricerca per codice case‑insensitive</strong></p>
