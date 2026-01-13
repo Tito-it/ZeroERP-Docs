@@ -3015,7 +3015,7 @@ Mappa, per ciascun <strong>articolo</strong>, le <strong>unità di misura operat
 <ul>
 <li>[ ] Per <strong>ogni articolo</strong> esiste <strong>esattamente una</strong> riga con <code>is_ba
 se=TRUE</code> e <code>factor_to_base=1</code>.</li>
-<li>[ ] Nessun <strong>overlap di validità</strong> per la stessa <code>(articolo_id, uom_id)</code>; una sola riga attiva alla data.</li>
+<li>[ ] <strong>Una sola riga per (articolo_id, uom_id)</strong>: l’univocità impedisce versioni multiple per la stessa coppia.</li>
 <li>[ ] <code>rounding_mode</code> tra {UP, DOWN, HALF_UP, HALF_DOWN, HALF_EVEN}.</li>
 <li>[ ] Se <code>forbid_fraction=TRUE</code> ⇒ <code>max_decimals=0</code> e <code>qty_step=1</code>.</li>
 <li>[ ] Le API/trigger rispettano <code>qty_step</code>, <code>max_decimals</code> e <strong>copiano</strong> il <code>factor_to_base</code> nei documenti.</li>
@@ -3031,8 +3031,8 @@ se=TRUE</code> e <code>factor_to_base=1</code>.</li>
 <p>(l’uso di <code>is_sell_uom</code>/<code>is_purchase_uom</code>/<code>is_logistic_uom</code> sulla riga base è opzionale; se vuoi tenerli separati, valuta <code>CHECK (NOT is_base OR (is_sell_uom OR is_purchase_uom OR is_logistic_uom) IS NOT TRUE)</code>.)</p>
 <ol>
 <li>
-<p><strong>Integrità temporale</strong> <em>(opzionale ma utile)</em>
-   Il modello consente più righe per la stessa <code>(articolo_id, uom_id)</code> con diverse finestre di validità: per evitare <strong>overlap</strong> attivi nello stesso periodo, valuta una <strong>esclusione</strong> a livello applicativo/trigger o una <em>constraint</em> con range <code>daterange</code> (richiede refactoring a colonna range).</p>
+<p><strong>Integrità temporale</strong>
+   Con l’univocità su <code>(articolo_id, uom_id)</code> non sono previste versioni multiple per la stessa coppia; se in futuro si vuole versionare nel tempo, sarà necessario rivedere il vincolo e introdurre un range/constraint di esclusione.</p>
 </li>
 <li>
 <p><strong>Default e stile indici</strong>

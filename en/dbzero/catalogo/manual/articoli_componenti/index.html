@@ -2995,6 +2995,7 @@
 <p>👀 <strong>Vedi anche</strong></p>
 <p><strong>Approfondimento Tabelle</strong>
 • <a href="../../../../dbzero/catalogo/tabelle/articoli"><code>catalogo.articoli</code></a> <br />
+• <a href="../../../../dbzero/catalogo/tabelle/note"><code>catalogo.note</code></a> <br />
 • <em>(opz.)</em> <a href="../../../../dbzero/catalogo/tabelle/unita_misura"><code>catalogo.unita_misura</code></a>   </p>
 <p><strong>Approfondimento Trigger/Funzioni</strong>
 • <a href="../../../../dbzero/dbops/funzioni/trgfn_tx_id_managed"><code>dbops.trgfn_tx_id_managed</code></a> <br />
@@ -3051,6 +3052,7 @@
 <li><strong>Legame</strong>: <code>prodotto_id UUID</code> (FK), <code>componente_id UUID</code> (FK)</li>
 <li><strong>Versioning</strong>: <code>valid_from DATE</code> (<strong>obbligatorio</strong>), <code>valid_to DATE</code> <em>(NULL = infinito)</em></li>
 <li><strong>Quantità &amp; logica</strong>: <code>coeff_qta NUMERIC(18,6) ≥ 0</code>, <code>partecipa_qta BOOLEAN</code>, <code>obbligatorio BOOLEAN</code></li>
+<li><strong>Note</strong>: <code>note_target_tipo</code>, <code>note_id</code> (FK composita verso <code>catalogo.note</code>)</li>
 <li><strong>Meta &amp; Audit</strong>: <code>meta JSONB</code>, <code>attivo</code>, <code>storicizza</code>, <code>tx_id</code>, <code>user_*</code>, <code>data_*</code></li>
 </ul>
 <hr />
@@ -3063,14 +3065,14 @@
 <li><strong>Nessuna sovrapposizione nel tempo</strong> per la <strong>stessa coppia</strong> <code>(prodotto, componente)</code>:
   <code>EXCLUDE USING gist (prodotto_id WITH =, componente_id WITH =, daterange(valid_from, COALESCE(valid_to, 'infinity'), '[]') WITH &amp;&amp;)</code>
   ➜ <strong>richiede estensione</strong> <code>btree_gist</code> per supportare <code>uuid</code> su GiST.</li>
-<li><strong>Parent attivi</strong> (via trigger <strong>deferrable</strong>): sia <code>prodotto_id</code> sia <code>componente_id</code> devono puntare ad articoli <strong>attivi</strong>.</li>
+<li><strong>Parent attivi</strong>: sia <code>prodotto_id</code> sia <code>componente_id</code> devono puntare ad articoli <strong>attivi</strong> (policy ATTIVO: require sul figlio).</li>
 </ul>
 <hr />
 <h3 id="indicizzazione">🔍 Indicizzazione<a class="headerlink" href="#indicizzazione" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>ix_articoli_componenti_prodotto_from_to (prodotto_id, valid_from, valid_to)</code> → espansione distinta per prodotto e per data.</li>
 <li><code>ix_articoli_componenti_componente_from_to (componente_id, valid_from, valid_to)</code> → “dove è usato” il componente.</li>
-<li><strong>Exclusion</strong> GiST per prevenire <strong>overlap</strong> temporali (vedi sopra).</li>
+<li><strong>Exclusion</strong> GiST per prevenire <strong>overlap</strong> temporali (vedi sopra) + indice <code>ix_articoli_componenti_no_overlap_gist</code>.</li>
 </ul>
 <hr />
 <h3 id="query-tipiche">🔎 Query tipiche<a class="headerlink" href="#query-tipiche" title="Permanent link">&para;</a></h3>
