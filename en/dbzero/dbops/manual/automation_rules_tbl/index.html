@@ -3033,7 +3033,7 @@ Configurare <strong>regole di automazione</strong> per generare/applicare trigge
 <li><code>AUDIT_UPDATE</code> → trigger <code>BEFORE UPDATE</code> con <code>script.trgfn_upd_audit_data_user_generic()</code>.</li>
 <li><code>STORICO</code> → trigger su <code>BEFORE UPDATE</code> e <code>BEFORE DELETE</code> verso <code>storico.&lt;table&gt;_storico</code> con <code>script.trgfn_upd_dlt_storico_generic(...)</code>.</li>
 <li><code>LOCK_COLUMNS</code> → trigger <code>BEFORE UPDATE OF ...</code> con <code>script.trgfn_lock_columns(...)</code> su colonne critiche.</li>
-<li><code>ATTIVO</code> → set di trigger basati su FK <strong>NO ACTION/RESTRICT</strong> (cascade/require/block).</li>
+<li><code>ATTIVO</code> → set di trigger basati su FK (block sul padre; eventuali chiavi <code>cascade/require</code> nel template non usate nella policy attuale).</li>
 <li><strong>target_schema</strong> <em>(text)</em> – schema di destinazione.</li>
 <li><strong>target_table</strong> <em>(text, opzionale)</em> – nome tabella <strong>o pattern LIKE</strong> (<code>%</code>) per filtrare. Se <strong>NULL</strong>, tutte le tabelle dello schema per quel <em>rule_type</em>.</li>
 <li><strong>exec_mode</strong> <em>(text)</em> – <code>AUTO</code> | <code>CI</code> | <code>SCHEDULED</code>. L'orchestratore applica le regole con <code>exec_mode=p_exec_mode</code> <strong>o</strong> <code>AUTO</code>.</li>
@@ -3043,16 +3043,14 @@ Configurare <strong>regole di automazione</strong> per generare/applicare trigge
 <li>
 <p><code>{schema}</code> <code>{table}</code> <code>{parent}</code> <code>{child}</code> <code>{fk}</code> <code>{op}</code> (<code>op</code> ∈ <code>upd|dlt</code>).</p>
 </li>
-<li>Per <code>ATTIVO</code> è un <strong>JSON</strong> con tre chiavi: <code>{ "cascade": "...", "require": "...", "block": "..." }</code>.</li>
+<li>Per <code>ATTIVO</code> è un <strong>JSON</strong>: la policy attuale usa <strong>solo</strong> la chiave <code>block</code> (le chiavi <code>cascade/require</code> sono legacy/non operative).</li>
 <li>
 <p>Default consigliati:</p>
 <ul>
 <li><code>TX_ID</code>: <code>trg_{table}_ins_upd_gen_tx_id</code></li>
 <li><code>AUDIT_UPDATE</code>: <code>trg_upd_{table}_audit_data_user</code></li>
 <li><code>STORICO</code>: <code>trg_{table}_{op}_storico</code></li>
-<li><code>ATTIVO/cascade</code>: <code>trg_soft_del_{parent}__{child}__{fk}</code></li>
-<li><code>ATTIVO/require</code>: <code>trg_chk_{child}_parent_{fk}</code></li>
-<li><code>ATTIVO/block</code>: <code>trg_block_deact_{parent}__{child}</code></li>
+<li><code>ATTIVO/block</code>: <code>trg_{parent}_a10_{child}_block_deact_upd</code></li>
 <li><strong>existence_strategy</strong> <em>(text)</em> – come determinare se il trigger esiste già:</li>
 </ul>
 </li>
@@ -3086,6 +3084,7 @@ Configurare <strong>regole di automazione</strong> per generare/applicare trigge
 <p><code>include_no_action</code> <em>(boolean, default true)</em> → considera anche FK <code>NO ACTION</code> oltre a <code>RESTRICT</code>.</p>
 </li>
 <li>(eventuali flag boolean: <code>cascade_children</code>, <code>require_active_parent</code>, <code>block_if_child_no_attivo</code> – default <code>true</code>).</li>
+<li><strong>Nota</strong>: nella policy ATTIVO semplificata, questi flag non vengono più letti dall’orchestratore; sono mantenuti per retro‑compatibilità e non influenzano il comportamento attuale (block‑only).</li>
 </ul>
 <hr />
 <h3 id="interazione-con-le-altre-tabelle">🔗 Interazione con le altre tabelle<a class="headerlink" href="#interazione-con-le-altre-tabelle" title="Permanent link">&para;</a></h3>
@@ -3099,12 +3098,11 @@ Configurare <strong>regole di automazione</strong> per generare/applicare trigge
 <li>Scopo schemi: da <code>p_schemas</code> o tabella <code>dbops.automation_scope</code> (se presente), altrimenti tutti gli schemi <em>user</em> escluso <code>storico</code>.</li>
 <li>Per <strong>TX_ID / AUDIT_UPDATE / STORICO</strong>: loop per tabelle che matchano la regola (schema + table/pattern), valutano pre‑requisiti (colonne, storico presente), costruiscono nome via template, verificano esistenza secondo <code>existence_strategy</code>, <strong>creano il trigger</strong> se mancante (o <strong>DRYRUN</strong> se <code>p_dry_run=true</code>).</li>
 <li>
-<p>Per <strong>ATTIVO</strong>: loop sulle <strong>FK</strong> con <code>confdeltype IN ('a','r')</code> (NO ACTION/RESTRICT), filtra con <code>automation_fk_exclusions</code>, risolve colonne <code>attivo</code> su parent/child via overrides, poi applica:</p>
+<p>Per <strong>ATTIVO</strong>: loop su <strong>tutte</strong> le FK nello scope (indipendentemente da <code>confdeltype</code>), filtra con <code>automation_fk_exclusions</code>, risolve colonne <code>attivo</code> su parent/child via overrides, poi applica:</p>
 </li>
 <li>
-<p><em>CASO A</em> (parent &amp; child con <code>attivo</code>): trigger <strong>cascade</strong> (padre) + <strong>require</strong> (figlio, DEFERRABLE);</p>
+<p><strong>BLOCK</strong> sul padre: impedisce <code>attivo=true -&gt; false</code> se esistono figli <strong>attivi</strong> (o figli in generale se la colonna <code>attivo</code> sul figlio non esiste).</p>
 </li>
-<li><em>CASO B</em> (solo parent con <code>attivo</code>): trigger <strong>block</strong> (padre).</li>
 </ul>
 <p>Tutti i passaggi loggati in <code>dbops.audit_log</code> (<code>DRYRUN</code>/<code>OK</code>/<code>ERROR</code>).</p>
 <hr />
@@ -3116,15 +3114,13 @@ Configurare <strong>regole di automazione</strong> per generare/applicare trigge
 <span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;TX_ID&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;trg_{table}_ins_upd_gen_tx_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;BY_NAME&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{}&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;txid di default&#39;</span><span class="p">);</span>
 </code></pre></div>
 <ul>
-<li>Regola <strong>ATTIVO</strong> per <code>vendite.%</code> includendo FK NO ACTION:</li>
+<li>Regola <strong>ATTIVO</strong> per <code>vendite.%</code> (policy block):</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automation_rules_tbl</span><span class="p">(</span><span class="n">enabled</span><span class="p">,</span><span class="w"> </span><span class="n">rule_type</span><span class="p">,</span><span class="w"> </span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">target_table</span><span class="p">,</span><span class="w"> </span><span class="n">exec_mode</span><span class="p">,</span><span class="w"> </span><span class="n">name_template</span><span class="p">,</span><span class="w"> </span><span class="n">existence_strategy</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">,</span><span class="w"> </span><span class="n">priority</span><span class="p">)</span>
 <span class="k">VALUES</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ATTIVO&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;%%&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;{&quot;cascade&quot;:&quot;trg_soft_del_{parent}__{child}__{fk}&quot;,</span>
-<span class="s1">    &quot;require&quot;:&quot;trg_chk_{child}_parent_{fk}&quot;,</span>
-<span class="s1">    &quot;block&quot;:&quot;trg_block_deact_{parent}__{child}&quot;}&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;BY_NAME&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{&quot;include_no_action&quot;: true}&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span>
+<span class="w">  </span><span class="s1">&#39;{&quot;block&quot;:&quot;trg_{parent}_a10_{child}_block_deact_upd&quot;}&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;BY_NAME&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;{}&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span>
 <span class="p">);</span>
 </code></pre></div>
 <hr />
@@ -3140,12 +3136,12 @@ Configurare <strong>regole di automazione</strong> per generare/applicare trigge
 <li>Ordinamento applicazione: <code>ORDER BY priority, id</code>.</li>
 <li><em>exec_mode</em> filtro: la regola è valida se <code>exec_mode = p_exec_mode</code> <strong>o</strong> <code>exec_mode='AUTO'</code>.</li>
 <li><em>target_table</em> può essere <code>NULL</code> → tutte le tabelle dello schema per quel <em>rule_type</em>.</li>
-<li>Per <code>ATTIVO</code>, <code>name_template</code> è JSON con tre modelli (cascade/require/block).</li>
+<li>Per <code>ATTIVO</code>, <code>name_template</code> è JSON con il modello <code>block</code>.</li>
 </ul>
 <h3 id="best-practice">🧠 Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Mantieni template corti (&lt;63 char finali) e coerenti con lo standard di progetto.</li>
-<li>Usa <code>params</code> per comportamenti opzionali (es. <code>include_no_action</code> in <code>ATTIVO</code>).</li>
+<li>Usa <code>params</code> per comportamenti opzionali specifici dei rule_type.</li>
 <li>Se servono eccezioni di naming, preferisci <code>automation_overrides_cols</code>.</li>
 <li>Tieni le regole <strong>specifiche</strong> (per schema e, se possibile, tabella) per evitare sorprese.</li>
 </ul>
