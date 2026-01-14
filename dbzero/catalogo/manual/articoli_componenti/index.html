@@ -2942,6 +2942,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#esempio-realistico-distinta-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Esempio realistico (distinta base)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-realistico-utility-gas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Esempio realistico (utility gas)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-utilizzo-temporale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🕒 Esempio utilizzo temporale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#diagramma-er-relazioni-focus-bom" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3066,6 +3099,7 @@
   <code>EXCLUDE USING gist (prodotto_id WITH =, componente_id WITH =, daterange(valid_from, COALESCE(valid_to, 'infinity'), '[]') WITH &amp;&amp;)</code>
   ➜ <strong>richiede estensione</strong> <code>btree_gist</code> per supportare <code>uuid</code> su GiST.</li>
 <li><strong>Parent attivi</strong>: sia <code>prodotto_id</code> sia <code>componente_id</code> devono puntare ad articoli <strong>attivi</strong> (policy ATTIVO: require sul figlio).</li>
+<li><strong>Solo componente</strong>: un articolo con <code>is_solo_componente=true</code> non può essere usato come <code>prodotto_id</code>.</li>
 </ul>
 <hr />
 <h3 id="indicizzazione">🔍 Indicizzazione<a class="headerlink" href="#indicizzazione" title="Permanent link">&para;</a></h3>
@@ -3114,6 +3148,54 @@
 <li><strong>Chiusure automatiche</strong>: se vuoi evitare “open‑ended” duplicati, implementa una procedura che chiude la riga precedente (imposta <code>valid_to</code>) quando inserisci una nuova versione.</li>
 <li><strong>Estensione <code>btree_gist</code></strong>: assicurati che sia installata (<code>CREATE EXTENSION IF NOT EXISTS btree_gist;</code>).</li>
 <li><strong>Storicizza</strong> le modifiche e usa <code>attivo=false</code> per dismissioni logiche.</li>
+</ul>
+<hr />
+<h3 id="esempio-realistico-distinta-base">🧩 Esempio realistico (distinta base)<a class="headerlink" href="#esempio-realistico-distinta-base" title="Permanent link">&para;</a></h3>
+<p>Esempio: prodotto <strong>SEDIA</strong> con componenti <strong>piedi</strong>, <strong>schienale</strong>, <strong>sedile</strong>, <strong>viti</strong>.</p>
+<p>In <code>catalogo.articoli</code> esistono:</p>
+<ul>
+<li><code>SEDIA</code> (prodotto finito)</li>
+<li><code>PIEDE_SX</code>, <code>PIEDE_DX</code>, <code>PIEDE_POST_SX</code>, <code>PIEDE_POST_DX</code></li>
+<li><code>SCHIENALE</code></li>
+<li><code>SEDILE</code></li>
+<li><code>VITE_M6</code></li>
+</ul>
+<p>In <code>catalogo.articoli_componenti</code> avrai una riga per ciascun componente:</p>
+<ul>
+<li><code>prodotto_id = SEDIA</code>, <code>componente_id = PIEDE_SX</code>, <code>coeff_qta = 1</code></li>
+<li><code>prodotto_id = SEDIA</code>, <code>componente_id = PIEDE_DX</code>, <code>coeff_qta = 1</code></li>
+<li><code>prodotto_id = SEDIA</code>, <code>componente_id = PIEDE_POST_SX</code>, <code>coeff_qta = 1</code></li>
+<li><code>prodotto_id = SEDIA</code>, <code>componente_id = PIEDE_POST_DX</code>, <code>coeff_qta = 1</code></li>
+<li><code>prodotto_id = SEDIA</code>, <code>componente_id = SCHIENALE</code>, <code>coeff_qta = 1</code></li>
+<li><code>prodotto_id = SEDIA</code>, <code>componente_id = SEDILE</code>, <code>coeff_qta = 1</code></li>
+<li><code>prodotto_id = SEDIA</code>, <code>componente_id = VITE_M6</code>, <code>coeff_qta = 8</code></li>
+</ul>
+<hr />
+<h3 id="esempio-realistico-utility-gas">🧩 Esempio realistico (utility gas)<a class="headerlink" href="#esempio-realistico-utility-gas" title="Permanent link">&para;</a></h3>
+<p>Esempio: prodotto <strong>GAS_FACILE</strong> composto da <strong>MATERIA_PRIMA</strong>, <strong>QVD</strong> e <strong>SPREAD</strong>.</p>
+<p>In <code>catalogo.articoli</code> esistono:</p>
+<ul>
+<li><code>GAS_FACILE</code> (prodotto/servizio finale)</li>
+<li><code>MATERIA_PRIMA</code></li>
+<li><code>QVD</code></li>
+<li><code>SPREAD</code></li>
+</ul>
+<p>In <code>catalogo.articoli_componenti</code> avrai una riga per ciascun componente:</p>
+<ul>
+<li><code>prodotto_id = GAS_FACILE</code>, <code>componente_id = MATERIA_PRIMA</code>, <code>coeff_qta = 1</code></li>
+<li><code>prodotto_id = GAS_FACILE</code>, <code>componente_id = QVD</code>, <code>coeff_qta = 1</code></li>
+<li><code>prodotto_id = GAS_FACILE</code>, <code>componente_id = SPREAD</code>, <code>coeff_qta = 1</code></li>
+</ul>
+<hr />
+<h3 id="esempio-utilizzo-temporale">🕒 Esempio utilizzo temporale<a class="headerlink" href="#esempio-utilizzo-temporale" title="Permanent link">&para;</a></h3>
+<p>Se la composizione cambia nel tempo, si inserisce <strong>una nuova riga</strong> con un nuovo
+<code>valid_from</code> e si chiude la precedente con <code>valid_to</code>.</p>
+<p>Esempio: la quota <strong>SPREAD</strong> aumenta dal 2026-03-01.</p>
+<ul>
+<li>Versione attuale:</li>
+<li><code>prodotto_id = GAS_FACILE</code>, <code>componente_id = SPREAD</code>, <code>coeff_qta = 1</code>, <code>valid_from = 2026-01-01</code>, <code>valid_to = 2026-02-28</code></li>
+<li>Nuova versione:</li>
+<li><code>prodotto_id = GAS_FACILE</code>, <code>componente_id = SPREAD</code>, <code>coeff_qta = 1.2</code>, <code>valid_from = 2026-03-01</code>, <code>valid_to = NULL</code></li>
 </ul>
 <hr />
 <h3 id="diagramma-er-relazioni-focus-bom">Diagramma ER relazioni (focus BoM)<a class="headerlink" href="#diagramma-er-relazioni-focus-bom" title="Permanent link">&para;</a></h3>
