@@ -2034,6 +2034,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#9bis-policy-indici-fk-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9bis) 🔍 Policy indici FK (governance)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#10-esempi-di-configurazione-automation_rules_tbl" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3115,6 +3126,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#9bis-policy-indici-fk-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9bis) 🔍 Policy indici FK (governance)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#10-esempi-di-configurazione-automation_rules_tbl" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3317,6 +3339,39 @@ In caso contrario le automazioni possono <strong>non essere applicate</strong>, 
 <li>eventuali strategie più aggressive (cascata, archiviazione figli) sono demandate a operazioni esplicite.</li>
 <li>Runner aggiornati: <code>fn_resolve_scope</code>, <code>fn_table_in_scope</code>, <code>fn_schema_match('*all', ...)</code>.</li>
 <li>Guard globale: schema <code>storico</code> escluso dai runner di storico.</li>
+</ul>
+<hr />
+<h2 id="9bis-policy-indici-fk-governance">9bis) 🔍 Policy indici FK (governance)<a class="headerlink" href="#9bis-policy-indici-fk-governance" title="Permanent link">&para;</a></h2>
+<p><strong>Obiettivo</strong>: evitare la creazione manuale di indici FK e centralizzare la decisione in <code>dbops.fk_index_policy</code>.</p>
+<p><strong>Componenti principali</strong></p>
+<ul>
+<li><strong>Tabella policy</strong>: <a href="../../dbzero/dbops/tabelle/fk_index_policy">dbops.fk_index_policy</a> (flag <code>consentito</code> + <code>dll_command</code>).</li>
+<li><strong>View di supporto</strong>:</li>
+<li><a href="../../dbzero/dbops/views/vw_fk_con_indice_missing_policy">dbops.vw_fk_con_indice_missing_policy</a> → FK con indice esistente ma <strong>senza</strong> policy (filtrata per <code>automation_scope</code>).</li>
+<li><a href="../../dbzero/dbops/views/vw_fk_senza_indice">dbops.vw_fk_senza_indice</a>→ FK <strong>senza</strong> indice (filtrata per <code>automation_scope</code> e <strong>considera anche UNIQUE</strong>).</li>
+<li><a href="../../dbzero/dbops/views/vw_duplicate_indexes">dbops.vw_duplicate_indexes</a> → rileva indici duplicati per schema/tabella.</li>
+<li><strong>Funzioni</strong>:</li>
+<li><a href="../../dbzero/dbops/funzioni/fn_seed_fk_index_policy">dbops.fn_seed_fk_index_policy()</a> → registra in policy le FK gia' indicizzate (<code>consentito=true</code>).</li>
+<li><a href="../../dbzero/dbops/funzioni/fn_populate_fk_index_policy">dbops.fn_populate_fk_index_policy()</a> → registra in policy le FK senza indice (<code>consentito=false</code>).</li>
+<li><a href="../../dbzero/dbops/funzioni/fn_populate_fk_index_policy">dbops.fn_populate_fk_index_policy()</a> → crea/rimuove indici in base alla policy.</li>
+</ul>
+<p><strong>Regola operativa</strong></p>
+<ul>
+<li><strong>Non creare indici FK manualmente</strong>: se servono, usa la policy e il naming coerente, poi registra in <code>fk_index_policy</code>.</li>
+<li><strong>Scope schemi</strong>: le view lavorano solo sugli schemi presenti in <code>dbops.automation_scope</code>.</li>
+</ul>
+<p><strong>Flusso consigliato</strong></p>
+<ol>
+<li><strong>Seed</strong> (indici gia' presenti):
+   <code>SELECT dbops.fn_seed_fk_index_policy();</code></li>
+<li><strong>Populate</strong> (indici mancanti):
+   <code>SELECT dbops.fn_populate_fk_index_policy();</code></li>
+<li><strong>Apply</strong>:
+   <code>CALL dbops.apply_fk_index_policy();</code></li>
+</ol>
+<p><strong>Job schedulabile</strong></p>
+<ul>
+<li>Wrapper in maintenance: <code>maintenance.proc_apply_fk_index_policy_job()</code> (logging + lock).</li>
 </ul>
 <hr />
 <h2 id="10-esempi-di-configurazione-automation_rules_tbl">10) 🧪 Esempi di configurazione (<code>automation_rules_tbl</code>)<a class="headerlink" href="#10-esempi-di-configurazione-automation_rules_tbl" title="Permanent link">&para;</a></h2>
