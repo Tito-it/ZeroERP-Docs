@@ -3084,18 +3084,12 @@
 <hr />
 <h3 id="indicizzazione">🔍 Indicizzazione<a class="headerlink" href="#indicizzazione" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Ricerca case‑insensitive per codice</strong>: <code>ix_articoli_codice_upper</code> su <code>upper(codice)</code>.</li>
 <li><em>(Valuta se necessario)</em> indici su FK usate spesso in filtro: <code>tipo_voce_id</code>, <code>gruppo_voce_id</code>, <code>spesa_id</code>, <code>iva_id</code>, <code>attivo</code>.</li>
 </ul>
 <hr />
 <hr />
 <h3 id="query-tipiche">🔎 Query tipiche<a class="headerlink" href="#query-tipiche" title="Permanent link">&para;</a></h3>
-<p><strong>1) Ricerca per codice case‑insensitive</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli</span><span class="w"> </span><span class="n">a</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">upper</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">codice</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">upper</span><span class="p">(:</span><span class="n">codice</span><span class="p">);</span>
-</code></pre></div>
-<p><strong>2) Articoli attivi per tipologia e gruppo</strong></p>
+<p><strong>1) Articoli attivi per tipologia e gruppo</strong></p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">descrizione</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli</span><span class="w"> </span><span class="n">a</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span>
@@ -3103,7 +3097,7 @@
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">gruppo_voce_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">gruppo_id</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">descrizione</span><span class="p">;</span>
 </code></pre></div>
-<p><strong>3) Articoli compositi con componenti (schema indicativo)</strong></p>
+<p><strong>2) Articoli compositi con componenti (schema indicativo)</strong></p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">codice</span><span class="w">   </span><span class="k">AS</span><span class="w"> </span><span class="n">prodotto</span><span class="p">,</span>
 <span class="w">       </span><span class="k">c</span><span class="p">.</span><span class="n">codice</span><span class="w">   </span><span class="k">AS</span><span class="w"> </span><span class="n">componente</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli_componenti</span><span class="w"> </span><span class="n">ac</span>
@@ -3113,7 +3107,7 @@
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">codice</span><span class="p">;</span>
 </code></pre></div>
-<p><strong>4) Verifica coerenza UoM attiva (diagnostica)</strong></p>
+<p><strong>3) Verifica coerenza UoM attiva (diagnostica)</strong></p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">codice</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli</span><span class="w"> </span><span class="n">a</span>
 <span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">unita_misura</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">uom_id</span>

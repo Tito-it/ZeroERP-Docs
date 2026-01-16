@@ -2876,17 +2876,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#definizione-ddl" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🔍 Definizione (DDL)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#colonne-e-descrizione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2958,94 +2947,20 @@
 <li><a href="../../../../dbzero/dbops/manual/fn_populate_fk_index_policy">dbops.fn_populate_fk_index_policy</a>   </li>
 <li><a href="../../../../dbzero/dbops/manual/vw_fk_con_indice_missing_policy">dbops.vw_fk_senza_indice</a>   </li>
 <li>
-<p><a href="../../../../dbzero/dbops/manual/vw_duplicate_indexes">dbops.vw_duplicate_indexes</a>  </p>
+<p><a href="../../../../dbzero/dbops/views/vw_duplicate_indexes">dbops.vw_duplicate_indexes</a>     </p>
 </li>
 <li>
 <p>Catalogo dei vincoli FK in PostgreSQL (<code>pg_constraint</code>, <code>pg_class</code>, <code>pg_namespace</code>)</p>
 </li>
 </ul>
 </blockquote>
-<p>La view <strong><code>dbops.vw_fk_senza_indice</code></strong> elenca tutte le foreign key definite negli schemi monitorati che <strong>non hanno un indice associato</strong> sulle colonne di riferimento, suggerendo lo statement <code>CREATE INDEX</code> corrispondente e rispettando eventuali eccezioni definite in <code>dbops.fk_index_policy</code>.</p>
+<p>La view <strong><code>dbops.vw_fk_senza_indice</code></strong> elenca tutte le foreign key definite <strong>solo negli schemi presenti in <code>dbops.automation_scope</code></strong> che <strong>non hanno un indice associato</strong> sulle colonne di riferimento, suggerendo lo statement <code>CREATE INDEX</code> corrispondente e rispettando eventuali eccezioni definite in <code>dbops.fk_index_policy</code>. La view considera anche i <strong>vincoli UNIQUE</strong> esistenti: se una FK e<code>gia</code> coperta da un <code>UNIQUE</code> con le stesse colonne, non viene proposta.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Individuare automaticamente vincoli di integrità referenziale (FK) privi di indice, potenziali colli di bottiglia nelle operazioni di JOIN e DELETE.</li>
-<li>Fornire suggerimenti di creazione indice coerenti, facilitando l’ottimizzazione delle performance.</li>
-<li>Applicare eventuali policy di esclusione gestite in <code>dbops.fk_index_policy</code>.</li>
-</ul>
-<hr />
-<h3 id="definizione-ddl">🔍 Definizione (DDL)<a class="headerlink" href="#definizione-ddl" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_fk_senza_indice</span><span class="w"> </span><span class="k">AS</span>
-<span class="k">WITH</span><span class="w"> </span><span class="n">fk_columns</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">con</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">constraint_oid</span><span class="p">,</span>
-<span class="w">         </span><span class="n">con</span><span class="p">.</span><span class="n">conname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">nsp</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">rel</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">         </span><span class="k">unnest</span><span class="p">(</span><span class="n">con</span><span class="p">.</span><span class="n">conkey</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">attnum</span><span class="p">,</span>
-<span class="w">         </span><span class="n">con</span><span class="p">.</span><span class="n">conrelid</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_constraint</span><span class="w"> </span><span class="n">con</span>
-<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="n">rel</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">rel</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">con</span><span class="p">.</span><span class="n">conrelid</span>
-<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">nsp</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">nsp</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rel</span><span class="p">.</span><span class="n">relnamespace</span>
-<span class="w">   </span><span class="k">WHERE</span><span class="w"> </span><span class="n">con</span><span class="p">.</span><span class="n">contype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;f&#39;</span>
-<span class="p">),</span><span class="w"> </span><span class="n">fk_fields</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">a</span><span class="p">.</span><span class="n">attname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">column_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">fk</span><span class="p">.</span><span class="n">conrelid</span><span class="p">,</span>
-<span class="w">         </span><span class="n">fk</span><span class="p">.</span><span class="n">constraint_oid</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">fk_columns</span><span class="w"> </span><span class="n">fk</span>
-<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_attribute</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">attrelid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="n">conrelid</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">attnum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="n">attnum</span>
-<span class="p">),</span><span class="w"> </span><span class="n">indexed_columns</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">index_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">t</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">array_agg</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">attname</span><span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="k">ordinality</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">indexed_cols</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_index</span><span class="w"> </span><span class="n">ix</span>
-<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indexrelid</span>
-<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ix</span><span class="p">.</span><span class="n">indrelid</span>
-<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">relnamespace</span>
-<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="k">LATERAL</span><span class="w"> </span><span class="k">unnest</span><span class="p">(</span><span class="n">ix</span><span class="p">.</span><span class="n">indkey</span><span class="p">)</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="k">ORDINALITY</span><span class="w"> </span><span class="n">x</span><span class="p">(</span><span class="n">attnum</span><span class="p">,</span><span class="w"> </span><span class="k">ordinality</span><span class="p">)</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">true</span>
-<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_attribute</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">attrelid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">attnum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">attnum</span>
-<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">relname</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">relname</span>
-<span class="p">),</span><span class="w"> </span><span class="n">fk_grouped</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">         </span><span class="n">array_agg</span><span class="p">(</span><span class="n">fk</span><span class="p">.</span><span class="k">column_name</span><span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">column_name</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">fk_cols</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">fk_fields</span><span class="w"> </span><span class="n">fk</span>
-<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">,</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span>
-<span class="p">)</span>
-<span class="k">SELECT</span>
-<span class="w">  </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">fk</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">fk</span><span class="p">.</span><span class="n">fk_cols</span><span class="p">,</span>
-<span class="w">  </span><span class="n">format</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;CREATE INDEX ix_%I_%I_%s ON %I.%I(%s);&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">array_to_string</span><span class="p">(</span><span class="n">fk</span><span class="p">.</span><span class="n">fk_cols</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;_&#39;</span><span class="p">),</span>
-<span class="w">    </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">array_to_string</span><span class="p">(</span><span class="n">fk</span><span class="p">.</span><span class="n">fk_cols</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
-<span class="w">  </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">create_index_suggestion</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">fk_grouped</span><span class="w"> </span><span class="n">fk</span>
-<span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">indexed_columns</span><span class="w"> </span><span class="n">idx</span>
-<span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="k">schema_name</span>
-<span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="k">table_name</span>
-<span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="n">fk_cols</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">indexed_cols</span>
-<span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span><span class="w"> </span><span class="n">pol</span>
-<span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">pol</span><span class="p">.</span><span class="k">schema_name</span>
-<span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">pol</span><span class="p">.</span><span class="k">table_name</span>
-<span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">constraint_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pol</span><span class="p">.</span><span class="k">constraint_name</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">index_name</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
-<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">pol</span><span class="p">.</span><span class="n">consentito</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span>
-<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-</code></pre></div>
-<p><strong>Owner</strong>: <code>postgres</code></p>
-<p><strong>Commento</strong>: "Elenco delle foreign key senza indice esplicito, con suggerimento CREATE INDEX e rispetto policy da dbops.fk_index_policy"</p>
-<hr />
+<p>(latest review 16-01-26)
+* Individuare automaticamente vincoli di integrità referenziale (FK) privi di indice, potenziali colli di bottiglia nelle operazioni di JOIN e DELETE.
+* Fornire suggerimenti di creazione indice coerenti, facilitando l’ottimizzazione delle performance.
+* Applicare eventuali policy di esclusione gestite in <code>dbops.fk_index_policy</code>.</p>
 <h3 id="colonne-e-descrizione">🔍 Colonne e Descrizione<a class="headerlink" href="#colonne-e-descrizione" title="Permanent link">&para;</a></h3>
 <table>
 <thead>

@@ -3150,12 +3150,10 @@
 <p><strong>(latest review 13-01-26)</strong></p>
 <p><strong>Scope:</strong> aggiorna la guida esistente con le novità su wildcard <code>*all</code> e gli ultimi affinamenti senza stravolgere la struttura.</p>
 <p><strong>Riferimenti chiave</strong>:</p>
-<blockquote>
 <ul>
-<li><a href="../../dbzero/dbops/tabelle/automation_rules_tbl">dbops.automation_rules_tbl</a></li>
-</ul>
-</blockquote>
-<ul>
+<li>
+<p><a href="../../dbzero/dbops/tabelle/automation_rules_tbl">dbops.automation_rules_tbl</a></p>
+</li>
 <li>
 <p><a href="../../dbzero/dbops/tabelle/automation_fk_exclusions">dbops.automation_fk_exclusions</a></p>
 </li>
@@ -3169,18 +3167,25 @@
 <p><a href="../../dbzero/dbops/tabelle/audit_log">dbops.audit_log</a></p>
 </li>
 <li>
-<p>Orchestratori:</p>
+<p><em>Orchestratori:</em></p>
 </li>
+<li>
+<p><a href="../../dbzero/dbops/funzioni/fn_run_automations">dbops.fn_run_automations</a>,  </p>
+</li>
+<li><a href="../../dbzero/dbops/funzioni/fn_run_automations_tx_id">dbops.fn_run_automations_tx_id</a>,  </li>
+<li><a href="../../dbzero/dbops/funzioni/fn_run_automations_audit_update">dbops.run_automations_audit_update</a>,  </li>
+<li><a href="../../dbzero/dbops/funzioni/fn_run_automations_storico">dbops.run_automations_storico</a>,   </li>
+<li><a href="../../dbzero/dbops/funzioni/fn_run_automations_attivo">dbops.fn_run_automations_attivo</a>  </li>
 </ul>
-<p><a href="../../dbzero/dbops/funzioni/fn_run_automations">dbops.fn_run_automations</a>,<br />
-<a href="../../dbzero/dbops/funzioni/fn_run_automations_tx_id">dbops.fn_run_automations_tx_id</a>,<br />
-<a href="../../dbzero/dbops/funzioni/fn_run_automations_audit_update">dbops.run_automations_audit_update</a>,<br />
-<a href="../../dbzero/dbops/funzioni/fn_run_automations_storico">dbops.run_automations_storico</a>, <br />
-<a href="../../dbzero/dbops/funzioni/fn_run_automations_attivo">dbops.fn_run_automations_attivo</a>  </p>
 </blockquote>
 <hr />
 <h2 id="1-perche-un-framework-di-automazione">1) 🎯 Perché un framework di automazione<a class="headerlink" href="#1-perche-un-framework-di-automazione" title="Permanent link">&para;</a></h2>
 <p>Automatizzare attività ripetitive (assegnazione <code>tx_id</code>, audit update, storico, soft‑delete/<code>attivo</code>) riduce errori manuali e accelera i rilasci. Le regole dichiarative descrivono <strong>cosa</strong> e <strong>dove</strong> applicare; gli orchestratori generano trigger/oggetti in modo <strong>idempotente</strong>, con <strong>dry‑run</strong> e <strong>audit</strong>.</p>
+<blockquote>
+<p>⚠️ <strong>Avvertenza</strong></p>
+<p>Per garantire il corretto funzionamento del framework e delle regole di applicazione, nello sviluppo è <strong>obbligatorio</strong> rispettare le convenzioni di naming indicate  nella apposita sezione <strong><a href="../../linee-guida-sql">Linee guida sql</a></strong> .  <br />
+In caso contrario le automazioni possono <strong>non essere applicate</strong>, con conseguenti interventi manuali, debug non necessari e perdita di tempo nel capire perché il framework non abbia agito.</p>
+</blockquote>
 <hr />
 <h2 id="2-architettura-sintesi">2) 🧩 Architettura (sintesi)<a class="headerlink" href="#2-architettura-sintesi" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3217,6 +3222,7 @@
 <li>La regola si applica esclusivamente se il <strong>PADRE possiede la colonna <code>attivo</code></strong>.</li>
 <li>Le FK considerate sono <code>RESTRICT</code> e <code>NO ACTION</code> (anche <code>DEFERRABLE</code>).</li>
 </ul>
+<p><strong>Nota</strong>: <strong>l’automazione ATTIVO viene applicata solo alle FK con colonna che termina in <code>_id</code></strong>; in caso contrario la regola viene saltata per evitare riferimenti a codici testuali o chiavi non id.</p>
 <p><strong>Trigger generato</strong></p>
 <ul>
 <li><strong>Tabella</strong>: PADRE</li>

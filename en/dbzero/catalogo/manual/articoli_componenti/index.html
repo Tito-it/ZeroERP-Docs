@@ -3026,11 +3026,11 @@
 <h2 id="documentazione-concettuale-tabella-catalogoarticoli_componenti">📘 Documentazione Concettuale – Tabella <code>catalogo.articoli_componenti</code><a class="headerlink" href="#documentazione-concettuale-tabella-catalogoarticoli_componenti" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p><strong>Approfondimento Tabelle</strong>
+<p><strong>Approfondimento Tabelle</strong><br />
 • <a href="../../../../dbzero/catalogo/tabelle/articoli"><code>catalogo.articoli</code></a> <br />
 • <a href="../../../../dbzero/catalogo/tabelle/note"><code>catalogo.note</code></a> <br />
 • <em>(opz.)</em> <a href="../../../../dbzero/catalogo/tabelle/unita_misura"><code>catalogo.unita_misura</code></a>   </p>
-<p><strong>Approfondimento Trigger/Funzioni</strong>
+<p><strong>Approfondimento Trigger/Funzioni</strong> <br />
 • <a href="../../../../dbzero/dbops/funzioni/trgfn_tx_id_managed"><code>dbops.trgfn_tx_id_managed</code></a> <br />
 • <a href="../../../../dbzero/dbops/funzioni/trgfn_child_requires_active_parent"><code>dbops.trgfn_child_requires_active_parent</code></a> <br />
 • <a href="../../../../dbzero/script/funzioni/trgfn_audit_data_user_generic"><code>script.trgfn_audit_data_user_generic</code></a> <br />
@@ -3098,9 +3098,22 @@
 <li><strong>Nessuna sovrapposizione nel tempo</strong> per la <strong>stessa coppia</strong> <code>(prodotto, componente)</code>:
   <code>EXCLUDE USING gist (prodotto_id WITH =, componente_id WITH =, daterange(valid_from, COALESCE(valid_to, 'infinity'), '[]') WITH &amp;&amp;)</code>
   ➜ <strong>richiede estensione</strong> <code>btree_gist</code> per supportare <code>uuid</code> su GiST.</li>
-<li><strong>Parent attivi</strong>: sia <code>prodotto_id</code> sia <code>componente_id</code> devono puntare ad articoli <strong>attivi</strong> (policy ATTIVO: require sul figlio).</li>
+<li><strong>Parent attivi</strong>: sia <code>prodotto_id</code> sia <code>componente_id</code> devono puntare ad articoli <strong>attivi</strong>.</li>
 <li><strong>Solo componente</strong>: un articolo con <code>is_solo_componente=true</code> non può essere usato come <code>prodotto_id</code>.</li>
+<li><strong>Prodotto composito</strong>: un articolo con <code>is_composito=false</code> non può essere usato come <code>prodotto_id</code>.</li>
 </ul>
+<blockquote>
+<p><strong>Nota tecnica (trigger manuali)</strong></p>
+<p>Questi vincoli sono <strong>applicati tramite trigger dedicati</strong> su <code>articoli_componenti</code>:</p>
+<ul>
+<li>REQUIRE su <code>prodotto_id</code> (padre attivo)</li>
+<li>REQUIRE su <code>componente_id</code> (figlio attivo)</li>
+<li>GUARD su <code>is_composito</code></li>
+</ul>
+<p>Non rientrano nella generazione automatica <code>automations</code> perché la tabella
+usa <strong>due FK verso la stessa entità</strong> (<code>catalogo.articoli</code>) con ruoli diversi
+(prodotto vs componente), e la logica richiede controlli <strong>distinti e specifici</strong>.</p>
+</blockquote>
 <hr />
 <h3 id="indicizzazione">🔍 Indicizzazione<a class="headerlink" href="#indicizzazione" title="Permanent link">&para;</a></h3>
 <ul>

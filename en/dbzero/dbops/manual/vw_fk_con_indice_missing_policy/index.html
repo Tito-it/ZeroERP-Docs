@@ -2887,17 +2887,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ddl-della-view" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🔖 DDL della View
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2948,17 +2937,16 @@
 <li><a href="../../../../dbzero/dbops/manual/vw_duplicate_indexes">dbops.vw_duplicate_indexes</a>    </li>
 </ul>
 </blockquote>
-<p>La view <strong><code>dbops.vw_fk_con_indice_missing_policy</code></strong> elenca tutte le <strong>foreign key</strong> che <strong>hanno un indice</strong> (prefisso <code>ix_</code>) ma <strong>non</strong> sono ancora gestite dalla tabella di policy <code>dbops.fk_index_policy</code>. Per ciascuna FK, viene suggerito il comando SQL di creazione dell’indice.</p>
+<p>La view <strong><code>dbops.vw_fk_con_indice_missing_policy</code></strong> elenca tutte le <strong>foreign key</strong> che <strong>hanno un indice</strong> (prefisso <code>ix_</code>) ma <strong>non</strong> sono ancora gestite dalla tabella di policy <code>dbops.fk_index_policy</code>, limitandosi <strong>agli schemi presenti in <code>dbops.automation_scope</code></strong>. Per ciascuna FK, viene suggerito il comando SQL di creazione dell’indice.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Identificare gli indici esistenti</strong>
-  Trova le FK già indicizzate che non dispongono di una policy dedicata.</li>
-<li><strong>Suggerimento DDL</strong>
-  Genera automaticamente la stringa <code>CREATE INDEX ...</code> per uniformare naming e struttura.</li>
-<li><strong>Supporto auditing e governance</strong>
-  Permette di scoprire eventuali indici non tracciati, inserendoli poi in <code>fk_index_policy</code>.</li>
-</ul>
+<p>(latest review 16-01-26)
+* <strong>Identificare gli indici esistenti</strong>
+  Trova le FK già indicizzate che non dispongono di una policy dedicata.
+* <strong>Suggerimento DDL</strong>
+  Genera automaticamente la stringa <code>CREATE INDEX ...</code> per uniformare naming e struttura.
+* <strong>Supporto auditing e governance</strong>
+  Permette di scoprire eventuali indici non tracciati, inserendoli poi in <code>fk_index_policy</code>.</p>
 <hr />
 <h3 id="flusso-di-costruzione">⚙️ Flusso di Costruzione<a class="headerlink" href="#flusso-di-costruzione" title="Permanent link">&para;</a></h3>
 <ol>
@@ -2987,44 +2975,6 @@
 </code></pre></div>
 </li>
 </ol>
-<hr />
-<h3 id="ddl-della-view">🔖 DDL della View<a class="headerlink" href="#ddl-della-view" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_fk_con_indice_missing_policy</span><span class="w"> </span><span class="k">AS</span>
-<span class="k">WITH</span>
-<span class="w">  </span><span class="n">fk_columns</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(...),</span>
-<span class="w">  </span><span class="n">fk_fields</span><span class="w">  </span><span class="k">AS</span><span class="w"> </span><span class="p">(...),</span>
-<span class="w">  </span><span class="n">indexed_columns</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(...),</span>
-<span class="w">  </span><span class="n">fk_grouped</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(...)</span>
-<span class="k">SELECT</span>
-<span class="w">  </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">fk</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">fk</span><span class="p">.</span><span class="n">fk_cols</span><span class="p">,</span>
-<span class="w">  </span><span class="n">idx</span><span class="p">.</span><span class="n">index_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">format</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;CREATE INDEX ix_%I_%I_%s ON %I.%I(%s);&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">array_to_string</span><span class="p">(</span><span class="n">fk</span><span class="p">.</span><span class="n">fk_cols</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;_&#39;</span><span class="p">),</span>
-<span class="w">    </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">array_to_string</span><span class="p">(</span><span class="n">fk</span><span class="p">.</span><span class="n">fk_cols</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
-<span class="w">  </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">create_index_suggestion</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">fk_grouped</span><span class="w"> </span><span class="n">fk</span>
-<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">indexed_columns</span><span class="w"> </span><span class="n">idx</span>
-<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="k">schema_name</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="k">table_name</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="n">fk_cols</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">indexed_cols</span>
-<span class="w">  </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span><span class="w"> </span><span class="n">pol</span>
-<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">pol</span><span class="p">.</span><span class="k">schema_name</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">pol</span><span class="p">.</span><span class="k">table_name</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">constraint_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pol</span><span class="p">.</span><span class="k">constraint_name</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">pol</span><span class="p">.</span><span class="k">constraint_name</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
-<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">fk</span><span class="p">.</span><span class="k">table_name</span><span class="p">;</span>
-
-<span class="k">COMMENT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_fk_con_indice_missing_policy</span><span class="w"> </span><span class="k">IS</span>
-<span class="w">  </span><span class="s1">&#39;Elenco dei vincoli foreign key già indicizzati (prefisso ix_) che non sono ancora definiti in fk_index_policy&#39;</span><span class="p">;</span>
-</code></pre></div>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>

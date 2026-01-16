@@ -2898,17 +2898,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#trigger-associati-attesisuggeriti" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Trigger Associati (attesi/suggeriti)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2957,11 +2946,8 @@
 <p>Approfondimenti domini collegati:</p>
 <ul>
 <li><a href="../../../../dbzero/config/tabelle/lingue">config.lingue</a>     </li>
-<li><a href="../../../../dbzero/config/tabelle/sorgenti">config.sorgenti</a>    </li>
-</ul>
-<p>Approfondimenti funzioni/trigger generici:</p>
-<ul>
-<li><a href="../../../../dbzero/script/funzioni/trgfn_upd_audit_data_user_generic">script.trgfn_upd_audit_data_user_generic</a>     </li>
+<li><a href="../../../../dbzero/config/tabelle/sorgenti">config.sorgenti</a>  <br />
+</li>
 </ul>
 </blockquote>
 <hr />
@@ -3010,14 +2996,11 @@
 </table>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>(latest review 16-01-26)
+* Fornire un <strong>catalogo centralizzato e stabile</strong> degli stati in cui può trovarsi un asset.
+* Supportare la gestione del <strong>ciclo di vita degli asset</strong>, inclusi:</p>
 <ul>
-<li>Fornire un <strong>catalogo centralizzato e stabile</strong> degli stati in cui può trovarsi un asset.</li>
-<li>
-<p>Supportare la gestione del <strong>ciclo di vita degli asset</strong>, inclusi:</p>
-</li>
-<li>
-<p>magazzino → assegnazione → installazione → rientro → dismissione;</p>
-</li>
+<li>magazzino → assegnazione → installazione → rientro → dismissione;</li>
 <li>gestione del guasto / sostituzione.</li>
 <li>
 <p>Abilitare regole di processo su:</p>
@@ -3060,10 +3043,7 @@
 <p><strong>Descrizione</strong> (<code>descrizione</code>):</p>
 </li>
 <li>
-<p>testo leggibile per operatori e schermate di configurazione;</p>
-</li>
-<li>
-<p>indicizzata tramite <code>ix_stati_assets_descrizione_upper</code> per ricerche case-insensitive.</p>
+<p>testo leggibile per operatori e schermate di configurazione.</p>
 </li>
 <li>
 <p><strong>Stato di attivazione</strong> (<code>attivo</code>):</p>
@@ -3104,19 +3084,7 @@
 <li>
 <p><code>data_insert</code>, <code>user_insert</code>, <code>data_update</code>, <code>user_update</code> tracciano la storia delle modifiche al dominio;</p>
 </li>
-<li>
-<p>in linea con gli altri domini <code>config</code>, la gestione può essere centralizzata tramite trigger di audit generico.</p>
-</li>
-<li>
-<p><strong>Indici per ricerche case-insensitive</strong>:</p>
-</li>
-<li>
-<p><code>ix_stati_assets_codice_interno_upper</code>, <code>ix_stati_assets_codice_upper</code>, <code>ix_stati_assets_descrizione_upper</code>:</p>
-<ul>
-<li>permettono ricerche veloci per codice/descrizione senza distinzione tra maiuscole/minuscole;</li>
-<li>fondamentali quando gli input arrivano da UI, file o integrazioni non normalizzate.</li>
-</ul>
-</li>
+<li>in linea con gli altri domini <code>config</code>, la gestione può essere centralizzata tramite trigger di audit generico.</li>
 </ul>
 <hr />
 <h3 id="relazioni">🔗 Relazioni<a class="headerlink" href="#relazioni" title="Permanent link">&para;</a></h3>
@@ -3156,39 +3124,12 @@
 <p>🔁 In combinazione con i movimenti di magazzino e i dati impianto/cliente, <code>config.stati_assets</code> consente una visione coerente del ciclo di vita dell’asset.</p>
 </blockquote>
 <hr />
-<h3 id="trigger-associati-attesisuggeriti">⚙️ Trigger Associati (attesi/suggeriti)<a class="headerlink" href="#trigger-associati-attesisuggeriti" title="Permanent link">&para;</a></h3>
-<p>Al momento non sono definiti trigger specifici nella DDL riportata, ma è consigliabile introdurre:</p>
-<ol>
-<li>
-<p><strong>Trigger di audit</strong> (es. <code>trg_upd_stati_assets_audit_data_user</code>)</p>
-</li>
-<li>
-<p><strong>Quando</strong>: <code>BEFORE UPDATE</code>.</p>
-</li>
-<li><strong>Cosa fa</strong>: aggiorna <code>data_update</code> e <code>user_update</code>.</li>
-<li>
-<p><strong>Come</strong>: delega a <code>script.trgfn_upd_audit_data_user_generic()</code>.</p>
-</li>
-<li>
-<p><strong>Trigger di protezione del codice interno</strong> (es. <code>trg_stati_assets_protect_codice_interno</code>)</p>
-</li>
-<li>
-<p><strong>Quando</strong>: <code>BEFORE UPDATE</code>.</p>
-</li>
-<li><strong>Cosa fa</strong>: impedisce la modifica di <code>codice_interno</code> una volta creato il record.</li>
-<li><strong>Obiettivo</strong>: garantire la <strong>stabilità semantica</strong> del dominio, evitando che cambi di codice rompano logiche applicative o storici.</li>
-</ol>
-<blockquote>
-<p>✅ In questo modo, il dominio degli stati diventa affidabile anche in contesti dove l’asset viene tracciato per molti anni.</p>
-</blockquote>
-<hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Governance del ciclo di vita</strong>: gli stati descrivono in modo chiaro dove si trova l’asset e in quale fase del suo ciclo si trova (magazzino, installato, guasto, dismesso, ecc.).</li>
 <li><strong>Coerenza cross-modulo</strong>: tutti i moduli (magazzino, impianti, manutenzione, fatturazione basata su asset/contatori) condividono lo stesso dominio di stati.</li>
 <li><strong>Supporto a UI e reportistica</strong>: grazie a <code>meta</code> è possibile definire label multilingua, icone e colori per rendere immediata la lettura dello stato da parte degli operatori.</li>
 <li><strong>Flessibilità configurabile</strong>: nuovi stati possono essere introdotti (es. per workflow specifici di un gestore) senza rompere il modello esistente.</li>
-<li><strong>Ricerca efficiente</strong>: gli indici in upper permettono ricerche rapide anche su basi dati di grandi dimensioni.</li>
 </ul>
 <hr />
 <blockquote>
