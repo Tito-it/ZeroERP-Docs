@@ -2953,15 +2953,15 @@
 <ul>
 <li><a href="../../../../dbzero/anagrafiche/tabelle/billing_account">anagrafiche.billing_account</a></li>
 </ul>
-<p>Approfondimenti fuzioni: </p>
+<p>Approfondimenti funzioni:</p>
 <ul>
-<li><a href="../../../../dbzero/script/funzioni/fn_generate_codice">script.fn_generate_codice</a></li>
+<li><a href="../../../../dbzero/config/manual/sistema_codici">config.sistema_codici</a></li>
 </ul>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <p>(latest review 28-12-25)
-Il trigger <code>anagrafiche.trgfn_billing_account_guard_normalize</code> assicura che ogni record di <strong><code>billing_account</code></strong> abbia un <strong><code>codice (account)</code></strong> valido, generandolo automaticamente quando non viene specificato in fase di INSERT o UPDATE.</p>
+Il trigger <code>anagrafiche.trgfn_billing_account_guard_normalize</code> applica le <strong>validazioni di business</strong> e normalizza i campi, mentre la generazione del <code>codice</code> e' demandata al sistema automatico basato su <code>config.sistema_codici</code>.</p>
 <hr />
 <h3 id="contesto-di-esecuzione">🔄 Contesto di Esecuzione<a class="headerlink" href="#contesto-di-esecuzione" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2972,10 +2972,10 @@ Il trigger <code>anagrafiche.trgfn_billing_account_guard_normalize</code> assicu
 <h3 id="logica-operativa">📋 Logica Operativa<a class="headerlink" href="#logica-operativa" title="Permanent link">&para;</a></h3>
 <ol>
 <li>
-<p><strong>Verifica <code>codice (account)</code></strong></p>
+<p><strong>Normalizzazione <code>codice (account)</code></strong></p>
 </li>
 <li>
-<p>Se <code>NEW.codice</code> è <code>NULL</code>, si invoca la funzione <code>script.fn_generate_codice('billing_account')</code> per ottenere un nuovo codice.</p>
+<p>Se <code>NEW.codice</code> è valorizzato, viene normalizzato (trim).</p>
 </li>
 <li>
 <p><strong>Restituzione record</strong></p>
@@ -2988,14 +2988,14 @@ Il trigger <code>anagrafiche.trgfn_billing_account_guard_normalize</code> assicu
 <h3 id="impatto-e-vantaggi">🔍 Impatto e Vantaggi<a class="headerlink" href="#impatto-e-vantaggi" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Consistenza</strong>: garantisce che nessun record venga creato senza un codice di fatturazione.</li>
-<li><strong>Automazione</strong>: solleva l’applicazione dal dover calcolare manualmente i codici, riducendo errori.</li>
-<li><strong>Estendibilità</strong>: cambiando il parametro passato a <code>fn_generate_codice</code>, è possibile utilizzare lo stesso pattern di generazione su tabelle diverse.</li>
+<li><strong>Automazione</strong>: la generazione del codice e' gestita dal trigger automatico su <code>config.sistema_codici</code>.</li>
+<li><strong>Estendibilita</strong>: la configurazione e' centralizzata in <code>config.sistema_codici</code> per tutte le tabelle.</li>
 </ul>
 <hr />
 <h3 id="note-operative">⚠️ Note Operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>La funzione <code>script.fn_generate_codice</code> deve supportare il contesto <code>'billing_account'</code> e restituire un valore univoco.</li>
-<li>In caso di collisione di codici (rare), il trigger non gestisce retry; è consigliabile che <code>fn_generate_codice</code> includa un meccanismo di controllo collisione.</li>
+<li>Assicurarsi che in <code>config.sistema_codici</code> sia presente la riga per <code>codice_interno = 'billing_account'</code> con <code>usa_sequenza = TRUE</code>.</li>
+<li>La generazione del codice avviene nel trigger automatico sulla tabella target.</li>
 </ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>

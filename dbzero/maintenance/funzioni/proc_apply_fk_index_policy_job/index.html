@@ -3011,18 +3011,26 @@
 * <strong>Eseguire in modo schedulato</strong> l’applicazione della <strong>policy indici FK</strong> incapsulando la chiamata a <code>dbops.apply_fk_index_policy()</code> in un wrapper <strong>robusto</strong> con <strong>lock anti-overlap</strong> e <strong>logging strutturato</strong>.</p>
 <hr />
 <h3 id="firma">🧩 Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">PROCEDURE</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">proc_apply_fk_index_policy_job</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">PROCEDURE</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">proc_apply_fk_index_policy_job</span><span class="p">(</span><span class="n">p_populate</span><span class="w"> </span><span class="nb">boolean</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">false</span><span class="p">)</span>
 </code></pre></div>
 <hr />
 <h3 id="descrizione">🧩 Descrizione<a class="headerlink" href="#descrizione" title="Permanent link">&para;</a></h3>
 <p>La procedura:</p>
 <ol>
 <li>Invoca <code>maintenance.fn_run_and_log(...)</code> per registrare <strong>inizio/fine</strong>, esito e dettagli.</li>
-<li>Esegue la SQL:</li>
+<li>Se <code>p_populate = true</code>, esegue prima:</li>
+</ol>
+<p><code>SELECT dbops.fn_populate_fk_index_policy();</code></p>
+<p>poi:</p>
+<p><code>CALL dbops.apply_fk_index_policy();</code></p>
+<ol>
+<li>Se <code>p_populate = false</code>, esegue solo:</li>
 </ol>
 <p><code>CALL dbops.apply_fk_index_policy();</code></p>
 <p>come <strong>step</strong> identificato da <code>apply_fk_index_policy / run_apply_fk_index_policy</code>.
-3. Usa un <strong>advisory lock</strong> (<code>hashtext('apply_fk_index_policy')</code>) per evitare <strong>esecuzioni concorrenti</strong>.</p>
+4. Usa un <strong>advisory lock</strong> (<code>hashtext('apply_fk_index_policy')</code>) per evitare <strong>esecuzioni concorrenti</strong>.</p>
+<p>Esempio :
+ <code>CALL maintenance.proc_apply_fk_index_policy_job(true);</code> esegue il populate della tabella; <code>CALL maintenance.proc_apply_fk_index_policy_job();</code> non lo esegue</p>
 <hr />
 <h3 id="flusso-di-esecuzione-alto-livello">🔄 Flusso di esecuzione (alto livello)<a class="headerlink" href="#flusso-di-esecuzione-alto-livello" title="Permanent link">&para;</a></h3>
 <ol>

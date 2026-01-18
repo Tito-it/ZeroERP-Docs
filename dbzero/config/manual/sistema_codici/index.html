@@ -2928,14 +2928,15 @@
 <p>La tabella <strong><code>config.sistema_codici</code></strong> definisce le regole per la generazione automatica di codici alfanumerici, utilizzati in vari ambiti (ordini, clienti, fatture, ecc.).</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Definizione del formato codice</strong>
-  Consente di specificare per ogni tipo di codice (<code>codice_tipo</code>) un <strong>prefisso</strong>, un <strong>separatore</strong> e la <strong>lunghezza numerica</strong> totale, rendendo parametrica la struttura dei codici generati.</li>
-<li><strong>Configurazione del meccanismo di sequenza</strong>
-  Tramite il flag <code>usa_sequenza</code> e l’attributo <code>nome_sequenza</code>, si abilita o meno l’utilizzo di una progressione automatica basata su sequenza di database, a garanzia di unicità e ordinarietà.</li>
-<li><strong>Attivazione o disattivazione</strong>
-  Il campo <code>attivo</code> permette di abilitare o disabilitare temporaneamente il sistema di generazione per un tipo di codice, senza cancellare la configurazione.</li>
-</ul>
+<p>(latest review 18-01-26)
+* <strong>Definizione del formato codice</strong>
+  Consente di specificare per ogni tipo di codice (<code>codice_interno</code>) un <strong>prefisso</strong>, un <strong>separatore</strong> e la <strong>lunghezza numerica</strong> totale, rendendo parametrica la struttura dei codici generati.
+* <strong>Configurazione del meccanismo di sequenza</strong>
+  Tramite il flag <code>usa_sequenza</code> si abilita o meno l’utilizzo di una progressione automatica basata su sequenza di database, a garanzia di unicità e ordinarietà.
+* <strong>Aggancio alla tabella target</strong>
+  Le colonne <code>schema_tabella</code>, <code>nome_tabella</code> e <code>nome_colonna</code> definiscono la destinazione del codice e permettono di derivare automaticamente il nome sequenza standard.
+* <strong>Automazione trigger</strong>
+  Le righe con <code>usa_sequenza = TRUE</code> attivano automaticamente la creazione di un trigger sulla tabella target che genera il codice quando il campo risulta nullo (o vuoto/0 secondo il tipo).</p>
 <hr />
 <h3 id="parametri-di-configurazione">🔄 Parametri di Configurazione<a class="headerlink" href="#parametri-di-configurazione" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2947,8 +2948,8 @@
   Numero totale di cifre della parte numerica (es. <code>6</code> → da <code>000001</code> a <code>999999</code>). Se la sequenza supera lo spazio, si deve aggiornare il parametro.</li>
 <li><strong><code>usa_sequenza</code></strong>
   Booleano che, se <strong>true</strong>, indica che il codice numerico è generato tramite una sequenza di database; se <strong>false</strong>, occorre gestire manualmente l’incremento.</li>
-<li><strong><code>nome_sequenza</code></strong>
-  Nome della sequenza di database (es. <code>seq_ordine</code>) da cui attingere il valore numerico.</li>
+<li><strong><code>schema_tabella</code></strong>, <strong><code>nome_tabella</code></strong>, <strong><code>nome_colonna</code></strong>
+  Identificano la tabella e la colonna a cui si applica la numerazione e servono per calcolare il nome sequenza automatico <code>&lt;schema&gt;.&lt;tabella&gt;_&lt;colonna&gt;_seq</code>.</li>
 </ul>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
@@ -2960,7 +2961,7 @@
 <li><strong>Affidabilità della sequenza</strong>
   L’uso di una sequenza di database (quando <code>usa_sequenza</code> è <strong>true</strong>) evita collisioni e garantisce incrementi atomici, utili in contesti ad alto carico.</li>
 <li><strong>Gestione dinamica</strong>
-  Il flag <code>attivo</code> permette di sospendere la generazione di un dato tipo di codice senza rimuoverne la configurazione, utile per archiviare vecchie configurazioni o per esigenze temporanee.</li>
+  Il flag <code>usa_sequenza</code> permette di sospendere la generazione di un dato tipo di codice senza rimuoverne la configurazione, utile per archiviare vecchie configurazioni o per esigenze temporanee.</li>
 </ul>
 <hr />
 <blockquote>

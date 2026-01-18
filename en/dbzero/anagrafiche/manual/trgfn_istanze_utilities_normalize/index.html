@@ -2966,7 +2966,7 @@
 </ul>
 <p>Approfondimento funzioni:</p>
 <ul>
-<li><a href="../../../../dbzero/script/funzioni/fn_generate_codice">script.fn_generate_codice</a></li>
+<li><a href="../../../../dbzero/config/manual/sistema_codici">config.sistema_codici</a></li>
 </ul>
 </blockquote>
 <hr />
@@ -2974,7 +2974,6 @@
 <p>(latest review 28-12-25)
 Il trigger <code>anagrafiche.trgfn_istanze_utilities_normalize</code> è invocato <strong>prima di ogni INSERT o UPDATE</strong> su <code>anagrafiche.istanze_utilities</code> e ha i seguenti obiettivi:</p>
 <ol>
-<li><strong>Generazione automatica</strong> di <code>codice (istanza)</code> quando non è specificato dall’utente.</li>
 <li><strong>Pulizia</strong> e predisposizione di ulteriori campi, se in futuro fosse necessario estendere la logica di default o normalizzazione.</li>
 </ol>
 <hr />
@@ -2982,25 +2981,16 @@ Il trigger <code>anagrafiche.trgfn_istanze_utilities_normalize</code> è invocat
 <ul>
 <li><strong>Evento</strong>: <code>BEFORE INSERT OR UPDATE</code> sulla tabella <code>anagrafiche.istanze_utilities</code>.</li>
 <li><strong>Record interessato</strong>: oggetto <code>NEW</code>, che rappresenta la riga prima del commit.</li>
-<li><strong>Dipendenze</strong>: utilizza <code>script.fn_generate_codice('istanze_utilties')</code> per calcolare il codice.</li>
+<li><strong>Dipendenze</strong>: la generazione del codice e' demandata al trigger automatico basato su <code>config.sistema_codici</code>.</li>
 </ul>
 <hr />
 <h3 id="logica-operativa">🔍 Logica Operativa<a class="headerlink" href="#logica-operativa" title="Permanent link">&para;</a></h3>
 <ol>
 <li>
-<p><strong>Verifica <code>codice (istanza)</code></strong></p>
-</li>
-<li>
-<p>Se <code>NEW.codice</code> è <code>NULL</code> o vuoto, chiama <code>script.fn_generate_codice('istanze_utilties')</code>.</p>
-</li>
-<li>
-<p>Il valore restituito è assegnato a <code>NEW.codice</code>.</p>
-</li>
-<li>
 <p><strong>Restituzione</strong></p>
 </li>
 <li>
-<p>Ritorna il record <code>NEW</code>, arricchito del codice, pronto per la persistenza.</p>
+<p>Ritorna il record <code>NEW</code> senza alterare il codice; la generazione avviene nel trigger automatico della tabella target.</p>
 </li>
 </ol>
 <hr />
@@ -3016,14 +3006,13 @@ Il trigger <code>anagrafiche.trgfn_istanze_utilities_normalize</code> è invocat
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Uniformità</strong>: tutti i record di istanze hanno un <code>codice (istanza)</code> generato secondo lo stesso schema, eliminando errori manuali.</li>
-<li><strong>Estendibilità</strong>: la funzione può essere arricchita con ulteriori pulizie (e.g. normalizzazione di testo, assegnazione di default) senza modifiche all’applicazione.</li>
+<li><strong>Uniformita</strong>: tutti i record di istanze hanno un <code>codice (istanza)</code> generato secondo lo stesso schema, eliminando errori manuali.</li>
+<li><strong>Estendibilita</strong>: la funzione può essere arricchita con ulteriori pulizie (e.g. normalizzazione di testo, assegnazione di default) senza modifiche all’applicazione.</li>
 </ul>
 <hr />
 <h3 id="best-practice">📌 Best Practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Verificare che esista in <code>config.sistema_codici</code> la configurazione per <code>codice_tipo = 'istanze_utilties'</code>.</li>
-<li>Assicurarsi che <code>script.fn_generate_codice</code> gestisca correttamente collisioni e sia performante.</li>
+<li>Verificare che esista in <code>config.sistema_codici</code> la configurazione per <code>codice_interno = 'istanze_utilties'</code> e <code>usa_sequenza = TRUE</code>.</li>
 <li>Evitare di inserire logica complessa o chiamate a tabelle esterne in questo trigger: mantenerlo rapido e focalizzato.</li>
 </ul>
 <hr />

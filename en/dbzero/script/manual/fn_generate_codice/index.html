@@ -2977,24 +2977,23 @@
 </ul>
 <p>Approfondimento funzioni :    </p>
 <ul>
-<li><a href="../../../../dbzero/script/funzioni/fn_get_messaggio">script.fn_get_messaggio</a>    </li>
+<li><a href="../../../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a>    </li>
 </ul>
 </blockquote>
-<p>La funzione <strong><code>script.fn_generate_codice(tipo TEXT)</code></strong> genera in modo parametrico un nuovo codice alfanumerico per uno specifico “tipo” (es. <code>ORDINE</code>, <code>CLIENTE</code>, <code>FATTURA</code>), basandosi sui parametri definiti nella tabella <strong><code>config.sistema_codici</code></strong>. Se la configurazione per quel tipo non esiste o è disattivata, viene sollevata un’eccezione.</p>
+<p>La funzione <strong><code>script.fn_generate_codice(tipo TEXT)</code></strong> genera in modo parametrico un nuovo codice alfanumerico per uno specifico “tipo” (es. <code>ORDINE</code>, <code>CLIENTE</code>, <code>FATTURA</code>), basandosi sui parametri definiti nella tabella <strong><code>config.sistema_codici</code></strong>. Se la configurazione per quel tipo non esiste, viene sollevata un’eccezione.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>(latest review 18-01-26)
+* <strong>Generazione di codici configurabili</strong>
+  Costruisce un codice concatenando un <strong>prefisso</strong>, un <strong>separatore</strong> e una <strong>parte numerica</strong> formattata, letti da <strong><code>config.sistema_codici</code></strong> in base al <code>codice_interno</code> passato in input.</p>
 <ul>
 <li>
-<p><strong>Generazione di codici configurabili</strong>
-  Costruisce un codice concatenando un <strong>prefisso</strong>, un <strong>separatore</strong> e una <strong>parte numerica</strong> formattata, letti da <strong><code>config.sistema_codici</code></strong> in base al <code>codice_tipo</code> passato in input.</p>
-</li>
-<li>
 <p><strong>Unicità tramite sequenza</strong>
-  Invoca la sequenza database indicata in <code>nome_sequenza</code> per ottenere un valore numerico progressivo, garantendo codici unici e ordinati.</p>
+  Invoca la sequenza database derivata da <code>schema_tabella/nome_tabella/nome_colonna</code> per ottenere un valore numerico progressivo, garantendo codici unici e ordinati.</p>
 </li>
 <li>
 <p><strong>Verifica configurazione</strong>
-  Se la riga corrispondente a <code>codice_tipo = tipo</code> non esiste o <code>attivo = FALSE</code>, o se <code>nome_sequenza</code> è <code>NULL</code>, la funzione solleva un’eccezione con messaggio di errore.</p>
+  Se la riga corrispondente a <code>codice_interno = tipo</code> non esiste, la funzione solleva un’eccezione con messaggio di errore. Se <code>usa_sequenza = FALSE</code>, la funzione restituisce <code>NULL</code>.</p>
 </li>
 </ul>
 <hr />
@@ -3011,7 +3010,7 @@
 <tr>
 <td><code>tipo</code></td>
 <td><code>TEXT</code></td>
-<td>Identificativo del <code>codice_tipo</code> nella tabella <code>config.sistema_codici</code>. Esempi: <code>"ORDINE"</code>, <code>"CLIENTE"</code>.</td>
+<td>Identificativo del <code>codice_interno</code> nella tabella <code>config.sistema_codici</code>. Esempi: <code>"ORDINE"</code>, <code>"CLIENTE"</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -3038,11 +3037,22 @@
 <ol>
 <li><strong>Lettura dei parametri</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">prefisso</span><span class="p">,</span><span class="w"> </span><span class="n">separatore</span><span class="p">,</span><span class="w"> </span><span class="n">lunghezza_numero</span><span class="p">,</span><span class="w"> </span><span class="n">nome_sequenza</span>
-<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">prefix</span><span class="p">,</span><span class="w"> </span><span class="n">sep</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">prefisso</span><span class="p">,</span>
+<span class="w">       </span><span class="n">separatore</span><span class="p">,</span>
+<span class="w">       </span><span class="n">lunghezza_numero</span><span class="p">,</span>
+<span class="w">       </span><span class="n">usa_sequenza</span><span class="p">,</span>
+<span class="w">       </span><span class="n">schema_tabella</span><span class="p">,</span>
+<span class="w">       </span><span class="n">nome_tabella</span><span class="p">,</span>
+<span class="w">       </span><span class="n">nome_colonna</span>
+<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">prefix</span><span class="p">,</span>
+<span class="w">       </span><span class="n">sep</span><span class="p">,</span>
+<span class="w">       </span><span class="n">len</span><span class="p">,</span>
+<span class="w">       </span><span class="n">v_usa_sequenza</span><span class="p">,</span>
+<span class="w">       </span><span class="n">v_schema_tabella</span><span class="p">,</span>
+<span class="w">       </span><span class="n">v_nome_tabella</span><span class="p">,</span>
+<span class="w">       </span><span class="n">v_nome_colonna</span>
 <span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">sistema_codici</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice_tipo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tipo</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span><span class="p">;</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tipo</span><span class="p">;</span>
 </code></pre></div>
 <ul>
 <li>
@@ -3051,38 +3061,30 @@
 <li><code>prefisso</code> (testo da anteporre)</li>
 <li><code>separatore</code> (stringa di separazione)</li>
 <li><code>lunghezza_numero</code> (numero di cifre per la parte numerica)</li>
-<li><code>nome_sequenza</code> (nome della sequenza database)</li>
-<li>Se non trova alcuna riga attiva per quel tipo, <code>seq_name</code> sarà <code>NULL</code>.</li>
+<li><code>usa_sequenza</code> (abilitazione sequenza)</li>
+<li><code>schema_tabella</code>, <code>nome_tabella</code>, <code>nome_colonna</code> (metadati per il nome sequenza)</li>
+<li>Se non trova alcuna riga per quel tipo, la funzione solleva un’eccezione.</li>
 </ul>
 </li>
 <li>
 <p><strong>Generazione del numero tramite sequenza</strong></p>
 </li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">seq_name</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;SELECT nextval(%L)&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">seq_val</span><span class="p">;</span>
-<span class="w">  </span><span class="n">risultato</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">sep</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">lpad</span><span class="p">(</span><span class="n">seq_val</span><span class="o">::</span><span class="nb">TEXT</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0&#39;</span><span class="p">);</span>
-<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="n">risultato</span><span class="p">;</span>
-<span class="k">ELSE</span>
-<span class="w">  </span><span class="k">RAISE</span><span class="w"> </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="s1">&#39;%&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_get_messaggio</span><span class="p">(</span><span class="s1">&#39;SEQUENZA_NON_CONFIGURATA&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">tipo</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">v_usa_sequenza</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">TRUE</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
 <span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="n">seq_name</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;%I.%I_%I_seq&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_schema_tabella</span><span class="p">,</span><span class="w"> </span><span class="n">v_nome_tabella</span><span class="p">,</span><span class="w"> </span><span class="n">v_nome_colonna</span><span class="p">);</span>
+
+<span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;CREATE SEQUENCE IF NOT EXISTS %s&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span><span class="p">);</span>
+<span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;SELECT nextval(%L)&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">seq_val</span><span class="p">;</span>
+<span class="n">risultato</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">sep</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">lpad</span><span class="p">(</span><span class="n">seq_val</span><span class="o">::</span><span class="nb">TEXT</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0&#39;</span><span class="p">);</span>
+<span class="k">RETURN</span><span class="w"> </span><span class="n">risultato</span><span class="p">;</span>
 </code></pre></div>
 <ul>
-<li>
-<p>Se <code>nome_sequenza</code> è valorizzato:</p>
-<ol>
-<li>Esegue dinamicamente <code>SELECT nextval('nome_sequenza')</code> per ottenere il prossimo valore numerico (<code>seq_val</code>).</li>
+<li>La sequenza viene creata se mancante e usata per ottenere il prossimo valore numerico.</li>
 <li>Converte <code>seq_val</code> in testo e lo riempie a sinistra con zeri fino a raggiungere la lunghezza <code>len</code>.</li>
 <li>Concatena <code>prefisso</code>, <code>separatore</code> e <code>numero_formattato</code>, restituendo il risultato.</li>
-<li>
-<p>Altrimenti:</p>
-</li>
-<li>
-<p>Solleva un’eccezione con il messaggio da <code>script.fn_get_messaggio('SEQUENZA_NON_CONFIGURATA', tipo)</code>.</p>
-</li>
-</ol>
-</li>
 </ul>
 <hr />
 <h3 id="possibili-eccezioni">🚨 Possibili eccezioni<a class="headerlink" href="#possibili-eccezioni" title="Permanent link">&para;</a></h3>
@@ -3092,12 +3094,12 @@
   Viene sollevata quando:</p>
 </li>
 <li>
-<p>Non esiste un record in <strong><code>config.sistema_codici</code></strong> per <code>codice_tipo = tipo</code> con <code>attivo = TRUE</code>.</p>
+<p>Non esiste un record in <strong><code>config.sistema_codici</code></strong> per <code>codice_interno = tipo</code>.</p>
 </li>
-<li>Il campo <code>nome_sequenza</code> è <code>NULL</code> (anche se la riga esiste e <code>attivo = TRUE</code>).</li>
+<li><code>usa_sequenza = TRUE</code> ma non è possibile determinare una sequenza valida.</li>
 </ul>
 <p>Il messaggio di errore è generato da:</p>
-<div class="highlight"><pre><span></span><code><span class="n">script</span><span class="mf">.</span><span class="n">fn_get_messaggio</span><span class="p">(</span><span class="s1">&#39;SEQUENZA_NON_CONFIGURATA&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">tipo</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span><span class="mf">...</span><span class="p">)</span>
 </code></pre></div>
 <hr />
 <h3 id="dipendenze">🔗 Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h3>
@@ -3106,29 +3108,26 @@
 <p><strong>Tabella di configurazione</strong></p>
 </li>
 <li>
-<p><strong><code>config.sistema_codici</code></strong> deve contenere una riga per ciascun <code>codice_tipo</code> con almeno:</p>
+<p><strong><code>config.sistema_codici</code></strong> deve contenere una riga per ciascun <code>codice_interno</code> con almeno:</p>
 <ul>
 <li><code>prefisso</code>: stringa testuale (es. <code>"ORD-"</code>).</li>
 <li><code>separatore</code>: carattere o stringa (es. <code>"-"</code>).</li>
 <li><code>lunghezza_numero</code>: numero intero (es. <code>6</code>).</li>
-<li><code>nome_sequenza</code>: nome di una sequenza SQL esistente (es. <code>"seq_ordine"</code>).</li>
-<li><code>attivo = TRUE</code></li>
+<li><code>schema_tabella</code>, <code>nome_tabella</code>, <code>nome_colonna</code>: usati per derivare il nome sequenza di default.</li>
 </ul>
 </li>
 <li>
 <p><strong>Sequenza database</strong></p>
 </li>
 <li>
-<p>La sequenza indicata in <code>nome_sequenza</code> deve esistere, ad esempio:</p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="n">SEQUENCE</span><span class="w"> </span><span class="n">seq_ordine</span><span class="p">;</span>
-</code></pre></div>
+<p>Se la sequenza calcolata non esiste, viene creata automaticamente.</p>
 </li>
 <li>
 <p><strong>Funzione di supporto</strong></p>
 </li>
 <li>
-<p><strong><code>script.fn_get_messaggio(codice_errore TEXT, elemento TEXT)</code></strong>
-    Restituisce il testo del messaggio di errore associato al codice di errore e all’elemento specificato.</p>
+<p><strong><code>script.fn_log_and_raise_error(...)</code></strong>
+    Registra e solleva l’errore con il contesto della funzione e i dettagli del codice interno.</p>
 </li>
 </ul>
 <hr />
@@ -3139,13 +3138,13 @@
 <li><strong>Unicità garantita</strong>
   L’uso della sequenza database (<code>nextval</code>) assicura incrementi atomici e codici unici anche in contesti concorrenti.</li>
 <li><strong>Controllo di configurazione</strong>
-  Se <code>attivo = FALSE</code> o manca la riga di configurazione, viene immediatamente segnalato un errore, evitando generazioni spurie.</li>
+  Se manca la riga di configurazione viene immediatamente segnalato un errore; se <code>usa_sequenza = FALSE</code> la funzione restituisce <code>NULL</code>, evitando generazioni spurie.</li>
 <li><strong>Estendibilità</strong>
   Per nuovi tipi di codice, basta inserire in <strong><code>config.sistema_codici</code></strong> una nuova riga; la funzione li gestirà automaticamente.</li>
 </ul>
 <hr />
 <blockquote>
-<p>🧠 <strong>“Questa funzione restituisce un codice conforme alle specifiche di <code>config.sistema_codici</code>. Se la configurazione non è presente o è disattivata, solleva un’eccezione descrittiva.”</strong></p>
+<p>🧠 <strong>“Questa funzione restituisce un codice conforme alle specifiche di <code>config.sistema_codici</code>. Se la configurazione non è presente o non è possibile determinare la sequenza, solleva un’eccezione descrittiva.”</strong></p>
 </blockquote>
 
 
