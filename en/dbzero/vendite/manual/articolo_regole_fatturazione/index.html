@@ -2887,6 +2887,34 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#visibilita-vs-generazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 Visibilità vs generazione
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-visibilita-su-stampa-e-ui-sara-generata-un-apposita-tabella" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per visibilità su stampa e UI sarà generata un apposita tabella
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per visibilità su stampa e UI sarà generata un apposita tabella">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#campi-chiave" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2991,9 +3019,11 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Questa tabella definisce, <strong>per ciascun articolo</strong>, le regole di business che governano:</p>
+<p>(latest review 21-01-2026)
+Questa tabella definisce, <strong>per ciascun articolo</strong>, le regole di business che governano:</p>
 <ul>
-<li><strong>Visibilità delle componenti</strong> nei documenti (preventivi, ordini, DDT, fatture) per articoli <strong>kit/BOM</strong>.</li>
+<li><strong>Generazione delle righe</strong> (esistenza effettiva nel DB) per articoli <strong>kit/BOM</strong>.</li>
+<li><strong>Visibilità delle componenti</strong> nei documenti (preventivi, ordini, DDT, fatture).</li>
 <li><strong>Calcolo della quantità del padre</strong> (se fissa o calcolata dalla somma delle componenti flaggate).</li>
 <li><strong>Arrotondamenti</strong> (numero di decimali e metodo) per <strong>importi</strong> e <strong>quantità</strong>.</li>
 </ul>
@@ -3003,7 +3033,9 @@
 <p>Le regole vengono lette dal motore documentale durante:</p>
 <ol>
 <li><strong>Generazione righe documento</strong> (preventivo → ordine → DDT → fattura).</li>
-<li><strong>Esplosione kit/BOM</strong>: determinano se mostrare solo il <strong>padre</strong>, il <strong>padre + componenti</strong>, o <strong>solo le componenti</strong>.</li>
+<li><strong>Esplosione kit/BOM</strong>:</li>
+<li>definisce <strong>quali righe vengono generate</strong> in DB (padre, componenti, entrambi);</li>
+<li>definisce anche <strong>come vengono mostrate</strong> in stampa/visibilità.</li>
 <li>
 <p><strong>Determinazione quantità padre</strong>:</p>
 </li>
@@ -3017,16 +3049,24 @@
 <p>I valori utilizzati nei documenti vengono <strong>copiati</strong> nelle righe in fase di generazione, così eventuali modifiche successive alla policy non alterano i documenti già emessi.</p>
 </blockquote>
 <hr />
+<h3 id="visibilita-vs-generazione">🔍 Visibilità vs generazione<a class="headerlink" href="#visibilita-vs-generazione" title="Permanent link">&para;</a></h3>
+<p>È importante distinguere:</p>
+<ul>
+<li><strong>Generazione</strong> → determina <strong>se la riga esiste nel DB</strong> (<code>fatture_righe</code>, <code>ordini_righe</code>, ecc.).</li>
+<li><strong>Visibilità</strong> → determina <strong>come la riga viene presentata</strong> in stampa o UI.</li>
+</ul>
+<p>In fatturazione può accadere di <strong>generare righe componenti</strong> (per calcolo e tracciabilità)
+e <strong>aggregarle in stampa</strong> (visibilità), mantenendo nel DB il dettaglio completo.</p>
+<h2 id="per-visibilita-su-stampa-e-ui-sara-generata-un-apposita-tabella"><strong>Per visibilità su stampa e UI sarà generata un apposita tabella</strong><a class="headerlink" href="#per-visibilita-su-stampa-e-ui-sara-generata-un-apposita-tabella" title="Permanent link">&para;</a></h2>
 <h3 id="campi-chiave">🔑 Campi chiave<a class="headerlink" href="#campi-chiave" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>visibilita_componenti</code>: <code>solo_padre</code> | <code>padre_componenti</code> | <code>solo_componenti</code>
-  → controlla la visibilità dei componenti.</li>
+  → controlla la visibilità dei componenti (non necessariamente la loro generazione).</li>
 <li><code>calcolo_qta_padre</code>: <code>fissa</code> | <code>somma_componenti_flaggate</code>
   → stabilisce la logica di calcolo della quantità padre.</li>
 <li><code>arrotondamento_importi_dec</code>, <code>metodo_arrotondamento_importi</code>: precisione e metodo per gli importi.</li>
 <li><code>arrotondamento_quantita_dec</code>, <code>metodo_arrotondamento_quantita</code>: precisione e metodo per le quantità.</li>
 <li><code>meta</code>: campo estensibile (criteri speciali, regole di esclusione, override per canale, ecc.).</li>
-<li><code>trg_articolo_regole_fatturazione_upd_audit_data_user_generic</code>: trigger che aggiorna <code>data_update</code> e <code>user_update</code> (audit standard).</li>
 </ul>
 <hr />
 <h3 id="esempi-duso">🧪 Esempi d’uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
