@@ -2926,45 +2926,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#trigger-associati" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚙️ Trigger Associati
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="⚙️ Trigger Associati">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-trg_sorgenti_a10_upd_lock_columns" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. trg_sorgenti_a10_upd_lock_columns
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-trg_sorgenti_ins_upd_norm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. trg_sorgenti_ins_upd_norm
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3013,8 +2974,6 @@
 <p>Approfondimenti funzioni/trigger:</p>
 <ul>
 <li><a href="../../../../dbzero/config/funzioni/trgfn_sorgenti_norm">config.trgfn_sorgenti_norm</a></li>
-<li><a href="../../../../dbzero/script/funzioni/trgfn_lock_columns">script.trgfn_lock_columns</a></li>
-<li><a href="../../../../dbzero/script/funzioni/trgfn_upd_audit_data_user_generic">script.trgfn_upd_audit_data_user_generic</a> <em>(se usato in evoluzione futura)</em></li>
 </ul>
 </blockquote>
 <hr />
@@ -3027,13 +2986,10 @@
 </ul>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>(latest update 24-01-2026)
+* Fornire un <strong>catalogo univoco</strong> delle sorgenti applicative utilizzate in:</p>
 <ul>
-<li>
-<p>Fornire un <strong>catalogo univoco</strong> delle sorgenti applicative utilizzate in:</p>
-</li>
-<li>
-<p>tabelle di collegamento (es. note collegate a entità diverse),</p>
-</li>
+<li>tabelle di collegamento (es. note collegate a entità diverse),</li>
 <li>funzioni di validazione polimorfa su tabelle target,</li>
 <li>sistemi di idempotenza/lock (es. registrazione eventi, attività, job).</li>
 <li>Normalizzare i riferimenti alle sorgenti per evitare codifiche testuali sparse e non controllate nel database.</li>
@@ -3146,7 +3102,16 @@
 <li>
 <p><code>data_insert</code>, <code>user_insert</code>, <code>data_update</code>, <code>user_update</code> tracciano le modifiche al catalogo sorgenti;</p>
 </li>
-<li>la gestione può essere uniformata in futuro tramite trigger generici di audit.</li>
+<li>
+<p>la gestione può essere uniformata in futuro tramite trigger generici di audit.</p>
+</li>
+<li>
+<p><strong>Registro fatturazione</strong> (<code>registro_id</code>):</p>
+</li>
+<li>
+<p>opzionale, usato per sorgenti <strong>RIGA</strong> nella generazione di <code>attivita_fatturabili</code>;</p>
+</li>
+<li>se valorizzato, ha priorita` sul registro di default della utility.</li>
 </ul>
 <hr />
 <h3 id="relazioni">🔗 Relazioni<a class="headerlink" href="#relazioni" title="Permanent link">&para;</a></h3>
@@ -3176,47 +3141,6 @@
 </ul>
 <blockquote>
 <p>🔁 In generale, dove serve un <strong>collegamento generico e riusabile</strong> a “qualcosa nel sistema”, <code>config.sorgenti</code> diventa il punto di partenza per identificare <em>cosa</em> sia quel “qualcosa”.</p>
-</blockquote>
-<hr />
-<h3 id="trigger-associati">⚙️ Trigger Associati<a class="headerlink" href="#trigger-associati" title="Permanent link">&para;</a></h3>
-<h4 id="1-trg_sorgenti_a10_upd_lock_columns">1. <code>trg_sorgenti_a10_upd_lock_columns</code><a class="headerlink" href="#1-trg_sorgenti_a10_upd_lock_columns" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>Quando</strong>: <code>BEFORE UPDATE</code> su <code>config.sorgenti</code>.</li>
-<li><strong>Condizione</strong>: solo se <code>old.categoria</code> è diversa da <code>new.categoria</code>.</li>
-<li>
-<p><strong>Cosa fa</strong>:</p>
-</li>
-<li>
-<p>invoca <code>script.trgfn_lock_columns('categoria', 'CODICE_NON_MODIFICABILE')</code>;</p>
-</li>
-<li>se viene tentata la modifica di <code>categoria</code>, la funzione blocca l’operazione (sollevando un errore applicativo con codice logico <code>CODICE_NON_MODIFICABILE</code>).</li>
-<li>
-<p><strong>Obiettivo</strong>:</p>
-</li>
-<li>
-<p>garantire che la <strong>categoria assegnata alla sorgente non cambi</strong> nel tempo, preservando la stabilità semantica.</p>
-</li>
-</ul>
-<h4 id="2-trg_sorgenti_ins_upd_norm">2. <code>trg_sorgenti_ins_upd_norm</code><a class="headerlink" href="#2-trg_sorgenti_ins_upd_norm" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>Quando</strong>: <code>BEFORE INSERT OR UPDATE</code> su <code>config.sorgenti</code>.</li>
-<li>
-<p><strong>Cosa fa</strong> (comportamento atteso):</p>
-</li>
-<li>
-<p>normalizza i valori chiave della sorgente (<code>codice_interno</code>, <code>codice</code>, eventuali spazi, maiuscole/minuscole);</p>
-</li>
-<li>applica regole di default/consistenza su <code>categoria</code>, <code>target_table</code>, <code>key_selector</code> quando necessario;</li>
-<li>può effettuare controlli preventivi su <code>target_table</code> (esistenza tabella) per evitare configurazioni incoerenti.</li>
-<li>
-<p><strong>Come</strong>:</p>
-</li>
-<li>
-<p>delega a <code>config.trgfn_sorgenti_norm()</code>, che centralizza la logica di normalizzazione e validazione.</p>
-</li>
-</ul>
-<blockquote>
-<p>✅ La combinazione dei due trigger rende il dominio <code>config.sorgenti</code> <strong>stabile, normalizzato e sicuro</strong>, riducendo il rischio di errori di configurazione che impatterebbero più processi.</p>
 </blockquote>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>

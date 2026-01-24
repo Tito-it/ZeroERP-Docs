@@ -2959,17 +2959,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#vincoli-indici-e-coerenze" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🔒 Vincoli, indici e coerenze
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#esempi-duso-query-applicative" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3056,7 +3045,8 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p><code>vendite.fatture</code> rappresenta la <strong>testata del documento fiscale di vendita</strong>. Gestisce <strong>identità fiscale (registro/anno/serie/numero)</strong>, <strong>stato e tipo documento</strong>, <strong>intestatari economici</strong> (BA, emittente, reseller), <strong>valuta e pagamento</strong>, <strong>totali</strong> e <strong>metadati</strong>. È il <strong>punto di aggregazione</strong> delle righe (<code>vendite.fatture_righe</code>) e dei riepiloghi IVA.</p>
+<p>(latest review 24-01-2026)
+<code>vendite.fatture</code> rappresenta la <strong>testata del documento fiscale di vendita</strong>. Gestisce <strong>identità fiscale (registro/anno/serie/numero)</strong>, <strong>stato e tipo documento</strong>, <strong>intestatari economici</strong> (BA, emittente, reseller), <strong>valuta e pagamento</strong>, <strong>totali</strong> e <strong>metadati</strong>. È il <strong>punto di aggregazione</strong> delle righe (<code>vendite.fatture_righe</code>) e dei riepiloghi IVA.</p>
 <p>Obiettivi principali:</p>
 <ul>
 <li>Garantire <strong>numerazione univoca</strong> per <em>(registro, anno, serie, numero)</em> quando la fattura è numerata.</li>
@@ -3064,6 +3054,7 @@
 <li>Gestire <strong>multi‑valuta</strong> e <strong>termini di pagamento</strong>.</li>
 <li>Conservare <strong>totali</strong> e <strong>correzioni</strong> (bollo, arrotondamenti), con opzione <strong>"fattura di minimo"</strong> (utilities).</li>
 <li>Consentire <strong>idempotenza</strong> d’import (<strong><code>uid</code></strong> e/o <em>(sorgente_tipo_id, sorgente_uid)</em>).</li>
+<li>Segnalare <strong>anomalie bloccanti</strong> tramite <code>critical</code>.</li>
 </ul>
 <hr />
 <h3 id="collocazione-nel-flusso-documentale">🧭 Collocazione nel flusso documentale<a class="headerlink" href="#collocazione-nel-flusso-documentale" title="Permanent link">&para;</a></h3>
@@ -3095,6 +3086,7 @@
 <li><strong>Emittente fiscale</strong>: <code>emittente_soggetto_ruolo_id</code> → <code>anagrafiche.soggetti_ruoli</code> (stabilisce chi emette).</li>
 <li><strong>Billing Account</strong>: <code>billing_account_id</code> (payer).</li>
 <li><strong>Reseller</strong> <em>(opzionale)</em>: <code>reseller_soggetto_ruolo_id</code> per branding e catene commerciali.</li>
+<li>**Flag criticita<code>**:</code>critical = true` indica errori bloccanti (numerazione/invio sospesi).</li>
 </ul>
 <hr />
 <h3 id="valuta-cambio-pagamento">💱 Valuta, cambio &amp; pagamento<a class="headerlink" href="#valuta-cambio-pagamento" title="Permanent link">&para;</a></h3>
@@ -3125,27 +3117,6 @@
 <p><code>uid</code> (uuid) come <strong>identificativo applicativo</strong> universale.</p>
 </li>
 <li>Coppia <strong>(<code>sorgente_tipo_id</code>, <code>sorgente_uid</code>)</strong> con indice univoco parziale <code>uq_fatture_v_sorgente_fk</code> per sincronizzazioni da sistemi esterni.</li>
-</ul>
-<hr />
-<h3 id="vincoli-indici-e-coerenze">🔒 Vincoli, indici e coerenze<a class="headerlink" href="#vincoli-indici-e-coerenze" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>FK</strong>: BA, emittente, reseller, registro, stato, tipo, valuta, sorgente tipo.</li>
-<li>
-<p><strong>Indici operativi</strong>:</p>
-</li>
-<li>
-<p><code>ix_fatture_ba_data</code> → ricerche per BA &amp; periodo.</p>
-</li>
-<li><code>ix_fatture_emitt_data</code> → ricerche per emittente &amp; data.</li>
-<li><code>ix_fatture_stato_doc</code> → cruscotti per stato.</li>
-<li><code>ix_fatture_data_contabile</code> → export/contabilità.</li>
-<li>
-<p><strong>Unique parziali</strong>:</p>
-</li>
-<li>
-<p><code>uq_fatture_numero</code> su <em>(registro, anno, serie_coalesce, numero)</em> <strong>WHERE <code>numero IS NOT NULL</code></strong>.</p>
-</li>
-<li><code>uq_fatture_v_sorgente_fk</code> su <em>(sorgente_tipo_id, sorgente_uid)</em> <strong>WHERE <code>sorgente_tipo_id IS NOT NULL</code></strong>.</li>
 </ul>
 <hr />
 <h3 id="esempi-duso-query-applicative">🧪 Esempi d’uso (query applicative)<a class="headerlink" href="#esempi-duso-query-applicative" title="Permanent link">&para;</a></h3>

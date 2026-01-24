@@ -2234,6 +2234,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#31-multiemittente-e-fatturazione-su-parent-billing-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1) Multi‑emittente e fatturazione su parent billing account
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-reseller-ruolo-commerciale-non-cliente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2) Reseller (ruolo commerciale, non cliente)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#4-stati-documento-e-stati-sdi-separati" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3837,6 +3859,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#31-multiemittente-e-fatturazione-su-parent-billing-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1) Multi‑emittente e fatturazione su parent billing account
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-reseller-ruolo-commerciale-non-cliente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2) Reseller (ruolo commerciale, non cliente)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#4-stati-documento-e-stati-sdi-separati" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4230,8 +4274,8 @@
 <li><code>utility_id</code> (opzionale)</li>
 <li><code>registro_id</code> (opzionale)</li>
 <li><code>billing_account_id</code> (opzionale)</li>
-<li><code>stato_job</code> (IN_ESECUZIONE | COMPLETATO | ERRORE)</li>
-<li><code>stato_documenti</code> (DRAFT | EMESSA | INVIATA)</li>
+<li><code>stato_lotto</code> (IN_ESECUZIONE | COMPLETATO | ERRORE)</li>
+<li><code>stato_doc_fiscale_id</code> (FK -&gt; <code>config.stati_doc_fiscale</code>)</li>
 <li>audit + <code>meta</code></li>
 </ul>
 <blockquote>
@@ -4245,6 +4289,7 @@ Lo stato del lotto segue un <strong>ordine</strong> e supporta <code>stato_prece
 <li><code>p_billing_account_id</code> (opzionale)</li>
 <li><code>p_utility_id</code> (opzionale)</li>
 <li><code>p_registro_id</code> (opzionale)</li>
+<li><code>p_reseller_soggetto_ruolo_id</code> (opzionale)</li>
 <li><code>p_lotto_id</code> (opzionale; se NULL/0 -&gt; crea lotto)</li>
 <li><code>p_preview</code> (opzionale)</li>
 </ul>
@@ -4252,6 +4297,7 @@ Lo stato del lotto segue un <strong>ordine</strong> e supporta <code>stato_prece
 <ul>
 <li>se <code>p_lotto_id</code> e` valorizzato, il ricalcolo si aggancia al lotto (e ai suoi parametri).</li>
 <li>il lotto contiene <strong>tutti i parametri</strong> necessari per ricalcoli futuri.</li>
+<li>il <code>reseller</code> e` un filtro commerciale, <strong>non</strong> modifica il destinatario fattura.</li>
 </ul>
 <hr />
 <h3 id="3-raggruppamento-fatture">3) Raggruppamento fatture<a class="headerlink" href="#3-raggruppamento-fatture" title="Permanent link">&para;</a></h3>
@@ -4265,6 +4311,29 @@ Lo stato del lotto segue un <strong>ordine</strong> e supporta <code>stato_prece
 <li><code>emittente_soggetto_ruolo_id</code></li>
 </ul>
 <p>La funzione <strong>aggrega</strong> su fattura bozza esistente con stessa chiave.</p>
+<hr />
+<h3 id="31-multiemittente-e-fatturazione-su-parent-billing-account">3.1) Multi‑emittente e fatturazione su parent billing account<a class="headerlink" href="#31-multiemittente-e-fatturazione-su-parent-billing-account" title="Permanent link">&para;</a></h3>
+<p><strong>Multi‑emittente</strong>:
+* L’emittente fiscale e<code>un ruolo e puo</code> variare per utility/cliente.
+* Il lotto puo<code>includere piu</code> emittenti (societa` diverse) e il raggruppamento
+  deve mantenere separati i documenti per emittente.</p>
+<p><strong>Parent billing account</strong>:
+* Un <code>billing_account</code> puo<code>avere un **parent**.
+* La **testata fattura** viene emessa al parent.
+* Le **righe** mantengono il dettaglio per **child** (es.</code>dest_billing_account_id<code>),
+  cosi</code> il parent riceve una fattura aggregata ma con dettaglio per account figlio.</p>
+<p><strong>Implicazioni di calcolo</strong>:
+* Il raggruppamento usa il parent per la testata.
+* I calcoli di riga restano legati al child, per ripartizioni e riepiloghi separati.</p>
+<hr />
+<h3 id="32-reseller-ruolo-commerciale-non-cliente">3.2) Reseller (ruolo commerciale, non cliente)<a class="headerlink" href="#32-reseller-ruolo-commerciale-non-cliente" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Cliente unico</strong>: il destinatario fattura resta sempre il <strong>billing account</strong> (o il suo parent).</li>
+<li><strong>Reseller opzionale</strong>: non aggrega BA diversi in un’unica fattura; serve come filtro e
+  metadato commerciale (report, provvigioni, selezioni batch).</li>
+<li><strong>Distribuzione esclusa</strong>: il caso in cui il reseller diventa destinatario fattura
+  e<code>fuori dallo standard e verra</code> trattato come processo dedicato.</li>
+</ul>
 <hr />
 <h3 id="4-stati-documento-e-stati-sdi-separati">4) Stati documento e stati SDI (separati)<a class="headerlink" href="#4-stati-documento-e-stati-sdi-separati" title="Permanent link">&para;</a></h3>
 <p>Lo <strong>stato SDI</strong> deve essere <strong>per documento</strong>, non per lotto.
@@ -4289,6 +4358,9 @@ Si propone quindi lo <strong>sdoppiamento</strong> dello stato:</p>
 <ul>
 <li>gli stati <code>INVIATA</code>, <code>CONSEGNATA</code>, <code>SCARTATA</code> <strong>escono</strong> da <code>config.stati_doc_fiscale</code></li>
 <li>si crea <code>config.stati_sdi</code> e si collega a <code>vendite.fatturazione_lotti_fatture.stato_sdi_id</code></li>
+<li><code>config.stati_doc_fiscale</code> resta unica, con flag di applicabilita`:</li>
+<li><code>applica_fattura</code> (stato valido per <code>vendite.fatture</code>)</li>
+<li><code>applica_lotto</code> (stato valido per <code>vendite.fatturazione_lotti</code>)</li>
 </ul>
 <hr />
 <h3 id="5-regole-di-rollback-da-definire-in-policy">5) Regole di rollback (da definire in policy)<a class="headerlink" href="#5-regole-di-rollback-da-definire-in-policy" title="Permanent link">&para;</a></h3>
@@ -4309,6 +4381,10 @@ Si propone quindi lo <strong>sdoppiamento</strong> dello stato:</p>
 <li>Se l’attivita<code>deriva da una sorgente **RIGA** (</code>config.sorgenti<code>), il</code>registro_id` viene ereditato dalla sorgente.</li>
 <li>Per attivita<code>inserite manualmente (auto‑sorgente), il</code>registro_id` deve essere valorizzato direttamente.</li>
 <li><strong>Fallback</strong>: se non e<code>presente, usare il **registro di default della utility** (</code>config.utilities.registro_id`).</li>
+<li><strong>Ordine di risoluzione</strong> per l’alimentazione di <code>attivita_fatturabili</code>:
+  1) <code>config.sorgenti.registro_id</code> (se sorgente RIGA e valorizzato)
+  2) <code>config.utilities.registro_id</code> (fallback)
+  3) errore se ancora NULL</li>
 </ul>
 <p>Questa regola rende il raggruppamento deterministico e permette casi semplificati con <strong>un solo registro per utility</strong>.</p>
 <hr />
@@ -4383,23 +4459,48 @@ per evitare fatture miste o ambiguita`.</p>
 <h3 id="13-tabelle-da-introdurre-o-modificare-prima-della-logica">13) Tabelle da introdurre o modificare (prima della logica)<a class="headerlink" href="#13-tabelle-da-introdurre-o-modificare-prima-della-logica" title="Permanent link">&para;</a></h3>
 <p><strong>Nuove tabelle (proposte):</strong></p>
 <ul>
-<li><code>vendite.fatturazione_lotti</code> (lotto + stato job/documenti + lock uuid)</li>
-<li><code>vendite.fatturazione_lotti_fatture</code> (relazione lotto ↔ fattura + stato SDI + esclusione)</li>
-<li><code>config.stati_sdi</code> (stati canale SDI)</li>
-<li><code>config.stati_lotto_documenti</code> (ordine + stato_precedente_ammesso per lotto)</li>
-<li><code>anagrafiche.emittenti_fiscali_billing_account</code> (mapping <strong>billing_account → emittente fiscale</strong>)</li>
+<li>fatta <code>vendite.fatturazione_lotti</code> (lotto + stato job/documenti + lock uuid)</li>
+<li>
+<p>fatta <code>vendite.fatturazione_lotti_fatture</code> (relazione lotto ↔ fattura + stato SDI + esclusione)</p>
+</li>
+<li>
+<p>fatto -<code>config.stati_sdi</code> (stati canale SDI)</p>
+</li>
+<li>
+<p>fatto <code>config.stati_doc_fiscale</code> (stati documento con flag <code>applica_lotto</code> / <code>applica_fattura</code>)</p>
+</li>
+<li>
+<p>fatto <code>anagrafiche.emittenti_fiscali_billing_account</code> (mapping <strong>billing_account → emittente fiscale</strong>)</p>
+</li>
 <li>aggiungere <code>default boolean</code> con **unicita<code>** del valore</code>true`</li>
-<li><code>dbops.jobs</code>, <code>dbops.job_runs</code>, <code>dbops.job_steps</code> (modello job)</li>
-<li><code>vendite.fatture_log</code> (log anomalie documento)</li>
+<li>
+<p><code>dbops.jobs</code>, <code>dbops.job_runs</code>, <code>dbops.job_steps</code> (modello job)</p>
+</li>
+<li>
+<p><code>vendite.fatture_log</code> (log anomalie documento)</p>
+</li>
+<li>
+<p>fatto  <code>anagrafiche.resellers_billing_account</code> (mapping <strong>billing_account → reseller</strong> senza default)</p>
+</li>
+<li>campi minimi: <code>id</code>, <code>billing_account_id</code>, <code>reseller_soggetto_ruolo_id</code>, <code>meta</code>, audit</li>
 </ul>
 <p><strong>Tabelle da modificare (proposte):</strong></p>
 <ul>
-<li><code>vendite.attivita_fatturabili</code> → aggiungere <code>registro_id</code>, <code>valuta_id</code>, <code>prezzo_unitario</code></li>
-<li><code>config.sorgenti</code> → aggiungere <code>registro_id</code> (per sorgenti RIGA)</li>
-<li><code>config.utilities</code> → aggiungere <code>registro_id</code> default</li>
-<li><code>vendite.fatture</code> → aggiungere <code>registro_id</code> e <code>critical</code></li>
-<li><code>config.stati_doc_fiscale</code> → rimuovere stati SDI e aggiungere <code>stato_precedente_ammesso</code></li>
-<li><code>catalogo.articoli_componenti</code> → aggiungere <code>determina_qta_padre</code></li>
+<li>fatto <code>vendite.attivita_fatturabili</code> → aggiungere <code>registro_id</code>, <code>valuta_id</code>, <code>prezzo_unitario</code></li>
+<li>fatto <code>config.sorgenti</code> → aggiungere <code>registro_id</code> (per sorgenti RIGA)</li>
+<li>fatto <code>config.utilities</code> → aggiungere <code>registro_id</code> default</li>
+<li>
+<p>fatto <code>vendite.fatture</code> → aggiungere <code>registro_id</code> e <code>critical</code></p>
+</li>
+<li>
+<p>fatto <code>config.stati_doc_fiscale</code> → rimuovere stati SDI e aggiungere <code>stato_precedente_ammesso</code></p>
+</li>
+<li>
+<p>fatto  <code>catalogo.articoli_componenti</code> → aggiungere <code>determina_qta_padre</code></p>
+</li>
+<li>
+<p><code>anagrafiche.resellers</code> → bloccare <code>attivo = false</code> se esistono mapping su <code>resellers_billing_account</code></p>
+</li>
 </ul>
 <hr />
 <h3 id="14-collegamento-lotto-fatture-e-esclusioni">14) Collegamento lotto ↔ fatture e esclusioni<a class="headerlink" href="#14-collegamento-lotto-fatture-e-esclusioni" title="Permanent link">&para;</a></h3>
