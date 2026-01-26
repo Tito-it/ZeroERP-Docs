@@ -2437,6 +2437,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#16-sviluppi-funzioni-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16) Sviluppi funzioni (backlog)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4084,6 +4095,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#16-sviluppi-funzioni-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16) Sviluppi funzioni (backlog)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4634,6 +4656,44 @@ per evitare fatture miste o ambiguita`.</p>
 <li>un operatore autorizzato puo` <strong>disabilitare</strong> un errore ritenuto accettabile.</li>
 <li>se esiste almeno un log <strong>critical</strong> attivo, <code>fatture.critical = true</code> e la numerazione/invio devono essere bloccati.</li>
 <li><code>disabilitato = true</code> esclude il log dal calcolo del flag <code>critical</code> sulla fattura.</li>
+</ul>
+<hr />
+<h3 id="16-sviluppi-funzioni-backlog">16) Sviluppi funzioni (backlog)<a class="headerlink" href="#16-sviluppi-funzioni-backlog" title="Permanent link">&para;</a></h3>
+<p><strong>Preparazione lotto</strong></p>
+<ul>
+<li><code>vendite.fn_create_fatturazione_lotto(...)</code> → crea lotto da parametri (competenza, utility, registro, BA/reseller opzionali).</li>
+<li><code>vendite.fn_get_or_create_lotto(...)</code> → valida lotto esistente o lo crea se assente (supporto ricalcolo).</li>
+</ul>
+<p><strong>Selezione e lock attivita_fatturabili</strong></p>
+<ul>
+<li><code>vendite.fn_select_attivita_fatturabili(...)</code> → seleziona righe eleggibili (filtri: competenza, stati, BA, utility, registro, valuta).</li>
+<li><code>vendite.fn_lock_attivita_fatturabili(...)</code> → marca/lock delle righe selezionate per evitare doppie elaborazioni.</li>
+</ul>
+<p><strong>Aggregazione e chiavi documento</strong></p>
+<ul>
+<li><code>vendite.fn_group_attivita_fatturabili(...)</code> → applica regole di aggregazione (BA, utility, registro, valuta, parent BA).</li>
+<li><code>vendite.fn_build_fattura_key(...)</code> → genera chiave logica di aggregazione per documento.</li>
+</ul>
+<p><strong>Generazione documenti</strong></p>
+<ul>
+<li><code>vendite.fn_get_or_create_fattura_header(...)</code> → crea/recupera testata fattura in bozza (riuso per lotto/chiave).</li>
+<li><code>vendite.fn_generate_fatture_righe(...)</code> → genera righe da <code>attivita_fatturabili</code> secondo regole.</li>
+</ul>
+<p><strong>Ricalcolo</strong></p>
+<ul>
+<li><code>vendite.fn_reset_fattura_righe(...)</code> → elimina righe e dipendenze se lo stato lo consente.</li>
+<li><code>vendite.fn_ricalcolo_lotto(...)</code> → reset + rigenerazione per lotto (eventuale filtro BA).</li>
+</ul>
+<p><strong>Stato e validazioni</strong></p>
+<ul>
+<li><code>vendite.fn_guard_lotto_stato(...)</code> → verifica transizioni ammesse per lotto.</li>
+<li><code>vendite.fn_guard_fattura_stato(...)</code> → verifica transizioni ammesse per fattura.</li>
+<li><code>vendite.fn_check_fattura_errors(...)</code> → aggiorna <code>critical</code> e log in base agli errori.</li>
+</ul>
+<p><strong>Post-process</strong></p>
+<ul>
+<li><code>vendite.fn_numera_fatture_lotto(...)</code> → assegna progressivi documento (registri).</li>
+<li><code>vendite.fn_prepare_sdi_payload(...)</code> → prepara invio SDI (placeholder).</li>
 </ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
