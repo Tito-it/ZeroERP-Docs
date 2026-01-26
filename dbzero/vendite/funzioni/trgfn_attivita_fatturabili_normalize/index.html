@@ -2994,7 +2994,8 @@
 La funzione <code>vendite.trgfn_attivita_fatturabili_normalize()</code> applica una <strong>normalizzazione minima</strong>
 su <code>vendite.attivita_fatturabili</code> per garantire coerenza <strong>temporale</strong> e <strong>tecnica</strong> dei dati
 prima della scrittura.</p>
-<p>La funzione e<code>eseguita da un trigger **BEFORE INSERT/UPDATE** su</code>vendite.attivita_fatturabili`.</p>
+<p>La funzione e<code>eseguita da un trigger **BEFORE INSERT** e **BEFORE UPDATE OF**</code>competenza_mese<code>,</code>sorgente_tipo_id<code>,</code>sorgente_riga<code>,</code>billing_account_id<code>,</code>registro_id<code>,</code>valuta_id<code>su</code>vendite.attivita_fatturabili`.
+Le operazioni <strong>DELETE</strong> non attivano la normalizzazione.</p>
 <hr />
 <h3 id="regole-applicate">🔧 Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
 <ol>
@@ -3008,6 +3009,14 @@ prima della scrittura.</p>
    normalizzazione stringa.  
    Se</code>sorgente_tipo_id<code>e</code> valorizzato e <code>sorgente_riga</code> e<code>NULL, viene impostato</code>sorgente_riga = 0`
    per garantire coerenza con l’idempotenza import.</p>
+</li>
+<li>
+<p><strong>Registro fatturazione</strong><br />
+   Se <code>registro_id</code> e<code>NULL, viene risolto tramite</code>vendite.fn_get_registro_id<code>(priorita</code>: sorgente → utility → errore).</p>
+</li>
+<li>
+<p><strong>Valuta</strong><br />
+   Se <code>valuta_id</code> e<code>NULL, viene risolto tramite</code>vendite.fn_get_valuta_id<code>(priorita</code>: BA → utility → gestore).</p>
 </li>
 </ol>
 <p>La funzione non esegue validazioni di dominio (delegate ai trigger guard dedicati).</p>
