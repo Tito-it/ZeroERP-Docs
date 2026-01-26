@@ -302,7 +302,7 @@
   <span class="md-ellipsis">
     
   
-    Introduzione
+    Visione e Filosofia
   
 
     
@@ -318,39 +318,11 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Introduzione
+    Visione e Filosofia
   
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../introduzione/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Cos’è Zero ERP
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -387,14 +359,42 @@
   
   
     <li class="md-nav__item">
-      <a href="../../LICENSE/" class="md-nav__link">
+      <a href="../../introduzione/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Licenza
+    Cos’è Zero ERP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../perche-zeroerp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Perchè Zero ERP
   
 
     
@@ -484,6 +484,34 @@
     
   
     Prerequisiti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LICENSE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licenza
   
 
     
@@ -2212,6 +2240,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#11-processo-di-alimentazione-attivita_fatturabili-necessita" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1) Processo di alimentazione attivita_fatturabili (necessita`)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-lotto-alimentazione-attivita_consumi-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2) Lotto alimentazione + attivita_consumi (design)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2-parametri-funzione-di-calcolo-proposta" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3837,6 +3887,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#11-processo-di-alimentazione-attivita_fatturabili-necessita" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1) Processo di alimentazione attivita_fatturabili (necessita`)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-lotto-alimentazione-attivita_consumi-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2) Lotto alimentazione + attivita_consumi (design)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2-parametri-funzione-di-calcolo-proposta" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4085,11 +4157,18 @@
 <pre class="mermaid"><code>flowchart TD
   A[Sorgenti attive&lt;br/&gt;config.sorgenti] --&gt; B[Dashboard Input&lt;br/&gt;Selezione sorgenti]
   B --&gt; C[Alimentazione&lt;br/&gt;vendite.attivita_fatturabili]
+  B -.-&gt; X[Eccezioni utilities&lt;br/&gt;Calcolo consumi]
+  X --&gt; XC[attivita_consumi&lt;br/&gt;+ log alimentazione]
+  XC --&gt; C
   C --&gt; D[Dashboard Pre‑Calcolo&lt;br/&gt;Filtri + approvazione]
   D --&gt; E[Calcolo righe&lt;br/&gt;vendite.fatture_righe]
   E --&gt; F[Dashboard Emissione&lt;br/&gt;Conferma documento]
   F --&gt; G[Emissione + numerazione&lt;br/&gt;vendite.fatture]
   G --&gt; H[Output/Invio/Statistiche]</code></pre>
+<hr />
+<blockquote>
+<p>Nota: la dashboard e` concepita come <strong>unica</strong> con sezioni dedicate (input, eccezioni utilities, pre‑calcolo, emissione).</p>
+</blockquote>
 <hr />
 <h2 id="1-processo-di-alimentazione-attivita_fatturabili">1) Processo di alimentazione <code>attivita_fatturabili</code><a class="headerlink" href="#1-processo-di-alimentazione-attivita_fatturabili" title="Permanent link">&para;</a></h2>
 <h3 id="scopo">🎯 Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h3>
@@ -4122,6 +4201,14 @@
 <li>Visualizzazione righe candidate e preview dei conteggi.</li>
 <li>Avvio del processo di alimentazione (batch o manuale).</li>
 </ul>
+<p><strong>Integrazione utilities (gas/energia/acqua)</strong><br />
+Non tutte le sorgenti possono alimentare direttamente <code>attivita_fatturabili</code>:
+nei casi utilities serve un <strong>processo di calcolo preliminare</strong> dei consumi.
+La dashboard “Input” deve quindi gestire due flussi:</p>
+<p>1) <strong>Alimentazione diretta</strong> → inserimento righe <code>attivita_fatturabili</code> da sorgenti semplici.<br />
+2) <strong>Alimentazione con calcolo</strong> → generazione di <code>attivita_consumi</code> (testata consumi),
+   log dedicato e successiva produzione di righe <code>attivita_fatturabili</code>.</p>
+<p>Il processo di alimentazione avviene <strong>prima</strong> del lotto fatture e mantiene tracciabilita<code>tramite</code>fatturazione_lotti_attivita`.</p>
 <hr />
 <h2 id="2-processo-operativo-di-calcolo-preemissione">2) Processo operativo di calcolo (pre‑emissione)<a class="headerlink" href="#2-processo-operativo-di-calcolo-preemissione" title="Permanent link">&para;</a></h2>
 <h3 id="scopo_1">🎯 Scopo<a class="headerlink" href="#scopo_1" title="Permanent link">&para;</a></h3>
@@ -4283,6 +4370,33 @@
 Lo stato del lotto segue un <strong>ordine</strong> e supporta <code>stato_precedente_ammesso</code> per eventuali rollback.</p>
 </blockquote>
 <hr />
+<h3 id="11-processo-di-alimentazione-attivita_fatturabili-necessita">1.1) Processo di alimentazione attivita_fatturabili (necessita`)<a class="headerlink" href="#11-processo-di-alimentazione-attivita_fatturabili-necessita" title="Permanent link">&para;</a></h3>
+<p>In ambito utilities (gas/energia/acqua) la <strong>generazione</strong> di <code>attivita_fatturabili</code>
+non e` un semplice import ma un <strong>calcolo complesso</strong> (consumi, conguagli, minimi, fasce).
+Questo richiede:</p>
+<ul>
+<li>**tracciabilita<code>batch** (quando e</code> stato eseguito il calcolo, con quali parametri);</li>
+<li><strong>log dedicato</strong> (warning/critical specifici del calcolo consumi);</li>
+<li><strong>testata di calcolo</strong> con totali e periodi per BA/competenza;</li>
+<li>separazione chiara tra <strong>alimentazione</strong> e <strong>fatturazione</strong>.</li>
+</ul>
+<p>Per questo si introduce un <strong>processo di alimentazione</strong> separato dal lotto fatture,
+ma collegabile in dashboard.</p>
+<hr />
+<h3 id="12-lotto-alimentazione-attivita_consumi-design">1.2) Lotto alimentazione + attivita_consumi (design)<a class="headerlink" href="#12-lotto-alimentazione-attivita_consumi-design" title="Permanent link">&para;</a></h3>
+<p><strong>Lotto alimentazione</strong> (<code>vendite.fatturazione_lotti_attivita</code>):
+* batch di generazione <code>attivita_fatturabili</code> con parametri di calcolo (competenza, utility, BA);
+* stato lotto (IN_ESECUZIONE | COMPLETATO | ERRORE);
+* riferimento per dashboard e audit.</p>
+<p><strong>Testata consumi</strong> (<code>vendite.attivita_consumi</code>):
+* totalizzatori per BA/periodo (consumo_totale, uom, periodo);
+* punto di aggregazione per i dettagli futuri (fasce, minimi, ecc.);
+* collegabile a <code>fattura_id</code> quando il documento e` emesso.</p>
+<p><strong>Log dedicato</strong> (<code>vendite.attivita_fatturabili_log</code>):
+* messaggi W/C riferiti al lotto o alla testata consumi.</p>
+<p>Le righe <code>attivita_fatturabili</code> generate da processi automatici
+mantengono un riferimento al <strong>lotto alimentazione</strong> e, se disponibile,
+alla <strong>testata consumi</strong>.</p>
 <h3 id="2-parametri-funzione-di-calcolo-proposta">2) Parametri funzione di calcolo (proposta)<a class="headerlink" href="#2-parametri-funzione-di-calcolo-proposta" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>p_competenza_mese</code> (obbligatorio, YYYY-MM-01)</li>
@@ -4472,12 +4586,11 @@ per evitare fatture miste o ambiguita`.</p>
 <li>
 <p>fatto <code>anagrafiche.emittenti_fiscali_billing_account</code> (mapping <strong>billing_account → emittente fiscale</strong>)</p>
 </li>
-<li>aggiungere <code>default boolean</code> con **unicita<code>** del valore</code>true`</li>
 <li>
-<p><code>dbops.jobs</code>, <code>dbops.job_runs</code>, <code>dbops.job_steps</code> (modello job)</p>
+<p>aggiungere <code>default boolean</code> con **unicita<code>** del valore</code>true<code></code>dbops.jobs<code>,</code>dbops.job_runs<code>,</code>dbops.job_steps` (modello job)</p>
 </li>
 <li>
-<p><code>vendite.fatture_log</code> (log anomalie documento)</p>
+<p>fatto <code>vendite.fatture_log</code> (log anomalie documento)</p>
 </li>
 <li>
 <p>fatto  <code>anagrafiche.resellers_billing_account</code> (mapping <strong>billing_account → reseller</strong> senza default)</p>
