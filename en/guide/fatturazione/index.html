@@ -4466,7 +4466,7 @@ alla <strong>testata consumi</strong>.</p>
 <li><code>utility_id</code> (se valorizzato)</li>
 <li><code>tipo_doc_fiscale_id</code></li>
 <li><code>valuta_id</code></li>
-<li><code>emittente_soggetto_ruolo_id</code></li>
+<li><code>emittente_soggetto_ruolo_id</code> (se valorizzato)</li>
 </ul>
 <p>La funzione <strong>aggrega</strong> su fattura bozza esistente con stessa chiave.</p>
 <hr />
@@ -4538,11 +4538,10 @@ Si propone quindi lo <strong>sdoppiamento</strong> dello stato:</p>
 <li><code>vendite.attivita_fatturabili</code> <strong>deve</strong> avere <code>tipo_doc_fiscale_id</code>.</li>
 <li>Se l’attivita<code>deriva da una sorgente **RIGA** (</code>config.sorgenti<code>), il</code>tipo_doc_fiscale_id` viene ereditato dalla sorgente.</li>
 <li>Per attivita<code>inserite manualmente (auto‑sorgente), il</code>tipo_doc_fiscale_id` deve essere valorizzato direttamente.</li>
-<li><strong>Fallback</strong>: se non e<code>presente, usare il **tipo documento di default della utility** (</code>config.utilities.tipo_doc_fiscale_id`).</li>
+<li><strong>Fallback</strong>: non previsto. Il tipo documento e` di sistema.</li>
 <li><strong>Ordine di risoluzione</strong> per l’alimentazione di <code>attivita_fatturabili</code>:
   1) <code>config.sorgenti.tipo_doc_fiscale_id</code> (se sorgente RIGA e valorizzato)
-  2) <code>config.utilities.tipo_doc_fiscale_id</code> (fallback)
-  3) errore se ancora NULL</li>
+  2) errore se ancora NULL</li>
 </ul>
 <p>Questa regola rende il raggruppamento deterministico e permette casi semplificati con <strong>un solo tipo documento per utility</strong>.</p>
 <hr />
@@ -4628,7 +4627,7 @@ per evitare fatture miste o ambiguita`.</p>
 <p>✅ <code>config.stati_doc_fiscale</code> (stati documento con flag <code>applica_lotto</code> / <code>applica_fattura</code>)</p>
 </li>
 <li>
-<p>✅ <code>vendite.tipi_doc_fiscale_registri</code> (mapping <strong>tipo documento → registro</strong>, con varianti per utility/emittente)</p>
+<p>✅ <code>vendite.tipi_doc_fiscale_registri</code> (mapping <strong>tipo documento → registro</strong>)</p>
 </li>
 <li>
 <p>✅ <code>anagrafiche.emittenti_fiscali_billing_account</code> (mapping <strong>billing_account → emittente fiscale</strong>)</p>
@@ -4686,8 +4685,8 @@ per evitare fatture miste o ambiguita`.</p>
 <h3 id="16-sviluppi-funzioni-backlog">16) Sviluppi funzioni (backlog)<a class="headerlink" href="#16-sviluppi-funzioni-backlog" title="Permanent link">&para;</a></h3>
 <p><strong>Preparazione lotto</strong></p>
 <ul>
-<li><code>vendite.fn_create_fatturazione_lotto(...)</code> → crea lotto da parametri (competenza, utility, tipo documento, BA/reseller opzionali).</li>
-<li><code>vendite.fn_get_or_create_lotto(...)</code> → valida lotto esistente o lo crea se assente (supporto ricalcolo).</li>
+<li>✅ <code>vendite.fn_create_fatturazione_lotto(...)</code> → crea lotto da parametri (competenza, utility, tipo documento, BA/reseller opzionali).</li>
+<li>✅ <code>vendite.fn_get_or_create_lotto(...)</code> → valida lotto esistente o lo crea se assente (supporto ricalcolo).</li>
 </ul>
 <p><strong>Selezione e lock attivita_fatturabili</strong></p>
 <ul>
