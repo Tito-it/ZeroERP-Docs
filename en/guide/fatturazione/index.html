@@ -2328,10 +2328,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#6-registro-di-fatturazione-regola-proposta" class="md-nav__link">
+  <a href="#6-tipo-documento-fiscale-regola-proposta" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6) Registro di fatturazione (regola proposta)
+        6) Tipo documento fiscale (regola proposta)
       
     </span>
   </a>
@@ -2442,6 +2442,17 @@
     <span class="md-ellipsis">
       
         16) Sviluppi funzioni (backlog)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-nota-su-fatturazione-elettronica-fe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17) Nota su Fatturazione Elettronica (FE)
       
     </span>
   </a>
@@ -3986,10 +3997,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#6-registro-di-fatturazione-regola-proposta" class="md-nav__link">
+  <a href="#6-tipo-documento-fiscale-regola-proposta" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6) Registro di fatturazione (regola proposta)
+        6) Tipo documento fiscale (regola proposta)
       
     </span>
   </a>
@@ -4100,6 +4111,17 @@
     <span class="md-ellipsis">
       
         16) Sviluppi funzioni (backlog)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-nota-su-fatturazione-elettronica-fe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17) Nota su Fatturazione Elettronica (FE)
       
     </span>
   </a>
@@ -4380,15 +4402,15 @@ La dashboard “Input” deve quindi gestire due flussi:</p>
 <li><code>uuid</code> (lock_batch_id)</li>
 <li><code>codice</code> (es. LOT-YYYYMM-NN)</li>
 <li><code>competenza_mese</code> (date, YYYY-MM-01)</li>
-<li><code>utility_id</code> (opzionale)</li>
-<li><code>registro_id</code> (opzionale)</li>
+<li><code>utility_id</code> (opzionale, derivabile da BA)</li>
+<li><code>tipo_doc_fiscale_id</code> (<strong>obbligatorio</strong>)</li>
 <li><code>billing_account_id</code> (opzionale)</li>
 <li><code>stato_lotto</code> (IN_ESECUZIONE | COMPLETATO | ERRORE)</li>
 <li><code>stato_doc_fiscale_id</code> (FK -&gt; <code>config.stati_doc_fiscale</code>)</li>
 <li>audit + <code>meta</code></li>
 </ul>
 <blockquote>
-<p>Nota: <code>utility_id</code> e <code>registro_id</code> <strong>non sono obbligatori</strong>, ma entrano nel <strong>raggruppamento</strong> quando valorizzati.
+<p>Nota: <code>tipo_doc_fiscale_id</code> e<code>obbligatorio;</code>utility_id<code>puo</code> essere derivato da <code>billing_account_id</code>.
 Lo stato del lotto segue un <strong>ordine</strong> e supporta <code>stato_precedente_ammesso</code> per eventuali rollback.</p>
 </blockquote>
 <hr />
@@ -4424,7 +4446,7 @@ alla <strong>testata consumi</strong>.</p>
 <li><code>p_competenza_mese</code> (obbligatorio, YYYY-MM-01)</li>
 <li><code>p_billing_account_id</code> (opzionale)</li>
 <li><code>p_utility_id</code> (opzionale)</li>
-<li><code>p_registro_id</code> (opzionale)</li>
+<li><code>p_tipo_doc_fiscale_id</code> (obbligatorio)</li>
 <li><code>p_reseller_soggetto_ruolo_id</code> (opzionale)</li>
 <li><code>p_lotto_id</code> (opzionale; se NULL/0 -&gt; crea lotto)</li>
 <li><code>p_preview</code> (opzionale)</li>
@@ -4442,7 +4464,7 @@ alla <strong>testata consumi</strong>.</p>
 <li><code>billing_account_id</code></li>
 <li><code>competenza_mese</code></li>
 <li><code>utility_id</code> (se valorizzato)</li>
-<li><code>registro_id</code> (se valorizzato)</li>
+<li><code>tipo_doc_fiscale_id</code></li>
 <li><code>valuta_id</code></li>
 <li><code>emittente_soggetto_ruolo_id</code></li>
 </ul>
@@ -4511,18 +4533,18 @@ Si propone quindi lo <strong>sdoppiamento</strong> dello stato:</p>
 <li>la retrocessione e<code>consentita **solo** verso lo stato immediatamente precedente (per ordine), se il flag e</code> <code>true</code></li>
 </ul>
 <hr />
-<h3 id="6-registro-di-fatturazione-regola-proposta">6) Registro di fatturazione (regola proposta)<a class="headerlink" href="#6-registro-di-fatturazione-regola-proposta" title="Permanent link">&para;</a></h3>
+<h3 id="6-tipo-documento-fiscale-regola-proposta">6) Tipo documento fiscale (regola proposta)<a class="headerlink" href="#6-tipo-documento-fiscale-regola-proposta" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>vendite.attivita_fatturabili</code> <strong>deve</strong> avere <code>registro_id</code>.</li>
-<li>Se l’attivita<code>deriva da una sorgente **RIGA** (</code>config.sorgenti<code>), il</code>registro_id` viene ereditato dalla sorgente.</li>
-<li>Per attivita<code>inserite manualmente (auto‑sorgente), il</code>registro_id` deve essere valorizzato direttamente.</li>
-<li><strong>Fallback</strong>: se non e<code>presente, usare il **registro di default della utility** (</code>config.utilities.registro_id`).</li>
+<li><code>vendite.attivita_fatturabili</code> <strong>deve</strong> avere <code>tipo_doc_fiscale_id</code>.</li>
+<li>Se l’attivita<code>deriva da una sorgente **RIGA** (</code>config.sorgenti<code>), il</code>tipo_doc_fiscale_id` viene ereditato dalla sorgente.</li>
+<li>Per attivita<code>inserite manualmente (auto‑sorgente), il</code>tipo_doc_fiscale_id` deve essere valorizzato direttamente.</li>
+<li><strong>Fallback</strong>: se non e<code>presente, usare il **tipo documento di default della utility** (</code>config.utilities.tipo_doc_fiscale_id`).</li>
 <li><strong>Ordine di risoluzione</strong> per l’alimentazione di <code>attivita_fatturabili</code>:
-  1) <code>config.sorgenti.registro_id</code> (se sorgente RIGA e valorizzato)
-  2) <code>config.utilities.registro_id</code> (fallback)
+  1) <code>config.sorgenti.tipo_doc_fiscale_id</code> (se sorgente RIGA e valorizzato)
+  2) <code>config.utilities.tipo_doc_fiscale_id</code> (fallback)
   3) errore se ancora NULL</li>
 </ul>
-<p>Questa regola rende il raggruppamento deterministico e permette casi semplificati con <strong>un solo registro per utility</strong>.</p>
+<p>Questa regola rende il raggruppamento deterministico e permette casi semplificati con <strong>un solo tipo documento per utility</strong>.</p>
 <hr />
 <h3 id="7-ricalcolo-e-note-policy">7) Ricalcolo e note (policy)<a class="headerlink" href="#7-ricalcolo-e-note-policy" title="Permanent link">&para;</a></h3>
 <p><strong>Ricalcolo:</strong></p>
@@ -4595,46 +4617,49 @@ per evitare fatture miste o ambiguita`.</p>
 <h3 id="13-tabelle-da-introdurre-o-modificare-prima-della-logica">13) Tabelle da introdurre o modificare (prima della logica)<a class="headerlink" href="#13-tabelle-da-introdurre-o-modificare-prima-della-logica" title="Permanent link">&para;</a></h3>
 <p><strong>Nuove tabelle (proposte):</strong></p>
 <ul>
-<li>fatta <code>vendite.fatturazione_lotti</code> (lotto + stato job/documenti + lock uuid)</li>
+<li>✅ <code>vendite.fatturazione_lotti</code> (lotto + stato job/documenti + lock uuid)</li>
 <li>
-<p>fatta <code>vendite.fatturazione_lotti_fatture</code> (relazione lotto ↔ fattura + stato SDI + esclusione)</p>
+<p>✅ <code>vendite.fatturazione_lotti_fatture</code> (relazione lotto ↔ fattura + stato SDI + esclusione)</p>
 </li>
 <li>
-<p>fatto -<code>config.stati_sdi</code> (stati canale SDI)</p>
+<p>✅ -<code>config.stati_sdi</code> (stati canale SDI)</p>
 </li>
 <li>
-<p>fatto <code>config.stati_doc_fiscale</code> (stati documento con flag <code>applica_lotto</code> / <code>applica_fattura</code>)</p>
+<p>✅ <code>config.stati_doc_fiscale</code> (stati documento con flag <code>applica_lotto</code> / <code>applica_fattura</code>)</p>
 </li>
 <li>
-<p>fatto <code>anagrafiche.emittenti_fiscali_billing_account</code> (mapping <strong>billing_account → emittente fiscale</strong>)</p>
+<p>✅ <code>vendite.tipi_doc_fiscale_registri</code> (mapping <strong>tipo documento → registro</strong>, con varianti per utility/emittente)</p>
+</li>
+<li>
+<p>✅ <code>anagrafiche.emittenti_fiscali_billing_account</code> (mapping <strong>billing_account → emittente fiscale</strong>)</p>
 </li>
 <li>
 <p>aggiungere <code>default boolean</code> con **unicita<code>** del valore</code>true<code></code>dbops.jobs<code>,</code>dbops.job_runs<code>,</code>dbops.job_steps` (modello job)</p>
 </li>
 <li>
-<p>fatto <code>vendite.fatture_log</code> (log anomalie documento)</p>
+<p>✅ <code>vendite.fatture_log</code> (log anomalie documento)</p>
 </li>
 <li>
-<p>fatto  <code>anagrafiche.resellers_billing_account</code> (mapping <strong>billing_account → reseller</strong> senza default)</p>
+<p>✅  <code>anagrafiche.resellers_billing_account</code> (mapping <strong>billing_account → reseller</strong> senza default)</p>
 </li>
 <li>campi minimi: <code>id</code>, <code>billing_account_id</code>, <code>reseller_soggetto_ruolo_id</code>, <code>meta</code>, audit</li>
 </ul>
 <p><strong>Tabelle da modificare (proposte):</strong></p>
 <ul>
-<li>fatto <code>vendite.attivita_fatturabili</code> → aggiungere <code>registro_id</code>, <code>valuta_id</code>, <code>prezzo_unitario</code></li>
-<li>fatto <code>config.sorgenti</code> → aggiungere <code>registro_id</code> (per sorgenti RIGA)</li>
-<li>fatto <code>config.utilities</code> → aggiungere <code>registro_id</code> default</li>
+<li>✅ <code>vendite.attivita_fatturabili</code> → aggiungere <code>tipo_doc_fiscale_id</code>, <code>valuta_id</code>, <code>prezzo_unitario</code></li>
+<li>✅ <code>config.sorgenti</code> → aggiungere <code>tipo_doc_fiscale_id</code> (per sorgenti RIGA)</li>
+<li>✅ <code>config.utilities</code> → aggiungere <code>tipo_doc_fiscale_id</code> default</li>
 <li>
-<p>fatto <code>vendite.fatture</code> → aggiungere <code>registro_id</code> e <code>critical</code></p>
+<p>✅ <code>vendite.fatture</code> → aggiungere <code>registro_id</code> e <code>critical</code></p>
 </li>
 <li>
-<p>fatto <code>config.stati_doc_fiscale</code> → rimuovere stati SDI e aggiungere <code>stato_precedente_ammesso</code></p>
+<p>✅ <code>config.stati_doc_fiscale</code> → rimuovere stati SDI e aggiungere <code>stato_precedente_ammesso</code></p>
 </li>
 <li>
-<p>fatto  <code>catalogo.articoli_componenti</code> → aggiungere <code>determina_qta_padre</code></p>
+<p>✅  <code>catalogo.articoli_componenti</code> → aggiungere <code>determina_qta_padre</code></p>
 </li>
 <li>
-<p><code>anagrafiche.resellers</code> → bloccare <code>attivo = false</code> se esistono mapping su <code>resellers_billing_account</code></p>
+<p>✅ <code>anagrafiche.resellers</code> → bloccare <code>attivo = false</code> se esistono mapping su <code>resellers_billing_account</code></p>
 </li>
 </ul>
 <hr />
@@ -4661,17 +4686,17 @@ per evitare fatture miste o ambiguita`.</p>
 <h3 id="16-sviluppi-funzioni-backlog">16) Sviluppi funzioni (backlog)<a class="headerlink" href="#16-sviluppi-funzioni-backlog" title="Permanent link">&para;</a></h3>
 <p><strong>Preparazione lotto</strong></p>
 <ul>
-<li><code>vendite.fn_create_fatturazione_lotto(...)</code> → crea lotto da parametri (competenza, utility, registro, BA/reseller opzionali).</li>
+<li><code>vendite.fn_create_fatturazione_lotto(...)</code> → crea lotto da parametri (competenza, utility, tipo documento, BA/reseller opzionali).</li>
 <li><code>vendite.fn_get_or_create_lotto(...)</code> → valida lotto esistente o lo crea se assente (supporto ricalcolo).</li>
 </ul>
 <p><strong>Selezione e lock attivita_fatturabili</strong></p>
 <ul>
-<li><code>vendite.fn_select_attivita_fatturabili(...)</code> → seleziona righe eleggibili (filtri: competenza, stati, BA, utility, registro, valuta).</li>
+<li><code>vendite.fn_select_attivita_fatturabili(...)</code> → seleziona righe eleggibili (filtri: competenza, stati, BA, utility, tipo documento, valuta).</li>
 <li><code>vendite.fn_lock_attivita_fatturabili(...)</code> → marca/lock delle righe selezionate per evitare doppie elaborazioni.</li>
 </ul>
 <p><strong>Aggregazione e chiavi documento</strong></p>
 <ul>
-<li><code>vendite.fn_group_attivita_fatturabili(...)</code> → applica regole di aggregazione (BA, utility, registro, valuta, parent BA).</li>
+<li><code>vendite.fn_group_attivita_fatturabili(...)</code> → applica regole di aggregazione (BA, utility, tipo documento, valuta, parent BA).</li>
 <li><code>vendite.fn_build_fattura_key(...)</code> → genera chiave logica di aggregazione per documento.</li>
 </ul>
 <p><strong>Generazione documenti</strong></p>
@@ -4694,6 +4719,13 @@ per evitare fatture miste o ambiguita`.</p>
 <ul>
 <li><code>vendite.fn_numera_fatture_lotto(...)</code> → assegna progressivi documento (registri).</li>
 <li><code>vendite.fn_prepare_sdi_payload(...)</code> → prepara invio SDI (placeholder).</li>
+</ul>
+<hr />
+<h3 id="17-nota-su-fatturazione-elettronica-fe">17) Nota su Fatturazione Elettronica (FE)<a class="headerlink" href="#17-nota-su-fatturazione-elettronica-fe" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Il mapping <strong>FE</strong> (es. TD01, TD04) non e` gestito nel tipo documento attuale.</li>
+<li>La classificazione FE verra` introdotta in una fase successiva con un dominio dedicato
+  per l’emissione elettronica e l’invio SDI.</li>
 </ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>

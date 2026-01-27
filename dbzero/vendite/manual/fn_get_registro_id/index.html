@@ -2995,16 +2995,16 @@
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
 <p><strong>Approfondimento tabelle:</strong></p>
-<p>• <a href="../../../../dbzero/config/tabelle/sorgenti">config.sorgenti</a><br />
-• <a href="../../../../dbzero/config/tabelle/utilities">config.utilities</a><br />
+<p>• <a href="../../../../dbzero/config/tabelle/tipi_doc_fiscale">config.tipi_doc_fiscale</a><br />
+• <a href="../../../../dbzero/vendite/manual/tipi_doc_fiscale_registri">vendite.tipi_doc_fiscale_registri</a><br />
 • <a href="../../../../dbzero/vendite/tabelle/registri_fatturazione">vendite.registri_fatturazione</a><br />
 </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 24-01-2026)
+<p>(latest review 27-01-2026)
 La funzione <strong><code>vendite.fn_get_registro_id</code></strong> risolve il registro di fatturazione
-secondo una regola deterministica: <strong>sorgente → utility → errore</strong>.</p>
+in base al mapping <strong>tipo documento → registro</strong>, considerando utility/emittente se presenti.</p>
 <hr />
 <h3 id="parametri-di-input">🔍 Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -3017,29 +3017,36 @@ secondo una regola deterministica: <strong>sorgente → utility → errore</stro
 </thead>
 <tbody>
 <tr>
-<td><code>p_sorgente_tipo_id</code></td>
-<td><code>config.sorgenti.id%TYPE</code></td>
-<td>Sorgente di origine (opzionale).</td>
+<td><code>p_tipo_doc_fiscale_id</code></td>
+<td><code>config.tipi_doc_fiscale.id%TYPE</code></td>
+<td>Tipo documento fiscale.</td>
 </tr>
 <tr>
 <td><code>p_utility_id</code></td>
 <td><code>config.utilities.id%TYPE</code></td>
 <td>Utility di riferimento (opzionale).</td>
 </tr>
+<tr>
+<td><code>p_emittente_soggetto_ruolo_id</code></td>
+<td><code>anagrafiche.soggetti_ruoli.id%TYPE</code></td>
+<td>Emittente fiscale (opzionale).</td>
+</tr>
 </tbody>
 </table>
 <hr />
 <h3 id="regola-applicata">✅ Regola applicata<a class="headerlink" href="#regola-applicata" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Se <code>config.sorgenti.registro_id</code> e` valorizzato → usa quello.</li>
-<li>Altrimenti usa <code>config.utilities.registro_id</code>.</li>
-<li>Se ancora NULL → errore bloccante.</li>
+<li>tipo_doc + utility + emittente</li>
+<li>tipo_doc + utility</li>
+<li>tipo_doc + emittente</li>
+<li>tipo_doc (generico)</li>
+<li>Se assente → errore bloccante.</li>
 </ol>
 <hr />
 <h3 id="note-operative">✅ Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Funzione pensata per l’alimentazione di <code>attivita_fatturabili</code>.</li>
-<li>Garantisce coerenza del registro senza regole implicite.</li>
+<li>Funzione pensata per la numerazione e per i processi che richiedono il registro contabile.</li>
+<li>Le varianti sono gestite tramite registri con utility/emittente valorizzati.</li>
 </ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
