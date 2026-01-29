@@ -4690,7 +4690,7 @@ per evitare fatture miste o ambiguita`.</p>
 </ul>
 <p><strong>Selezione e lock attivita_fatturabili</strong></p>
 <ul>
-<li><code>vendite.fn_select_attivita_fatturabili(...)</code> → seleziona righe eleggibili e, se richiesto, esegue il lock in modo atomico.</li>
+<li>✅<code>vendite.fn_select_attivita_fatturabili(...)</code> → seleziona righe eleggibili e, se richiesto, esegue il lock in modo atomico.</li>
 </ul>
 <p><strong>Aggregazione e chiavi documento</strong></p>
 <ul>
@@ -4718,6 +4718,16 @@ per evitare fatture miste o ambiguita`.</p>
 <li><code>vendite.fn_numera_fatture_lotto(...)</code> → assegna progressivi documento (registri).</li>
 <li><code>vendite.fn_prepare_sdi_payload(...)</code> → prepara invio SDI (placeholder).</li>
 </ul>
+<p><strong>Pipeline (orchestrazione lotto)</strong></p>
+<p>*✅ <code>vendite.pr_run_lotto_pipeline(...)</code> → esegue la pipeline configurabile leggendo <code>vendite.fatturazione_pipeline</code>.
+  * imposta <code>stato_lotto = IN_ESECUZIONE</code> all’avvio e <code>COMPLETATO</code> a fine job.
+  * per ogni step:
+    * aggiorna <code>stato_doc_fiscale_id</code> del lotto,
+    * scrive un log <code>status=I</code> con <code>fase</code> su <code>fatturazione_lotti_log</code>,
+    * esegue i task definiti in <code>processi</code>.
+  * in caso di errore: <code>stato_lotto = ERRORE</code> + log errore.
+* ✅<code>vendite.fn_execute_pipeline_step(...)</code> → esegue i task di uno step (lettura <code>processi</code>/<code>rollback</code>).
+* ✅ <code>vendite.fn_log_pipeline_fase(...)</code> → inserisce log <code>I/W/C</code> con fase e stato lotto.</p>
 <hr />
 <h3 id="17-nota-su-fatturazione-elettronica-fe">17) Nota su Fatturazione Elettronica (FE)<a class="headerlink" href="#17-nota-su-fatturazione-elettronica-fe" title="Permanent link">&para;</a></h3>
 <ul>
