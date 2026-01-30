@@ -2262,6 +2262,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#13-area-geografica-analisi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3) Area geografica (analisi)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2-parametri-funzione-di-calcolo-proposta" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2442,6 +2453,17 @@
     <span class="md-ellipsis">
       
         16) Sviluppi funzioni (backlog)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-sviluppi-area-geografica-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18) Sviluppi – Area geografica (backlog)
       
     </span>
   </a>
@@ -3931,6 +3953,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#13-area-geografica-analisi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3) Area geografica (analisi)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2-parametri-funzione-di-calcolo-proposta" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4118,6 +4151,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#18-sviluppi-area-geografica-backlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18) Sviluppi – Area geografica (backlog)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#17-nota-su-fatturazione-elettronica-fe" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4252,7 +4296,7 @@ La dashboard “Input” deve quindi gestire due flussi:</p>
 <p>1) <strong>Alimentazione diretta</strong> → inserimento righe <code>attivita_fatturabili</code> da sorgenti semplici.<br />
 2) <strong>Alimentazione con calcolo</strong> → generazione di <code>attivita_consumi</code> (testata consumi),
    log dedicato e successiva produzione di righe <code>attivita_fatturabili</code>.</p>
-<p>Il processo di alimentazione avviene <strong>prima</strong> del lotto fatture e mantiene tracciabilita<code>tramite</code>fatturazione_lotti_attivita`.</p>
+<p>Il processo di alimentazione avviene <strong>prima</strong> del lotto fatture e mantiene tracciabilita<code>tramite</code>attivita_fatturabili_lotti`.</p>
 <hr />
 <h2 id="2-processo-operativo-di-calcolo-preemissione">2) Processo operativo di calcolo (pre‑emissione)<a class="headerlink" href="#2-processo-operativo-di-calcolo-preemissione" title="Permanent link">&para;</a></h2>
 <h3 id="scopo_1">🎯 Scopo<a class="headerlink" href="#scopo_1" title="Permanent link">&para;</a></h3>
@@ -4389,6 +4433,13 @@ La dashboard “Input” deve quindi gestire due flussi:</p>
   FR --&gt; F</code></pre>
 <hr />
 <h2 id="appendice-lotto-raggruppamenti-e-stati-design-operativo">📎 Appendice – Lotto, raggruppamenti e stati (design operativo)<a class="headerlink" href="#appendice-lotto-raggruppamenti-e-stati-design-operativo" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Nota importante (evidenza):</strong>
+<code>area_geografica_id</code> restera<code>**solo** un filtro geografico.
+In futuro i raggruppamenti multi‑criterio (comuni + tipologia utenza + contratti, ecc.)
+saranno gestiti con un **nuovo livello** (</code>gruppo_fatturazione_id<code>), per evitare
+ambiguita</code> semantiche e mantenere la compatibilita` con l’attuale modello.</p>
+</blockquote>
 <h3 id="1-lotto-di-fatturazione">1) Lotto di fatturazione<a class="headerlink" href="#1-lotto-di-fatturazione" title="Permanent link">&para;</a></h3>
 <p>Il <strong>lotto</strong> diventa l’elemento centrale per:</p>
 <ul>
@@ -4433,19 +4484,27 @@ trigger dedicati (es. <code>trgfn_attivita_fatturabili_guard_ba_coerenza</code>,
 </blockquote>
 <hr />
 <h3 id="12-lotto-alimentazione-attivita_consumi-design">1.2) Lotto alimentazione + attivita_consumi (design)<a class="headerlink" href="#12-lotto-alimentazione-attivita_consumi-design" title="Permanent link">&para;</a></h3>
-<p><strong>Lotto alimentazione</strong> (<code>vendite.fatturazione_lotti_attivita</code>):
+<p><strong>Lotto alimentazione</strong> (<code>vendite.attivita_fatturabili_lotti</code>):
 * batch di generazione <code>attivita_fatturabili</code> con parametri di calcolo (competenza, utility, BA);
 * stato lotto (IN_ESECUZIONE | COMPLETATO | ERRORE);
 * riferimento per dashboard e audit.</p>
-<blockquote>
-<p>Promemoria: rinominare <code>vendite.fatturazione_lotti_attivita</code> in <code>vendite.attivita_fatturabili_lotti</code>.</p>
-</blockquote>
 <p><strong>Testata consumi</strong> (<code>vendite.attivita_consumi</code>):
 * totalizzatori per BA/periodo (consumo_totale, uom, periodo);
 * punto di aggregazione per i dettagli futuri (fasce, minimi, ecc.);
 * collegabile a <code>fattura_id</code> quando il documento e` emesso.</p>
 <p><strong>Log dedicato</strong> (<code>vendite.attivita_fatturabili_log</code>):
 * messaggi W/C riferiti al lotto o alla testata consumi.</p>
+<hr />
+<h3 id="13-area-geografica-analisi">1.3) Area geografica (analisi)<a class="headerlink" href="#13-area-geografica-analisi" title="Permanent link">&para;</a></h3>
+<p>Per esigenze di fatturazione (es. raggruppamenti per <strong>comuni</strong>), e<code>necessario
+introdurre una **area geografica** dedicata.  
+Questa area e</code> un filtro <strong>specifico</strong> e non va confusa con i futuri gruppi
+multi‑criterio (che useranno un livello distinto).</p>
+<blockquote>
+<p>Nota: i BA senza area restano <strong>fatturabili</strong>. L’area geografica puo<code>essere
+NULL e le attivita vengono comunque generate, per non penalizzare chi non
+usa questa funzionalita</code>.</p>
+</blockquote>
 <p>Le righe <code>attivita_fatturabili</code> generate da processi automatici
 mantengono un riferimento al <strong>lotto alimentazione</strong> e, se disponibile,
 alla <strong>testata consumi</strong>.</p>
@@ -4702,13 +4761,13 @@ per evitare fatture miste o ambiguita`.</p>
 </ul>
 <p><strong>Aggregazione e chiavi documento</strong></p>
 <ul>
-<li><code>vendite.fn_group_attivita_fatturabili(...)</code> → applica regole di aggregazione (BA, utility, tipo documento, valuta, parent BA).</li>
-<li><code>vendite.fn_build_fattura_key(...)</code> → genera chiave logica di aggregazione per documento.</li>
+<li>✅<code>vendite.fn_group_attivita_fatturabili(...)</code> → applica regole di aggregazione (BA, utility, tipo documento, valuta, parent BA).</li>
+<li>✅<code>vendite.fn_build_fattura_key(...)</code> → genera chiave logica di aggregazione per documento.</li>
 </ul>
 <p><strong>Generazione documenti</strong></p>
 <ul>
-<li><code>vendite.fn_get_or_create_fattura_header(...)</code> → crea/recupera testata fattura in bozza (riuso per lotto/chiave).</li>
-<li><code>vendite.fn_generate_fatture_righe(...)</code> → genera righe da <code>attivita_fatturabili</code> secondo regole.</li>
+<li>✅<code>vendite.fn_get_or_create_fattura_header(...)</code> → crea/recupera testata fattura in bozza (riuso per lotto/chiave).</li>
+<li>✅<code>vendite.fn_generate_fatture_righe(...)</code> → genera righe da <code>attivita_fatturabili</code> secondo regole.</li>
 </ul>
 <p><strong>Ricalcolo</strong></p>
 <ul>
@@ -4736,6 +4795,25 @@ per evitare fatture miste o ambiguita`.</p>
   * in caso di errore: <code>stato_lotto = ERRORE</code> + log errore.
 * ✅<code>vendite.fn_execute_pipeline_step(...)</code> → esegue i task di uno step (lettura <code>processi</code>/<code>rollback</code>).
 * ✅ <code>vendite.fn_log_pipeline_fase(...)</code> → inserisce log <code>I/W/C</code> con fase e stato lotto.</p>
+<hr />
+<h3 id="18-sviluppi-area-geografica-backlog">18) Sviluppi – Area geografica (backlog)<a class="headerlink" href="#18-sviluppi-area-geografica-backlog" title="Permanent link">&para;</a></h3>
+<p><strong>Tabelle</strong></p>
+<ul>
+<li><code>vendite.area_geografica_fatturazione</code></li>
+<li>id, codice, descrizione, attivo, meta, audit</li>
+<li><code>vendite.area_geografica_fatturazione_comuni</code></li>
+<li>id, area_id, comune_id, attivo, meta, audit</li>
+</ul>
+<p><strong>Colonne da aggiungere</strong></p>
+<ul>
+<li><code>vendite.attivita_fatturabili.area_geografica_id</code> (FK, opzionale)</li>
+<li><code>vendite.fatturazione_lotti.area_geografica_id</code> (FK, opzionale)</li>
+</ul>
+<p><strong>Funzioni / regole previste</strong></p>
+<ul>
+<li>risoluzione area da comune (BA/indirizzo/utenza) in normalize</li>
+<li>filtro area in <code>fn_select_attivita_fatturabili</code></li>
+</ul>
 <hr />
 <h3 id="17-nota-su-fatturazione-elettronica-fe">17) Nota su Fatturazione Elettronica (FE)<a class="headerlink" href="#17-nota-su-fatturazione-elettronica-fe" title="Permanent link">&para;</a></h3>
 <ul>
