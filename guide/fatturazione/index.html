@@ -1890,6 +1890,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#analisi-lotto-giornaliero-vs-massivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔎 Analisi – Lotto “giornaliero” vs massivo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#tabelle-coinvolte-core" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2266,6 +2277,56 @@
     <span class="md-ellipsis">
       
         1.3) Area geografica (analisi)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendice-modifiche-richieste-giornaliero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📌 Appendice – Modifiche richieste (giornaliero)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📌 Appendice – Modifiche richieste (giornaliero)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A) Schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-regole-operative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B) Regole operative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C) Pipeline
       
     </span>
   </a>
@@ -3581,6 +3642,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#analisi-lotto-giornaliero-vs-massivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔎 Analisi – Lotto “giornaliero” vs massivo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#tabelle-coinvolte-core" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3963,6 +4035,56 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendice-modifiche-richieste-giornaliero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📌 Appendice – Modifiche richieste (giornaliero)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📌 Appendice – Modifiche richieste (giornaliero)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A) Schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-regole-operative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B) Regole operative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C) Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
           <li class="md-nav__item">
   <a href="#2-parametri-funzione-di-calcolo-proposta" class="md-nav__link">
     <span class="md-ellipsis">
@@ -4218,6 +4340,21 @@
 <li><strong>Emissione</strong> e numerazione del documento (<code>vendite.fatture</code>).</li>
 </ol>
 <p>Questa separazione garantisce <strong>idempotenza</strong>, <strong>controllo</strong> e <strong>revisionabilita`</strong> prima dell’emissione fiscale.</p>
+<hr />
+<h2 id="analisi-lotto-giornaliero-vs-massivo">🔎 Analisi – Lotto “giornaliero” vs massivo<a class="headerlink" href="#analisi-lotto-giornaliero-vs-massivo" title="Permanent link">&para;</a></h2>
+<p>Per esigenze front‑office puo` essere necessario <strong>emettere fatture immediate</strong> (numerate)
+senza attendere il ciclo massivo. Per mantenere coerenza con il modello a lotti,
+introduciamo due concetti:</p>
+<ul>
+<li><strong><code>tipo_lotto</code></strong>: <code>MASSIVO</code> | <code>GIORNALIERO</code></li>
+<li><strong><code>stato_operativo</code></strong>: <code>APERTO</code> | <code>CHIUSO</code> | <code>ERRORE</code></li>
+</ul>
+<p>Regola chiave:
+* Il <strong>lotto giornaliero</strong> può restare <strong>APERTO</strong> anche se le fatture sono <strong>EMESSE</strong>.
+* Si chiude <strong>solo</strong> quando il lotto passa a <strong>INVIATA</strong>.
+* Le fatture giornaliere <strong>non sono retrocedibili</strong> (no ritorno a BOZZA).</p>
+<p>Questo consente di <strong>accorpare più fatture</strong> nello stesso lotto giornaliero,
+senza perdere la governance documentale.</p>
 <hr />
 <h2 id="tabelle-coinvolte-core">🧱 Tabelle coinvolte (core)<a class="headerlink" href="#tabelle-coinvolte-core" title="Permanent link">&para;</a></h2>
 <ul>
@@ -4508,6 +4645,29 @@ usa questa funzionalita</code>.</p>
 <p>Le righe <code>attivita_fatturabili</code> generate da processi automatici
 mantengono un riferimento al <strong>lotto alimentazione</strong> e, se disponibile,
 alla <strong>testata consumi</strong>.</p>
+<hr />
+<h2 id="appendice-modifiche-richieste-giornaliero">📌 Appendice – Modifiche richieste (giornaliero)<a class="headerlink" href="#appendice-modifiche-richieste-giornaliero" title="Permanent link">&para;</a></h2>
+<h3 id="a-schema">A) Schema<a class="headerlink" href="#a-schema" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>vendite.fatturazione_lotti</code></li>
+<li>aggiungere <code>tipo_lotto</code> (<code>MASSIVO</code> | <code>GIORNALIERO</code>)</li>
+<li>aggiungere <code>stato_operativo</code> (<code>APERTO</code> | <code>CHIUSO</code> | <code>ERRORE</code>)</li>
+</ul>
+<h3 id="b-regole-operative">B) Regole operative<a class="headerlink" href="#b-regole-operative" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Giornaliero</strong>:</li>
+<li>fatture emesse subito (numerazione immediata)</li>
+<li><strong>no retrocessione</strong> a BOZZA</li>
+<li>lotto <code>APERTO</code> finché <code>stato_doc_fiscale_id</code> ≠ INVIATA</li>
+<li><strong>Massivo</strong>:</li>
+<li>retrocessione ammessa (se previsto dalle transizioni)</li>
+<li><code>stato_operativo</code> può riaprire</li>
+</ul>
+<h3 id="c-pipeline">C) Pipeline<a class="headerlink" href="#c-pipeline" title="Permanent link">&para;</a></h3>
+<ul>
+<li>pipeline dedicata <strong>GIORNALIERO</strong> (step ridotti fino a numerazione)</li>
+<li>pipeline MASSIVA invariata</li>
+</ul>
 <h3 id="2-parametri-funzione-di-calcolo-proposta">2) Parametri funzione di calcolo (proposta)<a class="headerlink" href="#2-parametri-funzione-di-calcolo-proposta" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>p_competenza_mese</code> (obbligatorio, YYYY-MM-01)</li>
@@ -4799,15 +4959,15 @@ per evitare fatture miste o ambiguita`.</p>
 <h3 id="18-sviluppi-area-geografica-backlog">18) Sviluppi – Area geografica (backlog)<a class="headerlink" href="#18-sviluppi-area-geografica-backlog" title="Permanent link">&para;</a></h3>
 <p><strong>Tabelle</strong></p>
 <ul>
-<li><code>vendite.area_geografica_fatturazione</code></li>
+<li>✅<code>vendite.area_geografica_fatturazione</code></li>
 <li>id, codice, descrizione, attivo, meta, audit</li>
-<li><code>vendite.area_geografica_fatturazione_comuni</code></li>
+<li>✅<code>vendite.area_geografica_fatturazione_comuni</code></li>
 <li>id, area_id, comune_id, attivo, meta, audit</li>
 </ul>
 <p><strong>Colonne da aggiungere</strong></p>
 <ul>
-<li><code>vendite.attivita_fatturabili.area_geografica_id</code> (FK, opzionale)</li>
-<li><code>vendite.fatturazione_lotti.area_geografica_id</code> (FK, opzionale)</li>
+<li>✅<code>vendite.attivita_fatturabili.area_geografica_id</code> (FK, opzionale)</li>
+<li>✅<code>vendite.fatturazione_lotti.area_geografica_id</code> (FK, opzionale)</li>
 </ul>
 <p><strong>Funzioni / regole previste</strong></p>
 <ul>

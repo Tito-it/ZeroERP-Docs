@@ -3075,8 +3075,8 @@ Queste righe sono <strong>pre‑documentali</strong>: quando il ciclo di fattura
 <ul>
 <li>
 <p><code>competenza_mese</code> → <strong>competenza mensile</strong> obbligatoria (sempre valorizzata) e al <strong>1° giorno del mese</strong> (es. <code>YYYY‑MM‑01</code>).
-  Rappresenta l’<strong>anno/mese di fatturazione</strong>: se non valorizzata, viene derivata
-  da <code>posticipa_al</code> (se presente) oppure da <code>data_attivita</code>.
+  Rappresenta l’<strong>anno/mese di fatturazione</strong>. Se non valorizzata, viene derivata
+  da <code>posticipa_al</code> (se presente). Non viene derivata da <code>data_attivita</code>.
   Se <code>posticipa_al</code> e` valorizzata, sposta l’attivita al <strong>nuovo anno/mese</strong> di fatturazione.</p>
 </li>
 <li>
@@ -3150,7 +3150,7 @@ Queste righe sono <strong>pre‑documentali</strong>: quando il ciclo di fattura
 <p><strong>Trigger</strong>:</p>
 </li>
 <li>
-<p><code>trg_attivita_fatturabili_normalize_ins_upd</code> → <strong>normalizza</strong> <code>competenza_mese</code> al 1° del mese (obbligatoria, derivata da <code>posticipa_al</code> o <code>data_attivita</code>), imposta <code>sorgente_riga</code> a <code>0</code> se <code>sorgente_tipo_id</code> è valorizzato e risolve <code>tipo_doc_fiscale_id</code>/<code>valuta_id</code> quando mancanti.</p>
+<p><code>trg_attivita_fatturabili_normalize_ins_upd</code> → <strong>normalizza</strong> <code>competenza_mese</code> al 1° del mese (obbligatoria, derivata da <code>posticipa_al</code> se assente), imposta <code>sorgente_riga</code> a <code>0</code> se <code>sorgente_tipo_id</code> è valorizzato e risolve <code>tipo_doc_fiscale_id</code>/<code>valuta_id</code> quando mancanti.</p>
 </li>
 <li><code>trg_attivita_fatturabili_a10_guard_ba_coerenza_ins_upd</code> → <strong>coerenze BA/istanza/articolo</strong> (regole di dominio).</li>
 <li><code>trg_attivita_fatturabili_a10_guard_fonte_ins_upd</code> → <strong>validazione sorgente</strong> (<code>sorgente_tipo_id</code>/<code>sorgente_uid</code>).</li>
@@ -3165,10 +3165,7 @@ Queste righe sono <strong>pre‑documentali</strong>: quando il ciclo di fattura
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">fatturato</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">sospesa</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">posticipa_al</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">posticipa_al</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="p">:</span><span class="n">data_fatturazione</span><span class="p">)</span>
-<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">competenza_mese</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">competenza_mese</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">date_trunc</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">:</span><span class="n">data_fatturazione</span><span class="p">))</span><span class="w"> </span><span class="k">OR</span>
-<span class="w">    </span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">competenza_mese</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">competenza_al</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">competenza_al</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="p">:</span><span class="n">data_fatturazione</span><span class="p">))</span>
-<span class="w">  </span><span class="p">);</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">competenza_mese</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">date_trunc</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">:</span><span class="n">data_fatturazione</span><span class="p">);</span>
 
 <span class="c1">-- 2) Marcatura come fatturato (eseguita dal motore dopo creazione riga fattura)</span>
 <span class="k">UPDATE</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">attivita_fatturabili</span>
