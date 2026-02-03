@@ -3377,6 +3377,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#matrice-responsabilita-python-vs-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matrice responsabilita` (Python vs DB)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#note-di-migrazione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3411,33 +3422,52 @@
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Eseguire un singolo step di pipeline, applicando i task definiti nello step corrente.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>In DB la funzione <code>vendite.fn_execute_pipeline_step()</code> esegue i task definiti in <code>processi</code>/<code>rollback</code>.
-In Django questa logica viene portata nei <strong>services</strong>.</p>
+<p>La funzione SQL <code>vendite.fn_execute_pipeline_step()</code> e<code>stata migrata lato backend Django.
+La logica applicativa ora vive in:
+-</code>apps/vendite/services/pipeline_service.py<code>(</code>fn_execute_pipeline_step<code>)
+-</code>apps/vendite/services/pipeline_step_executor.py<code>(</code>PipelineStepExecutor.execute_step`)</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>lotto_id</code></li>
-<li><code>step_code</code> o riferimento allo step</li>
-<li>configurazione step (task JSON)</li>
+<li><code>stato_doc_fiscale_id</code> (step corrente)</li>
+<li><code>rollback</code> (usa definizione <code>rollback</code> invece di <code>processi</code>)</li>
+<li><code>dry_run</code></li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
-<li>esito step</li>
-<li>log task (successo/errore)</li>
+<li>nessun valore di ritorno</li>
+<li>log task/fase su <code>vendite.fatturazione_lotti_log</code></li>
+<li>eventuale errore applicativo (<code>ServiceError</code>)</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Ogni task deve essere tracciato.</li>
-<li>In caso di errore, interrompere lo step e registrare il log.</li>
+<li>Validazione parametri obbligatori (<code>lotto_id</code>, <code>stato_doc_fiscale_id</code>).</li>
+<li>Recupero contesto lotto obbligatorio (<code>competenza_mese</code> e campi necessari ai task).</li>
+<li>Lettura configurazione task JSON da <code>vendite.fatturazione_pipeline</code>.</li>
+<li>Ogni task viene loggato prima dell'esecuzione.</li>
+<li><code>dry_run</code> e task <code>noop</code>/<code>log_only</code> non eseguono side effect.</li>
+<li>Per <code>select_attivita</code>, funzione ammessa solo se in whitelist (<code>vendite.fn_select_attivita_fatturabili</code>).</li>
+<li>Per <code>generate_fatture_righe</code>, funzione ammessa solo se in whitelist (<code>vendite.fn_generate_fatture_righe</code>).</li>
+<li>Task non riconosciuti -&gt; <code>E_TASK_NOT_IMPLEMENTED</code>.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Lettura pipeline da <code>vendite.fatturazione_pipeline</code></li>
-<li>Funzioni/trigger di integrità in DB (immutate)</li>
+<li><code>vendite.fn_log_pipeline_fase(...)</code></li>
+<li><code>vendite.fn_select_attivita_fatturabili(...)</code></li>
+<li><code>vendite.fn_get_or_create_fattura_header(...)</code></li>
+<li>Funzioni/trigger di integrita` e coerenza dati restano in DB</li>
+</ul>
+<h2 id="matrice-responsabilita-python-vs-db">Matrice responsabilita` (Python vs DB)<a class="headerlink" href="#matrice-responsabilita-python-vs-db" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Python (step executor): validazione input, dispatch task da JSON, whitelist task/funzioni, controllo <code>dry_run</code>/<code>rollback</code>.</li>
+<li>DB (funzioni/tabelle): lettura configurazione pipeline, logging persistente, esecuzione logica dati massiva (<code>fn_select_attivita_fatturabili</code>), creazione header fattura, enforcement integrita`.</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Convertire i task JSON in chiamate a service Django con mapping esplicito.</li>
-<li>Evitare logica dinamica non controllata: mantenere mapping chiaro tra <code>task_code</code> e handler.</li>
+<li>Stato attuale: migrazione completata lato Python per orchestrazione task.</li>
+<li>Non viene eseguito SQL dinamico da input esterno; il dispatch task e` esplicito nel codice.</li>
+<li>Estensioni future: aggiungere nuovi task mantenendo mapping esplicito in <code>PipelineStepExecutor</code>.</li>
 </ul>
 
 

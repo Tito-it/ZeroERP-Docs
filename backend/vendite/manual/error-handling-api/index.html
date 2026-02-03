@@ -3426,35 +3426,28 @@
 
 <h1 id="error-handling-api-vendite-django">Error handling API vendite (Django)<a class="headerlink" href="#error-handling-api-vendite-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Definire un contratto errore uniforme per API, backend Django e logica DB.</p>
+<p>Documentare come l'area vendite applica il contratto errori condiviso.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Il DB usa <code>config.messaggi_errore</code>, <code>script.fn_log_and_raise_error</code> e <code>script.fn_log_error_only</code>.
-Il backend Django traduce le eccezioni applicative/DB in un envelope JSON coerente.
-La logica e<code>centralizzata con:
--</code>apps/core/services/error_manager.py<code>-</code>apps/core/services/error_policies.py<code>-</code>apps/core/services/service_errors.py<code>-</code>apps/core/services/error_translator.py`</p>
+<p>La policy errori cross-domain e<code>definita in:
+-</code>docs/it/backend/core/manual/error-handling-api.md`</p>
+<p>Vendite usa i componenti core senza ridefinire policy locali:
+- <code>apps/core/services/error_manager.py</code>
+- <code>apps/core/api/error_responses.py</code></p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Eccezioni applicative Python (es. <code>PipelineError</code>)</li>
-<li>Eccezioni DB (<code>DatabaseError</code>, incluse <code>DETAIL</code> e <code>HINT</code>)</li>
+<li>Eccezioni applicative vendite (<code>ServiceError</code> con codici <code>E_PIPELINE_*</code>, <code>E_TASK_*</code>, ...)</li>
+<li>Eccezioni DB propagate dai repository</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Payload API uniforme:</li>
-<li><code>error.code</code></li>
-<li><code>error.message</code></li>
-<li><code>error.detail</code> (opzionale)</li>
-<li><code>error.hint</code> (opzionale)</li>
-<li><code>error.tx_id</code> (opzionale)</li>
-<li><code>error.retryable</code></li>
+<li>Payload API uniforme (definito in area core).</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Il frontend gestisce per <code>error.code</code>, non per testo libero.</li>
-<li>Mapping centralizzato <code>code -&gt; HTTP status -&gt; ui_action</code> in <code>ErrorPolicyRegistry</code>.</li>
-<li>Errori di servizio -&gt; codice specifico (<code>E_PIPELINE_*</code>, <code>E_TASK_*</code>, ecc.) secondo policy.</li>
-<li>Errori database -&gt; <code>E_DATABASE</code> / <code>E_DATABASE_RETRYABLE</code> secondo SQLSTATE.</li>
-<li>Errori non classificati -&gt; <code>E_GENERICO</code>.</li>
-<li>Nei servizi usare <code>ErrorManager.require(...)</code> e <code>ErrorManager.raise_error(...)</code> per evitare duplicazioni.</li>
+<li>Mapping centralizzato <code>code -&gt; HTTP status -&gt; ui_action</code> in <code>ErrorPolicyRegistry</code> (core).</li>
+<li>Nei servizi vendite usare <code>ErrorManager.require(...)</code> e <code>ErrorManager.raise_error(...)</code>.</li>
+<li>Nelle view vendite usare helper core <code>exception_to_error_response(...)</code>.</li>
 </ul>
 <h3 id="esempio-policy-uiapi">Esempio policy UI/API<a class="headerlink" href="#esempio-policy-uiapi" title="Permanent link">&para;</a></h3>
 <ul>
@@ -3470,8 +3463,8 @@ La logica e<code>centralizzata con:
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Stato attuale: helper unico introdotto e applicato ai servizi pipeline vendite.</li>
-<li>Mapping <code>codice errore -&gt; HTTP status/UI action</code> introdotto lato backend in <code>ErrorPolicyRegistry</code>.</li>
+<li>Stato attuale: vendite allineata al layer errori core condiviso.</li>
+<li>Le evoluzioni policy devono essere fatte in area core e poi riusate da vendite.</li>
 </ul>
 
 

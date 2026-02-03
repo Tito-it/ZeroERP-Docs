@@ -12,7 +12,7 @@
       
       
         
-          <link rel="alternate" href="../../../../../backend/vendite/manual/fn_group_attivita_fatturabili/" hreflang="it">
+          <link rel="alternate" href="../../../../../backend/core/manual/value-normalizer/" hreflang="it">
         
           <link rel="alternate" href="./" hreflang="en">
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>fn_group_attivita_fatturabili (Django) - Zero ERP Documentation</title>
+        <title>Value normalizer (Core Django) - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#fn_group_attivita_fatturabili-django" class="md-skip">
+        <a href="#value-normalizer-core-django" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              fn_group_attivita_fatturabili (Django)
+              Value normalizer (Core Django)
             
           </span>
         </div>
@@ -121,7 +121,7 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../../../../backend/vendite/manual/fn_group_attivita_fatturabili/" hreflang="it" class="md-select__link">
+            <a href="../../../../../backend/core/manual/value-normalizer/" hreflang="it" class="md-select__link">
               Italiano
             </a>
           </li>
@@ -1922,7 +1922,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../" class="md-nav__link">
+      <a href="../../../vendite/" class="md-nav__link">
         
   
   
@@ -3377,17 +3377,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#matrice-responsabilita-python-vs-db" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Matrice responsabilita` (Python vs DB)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#note-di-migrazione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3418,42 +3407,33 @@
   
 
 
-<h1 id="fn_group_attivita_fatturabili-django">fn_group_attivita_fatturabili (Django)<a class="headerlink" href="#fn_group_attivita_fatturabili-django" title="Permanent link">&para;</a></h1>
+<h1 id="value-normalizer-core-django">Value normalizer (Core Django)<a class="headerlink" href="#value-normalizer-core-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Costruire in Django la chiave di aggregazione delle attivita fatturabili.</p>
+<p>Centralizzare utility riusabili di normalizzazione valori input.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>La logica di <code>vendite.fn_group_attivita_fatturabili()</code> e<code>stata portata in:
--</code>apps/vendite/services/fatture_righe_service.py<code>(</code>group_attivita_fatturabili<code>)
--</code>apps/vendite/services/pipeline_service.py<code>(</code>fn_group_attivita_fatturabili`)</p>
+<p>Utility condivise in:
+- <code>apps/core/services/value_normalizer.py</code></p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>attivita_id</code></li>
+<li>valori eterogenei (<code>Any</code>) da payload/JSON/config</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>group_key</code> strutturata (dict) con campi articolo/destinazione/uom/iva/competenza/regole</li>
+<li><code>as_bool(...)</code> -&gt; <code>bool</code></li>
+<li><code>empty_to_none(...)</code> -&gt; valore normalizzato</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Deterministica e stabile.</li>
-<li><code>dest_billing_account_id</code> e` sempre BA reale da attivita.</li>
-<li><code>uom_id</code> usa fallback da articolo se assente su attivita.</li>
-<li>Competenza valorizzata solo se diversa dalla singola data attivita.</li>
-<li>Error handling centralizzato via <code>ErrorManager</code>.</li>
+<li><code>as_bool</code> riconosce <code>1,true,t,yes,y,on</code>.</li>
+<li><code>empty_to_none</code> converte stringhe vuote in <code>None</code>.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Tabelle <code>vendite.attivita_fatturabili</code>, <code>catalogo.articoli</code>, <code>vendite.articolo_regole_fatturazione</code>.</li>
-</ul>
-<h2 id="matrice-responsabilita-python-vs-db">Matrice responsabilita` (Python vs DB)<a class="headerlink" href="#matrice-responsabilita-python-vs-db" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Python: composizione chiave di grouping, validazioni input, politica errori.</li>
-<li>DB: source of truth dei dati (attivita/articolo/regole) e vincoli di integrita`.</li>
+<li>Nessuna</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Stato attuale: migrazione completata lato Python.</li>
-<li>La funzione SQL puo<code>restare come compatibilita</code> storica/transitoria.</li>
+<li>Evita duplicazione di helper equivalenti nelle app dominio.</li>
 </ul>
 
 

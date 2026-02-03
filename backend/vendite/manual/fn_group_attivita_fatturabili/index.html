@@ -23,7 +23,7 @@
     
     
       
-        <title>fn_group_attivita_fatturabili (Django) — opzionale - Zero ERP Documentation</title>
+        <title>fn_group_attivita_fatturabili (Django) - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#fn_group_attivita_fatturabili-django-opzionale" class="md-skip">
+        <a href="#fn_group_attivita_fatturabili-django" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              fn_group_attivita_fatturabili (Django) — opzionale
+              fn_group_attivita_fatturabili (Django)
             
           </span>
         </div>
@@ -3377,6 +3377,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#matrice-responsabilita-python-vs-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matrice responsabilita` (Python vs DB)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#note-di-migrazione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3407,32 +3418,42 @@
   
 
 
-<h1 id="fn_group_attivita_fatturabili-django-opzionale">fn_group_attivita_fatturabili (Django) — opzionale<a class="headerlink" href="#fn_group_attivita_fatturabili-django-opzionale" title="Permanent link">&para;</a></h1>
+<h1 id="fn_group_attivita_fatturabili-django">fn_group_attivita_fatturabili (Django)<a class="headerlink" href="#fn_group_attivita_fatturabili-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Portare in Django la logica di raggruppamento delle attivita fatturabili.</p>
+<p>Costruire in Django la chiave di aggregazione delle attivita fatturabili.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>In DB <code>vendite.fn_group_attivita_fatturabili()</code> costruisce la chiave di aggregazione riga.
-La migrazione è utile solo se le regole cambiano spesso.</p>
+<p>La logica di <code>vendite.fn_group_attivita_fatturabili()</code> e<code>stata portata in:
+-</code>apps/vendite/services/fatture_righe_service.py<code>(</code>group_attivita_fatturabili<code>)
+-</code>apps/vendite/services/pipeline_service.py<code>(</code>fn_group_attivita_fatturabili`)</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
-<li>riga <code>attivita_fatturabili</code></li>
+<li><code>attivita_id</code></li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
-<li>chiave di grouping (hash/tuple)</li>
+<li><code>group_key</code> strutturata (dict) con campi articolo/destinazione/uom/iva/competenza/regole</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Deterministica e stabile.</li>
-<li>Versionabile: cambi di regole devono essere tracciati.</li>
+<li><code>dest_billing_account_id</code> e` sempre BA reale da attivita.</li>
+<li><code>uom_id</code> usa fallback da articolo se assente su attivita.</li>
+<li>Competenza valorizzata solo se diversa dalla singola data attivita.</li>
+<li>Error handling centralizzato via <code>ErrorManager</code>.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Tabelle <code>vendite.attivita_fatturabili</code> e riferimenti a cataloghi/parametri.</li>
+<li>Tabelle <code>vendite.attivita_fatturabili</code>, <code>catalogo.articoli</code>, <code>vendite.articolo_regole_fatturazione</code>.</li>
+</ul>
+<h2 id="matrice-responsabilita-python-vs-db">Matrice responsabilita` (Python vs DB)<a class="headerlink" href="#matrice-responsabilita-python-vs-db" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Python: composizione chiave di grouping, validazioni input, politica errori.</li>
+<li>DB: source of truth dei dati (attivita/articolo/regole) e vincoli di integrita`.</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Se rimane in DB, Django deve solo consumare la chiave.</li>
+<li>Stato attuale: migrazione completata lato Python.</li>
+<li>La funzione SQL puo<code>restare come compatibilita</code> storica/transitoria.</li>
 </ul>
 
 

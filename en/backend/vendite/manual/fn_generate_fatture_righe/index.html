@@ -23,7 +23,7 @@
     
     
       
-        <title>fn_generate_fatture_righe (Django) — opzionale - Zero ERP Documentation</title>
+        <title>fn_generate_fatture_righe (Django) - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#fn_generate_fatture_righe-django-opzionale" class="md-skip">
+        <a href="#fn_generate_fatture_righe-django" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              fn_generate_fatture_righe (Django) — opzionale
+              fn_generate_fatture_righe (Django)
             
           </span>
         </div>
@@ -3377,6 +3377,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#matrice-responsabilita-python-vs-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matrice responsabilita` (Python vs DB)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#note-di-migrazione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3407,34 +3418,46 @@
   
 
 
-<h1 id="fn_generate_fatture_righe-django-opzionale">fn_generate_fatture_righe (Django) — opzionale<a class="headerlink" href="#fn_generate_fatture_righe-django-opzionale" title="Permanent link">&para;</a></h1>
+<h1 id="fn_generate_fatture_righe-django">fn_generate_fatture_righe (Django)<a class="headerlink" href="#fn_generate_fatture_righe-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Portare in Django la logica di calcolo/importi delle righe fattura, lasciando in DB le insert.</p>
+<p>Generare in Django le righe fattura a partire da <code>attivita_fatturabili</code> lockate sul lotto.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>In DB <code>vendite.fn_generate_fatture_righe()</code> genera righe fattura da <code>attivita_fatturabili</code>.
-L’eventuale migrazione in Django riguarda solo la <strong>logica di calcolo</strong>.</p>
+<p>La logica di <code>vendite.fn_generate_fatture_righe()</code> e<code>stata portata in:
+-</code>apps/vendite/services/fatture_righe_service.py<code>(</code>generate_fatture_righe<code>)
+-</code>apps/vendite/services/pipeline_service.py<code>(</code>fn_generate_fatture_righe`)</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
-<li>set righe fatturabili (lockato in DB)</li>
-<li>parametri fiscali e di pricing</li>
+<li><code>lotto_id</code></li>
+<li><code>dry_run</code> (default <code>False</code>)</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
-<li>payload righe fattura da inserire (via DB)</li>
+<li>numero righe elaborate</li>
+<li>aggiornamento <code>fattura_riga_id</code> e <code>fatturato</code> sulle attivita processate (se non dry-run)</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Idempotenza per riga.</li>
-<li>Importi congelati come snapshot.</li>
+<li>Header fattura ottenuto via <code>fn_get_or_create_fattura_header</code>.</li>
+<li>Group key calcolata via servizio Python <code>group_attivita_fatturabili</code>.</li>
+<li>In <code>dry_run</code> conta gli elementi ma non esegue insert/update.</li>
+<li>Error handling centralizzato via <code>ErrorManager</code>.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Tabelle <code>vendite.attivita_fatturabili</code>, <code>vendite.fatture_righe</code></li>
-<li>Funzioni di supporto (IVA, UoM, registri)</li>
+<li>Tabelle <code>vendite.attivita_fatturabili</code>, <code>vendite.fatture_righe</code>, <code>vendite.fatture</code>.</li>
+<li>Funzione DB <code>vendite.fn_get_or_create_fattura_header(...)</code> per header.</li>
+<li>Vincoli di integrita`/consistenza restano in DB.</li>
+</ul>
+<h2 id="matrice-responsabilita-python-vs-db">Matrice responsabilita` (Python vs DB)<a class="headerlink" href="#matrice-responsabilita-python-vs-db" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Python: loop applicativo, costruzione metadati riga, gestione <code>dry_run</code>, policy errori.</li>
+<li>DB: locking/selezione dati, generazione header fattura, persistenza righe e regole di integrita`.</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Migrazione consigliata solo se la logica cambia spesso.</li>
+<li>Stato attuale: migrazione logica completata lato Python.</li>
+<li>La funzione SQL puo<code>restare per compatibilita</code> storica/transitoria.</li>
 </ul>
 
 
