@@ -3443,12 +3443,16 @@
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Metodo: <code>POST</code></li>
-<li>Path: <code>/api/vendite/pipeline/run/</code></li>
+<li>Path canonico: <code>/api/v1/vendite/pipeline/run/</code></li>
+<li>Path legacy (compatibilita<code>):</code>/api/vendite/pipeline/run/`</li>
+<li>la route legacy espone header HTTP <code>Deprecation</code>, <code>Warning</code>, <code>Link</code>, <code>Sunset</code></li>
+<li>Header richiesto: <code>Idempotency-Key</code></li>
+<li>Header sicurezza (solo path <code>/api/v1/...</code>): <code>Authorization: Bearer &lt;access_token&gt;</code></li>
 <li>Body JSON: <code>lotto_id</code>, <code>competenza_mese</code>, <code>tipo_doc_fiscale_id</code>, <code>utility_id</code>, <code>billing_account_id</code>, <code>lock_batch_id</code>, <code>meta</code>, <code>dry_run</code>, <code>tipo_lotto</code></li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>200</code>: <code>{ "lotto_id": &lt;id&gt;, "status": "ok" }</code></li>
+<li><code>200</code>: <code>{ "data": { "lotto_id": &lt;id&gt;, "status": "ok" }, "meta": { ... } }</code></li>
 <li><code>400</code>: payload non valido o errore applicativo pipeline</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
@@ -3458,6 +3462,8 @@
 <li>Usa parser/request helper condivisi area core.</li>
 <li>Traduce eccezioni con envelope errore core.</li>
 <li>Implementa il pattern standard core <code>handle_post_json(...)</code>.</li>
+<li>Non usa <code>try/except Exception</code> locale: fallback errori non gestiti delegato al middleware API globale.</li>
+<li>Endpoint write protetto con obbligo <code>Idempotency-Key</code>.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>

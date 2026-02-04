@@ -14,7 +14,7 @@
         
           <link rel="alternate" href="./" hreflang="it">
         
-          <link rel="alternate" href="../../../../en/backend/core/manual/error-handling-api/" hreflang="en">
+          <link rel="alternate" href="../../../../en/backend/core/manual/request-context-api/" hreflang="en">
         
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Error handling API (Core Django) - Zero ERP Documentation</title>
+        <title>Request context API (Core Django) - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#error-handling-api-core-django" class="md-skip">
+        <a href="#request-context-api-core-django" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Error handling API (Core Django)
+              Request context API (Core Django)
             
           </span>
         </div>
@@ -127,7 +127,7 @@
           </li>
         
           <li class="md-select__item">
-            <a href="../../../../en/backend/core/manual/error-handling-api/" hreflang="en" class="md-select__link">
+            <a href="../../../../en/backend/core/manual/request-context-api/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
@@ -3435,51 +3435,40 @@
   
 
 
-<h1 id="error-handling-api-core-django">Error handling API (Core Django)<a class="headerlink" href="#error-handling-api-core-django" title="Permanent link">&para;</a></h1>
+<h1 id="request-context-api-core-django">Request context API (Core Django)<a class="headerlink" href="#request-context-api-core-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Definire un contratto errore uniforme per tutte le API backend Django.</p>
+<p>Assegnare metadati di correlazione request (<code>request_id</code>) e idempotenza (<code>idempotency_key</code>) in modo uniforme per tutte le API.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>La logica condivisa e<code>centralizzata in:
--</code>apps/core/services/error_manager.py<code>-</code>apps/core/services/error_policies.py<code>-</code>apps/core/services/service_errors.py<code>-</code>apps/core/services/error_translator.py<code>-</code>apps/core/api/error_responses.py<code>-</code>apps/core/middleware/api_exception_middleware.py`</p>
+<p>Componenti:
+- <code>apps/core/middleware/request_context_middleware.py</code>
+- <code>apps/core/services/request_context.py</code></p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Eccezioni applicative (<code>ServiceError</code>)</li>
-<li>Eccezioni DB (<code>DatabaseError</code>, SQLSTATE)</li>
-<li>Eccezioni non classificate</li>
+<li>Header opzionali:</li>
+<li><code>X-Request-ID</code></li>
+<li><code>Idempotency-Key</code> / <code>X-Idempotency-Key</code></li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Envelope JSON coerente:</li>
-<li><code>error.code</code></li>
-<li><code>error.message</code></li>
-<li><code>error.detail</code> (opzionale)</li>
-<li><code>error.hint</code> (opzionale)</li>
-<li><code>error.tx_id</code> (opzionale)</li>
-<li><code>error.retryable</code></li>
+<li>Header risposta:</li>
+<li><code>X-Request-ID</code></li>
+<li><code>X-Idempotency-Key</code> (se presente in request)</li>
+<li>Meta envelope API:</li>
+<li><code>meta.request_id</code></li>
+<li><code>meta.idempotency_key</code> (se presente)</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Mapping centralizzato <code>code -&gt; HTTP status -&gt; ui_action</code> in <code>ErrorPolicyRegistry</code>.</li>
-<li>I domini devono usare <code>ErrorManager.require(...)</code> / <code>ErrorManager.raise_error(...)</code>.</li>
-<li>Le API devono convertire eccezioni in risposta usando helper core (<code>exception_to_error_response</code>).</li>
-<li>Middleware globale intercetta eccezioni non gestite solo su path <code>/api/*</code>, lasciando invariato il comportamento Django su pagine non API e su eccezioni <code>Http404</code>/<code>PermissionDenied</code>.</li>
-<li>Flag attivazione middleware: <code>DJANGO_API_EXCEPTION_MIDDLEWARE_ENABLED</code> (<code>1</code> default, <code>0</code> disabilita).</li>
-<li>Errori <code>retryable</code> includono header <code>Retry-After</code> (default 3s, configurabile via <code>DJANGO_API_RETRY_AFTER_SECONDS</code>).</li>
+<li>Se <code>X-Request-ID</code> manca, viene generato UUID.</li>
+<li>Idempotency key viene propagata per tracing (policy retry/write).</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>config.messaggi_errore</code></li>
-<li><code>script.fn_log_and_raise_error</code></li>
-<li><code>script.fn_log_error_only</code></li>
+<li>Nessuna</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Questo documento e` la fonte condivisa cross-domain.</li>
-<li>Le aree dominio (es. vendite) devono solo documentare l'uso locale della policy.</li>
-<li>Endpoint diagnostico (canonico versionato) disponibile per test rapido envelope:</li>
-<li><code>GET /api/v1/core/diagnostics/error-envelope/</code></li>
-<li>varianti: <code>?kind=generic|retryable|not_found</code></li>
-<li>Compatibilita<code>temporanea mantenuta anche su</code>/api/core/diagnostics/error-envelope/`.</li>
+<li>Introdotto per migliorare tracing/debug cross-layer senza impattare i service dominio.</li>
 </ul>
 
 

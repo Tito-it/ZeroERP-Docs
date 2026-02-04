@@ -3440,7 +3440,7 @@
 <p>Definire un contratto errore uniforme per tutte le API backend Django.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <p>La logica condivisa e<code>centralizzata in:
--</code>apps/core/services/error_manager.py<code>-</code>apps/core/services/error_policies.py<code>-</code>apps/core/services/service_errors.py<code>-</code>apps/core/services/error_translator.py<code>-</code>apps/core/api/error_responses.py`</p>
+-</code>apps/core/services/error_manager.py<code>-</code>apps/core/services/error_policies.py<code>-</code>apps/core/services/service_errors.py<code>-</code>apps/core/services/error_translator.py<code>-</code>apps/core/api/error_responses.py<code>-</code>apps/core/middleware/api_exception_middleware.py`</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Eccezioni applicative (<code>ServiceError</code>)</li>
@@ -3462,6 +3462,9 @@
 <li>Mapping centralizzato <code>code -&gt; HTTP status -&gt; ui_action</code> in <code>ErrorPolicyRegistry</code>.</li>
 <li>I domini devono usare <code>ErrorManager.require(...)</code> / <code>ErrorManager.raise_error(...)</code>.</li>
 <li>Le API devono convertire eccezioni in risposta usando helper core (<code>exception_to_error_response</code>).</li>
+<li>Middleware globale intercetta eccezioni non gestite solo su path <code>/api/*</code>, lasciando invariato il comportamento Django su pagine non API e su eccezioni <code>Http404</code>/<code>PermissionDenied</code>.</li>
+<li>Flag attivazione middleware: <code>DJANGO_API_EXCEPTION_MIDDLEWARE_ENABLED</code> (<code>1</code> default, <code>0</code> disabilita).</li>
+<li>Errori <code>retryable</code> includono header <code>Retry-After</code> (default 3s, configurabile via <code>DJANGO_API_RETRY_AFTER_SECONDS</code>).</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3473,9 +3476,10 @@
 <ul>
 <li>Questo documento e` la fonte condivisa cross-domain.</li>
 <li>Le aree dominio (es. vendite) devono solo documentare l'uso locale della policy.</li>
-<li>Endpoint diagnostico disponibile per test rapido envelope:</li>
-<li><code>GET /api/core/diagnostics/error-envelope/</code></li>
+<li>Endpoint diagnostico (canonico versionato) disponibile per test rapido envelope:</li>
+<li><code>GET /api/v1/core/diagnostics/error-envelope/</code></li>
 <li>varianti: <code>?kind=generic|retryable|not_found</code></li>
+<li>Compatibilita<code>temporanea mantenuta anche su</code>/api/core/diagnostics/error-envelope/`.</li>
 </ul>
 
 

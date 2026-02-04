@@ -3415,6 +3415,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#promemoria-jwt-ambiente-testdev" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Promemoria JWT (ambiente test/dev)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-operativa-nuove-api-dominio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checklist operativa (nuove API dominio)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3446,19 +3468,35 @@
 - Template di partenza: <code>apps/core/api/examples/domain_post_example.py</code></p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>HttpRequest</code> con body JSON</li>
+<li><code>Request</code> DRF con body JSON</li>
 <li>handler dominio che riceve <code>payload: dict</code></li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>JsonResponse</code> con contratto uniforme successo/errore</li>
+<li><code>JsonResponse</code> con contratto uniforme:</li>
+<li>successo: <code>{ "data": ..., "meta": { "request_id": ... } }</code></li>
+<li>errore: <code>{ "error": ..., "meta": { "request_id": ... } }</code></li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
+<li>Versioning URL: endpoint canonici sotto <code>/api/v1/...</code>; le route non versionate restano solo come compatibilita` temporanea.</li>
+<li>Autenticazione: endpoint <code>/api/v1/*</code> protetti con JWT Bearer.</li>
+<li>Emissione token:</li>
+<li><code>POST /api/v1/auth/token/</code></li>
+<li><code>POST /api/v1/auth/token/refresh/</code></li>
 <li>Endpoint POST JSON: usare <code>handle_post_json(request, handler=...)</code>.</li>
+<li>Per endpoint write critici, impostare <code>require_idempotency_key=True</code>.</li>
 <li>Nel handler dominio: validare campi specifici e invocare service.</li>
 <li>Errori applicativi: sempre via <code>ErrorManager</code>/<code>ServiceError</code>.</li>
 <li>Niente parser JSON/date duplicati nelle singole app dominio.</li>
+<li>Evitare <code>try/except Exception</code> generici nella view: il fallback globale su errori non gestiti e<code>nel middleware</code>apps/core/middleware/api_exception_middleware.py`.</li>
+<li>Se serve disattivare fallback middleware (debug mirato), usare <code>DJANGO_API_EXCEPTION_MIDDLEWARE_ENABLED=0</code>.</li>
+<li>Context middleware assegna <code>request_id</code> (header <code>X-Request-ID</code>) e propaga <code>Idempotency-Key</code> se presente.</li>
+<li>Rate limiting: non e` ancora applicato a livello applicativo; baseline consigliata su Nginx/API gateway per endpoint write/retryable.</li>
+<li>Fase 2 deprecazione legacy:</li>
+<li>route legacy abilitate/disabilitate via <code>DJANGO_API_LEGACY_ROUTES_ENABLED</code> (default <code>1</code>)</li>
+<li>header deprecazione su legacy via <code>DJANGO_API_LEGACY_DEPRECATION_HEADERS_ENABLED</code> (default <code>1</code>)</li>
+<li>sunset configurabile via <code>DJANGO_API_LEGACY_SUNSET_HEADER</code></li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3468,7 +3506,26 @@
 <ul>
 <li>Vendite usa gia<code>questo pattern su</code>run_lotto_pipeline`.</li>
 <li>Le nuove API (acquisti/anagrafiche/...) devono partire da questo standard.</li>
+<li>Per endpoint write usare la checklist operativa: <code>api_write_checklist.md</code>.</li>
+<li>OpenAPI/Swagger:</li>
+<li>schema: <code>GET /api/schema/</code></li>
+<li>UI: <code>GET /api/docs/</code></li>
 </ul>
+<h2 id="promemoria-jwt-ambiente-testdev">Promemoria JWT (ambiente test/dev)<a class="headerlink" href="#promemoria-jwt-ambiente-testdev" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Durata <code>access_token</code>: 60 minuti.</li>
+<li>Durata <code>refresh_token</code>: 1 giorno.</li>
+<li>Dopo modifiche a <code>SIMPLE_JWT</code> in settings, riavviare Gunicorn per applicare i nuovi valori.</li>
+</ul>
+<h2 id="checklist-operativa-nuove-api-dominio">Checklist operativa (nuove API dominio)<a class="headerlink" href="#checklist-operativa-nuove-api-dominio" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>View</strong>: creare endpoint in <code>apps/&lt;dominio&gt;/api/views.py</code> con <code>handle_post_json(...)</code>.</li>
+<li><strong>Routing</strong>: registrare path in <code>apps/&lt;dominio&gt;/api/urls.py</code> e includere in <code>zeroerp_backend/urls.py</code>.</li>
+<li><strong>Service</strong>: spostare logica business in <code>apps/&lt;dominio&gt;/services/</code> (view sottile).</li>
+<li><strong>Errori</strong>: usare <code>ErrorManager.require(...)</code> / <code>ErrorManager.raise_error(...)</code> nel service.</li>
+<li><strong>Test</strong>: aggiungere test API (status/envelope) e test service (regole dominio).</li>
+<li><strong>Doc</strong>: aggiornare manuale area dominio e indice con endpoint, input/output e regole.</li>
+</ol>
 
 
 

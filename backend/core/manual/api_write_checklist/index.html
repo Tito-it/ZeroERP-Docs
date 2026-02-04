@@ -14,7 +14,7 @@
         
           <link rel="alternate" href="./" hreflang="it">
         
-          <link rel="alternate" href="../../../../en/backend/core/manual/error-handling-api/" hreflang="en">
+          <link rel="alternate" href="../../../../en/backend/core/manual/api_write_checklist/" hreflang="en">
         
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Error handling API (Core Django) - Zero ERP Documentation</title>
+        <title>API write checklist (Core Django) - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#error-handling-api-core-django" class="md-skip">
+        <a href="#api-write-checklist-core-django" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Error handling API (Core Django)
+              API write checklist (Core Django)
             
           </span>
         </div>
@@ -127,7 +127,7 @@
           </li>
         
           <li class="md-select__item">
-            <a href="../../../../en/backend/core/manual/error-handling-api/" hreflang="en" class="md-select__link">
+            <a href="../../../../en/backend/core/manual/api_write_checklist/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
@@ -3350,10 +3350,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#contesto" class="md-nav__link">
+  <a href="#checklist-ready-to-use" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Contesto
+        Checklist ready-to-use
       
     </span>
   </a>
@@ -3361,54 +3361,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#input" class="md-nav__link">
+  <a href="#note" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Input
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#regole" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Regole
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dipendenze-db" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dipendenze DB
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#note-di-migrazione" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Note di migrazione
+        Note
       
     </span>
   </a>
@@ -3435,51 +3391,26 @@
   
 
 
-<h1 id="error-handling-api-core-django">Error handling API (Core Django)<a class="headerlink" href="#error-handling-api-core-django" title="Permanent link">&para;</a></h1>
+<h1 id="api-write-checklist-core-django">API write checklist (Core Django)<a class="headerlink" href="#api-write-checklist-core-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Definire un contratto errore uniforme per tutte le API backend Django.</p>
-<h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>La logica condivisa e<code>centralizzata in:
--</code>apps/core/services/error_manager.py<code>-</code>apps/core/services/error_policies.py<code>-</code>apps/core/services/service_errors.py<code>-</code>apps/core/services/error_translator.py<code>-</code>apps/core/api/error_responses.py<code>-</code>apps/core/middleware/api_exception_middleware.py`</p>
-<h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
+<p>Fornire una checklist operativa pronta per nuovi endpoint write (<code>POST/PUT/PATCH/DELETE</code> con side effect).</p>
+<h2 id="checklist-ready-to-use">Checklist ready-to-use<a class="headerlink" href="#checklist-ready-to-use" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>View</strong>: usare <code>handle_post_json(request, handler=..., require_idempotency_key=True)</code>.</li>
+<li><strong>Header</strong>: verificare presenza <code>Idempotency-Key</code> (gestito dal core helper).</li>
+<li><strong>Service</strong>: tenere logica business nel service, non nella view.</li>
+<li><strong>Errori</strong>: usare <code>ErrorManager</code> + codici dominio (<code>ServiceError</code>).</li>
+<li><strong>Test API</strong>:</li>
+<li>caso OK con <code>Idempotency-Key</code></li>
+<li>caso KO senza <code>Idempotency-Key</code> (<code>E_IDEMPOTENCY_KEY_REQUIRED</code>)</li>
+<li><strong>Test retryable</strong>: se applicabile, verificare header <code>Retry-After</code>.</li>
+<li><strong>Doc endpoint</strong>: aggiungere in Input l’header richiesto <code>Idempotency-Key</code>.</li>
+<li><strong>Contratto risposta</strong>: verificare envelope <code>{data,error}</code> + <code>meta.request_id</code>.</li>
+</ol>
+<h2 id="note">Note<a class="headerlink" href="#note" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Eccezioni applicative (<code>ServiceError</code>)</li>
-<li>Eccezioni DB (<code>DatabaseError</code>, SQLSTATE)</li>
-<li>Eccezioni non classificate</li>
-</ul>
-<h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Envelope JSON coerente:</li>
-<li><code>error.code</code></li>
-<li><code>error.message</code></li>
-<li><code>error.detail</code> (opzionale)</li>
-<li><code>error.hint</code> (opzionale)</li>
-<li><code>error.tx_id</code> (opzionale)</li>
-<li><code>error.retryable</code></li>
-</ul>
-<h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Mapping centralizzato <code>code -&gt; HTTP status -&gt; ui_action</code> in <code>ErrorPolicyRegistry</code>.</li>
-<li>I domini devono usare <code>ErrorManager.require(...)</code> / <code>ErrorManager.raise_error(...)</code>.</li>
-<li>Le API devono convertire eccezioni in risposta usando helper core (<code>exception_to_error_response</code>).</li>
-<li>Middleware globale intercetta eccezioni non gestite solo su path <code>/api/*</code>, lasciando invariato il comportamento Django su pagine non API e su eccezioni <code>Http404</code>/<code>PermissionDenied</code>.</li>
-<li>Flag attivazione middleware: <code>DJANGO_API_EXCEPTION_MIDDLEWARE_ENABLED</code> (<code>1</code> default, <code>0</code> disabilita).</li>
-<li>Errori <code>retryable</code> includono header <code>Retry-After</code> (default 3s, configurabile via <code>DJANGO_API_RETRY_AFTER_SECONDS</code>).</li>
-</ul>
-<h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
-<ul>
-<li><code>config.messaggi_errore</code></li>
-<li><code>script.fn_log_and_raise_error</code></li>
-<li><code>script.fn_log_error_only</code></li>
-</ul>
-<h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Questo documento e` la fonte condivisa cross-domain.</li>
-<li>Le aree dominio (es. vendite) devono solo documentare l'uso locale della policy.</li>
-<li>Endpoint diagnostico (canonico versionato) disponibile per test rapido envelope:</li>
-<li><code>GET /api/v1/core/diagnostics/error-envelope/</code></li>
-<li>varianti: <code>?kind=generic|retryable|not_found</code></li>
-<li>Compatibilita<code>temporanea mantenuta anche su</code>/api/core/diagnostics/error-envelope/`.</li>
+<li>Per endpoint read-only (<code>GET</code> senza side effect), non richiedere <code>Idempotency-Key</code>.</li>
+<li>Se serve eccezione temporanea, motivarla in doc e aprire task di riallineamento.</li>
 </ul>
 
 
