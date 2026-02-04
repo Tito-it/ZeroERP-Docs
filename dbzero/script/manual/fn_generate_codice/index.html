@@ -3467,7 +3467,7 @@
 <p>La funzione <strong><code>script.fn_generate_codice(tipo TEXT)</code></strong> genera in modo parametrico un nuovo codice alfanumerico per uno specifico “tipo” (es. <code>ORDINE</code>, <code>CLIENTE</code>, <code>FATTURA</code>), basandosi sui parametri definiti nella tabella <strong><code>config.sistema_codici</code></strong>. Se la configurazione per quel tipo non esiste, viene sollevata un’eccezione.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 18-01-26)
+<p>(latest review 04-02-26)
 * <strong>Generazione di codici configurabili</strong>
   Costruisce un codice concatenando un <strong>prefisso</strong>, un <strong>separatore</strong> e una <strong>parte numerica</strong> formattata, letti da <strong><code>config.sistema_codici</code></strong> in base al <code>codice_interno</code> passato in input.</p>
 <ul>
@@ -3560,13 +3560,23 @@
 
 <span class="n">seq_name</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;%I.%I_%I_seq&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_schema_tabella</span><span class="p">,</span><span class="w"> </span><span class="n">v_nome_tabella</span><span class="p">,</span><span class="w"> </span><span class="n">v_nome_colonna</span><span class="p">);</span>
 
-<span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;CREATE SEQUENCE IF NOT EXISTS %s&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span><span class="p">);</span>
+<span class="k">IF</span><span class="w"> </span><span class="n">to_regclass</span><span class="p">(</span><span class="n">seq_name</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">v_context_name</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;SEQUENZA_NON_CONFIGURATA&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;codice_interno&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">tipo</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;sequence_name&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span><span class="p">),</span>
+<span class="w">    </span><span class="k">NULL</span><span class="o">::</span><span class="nb">uuid</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tipo</span><span class="o">::</span><span class="nb">TEXT</span>
+<span class="w">  </span><span class="p">);</span>
+<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
 <span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;SELECT nextval(%L)&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">seq_name</span><span class="p">)</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">seq_val</span><span class="p">;</span>
 <span class="n">risultato</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">sep</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">lpad</span><span class="p">(</span><span class="n">seq_val</span><span class="o">::</span><span class="nb">TEXT</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0&#39;</span><span class="p">);</span>
 <span class="k">RETURN</span><span class="w"> </span><span class="n">risultato</span><span class="p">;</span>
 </code></pre></div>
 <ul>
-<li>La sequenza viene creata se mancante e usata per ottenere il prossimo valore numerico.</li>
+<li>La sequenza deve essere pre-provisionata e viene usata per ottenere il prossimo valore numerico.</li>
 <li>Converte <code>seq_val</code> in testo e lo riempie a sinistra con zeri fino a raggiungere la lunghezza <code>len</code>.</li>
 <li>Concatena <code>prefisso</code>, <code>separatore</code> e <code>numero_formattato</code>, restituendo il risultato.</li>
 </ul>
@@ -3604,7 +3614,7 @@
 <p><strong>Sequenza database</strong></p>
 </li>
 <li>
-<p>Se la sequenza calcolata non esiste, viene creata automaticamente.</p>
+<p>La sequenza calcolata deve esistere gia'. Se manca, la funzione solleva errore (<code>SEQUENZA_NON_CONFIGURATA</code>).</p>
 </li>
 <li>
 <p><strong>Funzione di supporto</strong></p>
