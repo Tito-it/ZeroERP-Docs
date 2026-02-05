@@ -3415,6 +3415,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#modalita-debug-dettaglio-tecnico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modalita` debug dettaglio tecnico
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modalita` debug dettaglio tecnico">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modalita-standard-consigliata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modalita` standard (consigliata)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modalita-debug-tecnico-solo-temporanea" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modalita` debug tecnico (solo temporanea)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#come-attivaredisattivare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Come attivare/disattivare
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3465,6 +3515,13 @@
 <li>Middleware globale intercetta eccezioni non gestite solo su path <code>/api/*</code>, lasciando invariato il comportamento Django su pagine non API e su eccezioni <code>Http404</code>/<code>PermissionDenied</code>.</li>
 <li>Flag attivazione middleware: <code>DJANGO_API_EXCEPTION_MIDDLEWARE_ENABLED</code> (<code>1</code> default, <code>0</code> disabilita).</li>
 <li>Errori <code>retryable</code> includono header <code>Retry-After</code> (default 3s, configurabile via <code>DJANGO_API_RETRY_AFTER_SECONDS</code>).</li>
+<li>Sanitizzazione detail tecnico verso client:</li>
+<li>default <code>DJANGO_API_EXPOSE_TECHNICAL_DETAILS=0</code> (non espone stack SQL/PLpgSQL)</li>
+<li>opzionale in debug mirato: <code>DJANGO_API_EXPOSE_TECHNICAL_DETAILS=1</code></li>
+<li>i dettagli completi restano nei log interni e sono correlabili via <code>request_id</code>.</li>
+<li>Contratto messaggi tecnici:</li>
+<li><code>message</code>: sempre business/safe in produzione per codici tecnici.</li>
+<li><code>technical_message</code>: presente solo con <code>DJANGO_API_EXPOSE_TECHNICAL_DETAILS=1</code>.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3481,6 +3538,49 @@
 <li>varianti: <code>?kind=generic|retryable|not_found</code></li>
 <li>Compatibilita<code>temporanea mantenuta anche su</code>/api/core/diagnostics/error-envelope/`.</li>
 </ul>
+<h2 id="modalita-debug-dettaglio-tecnico">Modalita` debug dettaglio tecnico<a class="headerlink" href="#modalita-debug-dettaglio-tecnico" title="Permanent link">&para;</a></h2>
+<p>Questa sezione regola cosa vede il client API in caso di errore tecnico (<code>E_DATABASE</code>, <code>E_PIPELINE</code>, <code>E_GENERICO</code>).</p>
+<h3 id="modalita-standard-consigliata">Modalita` standard (consigliata)<a class="headerlink" href="#modalita-standard-consigliata" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>DJANGO_API_EXPOSE_TECHNICAL_DETAILS=0</code> (default)</li>
+<li><code>error.message</code> = messaggio business/safe</li>
+<li><code>error.detail</code> = testo sanitizzato con <code>request_id</code></li>
+<li><code>error.technical_message</code> = assente</li>
+</ul>
+<p>Esempio:
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;error&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;E_DATABASE&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Errore durante l&#39;operazione database.&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;detail&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Dettaglio tecnico non esposto. Usa request_id=&lt;uuid&gt; per supporto.&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></p>
+<h3 id="modalita-debug-tecnico-solo-temporanea">Modalita` debug tecnico (solo temporanea)<a class="headerlink" href="#modalita-debug-tecnico-solo-temporanea" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>DJANGO_API_EXPOSE_TECHNICAL_DETAILS=1</code></li>
+<li><code>error.message</code> puo` contenere testo tecnico</li>
+<li><code>error.technical_message</code> presente con dettaglio tecnico completo</li>
+</ul>
+<p>Uso consigliato:
+- attivare solo durante analisi incidente
+- disattivare a fine analisi
+- usare sempre <code>request_id</code> per correlare i log server/DB</p>
+<h3 id="come-attivaredisattivare">Come attivare/disattivare<a class="headerlink" href="#come-attivaredisattivare" title="Permanent link">&para;</a></h3>
+<p>In <code>backend/env.sh</code>:
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DJANGO_API_EXPOSE_TECHNICAL_DETAILS</span><span class="o">=</span><span class="m">1</span>
+</code></pre></div></p>
+<p>In <code>backend/.env.systemd</code>:
+<div class="highlight"><pre><span></span><code><span class="nv">DJANGO_API_EXPOSE_TECHNICAL_DETAILS</span><span class="o">=</span><span class="m">1</span>
+</code></pre></div></p>
+<p>Applicazione:
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>zeroerp-gunicorn
+</code></pre></div></p>
+<p>Ritorno alla modalita` standard:
+<div class="highlight"><pre><span></span><code><span class="c1"># valore consigliato produzione</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">DJANGO_API_EXPOSE_TECHNICAL_DETAILS</span><span class="o">=</span><span class="m">0</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>zeroerp-gunicorn
+</code></pre></div></p>
 
 
 
