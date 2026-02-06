@@ -3465,7 +3465,8 @@
 - <code>apps/core/api/endpoint_helpers.py</code>
 - <code>apps/core/api/request_parsers.py</code>
 - <code>apps/core/api/error_responses.py</code>
-- Template di partenza: <code>apps/core/api/examples/domain_post_example.py</code></p>
+- Template di partenza: <code>apps/core/api/examples/domain_post_example.py</code>
+- Esempio search (throttling + min length): <code>apps/core/api/examples/domain_search_example.py</code></p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>Request</code> DRF con body JSON</li>
@@ -3493,6 +3494,11 @@
 <li>Se serve disattivare fallback middleware (debug mirato), usare <code>DJANGO_API_EXCEPTION_MIDDLEWARE_ENABLED=0</code>.</li>
 <li>Context middleware assegna <code>request_id</code> (header <code>X-Request-ID</code>) e propaga <code>Idempotency-Key</code> se presente.</li>
 <li>Rate limiting: non e` ancora applicato a livello applicativo; baseline consigliata su Nginx/API gateway per endpoint write/retryable.</li>
+<li>Paginazione/ricerca: seguire la policy <code>docs/it/dev/Policy-ricerca-e-paginazione(API-DB).md</code>.</li>
+<li>Parametri standard: <code>page</code>, <code>page_size</code>, <code>cursor</code>, <code>ordering</code>, <code>term</code>, <code>from</code>, <code>to</code>.</li>
+<li>Max page size: 200 (hard cap).</li>
+<li><code>contains/ilike</code> solo con <code>term</code> &gt;= 3.</li>
+<li>Throttling search: DRF <code>SearchBurstRateThrottle</code> attivo su view con <code>is_search_endpoint = True</code>.</li>
 <li>Fase 2 deprecazione legacy:</li>
 <li>route legacy abilitate/disabilitate via <code>DJANGO_API_LEGACY_ROUTES_ENABLED</code> (default <code>0</code>, v1-only)</li>
 <li>header deprecazione su legacy via <code>DJANGO_API_LEGACY_DEPRECATION_HEADERS_ENABLED</code> (default <code>1</code>)</li>
@@ -3525,6 +3531,7 @@
 <li><strong>Errori</strong>: usare <code>ErrorManager.require(...)</code> / <code>ErrorManager.raise_error(...)</code> nel service.</li>
 <li><strong>Test</strong>: aggiungere test API (status/envelope) e test service (regole dominio).</li>
 <li><strong>Doc</strong>: aggiornare manuale area dominio e indice con endpoint, input/output e regole.</li>
+<li><strong>Liste/Search</strong>: applicare policy paginazione/ricerca e usare helper DRF core (<code>pagination.py</code>, <code>search_validators.py</code>).</li>
 </ol>
 
 
