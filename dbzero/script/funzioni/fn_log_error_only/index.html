@@ -3543,8 +3543,11 @@
 <hr />
 <h3 id="sicurezza-permessi">Sicurezza &amp; Permessi<a class="headerlink" href="#sicurezza-permessi" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Se si usa <code>dblink_connect_u</code>, richiede superuser o configurazioni ad hoc; preferibile <code>dblink_connect</code> con utente dedicato ai log.</li>
-<li>Valutare <code>SECURITY DEFINER</code> <strong>solo se necessario</strong> (es. log verso DB di servizio con credenziali dedicate). In tal caso impostare owner, <code>search_path</code> e GRANT con attenzione.</li>
+<li>Per <strong>logging out-of-transaction</strong> via <code>dblink</code> senza password in GUC, <strong>la funzione deve essere <code>SECURITY DEFINER</code></strong> e <strong>owner superuser</strong> (es. <code>postgres</code>).
+  In caso contrario, il caller non superuser riceve <code>2F003</code> (password/GSSAPI richiesti).</li>
+<li>Usare un utente dedicato ai log (es. <code>zeroerp_log</code>) con privilegi <strong>minimi</strong> su <code>dbops.error_log</code>.</li>
+<li>Configurare <strong><code>pg_service.conf</code> + <code>.pgpass</code></strong> sul server PostgreSQL (utente OS <code>postgres</code>) per il service usato da <code>myapp.dblink_log_connection</code>.</li>
+<li>In modalità <code>SECURITY DEFINER</code>, mantenere <code>search_path</code> ristretto e garantire <code>GRANT EXECUTE</code> solo ai ruoli necessari.</li>
 <li>Il <strong>caller</strong> necessita solo di <code>EXECUTE</code> sulla funzione; i permessi sulla tabella di log sono gestiti sul lato remoto via <code>dblink</code>.</li>
 </ul>
 <hr />
@@ -3567,6 +3570,7 @@
 <h3 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>dblink</code> non configurato</strong> → la funzione continua “a vuoto” (non lancia). Verificare la GUC <code>dblink.log_connection</code> e l’operatività di <code>script.fn_ensure_logconn()</code>.</li>
+<li><strong>Errore <code>2F003</code> (password/GSSAPI richiesti)</strong> → la funzione non è <code>SECURITY DEFINER</code> o non è owner superuser; verificare anche <code>pg_service.conf/.pgpass</code>.</li>
 <li><strong>Messaggio non trovato</strong> → verificare <code>config.messaggi_errore</code> o la lingua corrente; con fallback non si blocca.</li>
 </ul>
 <hr />
