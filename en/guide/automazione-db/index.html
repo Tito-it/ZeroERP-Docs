@@ -3808,6 +3808,9 @@
 <p><a href="../../dbzero/dbops/tabelle/automation_fk_exclusions">dbops.automation_fk_exclusions</a></p>
 </li>
 <li>
+<p><a href="../../dbzero/dbops/tabelle/automation_cleanup_exclusions">dbops.automation_cleanup_exclusions</a></p>
+</li>
+<li>
 <p><a href="../../dbzero/dbops/tabelle/automation_overrides_cols">dbops.automation_overrides_cols</a></p>
 </li>
 <li>
@@ -3834,6 +3837,7 @@
 <li><a href="../../dbzero/dbops/funzioni/fn_run_automations_lock_columns">dbops.fn_run_automations_lock_columns</a>,  </li>
 <li><a href="../../dbzero/dbops/funzioni/fn_run_automations_attivo">dbops.fn_run_automations_attivo</a>,  </li>
 <li><a href="../../dbzero/dbops/funzioni/fn_run_automations_delete_block">dbops.fn_run_automations_delete_block</a>  </li>
+<li><a href="../../dbzero/dbops/funzioni/fn_run_automations_cleanup">dbops.fn_run_automations_cleanup</a>  </li>
 </ul>
 </blockquote>
 <hr />
@@ -3848,7 +3852,7 @@ In caso contrario le automazioni possono <strong>non essere applicate</strong>, 
 <h2 id="2-architettura-sintesi">2) 🧩 Architettura (sintesi)<a class="headerlink" href="#2-architettura-sintesi" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Scope</strong> (<code>automation_scope</code> + <code>fn_resolve_scope</code> / parametro): delimita gli schemi/tabelle.</li>
-<li><strong>Rules</strong> (<code>automation_rules_tbl</code>): regole per schema/tabella (TX_ID, AUDIT_UPDATE, STORICO, LOCK_COLUMNS, + STORICO_PROVISION).</li>
+<li><strong>Rules</strong> (<code>automation_rules_tbl</code>): regole per schema/tabella (TX_ID, AUDIT_UPDATE, STORICO, LOCK_COLUMNS, CLEANUP, + STORICO_PROVISION).</li>
 <li><strong>Overrides/Exclusions</strong>: colonne non standard e FK da saltare.</li>
 <li><strong>Orchestratori</strong>: <code>fn_run_automations_*</code> per ogni area.</li>
 <li><strong>Audit</strong>: <code>audit_log</code> (anche out‑of‑tx via dblink opzionale).</li>
@@ -3926,6 +3930,21 @@ su tabelle <strong>versionate</strong> con colonne periodo (<code>valido_dal/val
 <li><strong>Config</strong>: <code>dbops.automation_delete_block</code> con schema/tabella, GUC e flag <code>enabled</code>.</li>
 <li><strong>Trigger</strong>: <code>script.trgfn_delete_block_by_guc(guc_key)</code>.</li>
 <li><strong>Apply</strong>: <code>dbops.fn_run_automations_delete_block()</code> applica i trigger.</li>
+</ul>
+<p><strong>3.9 CLEANUP (cleanup_at)</strong></p>
+<p>Automazione per <strong>calcolare <code>cleanup_at</code></strong> e <strong>purge</strong> dei record scaduti.</p>
+<p>Componenti principali:</p>
+<ul>
+<li><strong>Config regole</strong>: <code>dbops.automation_rules_tbl</code> con <code>rule_type</code>:</li>
+<li><code>CLEANUP_AT</code> → calcola <code>cleanup_at</code> con TTL fisso</li>
+<li><code>CLEANUP_PURGE</code> → elimina record scaduti (batch)</li>
+<li><strong>Esclusioni</strong>: <code>dbops.automation_cleanup_exclusions</code></li>
+<li><strong>Apply</strong>: <code>dbops.fn_run_automations_cleanup()</code></li>
+</ul>
+<p>Parametri JSON tipici:</p>
+<ul>
+<li><code>CLEANUP_AT</code>: <code>ttl_days</code>, <code>cleanup_column</code>, <code>base_ts_column</code>, <code>apply_on_update</code></li>
+<li><code>CLEANUP_PURGE</code>: <code>cleanup_column</code>, <code>batch_limit</code></li>
 </ul>
 <hr />
 <h2 id="4-configurazione">4) ⚙️ Configurazione<a class="headerlink" href="#4-configurazione" title="Permanent link">&para;</a></h2>
