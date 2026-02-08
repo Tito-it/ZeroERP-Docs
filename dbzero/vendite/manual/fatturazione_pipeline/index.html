@@ -3460,6 +3460,7 @@ evoluzioni (nuovi step o processi senza refactor massivo).</p>
 <ul>
 <li><code>stato_doc_fiscale_id</code> collega lo step agli <strong>stati lotto</strong> (non agli stati fattura).</li>
 <li><code>tipo_lotto</code> distingue pipeline MASSIVO vs GIORNALIERO.</li>
+<li><code>utility_id</code> e <code>tipo_doc_fiscale_id</code> sono opzionali e permettono varianti specifiche.</li>
 <li><code>processi</code> contiene una lista di “task” tecnici da eseguire (payload jsonb).</li>
 <li><code>rollback</code> contiene le azioni di pulizia per tornare allo stato precedente.</li>
 <li>Solo gli step con <code>attivo=true</code> vengono eseguiti dalla pipeline.</li>
@@ -3509,9 +3510,15 @@ tecnici. Esempio (schema indicativo):</p>
 <li>L’orchestratore legge questa tabella per decidere <strong>quali processi</strong> eseguire
   e come gestire il <strong>rollback</strong>.</li>
 <li>I singoli processi devono essere <strong>idempotenti</strong> o progettati per gestire retry.</li>
+<li>I task eseguiti sono gestiti da <code>vendite.fn_execute_pipeline_step</code> tramite
+  whitelist (es. <code>select_attivita</code>, <code>noop</code>, <code>log_only</code>).</li>
+<li>Risoluzione configurazione con fallback (per <code>tipo_lotto + stato_doc_fiscale_id</code>):</li>
+<li>1) match esatto <code>utility_id + tipo_doc_fiscale_id</code></li>
+<li>2) match <code>utility_id</code> con <code>tipo_doc_fiscale_id = NULL</code></li>
+<li>3) match <code>tipo_doc_fiscale_id</code> con <code>utility_id = NULL</code></li>
+<li>4) fallback globale <code>utility_id = NULL</code> e <code>tipo_doc_fiscale_id = NULL</code></li>
 <li>
-<p>I task eseguiti sono gestiti da <code>vendite.fn_execute_pipeline_step</code> tramite
-  whitelist (es. <code>select_attivita</code>, <code>noop</code>, <code>log_only</code>).</p>
+<p>Ogni livello e<code>unico per evitare ambiguita</code> di configurazione.</p>
 </li>
 <li>
 <p><strong>Regola di sicurezza: i task devono usare </strong>solo <code>lotto_id</code><strong> come input; i parametri operativi devono essere recuperati dal lotto (o da tabelle collegate).</strong></p>
