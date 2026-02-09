@@ -3361,6 +3361,89 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#generazione-fatture-puntuali-lotti-giornalieri" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📌 Generazione fatture puntuali (lotti giornalieri)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📌 Generazione fatture puntuali (lotti giornalieri)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scopo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modello-operativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modello operativo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impatti-su-pipeline-e-guard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impatti su pipeline e guard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processo-puntuale-fuori-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Processo puntuale (fuori pipeline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nota-di-coerenza" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nota di coerenza
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sviluppi-necessari-minimo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sviluppi necessari (minimo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#1-processo-di-alimentazione-attivita_fatturabili" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3373,7 +3456,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#scopo" class="md-nav__link">
+  <a href="#scopo_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         🎯 Scopo
@@ -3434,7 +3517,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#scopo_1" class="md-nav__link">
+  <a href="#scopo_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         🎯 Scopo
@@ -3506,7 +3589,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#scopo_2" class="md-nav__link">
+  <a href="#scopo_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         🎯 Scopo
@@ -4032,9 +4115,51 @@ La guida principale resta <code>docs/it/guide/fatturazione.md</code>.</p>
 <li>il dispatch e` controllato da registry DB + mapping statico in Django.</li>
 <li>vincoli, trigger e funzioni di consistenza restano in DB.</li>
 </ul>
+<h2 id="generazione-fatture-puntuali-lotti-giornalieri">📌 Generazione fatture puntuali (lotti giornalieri)<a class="headerlink" href="#generazione-fatture-puntuali-lotti-giornalieri" title="Permanent link">&para;</a></h2>
+<h3 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h3>
+<p>Gestire emissioni immediate (front-office) senza attendere il ciclo massivo,
+ma mantenendo la tracciabilita` tramite lotto giornaliero.</p>
+<h3 id="modello-operativo">Modello operativo<a class="headerlink" href="#modello-operativo" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Il <strong>lotto giornaliero</strong> e` un contenitore operativo, non il driver di emissione.</li>
+<li>Le fatture vengono <strong>create/emesse per documento</strong> (processo puntuale).</li>
+<li>Il lotto resta <strong>APERTO</strong> e raccoglie le fatture emesse nella giornata.</li>
+<li>Il lotto passa a <strong>INVIATA</strong> solo nella fase batch di chiusura (invio/SDI).</li>
+</ul>
+<h3 id="impatti-su-pipeline-e-guard">Impatti su pipeline e guard<a class="headerlink" href="#impatti-su-pipeline-e-guard" title="Permanent link">&para;</a></h3>
+<ul>
+<li>La pipeline <code>GIORNALIERO</code> non deve includere step di creazione/emissione.</li>
+<li>Il trigger <code>trgfn_fatturazione_lotti_guard_stato</code> non viene sollecitato
+  per la fase EMESSA, perche` il lotto non transita in EMESSA.</li>
+<li>L'unico cambio stato lotto rilevante per il giornaliero e` la chiusura (INVIATA).</li>
+</ul>
+<h3 id="processo-puntuale-fuori-pipeline">Processo puntuale (fuori pipeline)<a class="headerlink" href="#processo-puntuale-fuori-pipeline" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Deve riusare <strong>gli stessi servizi/primitive</strong> del massivo:
+  <code>select_attivita</code> (lock), <code>get_or_create_fattura_header</code>,
+  <code>generate_fatture_righe</code>, <code>fn_numera_fattura_opz_emessa</code>.</li>
+<li>Deve garantire <strong>idempotenza</strong> e <strong>lock</strong> sul lotto giornaliero.</li>
+<li>Deve loggare su <code>fatturazione_lotti_log</code> per tracciabilita`.</li>
+<li>Deve agganciare sempre la fattura al lotto giornaliero aperto.</li>
+</ul>
+<h3 id="nota-di-coerenza">Nota di coerenza<a class="headerlink" href="#nota-di-coerenza" title="Permanent link">&para;</a></h3>
+<p>Il flusso puntuale non duplica logica: usa le stesse funzioni/servizi,
+ma senza passare dalla pipeline lotto.</p>
+<h3 id="sviluppi-necessari-minimo">Sviluppi necessari (minimo)<a class="headerlink" href="#sviluppi-necessari-minimo" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Servizio Django “emissione immediata”:</li>
+<li>risolve/crea lotto giornaliero APERTO</li>
+<li>seleziona/locka attivita fatturabili</li>
+<li>genera righe e numerazione documento</li>
+<li>collega fattura al lotto</li>
+<li>logga su <code>fatturazione_lotti_log</code></li>
+<li>Pipeline giornaliera ridotta ai soli task batch (chiusura/invio)</li>
+<li>Chiusura batch tramite <code>vendite.fn_close_giornaliero_lotto</code></li>
+<li>Endpoint API dedicato (o estensione dell’endpoint esistente)</li>
+</ul>
 <hr />
 <h2 id="1-processo-di-alimentazione-attivita_fatturabili">1) Processo di alimentazione <code>attivita_fatturabili</code><a class="headerlink" href="#1-processo-di-alimentazione-attivita_fatturabili" title="Permanent link">&para;</a></h2>
-<h3 id="scopo">🎯 Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h3>
+<h3 id="scopo_1">🎯 Scopo<a class="headerlink" href="#scopo_1" title="Permanent link">&para;</a></h3>
 <p>Creare le righe pre‑documentali che rappresentano <strong>tutto cio<code>che potra</code> essere fatturato</strong>.</p>
 <h3 id="sorgenti-macrotipi">🔌 Sorgenti (macro‑tipi)<a class="headerlink" href="#sorgenti-macrotipi" title="Permanent link">&para;</a></h3>
 <p>Le sorgenti sono definite in <code>config.sorgenti</code> e rappresentano <strong>origini dati</strong> eterogenee. Esempio:</p>
@@ -4074,7 +4199,7 @@ La dashboard “Input” deve quindi gestire due flussi:</p>
 <p>Il processo di alimentazione avviene <strong>prima</strong> del lotto fatture e mantiene tracciabilita<code>tramite</code>attivita_fatturabili_lotti`.</p>
 <hr />
 <h2 id="2-processo-operativo-di-calcolo-preemissione">2) Processo operativo di calcolo (pre‑emissione)<a class="headerlink" href="#2-processo-operativo-di-calcolo-preemissione" title="Permanent link">&para;</a></h2>
-<h3 id="scopo_1">🎯 Scopo<a class="headerlink" href="#scopo_1" title="Permanent link">&para;</a></h3>
+<h3 id="scopo_2">🎯 Scopo<a class="headerlink" href="#scopo_2" title="Permanent link">&para;</a></h3>
 <p>Trasformare attivita` approvate e fatturabili in <strong>righe economiche</strong> di fattura.</p>
 <h3 id="selezione">🔎 Selezione<a class="headerlink" href="#selezione" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4102,7 +4227,7 @@ La dashboard “Input” deve quindi gestire due flussi:</p>
 </ul>
 <hr />
 <h2 id="3-processo-di-emissione-documento-output">3) Processo di emissione documento (output)<a class="headerlink" href="#3-processo-di-emissione-documento-output" title="Permanent link">&para;</a></h2>
-<h3 id="scopo_2">🎯 Scopo<a class="headerlink" href="#scopo_2" title="Permanent link">&para;</a></h3>
+<h3 id="scopo_3">🎯 Scopo<a class="headerlink" href="#scopo_3" title="Permanent link">&para;</a></h3>
 <p>Convertire il risultato del calcolo in <strong>documento fiscale numerato</strong>.</p>
 <h3 id="separazione-dal-calcolo">✅ Separazione dal calcolo<a class="headerlink" href="#separazione-dal-calcolo" title="Permanent link">&para;</a></h3>
 <p>Il <strong>calcolo</strong> produce righe; l’<strong>emissione</strong> produce la testata, la numerazione e gli output fiscali.</p>
