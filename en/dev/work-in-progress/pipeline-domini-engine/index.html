@@ -3809,6 +3809,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#9-checklist-di-coerenza-da-eseguire" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9) Checklist di coerenza (da eseguire)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3966,6 +3977,7 @@ in fatturazione, alimentazione attivita`, pratiche o utility verticali (idrico/g
 <li>[x] Tabelle <code>dbops.domini_task</code>, <code>dbops.pipeline_task_registry</code>, <code>dbops.pipeline_task_registry_impl</code></li>
 <li>[x] Funzioni <code>dbops.fn_check_pipeline_task_registered</code> e <code>dbops.fn_get_pipeline_task_implementation</code></li>
 <li>[x] Seed CSV iniziali per dominio FATTURAZIONE e task base</li>
+<li>[x] Task <code>close_lotto</code> registrato con handler <code>close_lotto_default</code></li>
 </ul>
 <hr />
 <h2 id="42-pipeline-fatturazione-db-integrazioni">4.2 Pipeline fatturazione (DB) - integrazioni<a class="headerlink" href="#42-pipeline-fatturazione-db-integrazioni" title="Permanent link">&para;</a></h2>
@@ -3991,11 +4003,14 @@ in fatturazione, alimentazione attivita`, pratiche o utility verticali (idrico/g
 <ul>
 <li><code>implementation_key</code> assente -&gt; fallback automatico a <code>default</code>.</li>
 <li><code>params.fn</code> resta legacy/transitorio e non pilota il dispatch.</li>
+<li><code>implementation_key</code> assente significa: usare l'implementazione <code>is_default=true</code>
+  definita in <code>dbops.pipeline_task_registry_impl</code>.</li>
 </ul>
 <h3 id="stato_2">Stato<a class="headerlink" href="#stato_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li>[x] Seed <code>fatturazione_pipeline.csv</code> aggiornato con <code>implementation_key: default</code></li>
 <li>[x] Python usa <code>implementation_key</code> e registry DB per dispatch</li>
+<li>[x] Pipeline massiva (EMESSA) include task <code>close_lotto</code></li>
 </ul>
 <h3 id="funzioni-sql-fatturazione">Funzioni SQL fatturazione<a class="headerlink" href="#funzioni-sql-fatturazione" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4195,6 +4210,17 @@ stessa logica di risoluzione configurazione, ma limitata al dominio attivita.</p
 </ul>
 </li>
 </ol>
+<hr />
+<h2 id="9-checklist-di-coerenza-da-eseguire">9) Checklist di coerenza (da eseguire)<a class="headerlink" href="#9-checklist-di-coerenza-da-eseguire" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Verificare che ogni <code>task_code</code> abbia <strong>esattamente un</strong> <code>is_default=true</code>.</li>
+<li>Verificare che ogni <code>handler_code</code> abbia <strong>mappatura Python</strong> unica e stabile.</li>
+<li>Verificare che <code>params.fn</code> non alteri il dispatch (solo legacy).</li>
+<li>Verificare che il mapping <code>dominio_id</code> sia centralizzato (no hardcode sparso).</li>
+<li>Verificare validazione JSON pipeline (task/implementation) prima dell'esecuzione.</li>
+<li>Verificare che il fallback <code>implementation_key -&gt; default</code> sia sempre loggato.</li>
+<li>Verificare coerenza fra seed DB e registry Python (task registrati e attivi).</li>
+</ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
