@@ -3835,6 +3835,7 @@
 <li><a href="../../dbzero/dbops/funzioni/fn_run_automations_audit_update">dbops.run_automations_audit_update</a>,  </li>
 <li><a href="../../dbzero/dbops/funzioni/fn_run_automations_storico">dbops.run_automations_storico</a>,   </li>
 <li><a href="../../dbzero/dbops/funzioni/fn_run_automations_lock_columns">dbops.fn_run_automations_lock_columns</a>,  </li>
+<li><a href="../../dbzero/dbops/funzioni/fn_run_automations_drop_lock_trg">dbops.fn_run_automations_drop_lock_trg</a>,  </li>
 <li><a href="../../dbzero/dbops/funzioni/fn_run_automations_attivo">dbops.fn_run_automations_attivo</a>,  </li>
 <li><a href="../../dbzero/dbops/funzioni/fn_run_automations_delete_block">dbops.fn_run_automations_delete_block</a>  </li>
 <li><a href="../../dbzero/dbops/funzioni/fn_run_automations_cleanup">dbops.fn_run_automations_cleanup</a>  </li>
@@ -3881,6 +3882,10 @@ In caso contrario le automazioni possono <strong>non essere applicate</strong>, 
 <li>La colonna <strong><code>codice_interno</code></strong> e' implicita: se presente in tabella viene sempre inclusa.</li>
 <li>Le colonne extra si configurano in <code>dbops.automation_lock_columns</code>.</li>
 </ul>
+<p><strong>3.5.1 LOCK_COLUMNS cleanup (drop trigger obsoleti)</strong></p>
+<p>Quando <strong>non esistono colonne da bloccare</strong> (nessun <code>codice_interno</code> e nessuna colonna extra attiva),
+i trigger LOCK_COLUMNS possono restare obsoleti.<br />
+La funzione <code>dbops.fn_run_automations_drop_lock_trg</code> rimuove questi trigger.</p>
 <p><strong>3.6 ATTIVO (soft‑delete funzionale – policy conservativa)</strong></p>
 <p>L’automazione <strong>ATTIVO</strong> implementa una politica <strong>BLOCK-ONLY</strong> finalizzata a garantire la coerenza logica tra record padre e figli collegati tramite FK.</p>
 <p><strong>Regola applicata</strong></p>
@@ -4009,6 +4014,8 @@ su tabelle <strong>versionate</strong> con colonne periodo (<code>valido_dal/val
 <li>Inserisci/aggiorna <strong>rules</strong> (usa <code>'*all'</code> dove serve).</li>
 <li>(Opzionale) Popola <strong>scope</strong>: righe <code>('&lt;schema&gt;','*all')</code> o pattern puntuali.</li>
 <li>Esegui <strong>dry‑run</strong> del/i runner interessati (es. <code>fn_run_automations_storico(..., true)</code> o <code>fn_run_automations_lock_columns(..., true)</code>).</li>
+<li>Se stai disattivando colonne LOCK_COLUMNS, valuta il cleanup:<br />
+<code>SELECT dbops.fn_run_automations_drop_lock_trg('AUTO', NULL, false);</code></li>
 <li>Verifica audit → poi <strong>apply</strong> (<code>p_dry_run=false</code>).</li>
 <li>Controlla i trigger creati (<code>pg_trigger</code>) e, per STORICO, la presenza della tabella <code>storico.&lt;tabella&gt;</code>.</li>
 </ol>
