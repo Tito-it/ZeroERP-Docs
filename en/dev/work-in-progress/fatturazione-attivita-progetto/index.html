@@ -3732,6 +3732,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#attivita-da-introdurre-fondi-fattura-wip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📌 Attivita` da introdurre – Fondi fattura (WIP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📌 Attivita` da introdurre – Fondi fattura (WIP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scopo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modello-proposto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modello proposto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impatti-su-logica-django" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impatti su logica Django
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#note-operative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Note operative
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#appendice-lotto-raggruppamenti-e-stati-design-operativo" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4344,6 +4405,39 @@ La dashboard “Input” deve quindi gestire due flussi:</p>
   AF --&gt; FR
   FR --&gt; F</code></pre>
 <hr />
+<h2 id="attivita-da-introdurre-fondi-fattura-wip">📌 Attivita` da introdurre – Fondi fattura (WIP)<a class="headerlink" href="#attivita-da-introdurre-fondi-fattura-wip" title="Permanent link">&para;</a></h2>
+<h3 id="scopo_4">Scopo<a class="headerlink" href="#scopo_4" title="Permanent link">&para;</a></h3>
+<p>Separare i <strong>fondi fattura</strong> dalle righe standard per garantire semantica corretta,
+tracciabilita` verso documenti precedenti e calcolo deterministico del totale a pagare.</p>
+<h3 id="modello-proposto">Modello proposto<a class="headerlink" href="#modello-proposto" title="Permanent link">&para;</a></h3>
+<p><strong>Nuove tabelle:</strong></p>
+<ul>
+<li><code>vendite.tipi_fondi_fattura</code></li>
+<li><code>id</code>, <code>codice</code>, <code>codice_interno</code>, <code>descrizione</code>, <code>meta</code>, audit</li>
+<li><code>vendite.fatture_fondi_fattura</code></li>
+<li><code>id</code>, <code>fattura_id</code>, <code>riferimento_fattura_id</code>, <code>tipo_fondo_fattura_id</code>, <code>importo</code>, <code>meta</code>, audit</li>
+</ul>
+<p><strong>Modifiche a <code>vendite.fatture</code>:</strong></p>
+<ul>
+<li><code>totale_doc</code> resta: <code>imponibile_tot + imposta_tot</code></li>
+<li>introdurre <code>totale_a_pagare</code> (totale fiscale + arrotondamenti + fondi)</li>
+<li>rimuovere <code>totale_escluso_imponibile</code> (sostituito dalla somma fondi)</li>
+</ul>
+<p><strong>Modifiche a <code>catalogo.articoli</code>:</strong></p>
+<ul>
+<li>rimuovere <code>fondo_fattura</code> (non piu` coerente come flag articolo)</li>
+</ul>
+<h3 id="impatti-su-logica-django">Impatti su logica Django<a class="headerlink" href="#impatti-su-logica-django" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Il processo di generazione righe <strong>non</strong> deve creare fondi fattura.</li>
+<li>I fondi fattura vanno gestiti da <strong>servizio dedicato</strong> (API o batch).</li>
+<li>Il ricalcolo totali deve includere <code>SUM(fatture_fondi_fattura.importo)</code>.</li>
+</ul>
+<h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Nessuna migrazione dati (al momento non esistono righe fondo fattura).</li>
+<li>Aggiornare <code>fn_ricalcola_totali_fattura</code> e test pgtap relativi.</li>
+</ul>
 <h2 id="appendice-lotto-raggruppamenti-e-stati-design-operativo">📎 Appendice – Lotto, raggruppamenti e stati (design operativo)<a class="headerlink" href="#appendice-lotto-raggruppamenti-e-stati-design-operativo" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p><strong>Nota importante (evidenza):</strong>
