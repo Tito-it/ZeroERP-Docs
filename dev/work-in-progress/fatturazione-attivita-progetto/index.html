@@ -3793,6 +3793,111 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#analisi-fondi-fattura-processo-e-regole-wip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📌 Analisi fondi fattura – processo e regole (WIP)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📌 Analisi fondi fattura – processo e regole (WIP)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#problema-da-risolvere" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problema da risolvere
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#separazione-necessaria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Separazione necessaria
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabella-sorgente-core-logico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabella sorgente (core logico)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processo-1-generazione-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Processo 1: Generazione source
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processo-2-applicazione-su-fattura" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Processo 2: Applicazione su fattura
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storni-note-credito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storni / note credito
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pagamenti" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pagamenti
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#totali-fattura" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Totali fattura
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#appendice-lotto-raggruppamenti-e-stati-design-operativo" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4437,6 +4542,60 @@ tracciabilita` verso documenti precedenti e calcolo deterministico del totale a 
 <ul>
 <li>Nessuna migrazione dati (al momento non esistono righe fondo fattura).</li>
 <li>Aggiornare <code>fn_ricalcola_totali_fattura</code> e test pgtap relativi.</li>
+</ul>
+<hr />
+<h2 id="analisi-fondi-fattura-processo-e-regole-wip">📌 Analisi fondi fattura – processo e regole (WIP)<a class="headerlink" href="#analisi-fondi-fattura-processo-e-regole-wip" title="Permanent link">&para;</a></h2>
+<h3 id="problema-da-risolvere">Problema da risolvere<a class="headerlink" href="#problema-da-risolvere" title="Permanent link">&para;</a></h3>
+<p>I fondi fattura non sono righe di vendita. Sono addebiti/accrediti extra
+(minimi fatturati, canone RAI, recuperi precedenti) e richiedono:</p>
+<ul>
+<li>tracciabilita` verso fattura origine</li>
+<li>idempotenza (niente riaddebiti)</li>
+<li>gestione storni/riaperture</li>
+</ul>
+<h3 id="separazione-necessaria">Separazione necessaria<a class="headerlink" href="#separazione-necessaria" title="Permanent link">&para;</a></h3>
+<p>1) <strong>Sorgente fondo</strong>: credito/debito originario da fattura precedente.<br />
+2) <strong>Fondo applicato</strong>: addebito collegato alla fattura corrente.</p>
+<h3 id="tabella-sorgente-core-logico">Tabella sorgente (core logico)<a class="headerlink" href="#tabella-sorgente-core-logico" title="Permanent link">&para;</a></h3>
+<p><code>vendite.fatture_fondi_fattura_source</code>:</p>
+<ul>
+<li><code>fattura_sorgente_id</code></li>
+<li><code>tipo_fondo_fattura_id</code></li>
+<li><code>importo</code></li>
+<li><code>stato</code>: <code>DISPONIBILE</code> | <code>ASSEGNATO</code> | <code>ANNULLATO</code></li>
+<li><code>fattura_figlia_id</code>, <code>data_assegnazione</code>, <code>user_assegnazione</code></li>
+<li>denormalizzazioni: <code>billing_account_id</code>, <code>utility_id</code>, <code>tipo_doc_fiscale_id</code>,
+  <code>emittente_soggetto_ruolo_id</code>, <code>valuta_id</code></li>
+</ul>
+<h3 id="processo-1-generazione-source">Processo 1: Generazione source<a class="headerlink" href="#processo-1-generazione-source" title="Permanent link">&para;</a></h3>
+<ul>
+<li>seleziona fatture con <code>minimo = true</code></li>
+<li>esclude fatture gia<code>presenti in</code>source`</li>
+<li>esclude fatture pagate (regola a definire su pagamenti)</li>
+<li>inserisce record <code>DISPONIBILE</code></li>
+</ul>
+<h3 id="processo-2-applicazione-su-fattura">Processo 2: Applicazione su fattura<a class="headerlink" href="#processo-2-applicazione-su-fattura" title="Permanent link">&para;</a></h3>
+<ul>
+<li>seleziona record <code>DISPONIBILE</code> per chiave BA+utility+tipo_doc+emittente+valuta</li>
+<li>crea record in <code>fatture_fondi_fattura</code></li>
+<li>aggiorna source <code>ASSEGNATO</code> e collega la <code>fattura_figlia_id</code></li>
+</ul>
+<h3 id="storni-note-credito">Storni / note credito<a class="headerlink" href="#storni-note-credito" title="Permanent link">&para;</a></h3>
+<p>Policy per tipologia fondo:</p>
+<ul>
+<li>default <code>riapribile = false</code></li>
+<li>se <code>riapribile = true</code> e arriva storno, lo source torna <code>DISPONIBILE</code></li>
+</ul>
+<h3 id="pagamenti">Pagamenti<a class="headerlink" href="#pagamenti" title="Permanent link">&para;</a></h3>
+<p>Serve tabella movimenti:</p>
+<ul>
+<li><code>pagamenti.vendite_movimenti</code></li>
+<li><code>SUM(importo) &gt;= totale_a_pagare</code> come regola base di “pagata”</li>
+</ul>
+<h3 id="totali-fattura">Totali fattura<a class="headerlink" href="#totali-fattura" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>totale_doc = imponibile + imposta</code></li>
+<li><code>totale_a_pagare = totale_doc + arrotondamenti + SUM(fondi)</code></li>
 </ul>
 <h2 id="appendice-lotto-raggruppamenti-e-stati-design-operativo">📎 Appendice – Lotto, raggruppamenti e stati (design operativo)<a class="headerlink" href="#appendice-lotto-raggruppamenti-e-stati-design-operativo" title="Permanent link">&para;</a></h2>
 <blockquote>

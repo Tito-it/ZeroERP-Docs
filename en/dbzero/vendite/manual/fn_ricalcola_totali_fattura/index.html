@@ -3425,32 +3425,40 @@
 <p><strong>Approfondimento tabelle:</strong></p>
 <p>• <a href="../../../../dbzero/vendite/tabelle/fatture">vendite.fatture</a><br />
 • <a href="../../../../dbzero/vendite/tabelle/fatture_riepiloghi_iva">vendite.fatture_riepiloghi_iva</a><br />
-• <a href="../../../../dbzero/vendite/tabelle/fatture_fondi_fattura">vendite.fatture_fondi_fattura</a>  </p>
+• <a href="../../../../dbzero/vendite/tabelle/fatture_fondi_fattura">vendite.fatture_fondi_fattura</a><br />
+• <a href="../../../../dbzero/anagrafiche/tabelle/emittenti_fiscali_utilities">anagrafiche.emittenti_fiscali_utilities</a>  </p>
 <p><strong>Approfondimento funzioni:</strong></p>
-<p>• <a href="../../../../dbzero/vendite/funzioni/fn_ricalcola_fattura">vendite.fn_ricalcola_fattura</a>  </p>
+<p>• <a href="../../../../dbzero/vendite/funzioni/fn_get_totale_fondi_fattura">vendite.fn_get_totale_fondi_fattura</a><br />
+• <a href="../../../../dbzero/vendite/funzioni/fn_get_arrotondamento_scope">vendite.fn_get_arrotondamento_scope</a><br />
+• <a href="../../../../dbzero/vendite/funzioni/fn_set_arrotondamento_scope">vendite.fn_set_arrotondamento_scope</a><br />
+</p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-02-2026)<br />
-La funzione <strong><code>vendite.fn_ricalcola_totali_fattura()</code></strong> ricalcola i totali
-della testata fattura a partire dai riepiloghi IVA e dai fondi fattura.</p>
+<p>La funzione <strong><code>vendite.fn_ricalcola_totali_fattura()</code></strong> ricalcola i totali
+sulla testata fattura a partire dai <strong>riepiloghi IVA</strong> e dai <strong>fondi fattura</strong>,
+applicando le regole di arrotondamento definite per <strong>emittente/utility</strong>.</p>
 <hr />
 <h3 id="regole-principali">✅ Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>p_fattura_id</code> obbligatorio e <code>&gt; 0</code>.</li>
-<li><code>imponibile_tot</code> e <code>imposta_tot</code> derivano da <code>vendite.fatture_riepiloghi_iva</code>.</li>
-<li>I fondi fattura sono sommati da <code>vendite.fatture_fondi_fattura</code> (solo <code>attivo = true</code>).</li>
-<li><code>totale_a_pagare</code> = <code>totale_doc</code> + arrotondamenti + somma fondi.</li>
+<li><code>p_fattura_id</code> obbligatorio.</li>
+<li>Totali calcolati da <code>fatture_riepiloghi_iva</code>.</li>
+<li>Totale fondi fattura via <code>vendite.fn_get_totale_fondi_fattura()</code>.</li>
+<li>Arrotondamento calcolato in base a:</li>
+<li><code>anagrafiche.emittenti_fiscali_utilities.arrotondamento_importi_dec</code></li>
+<li><code>anagrafiche.emittenti_fiscali_utilities.metodo_arrotondamento_importi</code></li>
+<li>Aggiorna il saldo tecnico con <code>fn_set_arrotondamento_scope()</code>.</li>
+<li>Imposta <code>minimo = true</code> quando <code>totale_a_pagare</code> rientra nella soglia
+  (<code>minimo_soglia_min</code>/<code>minimo_soglia_max</code>).</li>
 </ul>
 <hr />
 <h3 id="output">✅ Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
-<p>Effetti principali:</p>
-<ul>
-<li>aggiorna <code>imponibile_tot</code>, <code>imposta_tot</code>, <code>totale_doc</code>, <code>totale_a_pagare</code>.</li>
-</ul>
+<p>Non ritorna valori. Aggiorna la testata fattura.</p>
 <hr />
 <h3 id="esempio-duso">🧪 Esempio d’uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_ricalcola_totali_fattura</span><span class="p">(</span><span class="mi">123</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_ricalcola_totali_fattura</span><span class="p">(</span>
+<span class="w">  </span><span class="n">p_fattura_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">123</span>
+<span class="p">);</span>
 </code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
