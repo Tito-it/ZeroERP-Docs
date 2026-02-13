@@ -3456,11 +3456,21 @@
 <h1 id="schema-pagamenti">Schema <code>pagamenti</code><a class="headerlink" href="#schema-pagamenti" title="Permanent link">&para;</a></h1>
 <h2 id="tabelle-manuale">📚 Tabelle (manuale)<a class="headerlink" href="#tabelle-manuale" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../manual/vendite_movimenti/">vendite_movimenti</a> — (latest review 10-02-2026)   <code>pagamenti.vendite_movimenti</code> registra i <strong>movimenti di incasso/rimborso</strong> associati alle fatture di vendita. Supporta piu<code>movimenti per fattura ed e</code> la base per determinare lo stato di pagamento.</li>
+<li><a href="../manual/centri_riscossione/">centri_riscossione</a> — La tabella <strong><code>pagamenti.centri_riscossione</code></strong> definisce le <strong>origini di incasso</strong> per i movimenti vendite (banca, posta, cassa, compensazioni, fondo fattura, ecc.).</li>
+<li><a href="../manual/compensazioni/">compensazioni</a> — La tabella <strong><code>pagamenti.compensazioni</code></strong> rappresenta la testata del processo che genera movimenti di compensazione tra documenti del cliente.</li>
+<li><a href="../manual/enti_incasso/">enti_incasso</a> — La tabella <code>pagamenti.enti_incasso</code> rappresenta i canali di provenienza dei flussi di incasso (banca, poste, PSP, altro), collegando il canale ai riferimenti anagrafici e operativi necessari all'import e riconciliazione.</li>
+<li><a href="../manual/vendite_contabili/">vendite_contabili</a> — La tabella <strong><code>pagamenti.vendite_contabili</code></strong> rappresenta la <strong>testata contabile</strong> per l’aggregazione di movimenti vendite. Serve a raggruppare movimenti per centro riscossione e data contabile, con eventuale dettaglio del canale (<code>ente_incasso</code>) e stato operativo della testata.</li>
+<li><a href="../manual/vendite_contabili_righe/">vendite_contabili_righe</a> — La tabella <strong><code>pagamenti.vendite_contabili_righe</code></strong> contiene il dettaglio delle righe importate/gestite nella testata contabile vendite, con stato di lavorazione e riferimenti di abbinamento (fattura, billing account).</li>
+<li><a href="../manual/vendite_contabili_righe_stati/">vendite_contabili_righe_stati</a> — (latest review 13-02-2026)   La tabella <strong><code>pagamenti.vendite_contabili_righe_stati</code></strong> definisce il lookup degli stati delle <strong>righe contabili</strong> legate ai movimenti vendite.</li>
+<li><a href="../manual/vendite_contabili_stati/">vendite_contabili_stati</a> — (latest review 13-02-2026)   La tabella <strong><code>pagamenti.vendite_contabili_stati</code></strong> definisce il lookup degli stati della <strong>testata contabile vendite</strong>.</li>
+<li><a href="../manual/vendite_movimenti/">vendite_movimenti</a> — La tabella <strong><code>pagamenti.vendite_movimenti</code></strong> registra i movimenti di incasso/rimborso collegati alle fatture, con indicazione della <strong>provenienza</strong> (centro riscossione)  e dei parametri utili al calcolo interessi e alla contabilizzazione.</li>
 </ul>
 <h2 id="funzioni-manuale">⚙️ Funzioni (manuale)<a class="headerlink" href="#funzioni-manuale" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../manual/fn_get_saldo_fattura/">fn_get_saldo_fattura</a> — (latest review 11-02-2026)   La funzione <strong><code>pagamenti.fn_get_saldo_fattura()</code></strong> restituisce il <strong>saldo</strong> movimenti di una fattura e un flag che indica se esistono movimenti.</li>
+<li><a href="../manual/trgfn_enti_incasso_guard_psp/">trgfn_enti_incasso_guard_psp</a> — Garantire la coerenza applicativa dei record <code>pagamenti.enti_incasso</code> quando il canale e<code>di tipo</code>PSP`.</li>
+<li><a href="../manual/trgfn_vendite_contabili_guard_ente_centro/">trgfn_vendite_contabili_guard_ente_centro</a> — Validare la coerenza tra <code>centro_riscossione_id</code> della testata e <code>ente_incasso_id</code> quando presente.</li>
+<li><a href="../manual/trgfn_vendite_movimenti_sync_contabile_from_riga/">trgfn_vendite_movimenti_sync_contabile_from_riga</a> — Mantenere coerente <code>contabile_id</code> su <code>pagamenti.vendite_movimenti</code> quando viene usato il riferimento a riga (<code>contabile_riga_id</code>).</li>
 </ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>

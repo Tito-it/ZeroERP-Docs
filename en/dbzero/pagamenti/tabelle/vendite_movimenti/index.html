@@ -3371,10 +3371,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#note-operative" class="md-nav__link">
+  <a href="#regole-principali" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ✅ Note operative
+        ✅ Regole principali
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-duso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Esempio d’uso
       
     </span>
   </a>
@@ -3414,32 +3425,47 @@
 <p><strong>Approfondimento tabelle:</strong></p>
 <p>• <a href="../../../../dbzero/vendite/tabelle/fatture">vendite.fatture</a><br />
 • <a href="../../../../dbzero/anagrafiche/tabelle/billing_account">anagrafiche.billing_account</a><br />
+• <a href="../../../../dbzero/pagamenti/tabelle/centri_riscossione">pagamenti.centri_riscossione</a><br />
+• <a href="../../../../dbzero/pagamenti/tabelle/vendite_contabili">pagamenti.vendite_contabili</a><br />
+• <a href="../../../../dbzero/pagamenti/tabelle/vendite_contabili_righe">pagamenti.vendite_contabili_righe</a><br />
+• <a href="../../../../dbzero/pagamenti/tabelle/compensazioni">pagamenti.compensazioni</a><br />
 </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-02-2026)<br />
-<code>pagamenti.vendite_movimenti</code> registra i <strong>movimenti di incasso/rimborso</strong>
-associati alle fatture di vendita. Supporta piu<code>movimenti per fattura
-ed e</code> la base per determinare lo stato di pagamento.</p>
+<p>La tabella <strong><code>pagamenti.vendite_movimenti</code></strong> registra i movimenti di incasso/rimborso
+collegati alle fatture, con indicazione della <strong>provenienza</strong> (centro riscossione)
+ e dei parametri utili al calcolo interessi e alla contabilizzazione.</p>
 <hr />
 <h3 id="campi-chiave-semantica">🧱 Campi chiave (semantica)<a class="headerlink" href="#campi-chiave-semantica" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>fattura_id</code>: fattura di riferimento.</li>
-<li><code>billing_account_id</code>: denormalizzato per filtri veloci.</li>
-<li><code>data_effettiva</code>: data di incasso/rimborso.</li>
-<li><code>data_registrazione</code>: data di registrazione.</li>
-<li><code>data_contabile</code>: data contabile (opzionale).</li>
-<li><code>importo</code>: positivo = incasso, negativo = rimborso/storno.</li>
-<li><code>meta</code>: dettagli esterni (es. riferimento bonifico).</li>
+<li><code>fattura_id</code>: fattura collegata.</li>
+<li><code>billing_account_id</code>: intestatario.</li>
+<li><code>centro_riscossione_id</code>: origine incasso (banca/posta/cassa/compensazione).</li>
+<li><code>contabile_riga_id</code>: riga contabile di riferimento (se presente).</li>
+<li><code>contabile_id</code>: testata contabile (derivata da <code>contabile_riga_id</code> quando valorizzata).</li>
+<li><code>compensazione_id</code>: testata processo compensazione (se movimento da compensazione).</li>
+<li><code>data_effettiva</code>, <code>data_registrazione</code>, <code>data_valuta</code>, <code>data_contabile</code>: date movimento.</li>
+<li><code>data_per_calcolo_interessi</code>: data riferimento per interessi.</li>
+<li><code>data_contabilizzazione</code>: data invio/registrazione in contabilita.</li>
+<li><code>escluso_da_interessi</code>: esclude il movimento dal calcolo interessi.</li>
+<li><code>importo</code>: valore (positivo o negativo).</li>
 </ul>
 <hr />
-<h3 id="note-operative">✅ Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
+<h3 id="regole-principali">✅ Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Il pagamento puo<code>essere parziale (piu</code> movimenti).</li>
-<li>Una fattura e<code>considerata **pagata** quando</code>SUM(importo) &gt;= totale_a_pagare`
-  (policy da formalizzare in logica applicativa).</li>
+<li>Un movimento puo` essere collegato a una fattura o usato per compensazioni.</li>
+<li>I movimenti possono essere esclusi dal calcolo interessi.</li>
+<li>Se <code>contabile_riga_id</code> e<code>valorizzato,</code>contabile_id` deve essere coerente
+  con la testata della riga (guard applicativa).</li>
+<li><code>contabile_riga_id</code> e` univoco quando presente (1 movimento ↔ 1 riga contabile).</li>
 </ul>
+<hr />
+<h3 id="esempio-duso">🧪 Esempio d’uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">pagamenti</span><span class="p">.</span><span class="n">vendite_movimenti</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">fattura_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span><span class="p">;</span>
+</code></pre></div>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 <hr />
