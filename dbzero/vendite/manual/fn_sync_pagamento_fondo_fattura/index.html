@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#documentazione-concettuale-funzione-venditefn_sync_pagamento_fondo_fattura" class="md-skip">
+        <a href="#documentazione-concettuale-funzione-venditefn_sync_pagamento_fondo_fattura-deprecata" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -3337,15 +3337,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#documentazione-concettuale-funzione-venditefn_sync_pagamento_fondo_fattura" class="md-nav__link">
+  <a href="#documentazione-concettuale-funzione-venditefn_sync_pagamento_fondo_fattura-deprecata" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📘 Documentazione Concettuale – Funzione vendite.fn_sync_pagamento_fondo_fattura
+        📘 Documentazione Concettuale – Funzione vendite.fn_sync_pagamento_fondo_fattura (DEPRECATA)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Funzione vendite.fn_sync_pagamento_fondo_fattura">
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Funzione vendite.fn_sync_pagamento_fondo_fattura (DEPRECATA)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3419,44 +3419,41 @@
 
   <h1>Fn sync pagamento fondo fattura</h1>
 
-<h2 id="documentazione-concettuale-funzione-venditefn_sync_pagamento_fondo_fattura">📘 Documentazione Concettuale – Funzione <code>vendite.fn_sync_pagamento_fondo_fattura</code><a class="headerlink" href="#documentazione-concettuale-funzione-venditefn_sync_pagamento_fondo_fattura" title="Permanent link">&para;</a></h2>
+<h2 id="documentazione-concettuale-funzione-venditefn_sync_pagamento_fondo_fattura-deprecata">📘 Documentazione Concettuale – Funzione <code>vendite.fn_sync_pagamento_fondo_fattura</code> (DEPRECATA)<a class="headerlink" href="#documentazione-concettuale-funzione-venditefn_sync_pagamento_fondo_fattura-deprecata" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
 <p><strong>Approfondimento tabelle:</strong></p>
 <p>• <a href="../../../../dbzero/vendite/tabelle/fatture_fondi_fattura_source">vendite.fatture_fondi_fattura_source</a><br />
 • <a href="../../../../dbzero/pagamenti/tabelle/centri_riscossione">pagamenti.centri_riscossione</a><br />
-• <a href="../../../../dbzero/pagamenti/tabelle/vendite_movimenti">pagamenti.vendite_movimenti</a>  </p>
+• <a href="../../../../dbzero/pagamenti/tabelle/vendite_contabili">pagamenti.vendite_contabili</a><br />
+• <a href="../../../../dbzero/pagamenti/tabelle/vendite_contabili_righe">pagamenti.vendite_contabili_righe</a>  </p>
 <p><strong>Approfondimento funzioni:</strong></p>
-<p>• <a href="../../../../dbzero/pagamenti/funzioni/fn_get_saldo_fattura">pagamenti.fn_get_saldo_fattura</a><br />
+<p>• <a href="../../../../dbzero/vendite/funzioni/fn_sync_contabili_fondo_fattura">vendite.fn_sync_contabili_fondo_fattura</a><br />
 • <a href="../../../../dbzero/vendite/funzioni/fn_reset_fondi_fattura">vendite.fn_reset_fondi_fattura</a><br />
 </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 12-02-2026)<br />
-La funzione <strong><code>vendite.fn_sync_pagamento_fondo_fattura()</code></strong> allinea i
-movimenti in <code>pagamenti.vendite_movimenti</code> per i fondi fattura assegnati a una
-fattura figlia.</p>
+<p>(latest review 13-02-2026)<br />
+La funzione <strong><code>vendite.fn_sync_pagamento_fondo_fattura()</code></strong> e<code>mantenuta solo
+per retrocompatibilita</code> ed e<code>**deprecata**.
+La logica effettiva ora e</code> demandata a
+<strong><code>vendite.fn_sync_contabili_fondo_fattura()</code></strong>, che scrive su
+<code>pagamenti.vendite_contabili</code> / <code>pagamenti.vendite_contabili_righe</code>.</p>
 <hr />
 <h3 id="regole-principali">✅ Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>p_fattura_figlia_id</code> obbligatorio.</li>
-<li>Richiede un centro riscossione attivo con <code>is_fondo_fattura = true</code>.</li>
-<li>Lavora solo su source <code>ASSEGNATO</code> con <code>codice_interno = 'F_F_ADD_ACC'</code>.</li>
-<li>Se la fattura sorgente ha saldo <code>0</code>, la source viene portata a <code>ANNULLATO</code>.</li>
-<li>Per le source eseguibili crea/aggiorna un movimento dedicato in
-  <code>pagamenti.vendite_movimenti</code> con:</li>
-<li><code>centro_riscossione_id</code> di tipo fondo fattura</li>
-<li>date (<code>effettiva</code>, <code>registrazione</code>, <code>contabile</code>) allineate alla data fattura sorgente</li>
-<li><code>escluso_da_interessi = true</code></li>
-<li>metadato <code>origine = FONDO_FATTURA</code>.</li>
+<li>La funzione invoca internamente <code>vendite.fn_sync_contabili_fondo_fattura()</code>.</li>
+<li>I campi di output restano invariati (<code>inserted_movimenti</code>, <code>updated_movimenti</code>,
+  <code>annullati_source</code>) ma rappresentano ora il risultato della sync contabili.</li>
 </ul>
 <hr />
 <h3 id="output">✅ Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>Ritorna:</p>
 <ul>
-<li><code>inserted_movimenti</code>: movimenti inseriti</li>
-<li><code>updated_movimenti</code>: movimenti aggiornati</li>
+<li><code>inserted_movimenti</code>: righe contabili inserite (wrapper legacy)</li>
+<li><code>updated_movimenti</code>: righe contabili aggiornate (wrapper legacy)</li>
 <li><code>annullati_source</code>: source portate a stato <code>ANNULLATO</code></li>
 </ul>
 <hr />

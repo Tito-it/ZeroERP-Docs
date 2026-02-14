@@ -3428,7 +3428,6 @@
 • <a href="../../../../dbzero/pagamenti/tabelle/centri_riscossione">pagamenti.centri_riscossione</a><br />
 • <a href="../../../../dbzero/pagamenti/tabelle/vendite_contabili">pagamenti.vendite_contabili</a><br />
 • <a href="../../../../dbzero/pagamenti/tabelle/vendite_contabili_righe">pagamenti.vendite_contabili_righe</a><br />
-• <a href="../../../../dbzero/pagamenti/tabelle/compensazioni">pagamenti.compensazioni</a><br />
 </p>
 </blockquote>
 <hr />
@@ -3439,12 +3438,11 @@ collegati alle fatture, con indicazione della <strong>provenienza</strong> (cent
 <hr />
 <h3 id="campi-chiave-semantica">🧱 Campi chiave (semantica)<a class="headerlink" href="#campi-chiave-semantica" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>fattura_id</code>: fattura collegata.</li>
-<li><code>billing_account_id</code>: intestatario.</li>
+<li><code>fattura_id</code>: fattura collegata (obbligatoria; derivata da riga contabile se presente).</li>
+<li><code>billing_account_id</code>: intestatario (obbligatorio; derivato da riga contabile se presente).</li>
 <li><code>centro_riscossione_id</code>: origine incasso (banca/posta/cassa/compensazione).</li>
 <li><code>contabile_riga_id</code>: riga contabile di riferimento (se presente).</li>
 <li><code>contabile_id</code>: testata contabile (derivata da <code>contabile_riga_id</code> quando valorizzata).</li>
-<li><code>compensazione_id</code>: testata processo compensazione (se movimento da compensazione).</li>
 <li><code>data_effettiva</code>, <code>data_registrazione</code>, <code>data_valuta</code>, <code>data_contabile</code>: date movimento.</li>
 <li><code>data_per_calcolo_interessi</code>: data riferimento per interessi.</li>
 <li><code>data_contabilizzazione</code>: data invio/registrazione in contabilita.</li>
@@ -3454,10 +3452,11 @@ collegati alle fatture, con indicazione della <strong>provenienza</strong> (cent
 <hr />
 <h3 id="regole-principali">✅ Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Un movimento puo` essere collegato a una fattura o usato per compensazioni.</li>
+<li>I movimenti rappresentano il risultato di posting contabile.</li>
+<li>Le compensazioni sono tracciate sulla testata contabile (<code>vendite_contabili.compensazione_id</code>),
+  non direttamente sul movimento.</li>
 <li>I movimenti possono essere esclusi dal calcolo interessi.</li>
-<li>Se <code>contabile_riga_id</code> e<code>valorizzato,</code>contabile_id` deve essere coerente
-  con la testata della riga (guard applicativa).</li>
+<li>Se <code>contabile_riga_id</code> e<code>valorizzato,</code>contabile_id<code>,</code>fattura_id<code>e</code>billing_account_id` devono essere coerenti con la riga (guard applicativa).</li>
 <li><code>contabile_riga_id</code> e` univoco quando presente (1 movimento ↔ 1 riga contabile).</li>
 </ul>
 <hr />

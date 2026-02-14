@@ -3439,11 +3439,14 @@ e mantiene allineata la source in base al saldo documento.</p>
 <ul>
 <li>Parametri obbligatori (ID &gt; 0).</li>
 <li>Seleziona fatture con <code>minimo = true</code> nel perimetro BA/utility/tipo_doc/emittente/valuta.</li>
-<li>Inserisce nuove source con stato <code>DISPONIBILE</code> solo per fatture con saldo diverso da <code>0</code>.</li>
+<li>Inserisce nuove source con stato <code>DISPONIBILE</code> solo per fatture con saldo effettivo diverso da <code>0</code>.</li>
 <li>Se la source esiste gia` (non assegnata), aggiorna importo e stato:</li>
-<li><code>saldo = 0</code> -&gt; <code>ANNULLATO</code></li>
-<li><code>saldo &lt;&gt; 0</code> -&gt; <code>DISPONIBILE</code></li>
+<li><code>saldo_effettivo = 0</code> -&gt; <code>ANNULLATO</code></li>
+<li><code>saldo_effettivo &lt;&gt; 0</code> -&gt; <code>DISPONIBILE</code></li>
 <li>La funzione e` idempotente: riallinea i dati senza creare duplicati.</li>
+<li><code>saldo_effettivo</code> e` calcolato come:</li>
+<li><code>residuo_fattura (totale_a_pagare - movimenti)</code></li>
+<li>meno saldo contabile postabile (<code>vendite_contabili_righe_stati.is_postabile = true</code>).</li>
 </ul>
 <hr />
 <h3 id="output">✅ Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>

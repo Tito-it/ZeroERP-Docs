@@ -2596,6 +2596,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#minimi-e-fondi-fattura-processo-dedicato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Minimi e fondi fattura (processo dedicato)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#dashboard-emissione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4128,6 +4139,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#minimi-e-fondi-fattura-processo-dedicato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Minimi e fondi fattura (processo dedicato)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#dashboard-emissione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4493,6 +4515,32 @@ prima si eliminano i riepiloghi esistenti e poi si ricalcola. Il processo puo</c
 essere inserito in qualsiasi step della pipeline o eseguito da servizio dedicato.</p>
 <p>Nota: il ricalcolo assume che <code>iva_id</code> sia gia<code>valorizzato sulle righe fattura;
 questa parte e</code> demandata al processo di generazione righe (Python).</p>
+<h3 id="minimi-e-fondi-fattura-processo-dedicato">✅ Minimi e fondi fattura (processo dedicato)<a class="headerlink" href="#minimi-e-fondi-fattura-processo-dedicato" title="Permanent link">&para;</a></h3>
+<p>La gestione dei minimi e` costruita su due tabelle con ruoli distinti:</p>
+<ul>
+<li><code>vendite.fatture_fondi_fattura_source</code>:</li>
+<li>contiene le sorgenti dei fondi da applicare (minimi non ancora assorbiti,
+    residui da compensazione, ecc.);</li>
+<li>viene aggiornata in fase di fatturazione per allineare importo e stato
+    (<code>DISPONIBILE</code> / <code>ASSEGNATO</code> / <code>ANNULLATO</code>);</li>
+<li>funziona come backlog tecnico dei fondi ancora applicabili.</li>
+<li><code>vendite.fatture_fondi_fattura</code>:</li>
+<li>contiene i fondi effettivamente applicati alla fattura figlia;</li>
+<li>raccoglie tipologie che influenzano il <code>totale_a_pagare</code> ma non il
+    <code>totale_doc</code> (es. minimi, canone RAI, altre totalizzazioni dedicate).</li>
+</ul>
+<p>Scelta progettuale:</p>
+<ul>
+<li>separare <strong>source</strong> da <strong>applicato</strong> semplifica idempotenza, reset e ricalcolo;</li>
+<li>i processi di fatturazione aggiornano entrambe le tabelle a ogni run, mantenendo
+  coerenza tra stato sorgente e righe applicate in documento.</li>
+</ul>
+<p>Regola di controllo operativa:</p>
+<ul>
+<li>per decidere se una source e<code>ancora applicabile si usa il saldo effettivo
+  del documento (residuo fattura al netto delle componenti contabili postabili),
+  cosi</code> si evita di riincludere importi gia` in lavorazione.</li>
+</ul>
 <h3 id="dashboard-emissione">🖥️ Dashboard “Emissione”<a class="headerlink" href="#dashboard-emissione" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Preview del documento, controlli finali e numerazione.</li>

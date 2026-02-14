@@ -3422,15 +3422,18 @@
 <h2 id="documentazione-concettuale-funzione-pagamentitrgfn_vendite_contabili_guard_ente_centro">📘 Documentazione Concettuale – Funzione <code>pagamenti.trgfn_vendite_contabili_guard_ente_centro</code><a class="headerlink" href="#documentazione-concettuale-funzione-pagamentitrgfn_vendite_contabili_guard_ente_centro" title="Permanent link">&para;</a></h2>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <p>Validare la coerenza tra <code>centro_riscossione_id</code> della testata e
-<code>ente_incasso_id</code> quando presente.</p>
+<code>ente_incasso_id</code> quando presente, e applicare i vincoli della compensazione.</p>
 <h3 id="regole-applicate">✅ Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Se <code>ente_incasso_id</code> e<code>valorizzato, legge il</code>centro_riscossione_id` dell’ente.</li>
 <li>Blocca la scrittura se il centro dell’ente non coincide con quello della testata.</li>
+<li>Se <code>compensazione_id</code> e` valorizzato:</li>
+<li>richiede <code>centro_riscossione.is_compensazione = true</code></li>
+<li>blocca la scrittura se la testata risulta gia` collegata a un lotto.</li>
 </ul>
 <h3 id="quando-si-attiva">🔁 Quando si attiva<a class="headerlink" href="#quando-si-attiva" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>BEFORE INSERT OR UPDATE OF centro_riscossione_id, ente_incasso_id</code>
+<li><code>BEFORE INSERT OR UPDATE OF centro_riscossione_id, ente_incasso_id, compensazione_id</code>
   su <code>pagamenti.vendite_contabili</code>.</li>
 </ul>
 <h3 id="error-handling">⚠️ Error handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h3>

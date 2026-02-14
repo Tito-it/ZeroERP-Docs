@@ -3399,6 +3399,7 @@
 <li><a href="tabelle/enti_incasso/">enti_incasso</a> — La tabella <code>pagamenti.enti_incasso</code> rappresenta i canali di provenienza dei flussi di incasso (banca, poste, PSP, altro), collegando il canale ai riferimenti anagrafici e operativi necessari all'import e riconciliazione.</li>
 <li><a href="tabelle/sepa_mandati/">sepa_mandati</a></li>
 <li><a href="tabelle/vendite_contabili/">vendite_contabili</a> — La tabella <strong><code>pagamenti.vendite_contabili</code></strong> rappresenta la <strong>testata contabile</strong> per l’aggregazione di movimenti vendite. Serve a raggruppare movimenti per centro riscossione e data contabile, con eventuale dettaglio del canale (<code>ente_incasso</code>) e stato operativo della testata.</li>
+<li><a href="tabelle/vendite_contabili_lotti/">vendite_contabili_lotti</a> — Tabella ponte che collega i lotti di fatturazione (<code>vendite.fatturazione_lotti</code>) alle testate contabili vendite (<code>pagamenti.vendite_contabili</code>).</li>
 <li><a href="tabelle/vendite_contabili_righe/">vendite_contabili_righe</a> — La tabella <strong><code>pagamenti.vendite_contabili_righe</code></strong> contiene il dettaglio delle righe importate/gestite nella testata contabile vendite, con stato di lavorazione e riferimenti di abbinamento (fattura, billing account).</li>
 <li><a href="tabelle/vendite_contabili_righe_stati/">vendite_contabili_righe_stati</a> — (latest review 13-02-2026)   La tabella <strong><code>pagamenti.vendite_contabili_righe_stati</code></strong> definisce il lookup degli stati delle <strong>righe contabili</strong> legate ai movimenti vendite.</li>
 <li><a href="tabelle/vendite_contabili_stati/">vendite_contabili_stati</a> — (latest review 13-02-2026)   La tabella <strong><code>pagamenti.vendite_contabili_stati</code></strong> definisce il lookup degli stati della <strong>testata contabile vendite</strong>.</li>
@@ -3406,10 +3407,13 @@
 </ul>
 <h2 id="funzioni">⚙️ Funzioni<a class="headerlink" href="#funzioni" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="funzioni/fn_get_saldo_fattura/">fn_get_saldo_fattura</a> — (latest review 11-02-2026)   La funzione <strong><code>pagamenti.fn_get_saldo_fattura()</code></strong> restituisce il <strong>saldo</strong> movimenti di una fattura e un flag che indica se esistono movimenti.</li>
+<li><a href="funzioni/fn_get_or_create_vendite_contabile/">fn_get_or_create_vendite_contabile</a> — Recuperare una testata contabile vendite esistente oppure crearne una nuova, con possibilita` di collegarla al lotto fatturazione tramite tabella ponte.</li>
+<li><a href="funzioni/fn_get_saldo_fattura/">fn_get_saldo_fattura</a> — (latest review 13-02-2026)   La funzione <strong><code>pagamenti.fn_get_saldo_fattura()</code></strong> restituisce il <strong>residuo</strong> della fattura:</li>
+<li><a href="funzioni/fn_get_saldo_fattura_contabili/">fn_get_saldo_fattura_contabili</a> — (latest review 13-02-2026)   La funzione <strong><code>pagamenti.fn_get_saldo_fattura_contabili()</code></strong> restituisce il saldo contabile di una fattura calcolato sulle sole righe in stato <code>is_postabile = true</code>.</li>
 <li><a href="funzioni/trgfn_enti_incasso_guard_psp/">trgfn_enti_incasso_guard_psp</a> — Garantire la coerenza applicativa dei record <code>pagamenti.enti_incasso</code> quando il canale e<code>di tipo</code>PSP`.</li>
-<li><a href="funzioni/trgfn_vendite_contabili_guard_ente_centro/">trgfn_vendite_contabili_guard_ente_centro</a> — Validare la coerenza tra <code>centro_riscossione_id</code> della testata e <code>ente_incasso_id</code> quando presente.</li>
-<li><a href="funzioni/trgfn_vendite_movimenti_sync_contabile_from_riga/">trgfn_vendite_movimenti_sync_contabile_from_riga</a> — Mantenere coerente <code>contabile_id</code> su <code>pagamenti.vendite_movimenti</code> quando viene usato il riferimento a riga (<code>contabile_riga_id</code>).</li>
+<li><a href="funzioni/trgfn_vendite_contabili_guard_ente_centro/">trgfn_vendite_contabili_guard_ente_centro</a> — Validare la coerenza tra <code>centro_riscossione_id</code> della testata e <code>ente_incasso_id</code> quando presente, e applicare i vincoli della compensazione.</li>
+<li><a href="funzioni/trgfn_vendite_contabili_lotti_guard_compensazione/">trgfn_vendite_contabili_lotti_guard_compensazione</a> — Impedire l'associazione di testate contabili di compensazione alla tabella ponte dei lotti (<code>pagamenti.vendite_contabili_lotti</code>).</li>
+<li><a href="funzioni/trgfn_vendite_movimenti_sync_contabile_from_riga/">trgfn_vendite_movimenti_sync_contabile_from_riga</a> — Mantenere coerenti <code>contabile_id</code>, <code>fattura_id</code> e <code>billing_account_id</code> su <code>pagamenti.vendite_movimenti</code> quando viene usato il riferimento a riga (<code>contabile_riga_id</code>).</li>
 </ul>
 <h2 id="views">🔍 Views<a class="headerlink" href="#views" title="Permanent link">&para;</a></h2>
 
