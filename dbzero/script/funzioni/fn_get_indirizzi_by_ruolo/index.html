@@ -2271,6 +2271,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione dei pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/tx_id_implementation_guide/" class="md-nav__link">
         
   
@@ -2395,10 +2423,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_14" >
         
           
-          <label class="md-nav__link" for="__nav_7_13" id="__nav_7_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_14" id="__nav_7_14_label" tabindex="0">
             
   
   
@@ -2416,8 +2444,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_13">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3393,10 +3421,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#logica-di-composizione-priorita-indirizzo" class="md-nav__link">
+  <a href="#logica-attuale" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🗺️ Logica di Composizione (priorità indirizzo)
+        🗺️ Logica (attuale)
       
     </span>
   </a>
@@ -3488,7 +3516,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 30-11-25)
+<p>(latest review 15-02-26)
 Restituisce tutti gli <strong>indirizzi</strong> associati a uno specifico <code>soggetto_ruolo</code>, producendo per ciascuno:</p>
 <ul>
 <li>il <strong>tipo di indirizzo</strong> (<code>codice_interno</code>) e indicazione se <strong>normalizzato</strong>;</li>
@@ -3504,7 +3532,8 @@ Restituisce tutti gli <strong>indirizzi</strong> associati a uno specifico <code
 <li><code>stato_id</code>, <code>stato_iso2</code>, <code>stato_descrizione</code>,</li>
 <li><code>cap_codice</code>.</li>
 </ul>
-<p>Questa funzione centralizza la composizione dell’indirizzo, garantendo consistenza ed evitando ridondanza in query applicative o viste.</p>
+<p>Questa funzione usa il layer <strong>RUOLO</strong> come sorgente master e legge dalla vista resolved base.
+Non applica fallback su indirizzi soggetto (la policy master/fallback e demandata a <code>script.fn_get_indirizzo</code>).</p>
 <hr />
 <h3 id="firma">🧩 Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzi_by_ruolo</span><span class="p">(</span>
@@ -3698,27 +3727,18 @@ Restituisce tutti gli <strong>indirizzi</strong> associati a uno specifico <code
 </tbody>
 </table>
 <hr />
-<h3 id="logica-di-composizione-priorita-indirizzo">🗺️ Logica di Composizione (priorità indirizzo)<a class="headerlink" href="#logica-di-composizione-priorita-indirizzo" title="Permanent link">&para;</a></h3>
+<h3 id="logica-attuale">🗺️ Logica (attuale)<a class="headerlink" href="#logica-attuale" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>A → Normalizzato</strong> (<code>indirizzo_dettaglio_id</code> NOT NULL):
-   → <code>ad.indirizzo_normalizzato</code>, + <code>Comune</code>, <code>CAP</code>.</li>
-<li><strong>B → Indirizzo libero nazionale</strong> (<code>indirizzo_libero</code> NOT NULL):
-   → <code>ai.indirizzo_libero</code>, + <code>Comune</code>, <code>CAP</code>.</li>
-<li><strong>C → Internazionale / fallback</strong>:
-   → combinazione di <code>indirizzo_libero</code>, <code>locality</code>, <code>administrative_area</code>, <code>postal_box</code>.</li>
+<li>Legge da <code>anagrafiche.vw_indirizzi_resolved_base</code>.</li>
+<li>Filtra <code>scope = 'RUOLO'</code>.</li>
+<li>Filtra per <code>soggetto_ruolo_id = p_soggetto_ruolo_id</code>.</li>
+<li>Ordina per <code>tipo_indirizzo_codice, indirizzo_id</code>.</li>
 </ol>
-<p> Recupero dati territoriali indipendente: anche se campi mancanti nella tabella, vengono derivati attraverso join (<code>indirizzo_dettaglio → stradario → comune → provincia → stato</code>).</p>
 <hr />
 <h3 id="dipendenze-principali">🧷 Dipendenze principali<a class="headerlink" href="#dipendenze-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>anagrafiche.indirizzi</code> (ai)</li>
-<li><code>anagrafiche.indirizzi_dettaglio</code> (ad)</li>
-<li><code>config.tipi_indirizzi</code> (ti)</li>
-<li><code>config.comuni</code> (co)</li>
-<li><code>config.codici_postali</code> (cp)</li>
-<li><code>config.province</code> (pr)</li>
-<li><code>config.stati</code> (st)</li>
-<li><code>config.stradario</code> e <code>config.stradario_generale</code> (indiretto via ad)</li>
+<li><code>anagrafiche.vw_indirizzi_resolved_base</code></li>
+<li><code>anagrafiche.vw_indirizzi_resolved_ruolo</code></li>
 </ul>
 <hr />
 <h3 id="proprieta-tecniche">⚙️ Proprietà tecniche<a class="headerlink" href="#proprieta-tecniche" title="Permanent link">&para;</a></h3>

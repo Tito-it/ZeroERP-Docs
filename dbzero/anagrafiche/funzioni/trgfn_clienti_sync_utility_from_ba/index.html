@@ -2271,6 +2271,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione dei pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/tx_id_implementation_guide/" class="md-nav__link">
         
   
@@ -2395,10 +2423,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_14" >
         
           
-          <label class="md-nav__link" for="__nav_7_13" id="__nav_7_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_14" id="__nav_7_14_label" tabindex="0">
             
   
   
@@ -2416,8 +2444,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_13">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3534,7 +3562,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 15-12-25)
+<p>(latest review 15-02-26)
 La trigger function <strong><code>anagrafiche.trgfn_clienti_sync_utility_from_ba()</code></strong> garantisce la <strong>coerenza</strong> tra:</p>
 <ul>
 <li><code>anagrafiche.clienti.utility_id</code></li>
@@ -3545,6 +3573,8 @@ La trigger function <strong><code>anagrafiche.trgfn_clienti_sync_utility_from_ba
 <ol>
 <li>Se <code>clienti.utility_id</code> è <strong>NULL</strong>, viene <strong>ereditato</strong> da <code>billing_account.utility_id</code>.</li>
 <li>Se <code>clienti.utility_id</code> è valorizzato ma <strong>diverso</strong> da quello del billing account, viene generato un <strong>errore applicativo</strong>.</li>
+<li>Se <code>config.utilities.richiede_pdp = true</code> per l’utility risolta dal billing account, <code>clienti.pdp_id</code> deve essere valorizzato.</li>
+<li>Se <code>clienti.pdp_id</code> è valorizzato, la utility del PDP deve coincidere con la utility del billing account.</li>
 </ol>
 <hr />
 <h3 id="contesto-e-motivazione">🧭 Contesto e Motivazione<a class="headerlink" href="#contesto-e-motivazione" title="Permanent link">&para;</a></h3>
@@ -3631,6 +3661,17 @@ La trigger function <strong><code>anagrafiche.trgfn_clienti_sync_utility_from_ba
 <p><code>E_CLIENTE_UTILITY_MISMATCH_BA</code></p>
 </li>
 </ul>
+<p><strong>5) Policy PDP da configurazione utility</strong></p>
+<ul>
+<li>Legge <code>config.utilities.richiede_pdp</code> per <code>v_utility_id</code>.</li>
+<li>Se la utility non è trovata in configurazione -&gt; errore applicativo (<code>E_GENERICO</code> con dettaglio).</li>
+<li>Se <code>richiede_pdp = true</code> e <code>NEW.pdp_id IS NULL</code> -&gt; errore applicativo (<code>E_GENERICO</code> con dettaglio).</li>
+</ul>
+<p><strong>6) Coerenza utility tra PDP e billing account</strong></p>
+<ul>
+<li>Se <code>NEW.pdp_id IS NOT NULL</code>, legge <code>anagrafiche.pdp.utilities_id</code>.</li>
+<li>Se diversa da <code>v_utility_id</code> -&gt; errore applicativo (<code>E_GENERICO</code> con dettaglio mismatch).</li>
+</ul>
 <p>Payload log include:</p>
 <ul>
 <li><code>billing_account_id</code></li>
@@ -3661,6 +3702,11 @@ La trigger function <strong><code>anagrafiche.trgfn_clienti_sync_utility_from_ba
 <tr>
 <td><code>E_CLIENTE_UTILITY_MISMATCH_BA</code></td>
 <td>utility cliente diversa da utility BA</td>
+<td>errore applicativo (bloccante)</td>
+</tr>
+<tr>
+<td><code>E_GENERICO</code></td>
+<td>utility non configurata / PDP richiesto mancante / mismatch utility BA↔PDP</td>
 <td>errore applicativo (bloccante)</td>
 </tr>
 </tbody>
@@ -3733,6 +3779,8 @@ La trigger function <strong><code>anagrafiche.trgfn_clienti_sync_utility_from_ba
 <li><code>billing_account_id</code> valido con <code>ba.utility_id</code> non null + <code>NEW.utility_id NULL</code> → utility valorizzata automaticamente.</li>
 <li><code>billing_account_id</code> valido con <code>ba.utility_id NULL</code> → errore <code>E_BILLING_ACCOUNT_UTILITY_NULL</code>.</li>
 <li><code>billing_account_id</code> valido con mismatch → errore <code>E_CLIENTE_UTILITY_MISMATCH_BA</code>.</li>
+<li>Utility con <code>richiede_pdp=true</code> e <code>pdp_id</code> assente -&gt; errore applicativo.</li>
+<li><code>pdp_id</code> presente con <code>pdp.utilities_id</code> diverso da utility BA -&gt; errore applicativo.</li>
 </ol>
 <hr />
 <h3 id="best-practice">📌 Best Practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>

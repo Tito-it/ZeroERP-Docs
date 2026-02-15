@@ -2271,6 +2271,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione dei pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/tx_id_implementation_guide/" class="md-nav__link">
         
   
@@ -2395,10 +2423,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_14" >
         
           
-          <label class="md-nav__link" for="__nav_7_13" id="__nav_7_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_14" id="__nav_7_14_label" tabindex="0">
             
   
   
@@ -2416,8 +2444,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_13">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3393,6 +3421,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#regola-richiede_pdp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔒 Regola richiede_pdp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#registro-di-fatturazione-fallback" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3434,7 +3473,7 @@
 <p>La tabella <strong><code>utilities</code></strong> costituisce il cuore modulare di Zero ERP: da qui si definiscono i settori funzionali dell’applicazione, sia quelli comuni a tutte le aziende sia le estensioni specifiche per ogni ramo di attività.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 24-01-2026)
+<p>(latest review 15-02-2026)
 * <strong>Definizione del settore</strong>
   Tabella dove si definiscono i tipi di "utilities" a cui l’azienda è rivolta. Ogni record identifica un settore di business specifico: per esempio manifatturiero, gas o telecom.
 * <strong>Componente standard e specifica</strong>
@@ -3446,8 +3485,14 @@
   Le funzionalità core (anagrafiche, preventivi, magazzino, fatturazione, reportistica, notifiche) costituiscono la base su cui si innestano i moduli verticali.</li>
 <li><strong>Estendibilità controllata</strong>
   Per ogni nuovo settore (manifatturiero, gas, acqua, elettricità, fonia/telecom, ecc.) si sfruttano gli stessi schemi dati e servizi condivisi, evitando duplicazioni di codice e accelerando i tempi di sviluppo.</li>
-<li><strong>Configurazione dinamica</strong>
-  La definizione  di un record di <code>utilities</code> abilita  il modulo corrispondente senza intervenire sul codice, permettendo adattamenti rapidi alle esigenze aziendali.</li>
+<li>
+<p><strong>Configurazione dinamica</strong>
+  La definizione  di un record di <code>utilities</code> abilita  il modulo corrispondente senza intervenire sul codice, permettendo adattamenti rapidi alle esigenze aziendali.</p>
+</li>
+<li>
+<p><strong>Policy PDP configurabile</strong>
+  Il flag <code>richiede_pdp</code> definisce a livello configurativo se, per quella utility, il PDP e` un requisito operativo.</p>
+</li>
 </ul>
 <hr />
 <h3 id="modalita-base-e-settori-verticali">🚀 Modalità “Base” e Settori Verticali<a class="headerlink" href="#modalita-base-e-settori-verticali" title="Permanent link">&para;</a></h3>
@@ -3485,8 +3530,26 @@
   Nessun deploy di codice richiesto per attivare o disattivare moduli: basta un update in tabella.</li>
 <li><strong>Sviluppo Accelerato</strong>
   Le nuove verticalizzazioni si costruiscono sulle componenti esistenti, riducendo tempi e costi di realizzazione.</li>
-<li><strong>Manutenzione Semplificata</strong>
-  Tutte le regole di attivazione e configurazione dei moduli risiedono in un’unica tabella, evitando la dispersione in configurazioni multiple.</li>
+<li>
+<p><strong>Manutenzione Semplificata</strong>
+  Tutte le regole di attivazione e configurazione dei moduli risiedono in un’unica tabella, evitando la dispersione in configurazioni multiple.</p>
+</li>
+<li>
+<p><strong>Regole uniformi PDP/non-PDP</strong>
+  Le validazioni su istanze/clienti possono usare un solo punto di verita<code>(</code>config.utilities.richiede_pdp`) senza hardcode per singolo settore.</p>
+</li>
+</ul>
+<hr />
+<h3 id="regola-richiede_pdp">🔒 Regola <code>richiede_pdp</code><a class="headerlink" href="#regola-richiede_pdp" title="Permanent link">&para;</a></h3>
+<p><code>config.utilities.richiede_pdp</code>:</p>
+<ul>
+<li><code>true</code> -&gt; PDP obbligatorio nelle transizioni operative dell’utility (es. attivazione).</li>
+<li><code>false</code> -&gt; PDP opzionale/assente ammesso.</li>
+</ul>
+<p>Setup atteso:</p>
+<ul>
+<li>utility <code>GAS</code>, <code>ENERGIA</code>, <code>IDRICO</code> -&gt; <code>richiede_pdp = true</code></li>
+<li>quando non sono <code>GAS</code>, <code>ENERGIA</code>, <code>IDRICO</code> -&gt; <code>richiede_pdp = false</code></li>
 </ul>
 <hr />
 <blockquote>

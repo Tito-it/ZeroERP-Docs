@@ -2271,6 +2271,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione dei pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/tx_id_implementation_guide/" class="md-nav__link">
         
   
@@ -2395,10 +2423,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_14" >
         
           
-          <label class="md-nav__link" for="__nav_7_13" id="__nav_7_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_14" id="__nav_7_14_label" tabindex="0">
             
   
   
@@ -2416,8 +2444,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_13">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3487,14 +3515,17 @@ La funzione <strong><code>script.fn_get_indirizzo</code></strong> restituisce <s
 <li><strong>delega integralmente</strong> il recupero e la normalizzazione dei dati a <code>script.fn_get_indirizzi_by_ruolo</code>,</li>
 <li>aggiunge una logica di <strong>fallback multi-livello</strong> basata sulla matrice di configurazione
   <a href="../../../../dbzero/config/tabelle/tipi_ruolo_tipi_indirizzo"><code>config.tipi_ruolo_tipi_indirizzo</code></a>.</li>
+<li>se il layer ruolo non risolve alcun indirizzo, applica fallback sul layer soggetto
+  tramite <code>script.fn_get_indirizzo_by_soggetto</code>.</li>
 </ul>
 <p>In pratica:</p>
 <blockquote>
-<p>“Dammi l’indirizzo per questo tipo; se non esiste, segui la catena di fallback definita in <code>config.tipi_ruolo_tipi_indirizzo</code> finché trovi uno o più indirizzi utilizzabili, o finché la catena termina.”</p>
+<p>“Dammi l’indirizzo per questo tipo dal layer ruolo; se non esiste, segui la catena fallback del ruolo e, in ultima istanza, usa il layer soggetto.”</p>
 </blockquote>
 <p>📌 <strong>Nota di ambito</strong>
-La funzione opera <strong>esclusivamente a livello di <code>soggetto_ruolo</code></strong> e utilizza la matrice <strong>ruolo ↔ tipo indirizzo</strong>.
-Non coinvolge né consulta la matrice <code>config.tipi_soggetto_dettaglio_tipi_indirizzo</code>, che è invece riferita agli indirizzi <strong>diretti del soggetto</strong>.</p>
+La funzione opera con policy:
+* <strong>master</strong> su <code>soggetto_ruolo</code> (matrice <strong>ruolo ↔ tipo indirizzo</strong>),
+* <strong>fallback finale</strong> su indirizzi diretti del soggetto (matrice <code>config.tipi_soggetto_dettaglio_tipi_indirizzo</code>).</p>
 <hr />
 <h3 id="firma-reale">🧩 Firma (reale)<a class="headerlink" href="#firma-reale" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span>
@@ -3610,10 +3641,10 @@ Non coinvolge né consulta la matrice <code>config.tipi_soggetto_dettaglio_tipi_
 <p>La funzione implementa una <strong>ricerca iterativa con fallback configurabile</strong>:</p>
 <ol>
 <li>Determina il <strong>tipo ruolo</strong> associato al <code>soggetto_ruolo</code>.</li>
-<li>Prova a recuperare indirizzi del tipo richiesto (<code>p_tipo_codice</code>).</li>
+<li>Prova a recuperare indirizzi del tipo richiesto (<code>p_tipo_codice</code>) nel layer ruolo.</li>
 <li>Se vengono trovati uno o più record, <strong>li restituisce e termina</strong>.</li>
 <li>
-<p>In assenza di risultati:</p>
+<p>In assenza di risultati nel layer ruolo:</p>
 </li>
 <li>
 <p>consulta <code>config.tipi_ruolo_tipi_indirizzo</code> per individuare un <code>fallback_tipo_indirizzo_id</code>,</p>
@@ -3621,13 +3652,14 @@ Non coinvolge né consulta la matrice <code>config.tipi_soggetto_dettaglio_tipi_
 <li>traduce l’ID in <code>codice_interno</code>,</li>
 <li>ripete il tentativo.</li>
 <li>
-<p>La catena termina quando:</p>
+<p>La catena ruolo termina quando:</p>
 </li>
 <li>
 <p>viene trovato almeno un indirizzo,</p>
 </li>
 <li>il fallback è <code>NULL</code>,</li>
 <li>viene rilevato un <strong>loop</strong> nella catena (protezione A → B → A).</li>
+<li>Se il layer ruolo non produce risultati, applica fallback su <code>script.fn_get_indirizzo_by_soggetto(...)</code>.</li>
 </ol>
 <p>📌 <strong>Comportamento intenzionale</strong>: la funzione <strong>non solleva errori</strong> se nessun indirizzo è disponibile; restituisce semplicemente zero righe.</p>
 <hr />
