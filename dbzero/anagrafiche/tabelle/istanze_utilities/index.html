@@ -3690,7 +3690,8 @@
 </ul>
 <p>Approfondimeto funzioni:</p>
 <ul>
-<li><a href="../../../../dbzero/anagrafiche/funzioni/trgfn_istanze_utilities_clean_fields">anagrafiche.trgfn_istanze_utilities_clean_fields</a>   </li>
+<li><a href="../../../../dbzero/anagrafiche/funzioni/trgfn_istanze_utilities_normalize">anagrafiche.trgfn_istanze_utilities_normalize</a>   </li>
+<li><a href="../../../../dbzero/anagrafiche/funzioni/trgfn_istanze_utilities_gen_codice">anagrafiche.trgfn_istanze_utilities_gen_codice</a>   </li>
 <li><a href="../../../../dbzero/script/funzioni/trgfn_audit_data_user_generic">script.trgfn_audit_data_user_generic</a>   </li>
 <li><a href="../../../../dbzero/config/manual/sistema_codici">config.sistema_codici</a>   </li>
 <li><a href="../../../../dbzero/dbops/funzioni/trgfn_tx_id_managed">dbops.trgfn_tx_id_managed</a>   </li>
@@ -3698,7 +3699,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 08-12-25)
+<p>(latest review 15-02-26)
 * Registrare ogni <strong>attivazione</strong> di servizio (volta) per un soggetto su un punto di erogazione.
 * Gestire la <strong>gerarchia</strong> delle attivazioni successive (subentri/volture) tramite <code>parent_istanza_id</code>.
 * Supportare record <strong>fittizi</strong>, ossia senza indirizzo obbligatorio.</p>
@@ -3742,14 +3743,14 @@
 <ul>
 <li><strong><code>ix_istanze_utilities_soggetto_id</code></strong>: ricerca rapida per soggetto.</li>
 <li><strong><code>ix_istanze_utilities_indirizzo_dettaglio_id</code></strong>: filtri per indirizzo di dettaglio.</li>
-<li><strong><code>uq_istanze_utilities_codice_istanza</code></strong>: garantisce l’unicità di <code>codice_istanza</code>.</li>
+<li><strong><code>uq_istanze_utilities_codice</code></strong>: garantisce l’unicità di <code>codice</code>.</li>
 </ul>
 <hr />
 <h3 id="vantaggi-operativi">💡 Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Tracciabilità subentri</strong>: <code>parent_istanza_id</code> consente di ricostruire facilmente la sequenza di attivazioni.</li>
 <li><strong>Flessibilità</strong>: supporto per istanze senza indirizzo tramite flag <code>fittizia</code>.</li>
-<li><strong>Coerenza</strong>: <code>codice_istanza</code> e <code>tx_id</code> generati automaticamente via trigger (sistema_codici + tx_id).</li>
+<li><strong>Coerenza</strong>: <code>codice</code> e <code>tx_id</code> generati automaticamente via trigger (sistema_codici + tx_id).</li>
 </ul>
 <hr />
 <h3 id="trigger-e-funzioni-coinvolte">⚙️ Trigger e Funzioni Coinvolte<a class="headerlink" href="#trigger-e-funzioni-coinvolte" title="Permanent link">&para;</a></h3>
@@ -3763,9 +3764,14 @@
 </thead>
 <tbody>
 <tr>
-<td><code>trg_istanze_utilities_clean_fields_ins_upd</code></td>
+<td><code>trg_istanze_utilities_normalize_ins_upd</code></td>
 <td>BEFORE INSERT OR UPDATE</td>
-<td><code>anagrafiche.trgfn_istanze_utilities_clean_fields_ins_upd()</code></td>
+<td><code>anagrafiche.trgfn_istanze_utilities_normalize()</code></td>
+</tr>
+<tr>
+<td><code>trg_istanze_utilities_a10_gen_codice_ins_upd</code></td>
+<td>BEFORE INSERT OR UPDATE</td>
+<td><code>anagrafiche.trgfn_istanze_utilities_gen_codice()</code></td>
 </tr>
 <tr>
 <td><code>trg_istanze_utilities_gen_tx_id_ins_upd</code></td>
@@ -3784,7 +3790,7 @@
 <ul>
 <li><code>parent_istanza_id</code>, <code>soggetto_id</code> e <code>indirizzo_dettaglio_id</code> garantiscono integrità referenziale.</li>
 <li>Vincolo <code>CHECK (fittizia = true OR indirizzo_dettaglio_id IS NOT NULL)</code> assicura coerenza tra flag e indirizzo.</li>
-<li>Unicità di <code>codice_istanza</code> evita duplicazioni su punti di erogazione.</li>
+<li>Unicità di <code>codice</code> evita duplicazioni su punti di erogazione.</li>
 </ul>
 <hr />
 <h2 id="integrazione-con-pdp-anagrafichepdp">➕ Integrazione con <strong>PDP</strong> (<code>anagrafiche.pdp</code>)<a class="headerlink" href="#integrazione-con-pdp-anagrafichepdp" title="Permanent link">&para;</a></h2>
@@ -3809,7 +3815,7 @@
 <ol>
 <li><strong>Coerenza fisica</strong>: il PDP è un’entità <strong>ancorata</strong> all’indirizzo; il link con la stessa <code>istanze_utilities</code> evita mismatch.</li>
 <li><strong>Pre‑attivazione supportata</strong>: istanze senza PDP sono lecite; l’associazione avviene solo quando disponibile.</li>
-<li><strong>Cardinalità controllata</strong>: grazie a <code>UNIQUE (indirizzo_dettaglio_id, utilities_id)</code> su <code>anagrafiche.pdp</code>, per uno stesso indirizzo esiste <strong>al più un PDP per utility</strong>; l’istanza si lega quindi ad <strong>al più un PDP</strong> coerente con il proprio indirizzo.</li>
+<li><strong>Cardinalità controllata</strong>: grazie a <code>UNIQUE (indirizzo_dettaglio_id, utility_id)</code> su <code>anagrafiche.pdp</code>, per uno stesso indirizzo esiste <strong>al più un PDP per utility</strong>; l’istanza si lega quindi ad <strong>al più un PDP</strong> coerente con il proprio indirizzo.</li>
 <li><strong>Query più semplici</strong>: la FK composita consente join diretti e sicuri senza ulteriori condizioni sull’indirizzo.</li>
 </ol>
 <hr />

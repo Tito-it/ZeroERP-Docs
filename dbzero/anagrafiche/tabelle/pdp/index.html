@@ -3399,6 +3399,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#22-nota-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Nota naming
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stato-tecnico-del-pdp" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3497,7 +3508,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 06-12-25)
+<p>(latest review 15-02-26)
 La tabella <strong><code>anagrafiche.pdp</code></strong> rappresenta i <strong>Punti di Prelievo (PDP)</strong>, entità fisiche ancorate a un indirizzo e identificate da un codice univoco globale (POD/PDR/altro). Ogni PDP appartiene a una utility (GAS, ENERGIA, ecc.) ed espone <strong>lo stato tecnico corrente</strong>, distinto dagli stati commerciali del cliente.</p>
 <p>La progettazione segue tre principi chiave:</p>
 <ol>
@@ -3517,7 +3528,7 @@ La tabella <strong><code>anagrafiche.pdp</code></strong> rappresenta i <strong>P
 <ul>
 <li><strong>PK</strong>: <code>id BIGINT IDENTITY</code></li>
 <li><strong>Codice PDP</strong>: <code>pdp VARCHAR(30)</code>, <strong>univoco globale e immutabile</strong></li>
-<li><strong>Utility</strong>: <code>utilities_id BIGINT NOT NULL</code> → FK <code>config.utilities(id)</code></li>
+<li><strong>Utility</strong>: <code>utility_id BIGINT NOT NULL</code> → FK <code>config.utilities(id)</code></li>
 <li><strong>Indirizzo fisico</strong>: <code>indirizzo_dettaglio_id BIGINT NOT NULL</code> → FK</li>
 <li><strong>Cliente corrente</strong>: <code>cliente_id BIGINT NULL</code> → FK</li>
 <li><strong>Stato tecnico</strong>: <code>stato_pdp_id BIGINT NOT NULL</code> → FK <code>config.stati_pdp(id)</code></li>
@@ -3525,6 +3536,13 @@ La tabella <strong><code>anagrafiche.pdp</code></strong> rappresenta i <strong>P
 <li><strong>Storicizzazione</strong>: <code>storicizza BOOLEAN DEFAULT TRUE</code></li>
 <li><strong>Extra info</strong>: JSONB</li>
 </ul>
+<h3 id="22-nota-naming">2.2 Nota naming<a class="headerlink" href="#22-nota-naming" title="Permanent link">&para;</a></h3>
+<p>Nel modello attuale:</p>
+<ul>
+<li><code>anagrafiche.pdp</code> usa <strong><code>utility_id</code></strong>;</li>
+<li>la documentazione e le viste applicative sono allineate allo stesso naming.</li>
+</ul>
+<p>Il riferimento funzionale resta unico: FK verso <code>config.utilities.id</code>.</p>
 <hr />
 <h3 id="stato-tecnico-del-pdp">🔄 Stato tecnico del PDP<a class="headerlink" href="#stato-tecnico-del-pdp" title="Permanent link">&para;</a></h3>
 <p>Con le modifiche concordate, il PDP ora include il campo:</p>
@@ -3573,11 +3591,11 @@ La tabella <strong><code>anagrafiche.pdp</code></strong> rappresenta i <strong>P
 <h3 id="vincoli-e-relazioni">⚙️ Vincoli e Relazioni<a class="headerlink" href="#vincoli-e-relazioni" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>UNIQUE (pdp)</strong> → codice univoco globale</li>
-<li><strong>UNIQUE (indirizzo_dettaglio_id, utilities_id)</strong> → massimo un PDP per utility per indirizzo</li>
+<li><strong>UNIQUE (indirizzo_dettaglio_id, utility_id)</strong> → massimo un PDP per utility per indirizzo</li>
 <li><strong>UNIQUE (id, indirizzo_dettaglio_id)</strong> → supporto alla FK composita da istanze</li>
 <li><strong>CHECK length(pdp)</strong> → verifica formale</li>
 <li><strong>FK stato_pdp_id → config.stati_pdp</strong></li>
-<li>Indici: <code>idx_pdp_utilities_id</code>, <code>idx_pdp_indirizzo_dettaglio_id</code>, <code>idx_pdp_cliente_id</code>, <code>idx_pdp_stato_pdp_id</code></li>
+<li>Indici: <code>ix_anagrafiche_pdp_utility_id</code>, <code>ix_anagrafiche_pdp_indirizzo_dettaglio_id</code>, <code>ix_anagrafiche_pdp_cliente_id</code></li>
 </ul>
 <hr />
 <h3 id="considerazioni-architetturali-aggiornate">🔍 Considerazioni architetturali aggiornate<a class="headerlink" href="#considerazioni-architetturali-aggiornate" title="Permanent link">&para;</a></h3>

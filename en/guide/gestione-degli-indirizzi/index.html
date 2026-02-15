@@ -2444,6 +2444,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#85-validazione-pgtap-stato-punto-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5. Validazione pgTAP (stato punto 2.4)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3866,6 +3877,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#85-validazione-pgtap-stato-punto-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5. Validazione pgTAP (stato punto 2.4)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4149,6 +4171,28 @@ erDiagram
     indirizzi_soggetti  ||--o{ vw_indirizzi_resolved_soggetto : resolved
     vw_indirizzi_resolved_ruolo ||--o{ vw_indirizzi_resolved_all : union
     vw_indirizzi_resolved_soggetto ||--o{ vw_indirizzi_resolved_all : union</code></pre>
+<h3 id="85-validazione-pgtap-stato-punto-24">8.5. Validazione pgTAP (stato punto 2.4)<a class="headerlink" href="#85-validazione-pgtap-stato-punto-24" title="Permanent link">&para;</a></h3>
+<p>Il punto <strong>2.4 - Doppio layer indirizzi (ruolo/soggetto)</strong> e' validato da:</p>
+<ul>
+<li><code>db/pgtap/anagrafiche/test-indirizzi-fallback.sql</code></li>
+</ul>
+<p>Copertura attuale (14 assert):</p>
+<ol>
+<li>Presenza Gestore di test.</li>
+<li>Presenza tipi indirizzo minimi (<code>RES</code>, <code>SEDELEG</code>).</li>
+<li>Upsert idempotente di <code>indirizzi_dettaglio</code>.</li>
+<li>Pre-condizione: assenza indirizzi ruolo <code>RES/SEDELEG/SEDEOP</code>.</li>
+<li>Guard: blocco inserimento <code>RES</code> su Gestore.</li>
+<li>Verifica post-guard: nessun <code>RES</code> inserito.</li>
+<li>Inserimento <code>SEDELEG</code> su ruolo riuscito.</li>
+<li>Fallback <code>fn_get_indirizzo(..., 'SEDEOP') -&gt; SEDELEG</code>.</li>
+<li>Coerenza <code>fn_get_indirizzi_by_ruolo</code> con <code>vw_indirizzi_resolved_base</code> (<code>scope='RUOLO'</code>).</li>
+<li>Presenza <code>SEDELEG</code> in <code>fn_get_indirizzi_by_ruolo</code>.</li>
+<li>Coerenza <code>fn_get_indirizzi_by_soggetto</code> con <code>vw_indirizzi_resolved_base</code> (<code>scope='SOGGETTO'</code>).</li>
+<li>Dominio <code>source</code> valido in <code>vw_indirizzi_resolved_all</code> (<code>RUOLO</code>/<code>SOGGETTO</code>).</li>
+<li><code>SEDELEG</code> di ruolo in <code>vw_indirizzi_resolved_all</code> con <code>source='RUOLO'</code>.</li>
+<li>Coerenza cardinalita: <code>vw_indirizzi_resolved_all = vw_indirizzi_resolved_ruolo + vw_indirizzi_resolved_soggetto</code>.</li>
+</ol>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 

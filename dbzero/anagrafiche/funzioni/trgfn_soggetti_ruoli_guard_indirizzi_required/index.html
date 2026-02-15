@@ -3481,7 +3481,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 28-12-25)
+<p>(latest review 15-02-26)
 Verificare che un <strong>ruolo soggetto</strong> abbia tutti i tipi di indirizzo <strong>obbligatori</strong> definiti nella matrice <code>config.tipi_ruolo_tipi_indirizzo</code>.</p>
 <p>Se per il tipo ruolo sono presenti righe di matrice con <code>obbligatorio = true</code>, la funzione controlla l'esistenza di almeno un indirizzo (anche tramite fallback) per ciascun tipo richiesto.</p>
 <hr />
@@ -3496,6 +3496,9 @@ Verificare che un <strong>ruolo soggetto</strong> abbia tutti i tipi di indirizz
 <li>validita' temporale (<code>valido_dal</code>/<code>valido_al</code>)</li>
 <li>presenza di un indirizzo con <code>tipo_indirizzo_id</code> oppure il relativo <code>fallback_tipo_indirizzo_id</code>.</li>
 <li>Se trova un obbligatorio mancante, genera errore applicativo.</li>
+<li>Il controllo e' eseguito da <strong>constraint trigger deferrable</strong>:</li>
+<li>default: a fine transazione (<code>COMMIT</code>);</li>
+<li>anticipabile con <code>SET CONSTRAINTS ... IMMEDIATE</code>.</li>
 </ol>
 <hr />
 <h3 id="errori-gestiti">🚨 Errori Gestiti<a class="headerlink" href="#errori-gestiti" title="Permanent link">&para;</a></h3>
@@ -3517,10 +3520,11 @@ Verificare che un <strong>ruolo soggetto</strong> abbia tutti i tipi di indirizz
 <code>script.fn_log_and_raise_error('&lt;contesto&gt;', '&lt;funzione&gt;', '&lt;codice&gt;', &lt;meta&gt;, NEW.tx_id, ...)</code>.</p>
 <hr />
 <h2 id="trigger-associato">🔗 Trigger Associato<a class="headerlink" href="#trigger-associato" title="Permanent link">&para;</a></h2>
-<p>Questa funzione e' tipicamente usata come guard su <code>anagrafiche.soggetti_ruoli</code>, ad esempio:</p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_soggetti_ruoli_guard_indirizzi_required</span>
-<span class="w">  </span><span class="k">BEFORE</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span>
+<p>Questa funzione e' usata come <strong>constraint trigger DEFERRABLE INITIALLY DEFERRED</strong> su <code>anagrafiche.soggetti_ruoli</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_soggetti_ruoli_def_guard_indirizzi_required_aft_ins_upd</span>
+<span class="w">  </span><span class="k">AFTER</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span>
 <span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span>
+<span class="w">  </span><span class="k">DEFERRABLE</span><span class="w"> </span><span class="k">INITIALLY</span><span class="w"> </span><span class="k">DEFERRED</span>
 <span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
 <span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">trgfn_soggetti_ruoli_guard_indirizzi_required</span><span class="p">();</span>
 </code></pre></div>
