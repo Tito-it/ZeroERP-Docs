@@ -3501,10 +3501,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#33-matrice-configurativa-stato-reale-gap-e-azioni" class="md-nav__link">
+  <a href="#33-matrice-configurativa-stato-reale-gap-e-azioni-chiuso" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.3 Matrice configurativa: stato reale, gap e azioni
+        3.3 Matrice configurativa: stato reale, gap e azioni (CHIUSO)
       
     </span>
   </a>
@@ -3512,10 +3512,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#34-incoerenza-narrativa-tra-guide-su-indirizzi-per-ruolo-vs-soggetto" class="md-nav__link">
+  <a href="#34-incoerenza-narrativa-tra-guide-su-indirizzi-per-ruolo-vs-soggetto-chiuso" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.4 Incoerenza narrativa tra guide su indirizzi per ruolo vs soggetto
+        3.4 Incoerenza narrativa tra guide su indirizzi per ruolo vs soggetto (CHIUSO)
       
     </span>
   </a>
@@ -3523,10 +3523,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#35-punto-da-verificare-indice-geoloc-documentato-come-gist-ma-definito-btree" class="md-nav__link">
+  <a href="#35-indice-geoloc-indirizzi-mismatch-namingengine-in-remediation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.5 Punto da verificare: indice geoloc documentato come GIST ma definito BTREE
+        3.5 Indice geoloc indirizzi: mismatch naming/engine (in remediation)
       
     </span>
   </a>
@@ -3960,7 +3960,7 @@ Ambito: revisione di gravita su incongruenze strutturali e miglioramenti ad alto
 <li>Corrette anche alcune tipizzazioni descrittive errate nella vista <code>vw_istanze_utilities_dettaglio</code>.</li>
 </ul>
 <hr />
-<h3 id="33-matrice-configurativa-stato-reale-gap-e-azioni">3.3 Matrice configurativa: stato reale, gap e azioni<a class="headerlink" href="#33-matrice-configurativa-stato-reale-gap-e-azioni" title="Permanent link">&para;</a></h3>
+<h3 id="33-matrice-configurativa-stato-reale-gap-e-azioni-chiuso">3.3 Matrice configurativa: stato reale, gap e azioni <strong>(CHIUSO)</strong><a class="headerlink" href="#33-matrice-configurativa-stato-reale-gap-e-azioni-chiuso" title="Permanent link">&para;</a></h3>
 <p>Cosa e stato verificato:</p>
 <ul>
 <li>la matrice indirizzi per ruolo esiste: <code>config.tipi_ruolo_tipi_indirizzo</code>;</li>
@@ -3970,8 +3970,8 @@ Ambito: revisione di gravita su incongruenze strutturali e miglioramenti ad alto
 </ul>
 <p>Cosa manca (gap reale):</p>
 <ul>
-<li>non esiste una matrice generale <code>utility -&gt; tipo_soggetto</code> e <code>utility -&gt; tipo_ruolo</code> per governare ammissibilita cross-dominio;</li>
-<li>quindi la regola "quali ruoli/soggetti sono ammessi per una utility" non e configurata in modo esplicito e centralizzato;</li>
+<li>non esiste una matrice generale <code>utility -&gt; tipo_ruolo</code> per governare ammissibilita ruolo-specifica per utility;</li>
+<li>per <code>tipo_soggetto</code> la scelta architetturale confermata e: nessun vincolo dedicato (potenzialmente tutti ammessi);</li>
 <li>il comportamento fail-open delle matrici indirizzi (se assenti: nessuna restrizione) resta un rischio operativo in ambienti non completamente configurati.</li>
 </ul>
 <p>Impatto:</p>
@@ -3986,25 +3986,98 @@ Ambito: revisione di gravita su incongruenze strutturali e miglioramenti ad alto
 <li><code>config.tipi_ruolo_tipi_indirizzo</code></li>
 <li><code>config.tipi_soggetto_dettaglio_tipi_indirizzo</code></li>
 <li>esplicitare che la policy utility oggi copre solo <code>richiede_pdp</code> (non copre ammissibilita ruoli/soggetti);</li>
+<li>esplicitare la decisione architetturale: nessuna matrice <code>utility -&gt; tipo_soggetto</code> (ammissibilita ampia by design);</li>
 <li>esplicitare il comportamento fail-open attuale e quando puo essere accettabile;</li>
 <li>aggiungere una nota architetturale che separi:</li>
 <li>governance indirizzi (coperta),</li>
-<li>governance utility-&gt;ruolo/soggetto (non ancora coperta).</li>
+<li>governance utility-&gt;ruolo (eventuale estensione futura),</li>
+<li>governance utility-&gt;tipo_soggetto (scelta consapevole: non vincolata).</li>
 </ol>
 <p>Cosa sviluppare:</p>
 <ol>
 <li>introdurre una nuova matrice configurativa per ammissibilita utility:</li>
-<li>opzione A: <code>config.utilities_tipi_ruolo</code></li>
-<li>opzione B: <code>config.utilities_tipi_soggetto_dettaglio</code></li>
-<li>opzione C: entrambe (consigliata per chiarezza semantica)</li>
-<li>aggiungere guard DB che validino la coerenza utility con ruolo/soggetto nei punti di ingresso principali (es. clienti/istanze/billing account secondo ownership);</li>
+<li>proposta: <code>config.utilities_tipi_ruolo</code>;</li>
+<li>comportamento default raccomandato: se non configurata nessuna riga per una utility -&gt; nessun vincolo (fail-open controllato).</li>
+<li>non introdurre matrice <code>utility -&gt; tipo_soggetto_dettaglio</code> (scelta progettuale: tutti i tipi soggetto potenzialmente ammessi).</li>
+<li>aggiungere guard DB opzionali che validino la coerenza utility con tipo_ruolo nei punti di ingresso principali (es. clienti/istanze/billing account secondo ownership);</li>
 <li>aggiungere pgtap dedicati:</li>
-<li>caso ammesso,</li>
-<li>caso non ammesso,</li>
-<li>caso matrice assente (comportamento esplicito: fail-open o fail-closed);</li>
-<li>dopo introduzione matrice utility, rivalutare policy default:</li>
-<li>mantenere fail-open solo dove serve per bootstrap,</li>
-<li>portare fail-closed negli ambienti operativi stabili.</li>
+<li>caso matrice utility/ruolo assente (nessun vincolo),</li>
+<li>caso riga presente ammessa,</li>
+<li>caso riga presente non ammessa (bloccante).</li>
+<li>dopo introduzione matrice utility/ruolo, mantenere policy default fail-open e valutare eventuale fail-closed solo per utilities specifiche.</li>
+</ol>
+<p>Stato implementativo (aggiornato 16-02-2026):</p>
+<ul>
+<li>introdotta matrice <code>config.utilities_tipi_ruolo</code>;</li>
+<li>introdotta guard centralizzata <code>script.fn_guard_utility_tipo_ruolo(...)</code>;</li>
+<li>introdotta trigger function generica <code>script.trgfn_guard_utility_tipo_ruolo_by_cols()</code>;</li>
+<li>introdotta automazione <code>dbops</code>:</li>
+<li>tabella <code>dbops.automazione_guard_utility_tipo_ruolo</code>,</li>
+<li>seed <code>dbops.fn_seed_automazione_guard_utility_tipo_ruolo(...)</code>,</li>
+<li>apply <code>dbops.fn_apply_automazione_guard_utility_tipo_ruolo(...)</code>;</li>
+<li>collegata esecuzione in <code>90_end/ci_apply</code> per evitare step manuali;</li>
+<li>aggiunto test pgTap dedicato all'automazione.</li>
+</ul>
+<p>Progettazione proposta tabella <code>config.utilities_tipi_ruolo</code>:</p>
+<ul>
+<li>scopo: whitelist opzionale dei <code>tipo_ruolo</code> ammessi per una <code>utility</code>;</li>
+<li>semantica:</li>
+<li>se per una utility non esistono righe attive/valide -&gt; nessun vincolo (fail-open);</li>
+<li>se esistono righe attive/valide -&gt; sono ammessi solo i <code>tipo_ruolo_id</code> presenti.</li>
+</ul>
+<p>Schema proposto (v1):</p>
+<ol>
+<li><code>id bigint</code> identity PK</li>
+<li><code>utility_id integer not null</code> FK -&gt; <code>config.utilities(id)</code></li>
+<li><code>tipo_ruolo_id bigint not null</code> FK -&gt; <code>config.tipi_ruoli(id)</code></li>
+<li><code>attivo boolean not null default true</code></li>
+<li><code>valido_dal date null</code></li>
+<li><code>valido_al date null</code></li>
+<li><code>meta jsonb not null default '{}'::jsonb</code></li>
+<li><code>user_insert text not null default CURRENT_USER</code></li>
+<li><code>user_update text not null default CURRENT_USER</code></li>
+<li><code>data_insert timestamptz not null default now()</code></li>
+<li><code>data_update timestamptz not null default now()</code></li>
+<li><code>storicizza boolean not null default false</code></li>
+</ol>
+<p>Vincoli/indici proposti:</p>
+<ol>
+<li><code>UNIQUE (utility_id, tipo_ruolo_id)</code> per evitare duplicati configurativi.</li>
+<li><code>CHECK (valido_al IS NULL OR valido_dal IS NULL OR valido_al &gt;= valido_dal)</code>.</li>
+<li>indice <code>ix_utilities_tipi_ruolo_utility_id</code> su <code>utility_id</code>.</li>
+<li>indice <code>ix_utilities_tipi_ruolo_tipo_ruolo_id</code> su <code>tipo_ruolo_id</code>.</li>
+</ol>
+<p>Funzione di guard consigliata (riuso centralizzato):</p>
+<ul>
+<li>nuova funzione <code>script.fn_guard_utility_tipo_ruolo(p_utility_id, p_tipo_ruolo_id, p_context text default null)</code>:</li>
+<li>se <code>p_utility_id</code> o <code>p_tipo_ruolo_id</code> null -&gt; return (non blocca);</li>
+<li>verifica se esiste almeno una riga attiva/valida per <code>p_utility_id</code>;</li>
+<li>se no -&gt; return (fail-open);</li>
+<li>se si -&gt; richiede match su <code>p_tipo_ruolo_id</code>, altrimenti errore applicativo.</li>
+</ul>
+<p>Punti di integrazione guard (solo entita con contesto ruolo):</p>
+<ol>
+<li>applicare la guard dove l'entita espone esplicitamente un riferimento ruolo (<code>soggetto_ruolo_id</code> o equivalente) e un contesto utility;</li>
+<li>riferimento prioritario ai ruoli censiti in <code>db/changelog/migrations_v2/80_data/sql/config/tipi_ruoli.csv</code> (es. <code>CL</code>, <code>FO</code>, <code>GE</code>, <code>RE</code>, <code>EF</code>, <code>DI</code>, <code>RIS_UMANA</code>, <code>VT</code>, <code>VE</code>, <code>BANK_B</code>, <code>PSP</code>);</li>
+<li>primo candidato naturale: <code>anagrafiche.emittenti_fiscali_utilities</code> (ha <code>emittente_soggetto_ruolo_id</code> + <code>utility_id</code>).</li>
+</ol>
+<p>Nota su <code>billing_account</code>:</p>
+<ul>
+<li><code>billing_account</code> non e<code>un ruolo; l'eventuale uso di</code>utility_tipi_ruolo<code>va fatto sulle entita ruolo-centriche, non sul solo fatto che</code>billing_account<code>possieda</code>utility_id`.</li>
+</ul>
+<p>Test pgtap minimi proposti:</p>
+<ol>
+<li>utility senza righe matrice -&gt; inserimento consentito (fail-open).</li>
+<li>utility con matrice e ruolo ammesso -&gt; consentito.</li>
+<li>utility con matrice e ruolo non ammesso -&gt; bloccato con errore atteso.</li>
+<li>utility con riga non attiva o fuori validita -&gt; non considerata nel match.</li>
+<li>duplicate <code>(utility_id, tipo_ruolo_id)</code> -&gt; bloccato da unique.</li>
+</ol>
+<p>Aggiornamenti documentazione conseguenti:</p>
+<ol>
+<li>nuova manualistica <code>config/manual/utilities_tipi_ruolo.md</code>.</li>
+<li>aggiornare <code>config/manual/utilities.md</code> con sezione "policy ruoli per utility (opzionale, fail-open)".</li>
+<li>aggiornare manual trigger/funzioni che applicano il guard, esplicitando il comportamento quando la matrice non e configurata.</li>
 </ol>
 <p>Riferimenti:</p>
 <ul>
@@ -4017,7 +4090,7 @@ Ambito: revisione di gravita su incongruenze strutturali e miglioramenti ad alto
 <li><code>docs/it/dbzero/anagrafiche/manual/trgfn_soggetti_guard_indirizzi_required.md</code></li>
 </ul>
 <hr />
-<h3 id="34-incoerenza-narrativa-tra-guide-su-indirizzi-per-ruolo-vs-soggetto">3.4 Incoerenza narrativa tra guide su indirizzi per ruolo vs soggetto<a class="headerlink" href="#34-incoerenza-narrativa-tra-guide-su-indirizzi-per-ruolo-vs-soggetto" title="Permanent link">&para;</a></h3>
+<h3 id="34-incoerenza-narrativa-tra-guide-su-indirizzi-per-ruolo-vs-soggetto-chiuso">3.4 Incoerenza narrativa tra guide su indirizzi per ruolo vs soggetto <strong>(CHIUSO)</strong><a class="headerlink" href="#34-incoerenza-narrativa-tra-guide-su-indirizzi-per-ruolo-vs-soggetto-chiuso" title="Permanent link">&para;</a></h3>
 <p>Problema:</p>
 <ul>
 <li>la guida soggetti/ruoli enfatizza l'appoggio indirizzi sul ruolo;</li>
@@ -4034,27 +4107,33 @@ Ambito: revisione di gravita su incongruenze strutturali e miglioramenti ad alto
 <li><code>docs/it/guide/gestione-degli-indirizzi.md</code></li>
 </ul>
 <hr />
-<h3 id="35-punto-da-verificare-indice-geoloc-documentato-come-gist-ma-definito-btree">3.5 Punto da verificare: indice geoloc documentato come GIST ma definito BTREE<a class="headerlink" href="#35-punto-da-verificare-indice-geoloc-documentato-come-gist-ma-definito-btree" title="Permanent link">&para;</a></h3>
+<h3 id="35-indice-geoloc-indirizzi-mismatch-namingengine-in-remediation">3.5 Indice geoloc <code>indirizzi</code>: mismatch naming/engine (in remediation)<a class="headerlink" href="#35-indice-geoloc-indirizzi-mismatch-namingengine-in-remediation" title="Permanent link">&para;</a></h3>
 <p>Problema:</p>
 <ul>
-<li>in documentazione tabellare l'indice <code>ix_indirizzi_geoloc_gist</code> e riportato con definizione BTREE.</li>
+<li>l'indice <code>anagrafiche.ix_indirizzi_geoloc_gist</code> risulta con naming "gist" ma definizione BTREE.</li>
 </ul>
 <p>Rischio:</p>
 <ul>
-<li>possibile mismatch tra naming e implementazione effettiva;</li>
-<li>rischio performance su query spaziali se l'indice reale non e coerente al tipo dati/uso.</li>
+<li>mismatch semantico tra naming e implementazione reale;</li>
+<li>possibile degrado performance su filtri/operatori spaziali.</li>
 </ul>
 <p>Riferimenti:</p>
 <ul>
 <li><code>docs/it/dbzero/anagrafiche/tabelle/indirizzi.md</code></li>
 <li><code>docs/it/dbzero/anagrafiche/tabelle/indirizzi_dettaglio.md</code></li>
+<li><code>db/changelog/migrations_v2/00_schema/anagrafiche/20260216-07-fix-index-indirizzi-geoloc-gist-mctit.yaml</code></li>
+</ul>
+<p>Stato:</p>
+<ul>
+<li>fix strutturale preparato in migration v2 (<code>DROP/CREATE</code> su <code>ix_indirizzi_geoloc_gist</code> con <code>USING gist</code>);</li>
+<li>da considerare chiuso dopo apply migration sull'ambiente target.</li>
 </ul>
 <h2 id="4-migliorie-architetturali-raccomandate">4. Migliorie architetturali raccomandate<a class="headerlink" href="#4-migliorie-architetturali-raccomandate" title="Permanent link">&para;</a></h2>
 <ol>
-<li>Definire una source-of-truth unica per utility istanza (non implicita).</li>
-<li>Riallineare documentazione core con naming e trigger reali.</li>
-<li>Esplicitare formalmente la semantica dei guard (deferred/immediate) nei contratti applicativi.</li>
-<li>Formalizzare la policy "indirizzo master" (soggetto vs ruolo) per ciascun processo.</li>
+<li>✅Definire una source-of-truth unica per utility istanza (non implicita).</li>
+<li>✅Riallineare documentazione core con naming e trigger reali.</li>
+<li>✅Esplicitare formalmente la semantica dei guard (deferred/immediate) nei contratti applicativi.</li>
+<li>✅Formalizzare la policy "indirizzo master" (soggetto vs ruolo) per ciascun processo.</li>
 <li>Avviare backend anagrafiche con perimetro minimo ma completo (service + API + test).</li>
 </ol>
 <h2 id="5-backend-anagrafiche-cosa-serve-per-iniziare-piano-di-avvio">5. Backend anagrafiche: cosa serve per iniziare (piano di avvio)<a class="headerlink" href="#5-backend-anagrafiche-cosa-serve-per-iniziare-piano-di-avvio" title="Permanent link">&para;</a></h2>

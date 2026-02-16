@@ -3854,6 +3854,9 @@
 <p><a href="../../dbzero/dbops/tabelle/automazione_overlap">dbops.automazione_overlap</a></p>
 </li>
 <li>
+<p><a href="../../dbzero/dbops/tabelle/automazione_guard_utility_tipo_ruolo">dbops.automazione_guard_utility_tipo_ruolo</a></p>
+</li>
+<li>
 <p><em>Orchestratori:</em></p>
 </li>
 <li>
@@ -3978,6 +3981,25 @@ su tabelle <strong>versionate</strong> con colonne periodo (<code>valido_dal/val
 <ul>
 <li><code>CLEANUP_AT</code>: <code>ttl_days</code>, <code>cleanup_column</code>, <code>base_ts_column</code>, <code>apply_on_update</code></li>
 <li><code>CLEANUP_PURGE</code>: <code>cleanup_column</code>, <code>batch_limit</code></li>
+</ul>
+<p><strong>3.10 GUARD utility-&gt;tipo_ruolo</strong></p>
+<p>Automazione dedicata ai casi in cui una tabella espone:</p>
+<ul>
+<li>una colonna utility (tipicamente <code>utility_id</code>);</li>
+<li>una colonna ruolo (<code>soggetto_ruolo_id</code> o <code>*_soggetto_ruolo_id</code>).</li>
+</ul>
+<p>Componenti principali:</p>
+<ul>
+<li><strong>Config</strong>: <code>dbops.automazione_guard_utility_tipo_ruolo</code></li>
+<li><strong>Seed</strong>: <code>dbops.fn_seed_automazione_guard_utility_tipo_ruolo()</code> autodetect tabelle candidate</li>
+<li><strong>Apply</strong>: <code>dbops.fn_apply_automazione_guard_utility_tipo_ruolo()</code></li>
+<li><strong>Trigger function</strong>: <code>script.trgfn_guard_utility_tipo_ruolo_by_cols()</code></li>
+</ul>
+<p>Semantica:</p>
+<ul>
+<li>il trigger risolve <code>tipo_ruolo_id</code> da <code>anagrafiche.soggetti_ruoli</code>;</li>
+<li>delega il controllo a <code>script.fn_guard_utility_tipo_ruolo(...)</code>;</li>
+<li>se la matrice <code>config.utilities_tipi_ruolo</code> non e configurata per la utility, resta il comportamento fail-open.</li>
 </ul>
 <hr />
 <h2 id="4-configurazione">4) ⚙️ Configurazione<a class="headerlink" href="#4-configurazione" title="Permanent link">&para;</a></h2>
