@@ -3533,13 +3533,19 @@ tecnici. Esempio (schema indicativo):</p>
 <hr />
 <h3 id="note-operative">✅ Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>La pipeline governa il <strong>workflow dei lotti</strong> (non la numerazione o i dettagli
-  del documento fiscale).</li>
+<li>La pipeline governa il <strong>workflow dei lotti</strong>; nel modello corrente la
+  numerazione e<code>prevista nello step</code>DEFINITIVA`.</li>
 <li>L’orchestratore legge questa tabella per decidere <strong>quali processi</strong> eseguire
   e come gestire il <strong>rollback</strong>.</li>
 <li>I singoli processi devono essere <strong>idempotenti</strong> o progettati per gestire retry.</li>
 <li>I task eseguiti sono gestiti da <code>vendite.fn_execute_pipeline_step</code> tramite
-  whitelist (es. <code>select_attivita</code>, <code>noop</code>, <code>log_only</code>).</li>
+  whitelist (es. <code>select_attivita</code>, <code>genera_fondi_source_lotto</code>,
+  <code>applica_fondi_lotto</code>, <code>ricalcola_iva_lotto</code>, <code>numera_fatture</code>,
+  <code>reset_lotto_draft</code>, <code>noop</code>, <code>log_only</code>).</li>
+<li>Il reset tecnico in pipeline e<code>previsto solo per il flusso</code>MASSIVO<code>(sezione</code>rollback<code>dello step</code>EMESSA`).</li>
+<li>Nel flusso <code>MASSIVO</code>, lo step <code>EMESSA</code> include il ciclo:
+  source fondi -&gt; applicazione fondi -&gt; ricalcolo IVA/totali.
+  La numerazione resta nello step <code>DEFINITIVA</code>.</li>
 <li>Risoluzione configurazione con fallback (per <code>tipo_lotto + stato_doc_fiscale_id</code>):</li>
 <li>1) match esatto <code>utility_id + tipo_doc_fiscale_id</code></li>
 <li>2) match <code>utility_id</code> con <code>tipo_doc_fiscale_id = NULL</code></li>

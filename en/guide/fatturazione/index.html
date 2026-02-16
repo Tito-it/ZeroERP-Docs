@@ -2574,6 +2574,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#step-emessa-massivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ Step EMESSA (massivo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#output-correlati" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4145,6 +4156,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#step-emessa-massivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚙️ Step EMESSA (massivo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#output-correlati" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4376,7 +4398,7 @@
 <ol>
 <li><strong>Alimentazione</strong> di <code>vendite.attivita_fatturabili</code> a partire dalle sorgenti.</li>
 <li><strong>Calcolo</strong> e generazione delle righe di fattura (<code>vendite.fatture_righe</code>).</li>
-<li><strong>Emissione</strong> e numerazione del documento (<code>vendite.fatture</code>).</li>
+<li><strong>Emissione</strong> del documento (<code>vendite.fatture</code>) e numerazione nello step <strong>DEFINITIVA</strong>.</li>
 </ol>
 <p>Questa separazione garantisce <strong>idempotenza</strong>, <strong>controllo</strong> e <strong>revisionabilita`</strong> prima dell’emissione fiscale.</p>
 <h3 id="stato-migrazione-db-django-07-febbraio-2026">Stato migrazione DB -&gt; Django (07 Febbraio 2026)<a class="headerlink" href="#stato-migrazione-db-django-07-febbraio-2026" title="Permanent link">&para;</a></h3>
@@ -4445,7 +4467,8 @@ senza perdere la governance documentale.</p>
   C --&gt; D[Dashboard Pre‑Calcolo&lt;br/&gt;Filtri + approvazione]
   D --&gt; E[Calcolo righe&lt;br/&gt;vendite.fatture_righe]
   E --&gt; F[Dashboard Emissione&lt;br/&gt;Conferma documento]
-  F --&gt; G[Emissione + numerazione&lt;br/&gt;vendite.fatture]
+  F --&gt; G[Emissione&lt;br/&gt;vendite.fatture]
+  G --&gt; GD[DEFINITIVA + numerazione]
   G --&gt; H[Output/Invio/Statistiche]</code></pre>
 <hr />
 <blockquote>
@@ -4524,11 +4547,19 @@ La dashboard “Input” deve quindi gestire due flussi:</p>
 <h3 id="scopo_2">🎯 Scopo<a class="headerlink" href="#scopo_2" title="Permanent link">&para;</a></h3>
 <p>Convertire il risultato del calcolo in <strong>documento fiscale numerato</strong>.</p>
 <h3 id="separazione-dal-calcolo">✅ Separazione dal calcolo<a class="headerlink" href="#separazione-dal-calcolo" title="Permanent link">&para;</a></h3>
-<p>Il <strong>calcolo</strong> produce righe; l’<strong>emissione</strong> produce la testata, la numerazione e gli output fiscali.</p>
+<p>Il <strong>calcolo</strong> produce righe; l’<strong>emissione</strong> produce la testata.
+La <strong>numerazione</strong> avviene nello step <strong>DEFINITIVA</strong>.</p>
 <h3 id="numerazione">🔢 Numerazione<a class="headerlink" href="#numerazione" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Assegnata <strong>solo</strong> in fase di emissione (cambio di stato).</li>
+<li>Assegnata <strong>solo</strong> nello step <strong>DEFINITIVA</strong> (non in <code>EMESSA</code>).</li>
 <li>Regole gestite da <code>vendite.registri_fatturazione</code>.</li>
+</ul>
+<h3 id="step-emessa-massivo">⚙️ Step <code>EMESSA</code> (massivo)<a class="headerlink" href="#step-emessa-massivo" title="Permanent link">&para;</a></h3>
+<p>Nello step <code>EMESSA</code> del lotto massivo sono previsti i task pre-fiscali:</p>
+<ul>
+<li>generazione source minimi/fondi</li>
+<li>applicazione fondi alle fatture del lotto</li>
+<li>ricalcolo IVA lotto (con aggiornamento totali testata)</li>
 </ul>
 <h3 id="output-correlati">📦 Output correlati<a class="headerlink" href="#output-correlati" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4571,7 +4602,7 @@ questa parte e</code> demandata al processo di generazione righe (Python).</p>
 </ul>
 <h3 id="dashboard-emissione">🖥️ Dashboard “Emissione”<a class="headerlink" href="#dashboard-emissione" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Preview del documento, controlli finali e numerazione.</li>
+<li>Preview del documento e controlli finali pre-fiscali.</li>
 <li>Conferma emissione con log degli esiti.</li>
 </ul>
 <hr />
@@ -4580,7 +4611,8 @@ questa parte e</code> demandata al processo di generazione righe (Python).</p>
 <ul>
 <li><strong>Input Fatturazione</strong> → alimenta <code>attivita_fatturabili</code></li>
 <li><strong>Pre‑Calcolo</strong> → selezione, approvazione, calcolo righe</li>
-<li><strong>Emissione</strong> → numerazione e creazione documento</li>
+<li><strong>Emissione</strong> → creazione/validazione documento (pre-fiscale)</li>
+<li><strong>Definitiva</strong> → numerazione documento</li>
 </ul>
 <h3 id="variante-invio-sdi-italia">🔁 Variante: invio SDI (Italia)<a class="headerlink" href="#variante-invio-sdi-italia" title="Permanent link">&para;</a></h3>
 <ul>
