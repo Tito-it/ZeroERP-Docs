@@ -3453,6 +3453,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#pattern-di-integrazione-con-log-di-dominio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Pattern di integrazione con log di dominio
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3574,6 +3585,23 @@ Non rappresenta una scadenza “funzionale” dell’errore, ma solo un <strong>
 <li><strong>Integrità delle informazioni</strong>: i trigger automatici garantiscono corretto popolamento di <code>tx_id</code> e audit inalterabile.</li>
 <li><strong>Coerenza semantica</strong>: l’uso di FK verso <code>config.messaggi_errore</code> assicura messaggi uniformi e localizzati.</li>
 </ul>
+<hr />
+<h3 id="pattern-di-integrazione-con-log-di-dominio">🧩 Pattern di integrazione con log di dominio<a class="headerlink" href="#pattern-di-integrazione-con-log-di-dominio" title="Permanent link">&para;</a></h3>
+<p><code>dbops.error_log</code> è il <strong>log tecnico centralizzato</strong>.<br />
+Nei domini applicativi è consigliato affiancarlo con log funzionali dedicati.</p>
+<p>Esempio dominio vendite/fatturazione:</p>
+<ul>
+<li>log tecnico: <code>dbops.error_log</code> (raise SQL / ErrorManager backend)</li>
+<li>log di processo lotto: <code>vendite.fatturazione_lotti_log</code></li>
+<li>log documento: <code>vendite.fatture_log</code></li>
+</ul>
+<p>Regola operativa:</p>
+<ul>
+<li>errore di orchestrazione/processo -&gt; log di dominio <code>LOTTO</code> + <code>error_log</code></li>
+<li>errore su singolo documento -&gt; log di dominio <code>FATTURA</code> + <code>error_log</code></li>
+</ul>
+<p>Questo approccio evita ambiguità: <code>error_log</code> conserva il dettaglio tecnico,
+mentre i log di dominio governano stato/esito funzionale visibile in dashboard.</p>
 <hr />
 <blockquote>
 <p>🧠 <strong>“Un error log strutturato con identità transazionale e contesto dettagliato semplifica il debug e il monitoraggio degli incidenti applicativi.”</strong></p>

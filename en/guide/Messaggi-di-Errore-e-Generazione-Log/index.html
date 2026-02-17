@@ -2765,6 +2765,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#routing-errori-applicativi-pipelinedomini" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Routing Errori Applicativi (pipeline/domini)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🧭 Routing Errori Applicativi (pipeline/domini)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contratto-minimo-consigliato-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contratto minimo consigliato (backend)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempi-pratici-stato-attuale-vendite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Esempi pratici (stato attuale vendite)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#best-practices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3907,6 +3946,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#routing-errori-applicativi-pipelinedomini" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Routing Errori Applicativi (pipeline/domini)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🧭 Routing Errori Applicativi (pipeline/domini)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contratto-minimo-consigliato-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contratto minimo consigliato (backend)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempi-pratici-stato-attuale-vendite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Esempi pratici (stato attuale vendite)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#best-practices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4126,6 +4204,35 @@ La funzione <code>script.fn_log_error_only</code> è registrata nella tabella e 
 <li><strong>Raise</strong> dell’eccezione con <code>RAISE EXCEPTION</code>, includendo <code>DETAIL</code> e <code>HINT</code>.</li>
 </ol>
 <p>L’applicazione riceverà l’errore formattato, mentre il database manterrà un audit completo.</p>
+<hr />
+<h2 id="routing-errori-applicativi-pipelinedomini">🧭 Routing Errori Applicativi (pipeline/domini)<a class="headerlink" href="#routing-errori-applicativi-pipelinedomini" title="Permanent link">&para;</a></h2>
+<p>Per i processi applicativi (es. pipeline fatturazione) il log tecnico generale su
+<code>dbops.error_log</code> <strong>non sostituisce</strong> i log di dominio.<br />
+Si applica quindi un routing esplicito:</p>
+<ul>
+<li><code>scope = LOTTO</code> -&gt; log su <code>vendite.fatturazione_lotti_log</code></li>
+<li><code>scope = FATTURA</code> -&gt; log su <code>vendite.fatture_log</code></li>
+<li>in entrambi i casi resta attivo anche il log tecnico standard (<code>dbops.error_log</code>)</li>
+</ul>
+<h3 id="contratto-minimo-consigliato-backend">Contratto minimo consigliato (backend)<a class="headerlink" href="#contratto-minimo-consigliato-backend" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>scope</code>: <code>LOTTO</code> | <code>FATTURA</code></li>
+<li><code>severity</code>: <code>I</code> | <code>W</code> | <code>C</code></li>
+<li><code>code</code>: codice errore stabile</li>
+<li><code>message</code>: messaggio sintetico</li>
+<li><code>detail</code>: dettaglio tecnico</li>
+<li><code>lotto_id</code>: obbligatorio nei processi pipeline</li>
+<li><code>fattura_id</code>: obbligatorio se <code>scope = FATTURA</code></li>
+<li><code>context/meta</code>: JSON con task, step, funzione, parametri</li>
+</ul>
+<h3 id="esempi-pratici-stato-attuale-vendite">Esempi pratici (stato attuale vendite)<a class="headerlink" href="#esempi-pratici-stato-attuale-vendite" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Avanzamento step pipeline -&gt; <code>vendite.fn_log_pipeline_fase(...)</code> su <code>fatturazione_lotti_log</code>.</li>
+<li>Esito severità lotto (C &gt; W &gt; I) -&gt; <code>vendite.fn_log_lotto_esito_fatture(...)</code>.</li>
+<li>Errori documento specifici (es. reset fondi bloccato da contabilizzazione) -&gt; <code>vendite.fatture_log</code>.</li>
+<li>Errori SQL/raise (<code>script.fn_log_and_raise_error</code>) -&gt; <code>dbops.error_log</code>.</li>
+</ul>
+<p>Questa regola è riusabile per altri domini (es. <code>ATTIVITA_FATTURABILI</code>, <code>PRATICHE</code>) mantenendo lo stesso contratto (<code>scope</code>, <code>severity</code>, <code>code</code>, <code>context</code>) e cambiando solo i target log di dominio.</p>
 <hr />
 <h2 id="best-practices">💡 Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <ul>

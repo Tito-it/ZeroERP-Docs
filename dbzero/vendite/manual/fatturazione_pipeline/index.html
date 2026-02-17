@@ -3540,12 +3540,14 @@ tecnici. Esempio (schema indicativo):</p>
 <li>I singoli processi devono essere <strong>idempotenti</strong> o progettati per gestire retry.</li>
 <li>I task eseguiti sono gestiti da <code>vendite.fn_execute_pipeline_step</code> tramite
   whitelist (es. <code>select_attivita</code>, <code>genera_fondi_source_lotto</code>,
-  <code>applica_fondi_lotto</code>, <code>ricalcola_iva_lotto</code>, <code>numera_fatture</code>,
+  <code>applica_fondi_lotto</code>, <code>ricalcola_iva_lotto</code>, <code>prepare_sdi_payload_lotto</code>, <code>numera_fatture</code>,
   <code>reset_lotto_draft</code>, <code>noop</code>, <code>log_only</code>).</li>
 <li>Il reset tecnico in pipeline e<code>previsto solo per il flusso</code>MASSIVO<code>(sezione</code>rollback<code>dello step</code>EMESSA`).</li>
 <li>Nel flusso <code>MASSIVO</code>, lo step <code>EMESSA</code> include il ciclo:
   source fondi -&gt; applicazione fondi -&gt; ricalcolo IVA/totali.
   La numerazione resta nello step <code>DEFINITIVA</code>.</li>
+<li>Lo step <code>INVIATA</code> del massivo prepara il payload SDI di lotto e apre/riusa
+  i tentativi in <code>vendite.fatture_sdi</code>.</li>
 <li>Risoluzione configurazione con fallback (per <code>tipo_lotto + stato_doc_fiscale_id</code>):</li>
 <li>1) match esatto <code>utility_id + tipo_doc_fiscale_id</code></li>
 <li>2) match <code>utility_id</code> con <code>tipo_doc_fiscale_id = NULL</code></li>

@@ -3422,6 +3422,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#logging-e-routing-errori" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logging e routing errori
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dipendenze-db" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3508,9 +3519,18 @@ L'orchestrazione ora vive in:
 <ul>
 <li>Se il lotto non esiste viene creato/risolto via DB.</li>
 <li>Il tipo lotto effettivo usa DB come fonte autoritativa; input come fallback.</li>
+<li>Se <code>stato_lotto = IN_ESECUZIONE</code> il rilancio pipeline e` bloccato.</li>
+<li>Se il lotto e<code>chiuso (</code>COMPLETATO<code>/</code>ERRORE<code>), le transizioni di stato documento sono governate da</code>config.stati_doc_fiscale_transizioni` (enforcement DB).</li>
 <li>Per lotto <code>GIORNALIERO</code>, allo stato <code>INVIATA</code> viene eseguita chiusura operativa lotto.</li>
 <li>Errori applicativi (<code>ServiceError</code>) preservano codice dominio e marcano lotto in errore.</li>
 <li>Errori inattesi vengono wrappati in <code>E_PIPELINE</code> con causa agganciata (<code>raise ... from ...</code>).</li>
+</ul>
+<h2 id="logging-e-routing-errori">Logging e routing errori<a class="headerlink" href="#logging-e-routing-errori" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Log tecnico centralizzato: <code>dbops.error_log</code> (via <code>ErrorManager</code> lato backend e <code>fn_log_and_raise_error</code> lato SQL).</li>
+<li>Log dominio lotto: <code>vendite.fatturazione_lotti_log</code> (fasi step + esito severita` dedotto).</li>
+<li>Log dominio fattura: <code>vendite.fatture_log</code> solo per errori attribuibili alla singola fattura (non massivamente a tutto il lotto).</li>
+<li>Contratto consigliato per errori applicativi: <code>scope</code> (<code>LOTTO</code>/<code>FATTURA</code>), <code>severity</code> (<code>I/W/C</code>), <code>code</code>, <code>lotto_id</code>, <code>fattura_id</code> (se <code>FATTURA</code>), <code>context/meta</code>.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
