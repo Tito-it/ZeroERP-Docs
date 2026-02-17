@@ -3378,6 +3378,122 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#recap-operativo-pipeline-fatturazione-db-django" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Recap operativo pipeline fatturazione (DB + Django)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#go-live-checklist-tecnica-stato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Go-live checklist tecnica (stato)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-test-go-live-unificata-esecutiva" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Checklist test go-live unificata (esecutiva)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="✅ Checklist test go-live unificata (esecutiva)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#0-pre-flight-ambiente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0) Pre-flight ambiente
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1-test-db-pgtap-sql-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Test DB (pgtap / SQL policy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-test-django-unitservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Test Django unit/service
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-test-api-contratto-sicurezza" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Test API (contratto + sicurezza)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-smoke-end-to-end-manuale-ambiente-integrato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Smoke end-to-end manuale (ambiente integrato)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-exit-criteria-go-live" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Exit criteria go-live
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-runbook-comandi-rapidi-operativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Runbook comandi rapidi (operativo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#test-gravita-disallineamenti-guida-vs-wip" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4408,6 +4524,97 @@ La guida principale resta <code>docs/it/guide/fatturazione.md</code>.</p>
 <li>[x] Policy rerun <code>MASSIVO</code> nel runner Django: resume dallo step corrente + rollback step opzionale con <code>meta.auto_step_rollback=true</code> (skip rollback distruttivi in auto-run).</li>
 <li>[x] Seed transizioni <code>config.stati_doc_fiscale_transizioni</code> allineato agli step lotto (incluso <code>MASSIVO</code> 8 -&gt; 3).</li>
 </ul>
+<h2 id="recap-operativo-pipeline-fatturazione-db-django">✅ Recap operativo pipeline fatturazione (DB + Django)<a class="headerlink" href="#recap-operativo-pipeline-fatturazione-db-django" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] Runner Django in produzione logica pipeline (<code>LottoPipelineRunner</code> + <code>PipelineStepExecutor</code>).</li>
+<li>[x] Config pipeline DB allineata agli step <code>DRAFT</code> -&gt; <code>EMESSA</code> -&gt; <code>DEFINITIVA</code>.</li>
+<li>[x] Step <code>EMESSA</code> massivo con task fondi/IVA e chiusure operative coerenti.</li>
+<li>[x] Policy rerun <code>MASSIVO</code> in errore: resume dallo step corrente.</li>
+<li>[x] Rollback step opzionale (<code>meta.auto_step_rollback=true</code>) con guard su rollback distruttivi.</li>
+<li>[x] <code>DEFINITIVA</code> in modalita resume (no reset globale lotto).</li>
+<li>[x] Error envelope + idempotency API centralizzati e allineati al flusso.</li>
+<li>[x] Test unit runner aggiornati e verdi (<code>apps.vendite.tests.services.test_pipeline_runner</code>).</li>
+</ul>
+<h2 id="go-live-checklist-tecnica-stato">✅ Go-live checklist tecnica (stato)<a class="headerlink" href="#go-live-checklist-tecnica-stato" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] Seed transizioni lotto coerente con step pipeline (evitati duplicati logici su <code>8 -&gt; 3</code>).</li>
+<li>[x] Seed registry task/implementation coerente con task JSON pipeline.</li>
+<li>[x] Documentazione guida + WIP riallineata al comportamento reale runner.</li>
+<li>[x] Consolidare checklist test finale unica (pgtap + Django + smoke API end-to-end).</li>
+<li>[ ] Estendere stesso pattern a pipeline <code>attivita_fatturabili</code> (runner/handler/test).</li>
+</ul>
+<h2 id="checklist-test-go-live-unificata-esecutiva">✅ Checklist test go-live unificata (esecutiva)<a class="headerlink" href="#checklist-test-go-live-unificata-esecutiva" title="Permanent link">&para;</a></h2>
+<h3 id="0-pre-flight-ambiente">0) Pre-flight ambiente<a class="headerlink" href="#0-pre-flight-ambiente" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Branch allineato (<code>main</code>/<code>Tito-dev</code>/<code>dev/*</code>) e working tree pulita.</li>
+<li>[ ] <code>.env</code>/utenza DB runtime corrette per backend (<code>zeroerp_app</code> o utente ambiente).</li>
+<li>[ ] Changelog Liquibase applicato all'ambiente target (schema + code + data).</li>
+</ul>
+<h3 id="1-test-db-pgtap-sql-policy">1) Test DB (pgtap / SQL policy)<a class="headerlink" href="#1-test-db-pgtap-sql-policy" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Eseguire suite pgtap dominio vendite (funzioni reset, trigger guard stato, pipeline resolve).</li>
+<li>[ ] Verificare seed <code>config.stati_doc_fiscale_transizioni</code> senza duplicati logici.</li>
+<li>[ ] Verificare <code>vendite.fatturazione_pipeline</code> + <code>dbops.pipeline_task_registry*</code> coerenti.</li>
+</ul>
+<h3 id="2-test-django-unitservice">2) Test Django unit/service<a class="headerlink" href="#2-test-django-unitservice" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] <code>apps.vendite.tests.services.test_pipeline_runner</code> (resume/rollback policy).</li>
+<li>[ ] <code>apps.vendite.tests.services.test_pipeline_step_executor</code> (task mapping/handler).</li>
+<li>[ ] test reset lotto/fattura (<code>test_lotto_reset_service</code>, <code>test_lotto_reset_fattura_service</code>).</li>
+</ul>
+<h3 id="3-test-api-contratto-sicurezza">3) Test API (contratto + sicurezza)<a class="headerlink" href="#3-test-api-contratto-sicurezza" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] <code>apps.vendite.tests.api.test_pipeline_api</code> (JWT, idempotency, envelope errori).</li>
+<li>[ ] <code>apps.vendite.tests.api.test_reset_lotto_draft_api</code>.</li>
+<li>[ ] <code>apps.vendite.tests.api.test_reset_lotto_fattura_draft_api</code>.</li>
+</ul>
+<h3 id="4-smoke-end-to-end-manuale-ambiente-integrato">4) Smoke end-to-end manuale (ambiente integrato)<a class="headerlink" href="#4-smoke-end-to-end-manuale-ambiente-integrato" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] POST <code>/api/v1/vendite/pipeline/run/</code> con <code>lotto_id=0</code> e <code>Idempotency-Key</code> nuovo -&gt; atteso <code>status=ok</code>.</li>
+<li>[ ] Riesecuzione stessa key -&gt; atteso replay/in-progress coerente con policy idempotency.</li>
+<li>[ ] Simulare errore step e rilancio lotto <code>MASSIVO</code>:</li>
+<li>[ ] resume da step corrente confermato;</li>
+<li>[ ] con <code>meta.auto_step_rollback=true</code> esegue solo rollback non distruttivi.</li>
+<li>[ ] Step <code>DEFINITIVA</code>: confermare numerazione idempotente e assenza reset globale lotto.</li>
+</ul>
+<h3 id="5-exit-criteria-go-live">5) Exit criteria go-live<a class="headerlink" href="#5-exit-criteria-go-live" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Nessun test bloccante fallito (DB + Django + API).</li>
+<li>[ ] Nessun errore tecnico non sanitizzato in response pubbliche.</li>
+<li>[ ] Log e request_id tracciabili per analisi supporto.</li>
+<li>[ ] Checklist firmata con data e commit SHA di riferimento.</li>
+</ul>
+<h3 id="6-runbook-comandi-rapidi-operativo">6) Runbook comandi rapidi (operativo)<a class="headerlink" href="#6-runbook-comandi-rapidi-operativo" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 0) Pre-flight: branch/stato repo</span>
+git<span class="w"> </span>fetch<span class="w"> </span>origin
+git<span class="w"> </span>status
+git<span class="w"> </span>rev-parse<span class="w"> </span>--short<span class="w"> </span>HEAD
+
+<span class="c1"># 1) Test Django vendite (service + api)</span>
+<span class="nb">cd</span><span class="w"> </span>backend
+./manage-test.sh<span class="w"> </span>apps.vendite.tests.services.test_pipeline_runner<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>
+./manage-test.sh<span class="w"> </span>apps.vendite.tests.services.test_pipeline_step_executor<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>
+./manage-test.sh<span class="w"> </span>apps.vendite.tests.api.test_pipeline_api<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>
+./manage-test.sh<span class="w"> </span>apps.vendite.tests.api.test_reset_lotto_draft_api<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>
+./manage-test.sh<span class="w"> </span>apps.vendite.tests.api.test_reset_lotto_fattura_draft_api<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>
+
+<span class="c1"># 2) Smoke API manuale (JWT + Idempotency-Key)</span>
+curl<span class="w"> </span>-k<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://&lt;host&gt;/api/v1/vendite/pipeline/run/&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer &lt;ACCESS_TOKEN&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Idempotency-Key: lotto-smoke-</span><span class="k">$(</span>date<span class="w"> </span>+%Y%m%d%H%M%S<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{</span>
+<span class="s1">    &quot;lotto_id&quot;: 0,</span>
+<span class="s1">    &quot;competenza_mese&quot;: &quot;2026-02-07&quot;,</span>
+<span class="s1">    &quot;tipo_doc_fiscale_id&quot;: 2,</span>
+<span class="s1">    &quot;utility_id&quot;: 1,</span>
+<span class="s1">    &quot;billing_account_id&quot;: 0,</span>
+<span class="s1">    &quot;lock_batch_id&quot;: null,</span>
+<span class="s1">    &quot;meta&quot;: {&quot;auto_step_rollback&quot;: false},</span>
+<span class="s1">    &quot;dry_run&quot;: true,</span>
+<span class="s1">    &quot;tipo_lotto&quot;: &quot;MASSIVO&quot;</span>
+<span class="s1">  }&#39;</span>
+</code></pre></div>
 <h2 id="test-gravita-disallineamenti-guida-vs-wip">🚦 Test gravita disallineamenti (guida vs WIP)<a class="headerlink" href="#test-gravita-disallineamenti-guida-vs-wip" title="Permanent link">&para;</a></h2>
 <p>Riferimento confronto:</p>
 <ul>
@@ -4442,7 +4649,7 @@ La guida principale resta <code>docs/it/guide/fatturazione.md</code>.</p>
 <li>Impatto: bassa visibilita` di regressione globale tra pgtap e test Django.</li>
 <li>Azione: creare una sezione unica “go-live checklist” con test minimi obbligatori.</li>
 <li>
-<p>Stato: <strong>aperta</strong>.</p>
+<p>Stato: <strong>chiusa</strong> (sezione unica introdotta in questo documento).</p>
 </li>
 <li>
 <p><strong>Contenuti guida/WIP parzialmente duplicati</strong></p>
