@@ -4404,6 +4404,9 @@ La guida principale resta <code>docs/it/guide/fatturazione.md</code>.</p>
 <li>[x] Pipeline dedicata per <code>attivita_fatturabili</code> (tabella + funzioni resolve/list).</li>
 <li>[ ] Pipeline <code>attivita_fatturabili</code>: completamento log/runner/handler dominio.</li>
 <li>[ ] Registry runtime multi-dominio completo in Django (mappa per dominio).</li>
+<li>[x] Resume <code>DEFINITIVA</code> a livello fattura (ripartenza da errore senza reset globale).</li>
+<li>[x] Policy rerun <code>MASSIVO</code> nel runner Django: resume dallo step corrente + rollback step opzionale con <code>meta.auto_step_rollback=true</code> (skip rollback distruttivi in auto-run).</li>
+<li>[x] Seed transizioni <code>config.stati_doc_fiscale_transizioni</code> allineato agli step lotto (incluso <code>MASSIVO</code> 8 -&gt; 3).</li>
 </ul>
 <h2 id="test-gravita-disallineamenti-guida-vs-wip">🚦 Test gravita disallineamenti (guida vs WIP)<a class="headerlink" href="#test-gravita-disallineamenti-guida-vs-wip" title="Permanent link">&para;</a></h2>
 <p>Riferimento confronto:</p>
@@ -5008,6 +5011,14 @@ Si propone quindi lo <strong>sdoppiamento</strong> dello stato:</p>
 <li>da <strong>EMESSA</strong> → <strong>DRAFT</strong> ammesso per consentire ricalcolo (prima dell’invio)</li>
 <li><strong>REGISTRATA</strong> e <strong>ANNULLATA</strong> non sono rollbackabili (salvo processo amministrativo dedicato)</li>
 </ul>
+<p>Regola operativa confermata:
+* <code>MASSIVO</code>
+  * <code>DRAFT</code> e <code>EMESSA</code>: rieseguibili con reset tecnico di step.
+  * <code>DEFINITIVA</code>: niente reset globale; resume dalle sole fatture non numerate/in errore.
+* <code>GIORNALIERO</code>
+  * nessun reset lotto per <code>EMESSA</code>; emissione gestita fuori pipeline lotto.</p>
+<p>Nota implementativa corrente:
+* Il runner Django esegue gli step con <code>rollback=false</code> fisso; il rollback automatico su errore step e` ancora da introdurre.</p>
 <p><strong>Regola proposta (config)</strong>:</p>
 <ul>
 <li>✅ in <code>config.stati_doc_fiscale</code> aggiungere <code>stato_precedente_ammesso boolean</code></li>

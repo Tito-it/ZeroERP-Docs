@@ -2618,6 +2618,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#riesecuzione-e-reset-stato-attuale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔁 Riesecuzione e reset (stato attuale)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#dashboard-emissione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2699,6 +2710,17 @@
     <span class="md-ellipsis">
       
         ✅ Risultato atteso
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-prima-esecuzione-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Checklist prima esecuzione pipeline
       
     </span>
   </a>
@@ -4200,6 +4222,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#riesecuzione-e-reset-stato-attuale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔁 Riesecuzione e reset (stato attuale)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#dashboard-emissione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4281,6 +4314,17 @@
     <span class="md-ellipsis">
       
         ✅ Risultato atteso
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-prima-esecuzione-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Checklist prima esecuzione pipeline
       
     </span>
   </a>
@@ -4553,6 +4597,7 @@ La <strong>numerazione</strong> avviene nello step <strong>DEFINITIVA</strong>.<
 <ul>
 <li>Assegnata <strong>solo</strong> nello step <strong>DEFINITIVA</strong> (non in <code>EMESSA</code>).</li>
 <li>Regole gestite da <code>vendite.registri_fatturazione</code>.</li>
+<li>In caso di errore in <code>DEFINITIVA</code>, la riesecuzione deve ripartire dalle sole fatture non numerate/in errore, senza reset globale del lotto.</li>
 </ul>
 <h3 id="step-emessa-massivo">⚙️ Step <code>EMESSA</code> (massivo)<a class="headerlink" href="#step-emessa-massivo" title="Permanent link">&para;</a></h3>
 <p>Nello step <code>EMESSA</code> del lotto massivo sono previsti i task pre-fiscali:</p>
@@ -4561,6 +4606,8 @@ La <strong>numerazione</strong> avviene nello step <strong>DEFINITIVA</strong>.<
 <li>applicazione fondi alle fatture del lotto</li>
 <li>ricalcolo IVA lotto (con aggiornamento totali testata)</li>
 </ul>
+<p>Prerequisito operativo:
+* Le transizioni in <code>config.stati_doc_fiscale_transizioni</code> devono essere configurate (es. <code>DRAFT -&gt; EMESSA</code> con <code>solo_fattura=false</code>), altrimenti il trigger lotto blocca l'avanzamento step.</p>
 <h3 id="output-correlati">📦 Output correlati<a class="headerlink" href="#output-correlati" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>vendite.fatture_riepiloghi_iva</code></li>
@@ -4599,6 +4646,14 @@ questa parte e</code> demandata al processo di generazione righe (Python).</p>
 <li>per decidere se una source e<code>ancora applicabile si usa il saldo effettivo
   del documento (residuo fattura al netto delle componenti contabili postabili),
   cosi</code> si evita di riincludere importi gia` in lavorazione.</li>
+</ul>
+<h3 id="riesecuzione-e-reset-stato-attuale">🔁 Riesecuzione e reset (stato attuale)<a class="headerlink" href="#riesecuzione-e-reset-stato-attuale" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>MASSIVO</code>: gli step <code>DRAFT</code> e <code>EMESSA</code> sono rieseguibili con reset tecnico di step.</li>
+<li><code>GIORNALIERO</code>: niente reset lotto su <code>EMESSA</code> (emissione fuori lotto).</li>
+<li>Runner Django:</li>
+<li>su lotto <code>MASSIVO</code> in <code>ERRORE</code>, la riesecuzione riparte dallo step corrente (resume) per evitare transizioni retroattive non ammesse;</li>
+<li>il rollback step (<code>rollback=true</code>) e<code>supportato in modo opzionale tramite</code>meta.auto_step_rollback=true<code>, con guard applicativa che evita rollback distruttivi (</code>reset_lotto_draft`) in auto-run.</li>
 </ul>
 <h3 id="dashboard-emissione">🖥️ Dashboard “Emissione”<a class="headerlink" href="#dashboard-emissione" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4657,6 +4712,44 @@ questa parte e</code> demandata al processo di generazione righe (Python).</p>
 <li>emissione separata → <code>fatture</code> numerate</li>
 <li>dashboard e output fiscali governati</li>
 </ul>
+<hr />
+<h2 id="checklist-prima-esecuzione-pipeline">✅ Checklist prima esecuzione pipeline<a class="headerlink" href="#checklist-prima-esecuzione-pipeline" title="Permanent link">&para;</a></h2>
+<p>Usare questa checklist prima di lanciare i primi run su un ambiente.</p>
+<ol>
+<li>Verificare che gli step pipeline siano presenti per il dominio/tipo lotto:</li>
+<li><code>vendite.fatturazione_pipeline</code> popolata per <code>MASSIVO</code> e (se usato) <code>GIORNALIERO</code>.</li>
+<li>Verificare task registry e implementazioni:</li>
+<li><code>dbops.pipeline_task_registry</code> e <code>dbops.pipeline_task_registry_impl</code> allineate con i task JSON.</li>
+<li>Verificare transizioni stati documento lotto:</li>
+<li><code>config.stati_doc_fiscale_transizioni</code> deve consentire i passaggi richiesti dagli step (es. <code>DRAFT -&gt; EMESSA</code> con <code>solo_fattura=false</code>).</li>
+<li>Se la stessa transizione vale per piu<code></code>tipo_lotto<code>(es.</code>DEFINITIVA -&gt; INVIATA<code>),
+     usare **una sola riga** con</code>meta = {}<code>(senza</code>meta.tipo_lotto`) per evitare conflitti sul vincolo unico.</li>
+<li>Verificare prerequisiti dati per task EMESSA:</li>
+<li>tipo fondo attivo (<code>vendite.tipi_fondi_fattura.codice_interno</code>)</li>
+<li>scope fatture lotto completo (utility/tipo_doc/emittente/valuta valorizzati).</li>
+<li>Verificare policy riesecuzione:</li>
+<li><code>MASSIVO</code> step <code>DRAFT/EMESSA</code> rieseguibili con reset tecnico step.</li>
+<li><code>DEFINITIVA</code> in resume per fattura (no reset globale).</li>
+<li><code>GIORNALIERO</code> senza reset lotto su emissione.</li>
+</ol>
+<p>Query di controllo rapido:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Step risolti per tipo lotto</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">stato_doc_fiscale_id</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">,</span><span class="w"> </span><span class="n">ordine</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_list_fatturazione_pipeline_steps</span><span class="p">(</span><span class="s1">&#39;MASSIVO&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+
+<span class="c1">-- Transizioni stato lotto critiche</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">stato_from_id</span><span class="p">,</span><span class="w"> </span><span class="n">stato_to_id</span><span class="p">,</span><span class="w"> </span><span class="n">ammesso</span><span class="p">,</span><span class="w"> </span><span class="n">solo_fattura</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_doc_fiscale_transizioni</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">stato_from_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="c1">-- Task registrati dominio FATTURAZIONE</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">task_code</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">implementation_key</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">handler_code</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">is_default</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">pipeline_task_registry</span><span class="w"> </span><span class="n">r</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">pipeline_task_registry_impl</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">task_registry_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">id</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">domini_task</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">dominio_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;FATTURAZIONE&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">attivo</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">attivo</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">task_code</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">implementation_key</span><span class="p">;</span>
+</code></pre></div>
 <hr />
 <h2 id="collegamenti-tabellari-visione-sintetica">🧩 Collegamenti tabellari (visione sintetica)<a class="headerlink" href="#collegamenti-tabellari-visione-sintetica" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart TD
