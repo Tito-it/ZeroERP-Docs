@@ -3386,6 +3386,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="✅ Recap operativo pipeline fatturazione (DB + Django)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stato-sdi-dettaglio-operativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stato SDI (dettaglio operativo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4467,6 +4484,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#20-error_log-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20) error_log refactor
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4511,6 +4539,11 @@ La guida principale resta <code>docs/it/guide/fatturazione.md</code>.</p>
 <li>[x] Reset tecnico modellato in pipeline (<code>rollback</code> step <code>EMESSA</code>) solo per <code>MASSIVO</code>.</li>
 <li>[x] Step <code>EMESSA</code> massivo configurato con task minimi/fondi + ricalcolo IVA/totali.</li>
 <li>[x] Step <code>INVIATA</code> massivo configurato con preparazione payload SDI su lotto.</li>
+<li>[x] Processo Python per reperire payload SDI da lotto (<code>fn_prepare_sdi_payload_lotto</code>).</li>
+<li>[ ] Generazione file invio SDI (builder XML/metadata) da payload lotto.</li>
+<li>[ ] Persistenza esito generazione file su <code>vendite.fatture_sdi</code> (<code>nome_file</code> + meta output).</li>
+<li>[ ] Registrazione eventi file su <code>vendite.fatture_sdi_eventi</code> (es. <code>FILE_GENERATO</code>).</li>
+<li>[ ] Processo di invio canale SDI e aggiornamento <code>data_invio</code>/esiti ricezione.</li>
 <li>[x] Refactor fondi fattura su contabili/righe (<code>fn_sync_contabili_fondo_fattura</code>) con deprecazione wrapper legacy.</li>
 <li>[x] Refactor saldi: <code>fn_get_saldo_fattura</code> come residuo documento.</li>
 <li>[x] Introduzione saldo contabile postabile (<code>fn_get_saldo_fattura_contabili</code>) per evitare doppie inclusioni.</li>
@@ -4535,6 +4568,20 @@ La guida principale resta <code>docs/it/guide/fatturazione.md</code>.</p>
 <li>[x] <code>DEFINITIVA</code> in modalita resume (no reset globale lotto).</li>
 <li>[x] Error envelope + idempotency API centralizzati e allineati al flusso.</li>
 <li>[x] Test unit runner aggiornati e verdi (<code>apps.vendite.tests.services.test_pipeline_runner</code>).</li>
+</ul>
+<h3 id="stato-sdi-dettaglio-operativo">Stato SDI (dettaglio operativo)<a class="headerlink" href="#stato-sdi-dettaglio-operativo" title="Permanent link">&para;</a></h3>
+<p>Gia` implementato:</p>
+<ul>
+<li><code>vendite.fn_prepare_sdi_payload(...)</code> (DB): prepara/riusa tentativi SDI per fatture del lotto.</li>
+<li>task pipeline <code>prepare_sdi_payload_lotto</code> (Django): invoca funzione DB e reperisce dataset strutturato.</li>
+<li>facade applicativa <code>fn_prepare_sdi_payload_lotto</code> (Django): riuso anche fuori pipeline.</li>
+</ul>
+<p>Da implementare (step successivi):</p>
+<ul>
+<li>builder file SDI (XML/metadata) a partire dal payload.</li>
+<li>persistenza nome/percorso file su <code>vendite.fatture_sdi</code>.</li>
+<li>evento applicativo su <code>vendite.fatture_sdi_eventi</code> (<code>FILE_GENERATO</code> e successivi).</li>
+<li>step invio canale SDI con gestione esiti (accettazione/scarto/consegna).</li>
 </ul>
 <h2 id="go-live-checklist-tecnica-stato">✅ Go-live checklist tecnica (stato)<a class="headerlink" href="#go-live-checklist-tecnica-stato" title="Permanent link">&para;</a></h2>
 <ul>
@@ -5493,6 +5540,102 @@ per evitare fatture miste o ambiguita`.</p>
 <h3 id="19-promemoria-refactor">19) Promemoria refactor<a class="headerlink" href="#19-promemoria-refactor" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Rinominare <code>vendite.fatturazione_lotti_attivita</code> in <code>vendite.attivita_fatturabili_lotti</code>.</li>
+</ul>
+<hr />
+<h3 id="20-error_log-refactor">20) error_log refactor<a class="headerlink" href="#20-error_log-refactor" title="Permanent link">&para;</a></h3>
+<p>Obiettivo: classificare le funzioni perimetro <code>LOTTO</code> vs <code>FATTURA</code> vs <code>ATTIVITA_FATTURABILI</code> per applicare in modo coerente il routing errori applicativi (<code>scope</code>, <code>severity</code>, <code>code</code>, <code>lotto_id</code>, <code>fattura_id</code>, <code>context</code>) su <code>dbops.error_log</code> e log dominio.</p>
+<p><strong>Perimetro LOTTO</strong></p>
+<ul>
+<li>✅X<code>vendite.fn_create_fatturazione_lotto</code></li>
+<li>✅X <code>vendite.fn_get_or_create_lotto</code></li>
+<li>✅X <code>vendite.fn_set_fatturazione_lotto_stato</code></li>
+<li>✅X <code>vendite.fn_sync_lotto_fatture_stato</code></li>
+<li>✅X <code>vendite.fn_log_pipeline_fase</code></li>
+<li>✅X <code>vendite.fn_log_lotto_esito_fatture</code></li>
+<li>✅X <code>vendite.fn_list_fatturazione_pipeline_steps</code></li>
+<li>✅X <code>vendite.fn_resolve_fatturazione_pipeline_step</code></li>
+<li>✅X <code>vendite.fn_prepare_sdi_payload</code></li>
+<li>✅X <code>vendite.fn_close_giornaliero_lotto</code></li>
+<li>✅X <code>vendite.fn_reset_lotto_draft</code></li>
+<li>✅X <code>vendite.fn_reset_lotto_fattura_draft</code></li>
+<li>✅ Trigger: <code>vendite.trgfn_fatturazione_lotti_guard_stato</code>, <code>vendite.trgfn_fatturazione_lotti_gen_codice</code></li>
+</ul>
+<p><strong>Perimetro FATTURA</strong></p>
+<ul>
+<li>✅ X<code>vendite.fn_build_fattura_key</code></li>
+<li>✅ X<code>vendite.fn_get_or_create_fattura_header</code></li>
+<li>✅ X<code>vendite.fn_group_attivita_fatturabili</code></li>
+<li>✅ X<code>vendite.fn_generate_fatture_righe</code></li>
+<li>✅ X<code>vendite.fn_assign_numero_fattura</code></li>
+<li>✅ X<code>vendite.fn_numera_fattura_opz_emessa</code></li>
+<li>✅ X<code>vendite.fn_ricalcola_riepilogo_iva_fattura</code></li>
+<li>✅ X<code>vendite.fn_ricalcola_totali_fattura</code></li>
+<li>✅ X<code>vendite.fn_ricalcola_fattura</code></li>
+<li>✅ X<code>vendite.fn_ricalcola_riepiloghi_iva_lotto</code></li>
+<li>✅ X<code>vendite.fn_get_totale_fondi_fattura</code></li>
+<li>✅ X<code>vendite.fn_genera_fondi_fattura_source</code></li>
+<li>✅ X<code>vendite.fn_applica_fondi_fattura</code></li>
+<li>✅ X<code>vendite.fn_reset_fondi_fattura</code></li>
+<li>✅ X<code>vendite.fn_sync_contabili_fondo_fattura</code></li>
+<li>✅ X<code>vendite.fn_sync_pagamento_fondo_fattura</code> (wrapper, da tenere solo come compatibilità)</li>
+<li>✅ X<code>vendite.fn_sync_fattura_critical</code></li>
+<li>✅ X<code>vendite.fn_resolve_termini_pagamento</code></li>
+<li>✅ Trigger: <code>vendite.trgfn_fatture_*</code>, <code>vendite.trgfn_fatture_righe_guard_normalize</code></li>
+</ul>
+<p><strong>Perimetro ATTIVITA_FATTURABILI (pre-fattura)</strong></p>
+<ul>
+<li>✅ <code>vendite.fn_select_attivita_fatturabili</code></li>
+<li>✅ <code>vendite.fn_get_registro_id</code></li>
+<li>✅ <code>vendite.fn_get_tipo_doc_fiscale_id</code></li>
+<li>✅ <code>vendite.fn_get_valuta_id</code></li>
+<li>✅ <code>vendite.fn_get_vendite_note</code></li>
+<li>✅ <code>vendite.fn_list_attivita_pipeline_steps</code></li>
+<li>✅ <code>vendite.fn_resolve_attivita_pipeline_step</code></li>
+<li>✅ Trigger: <code>vendite.trgfn_attivita_fatturabili_*</code>, <code>vendite.trgfn_attivita_norm_competenza_mese</code></li>
+</ul>
+<p><strong>Legacy orchestration SQL (deprecata lato runtime)</strong></p>
+<ul>
+<li>✅ <code>vendite.pr_run_lotto_pipeline</code></li>
+<li>✅ <code>vendite.fn_execute_pipeline_step</code></li>
+<li>Nota: runtime corrente orchestrato in Django/Python; mantenere SQL solo come compatibilità tecnica/documentale finché non rimosso.</li>
+</ul>
+<p><strong>Owner runtime per blocco</strong></p>
+<table>
+<thead>
+<tr>
+<th>Blocco</th>
+<th>Owner runtime principale</th>
+<th>Note operative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LOTTO</td>
+<td>Django orchestration + SQL guard</td>
+<td>Python gestisce sequencing/retry/logica step; DB applica vincoli e guardrail di stato/integrità.</td>
+</tr>
+<tr>
+<td>FATTURA</td>
+<td>Ibrido</td>
+<td>Python orchestration per processo; SQL per calcoli atomici, consistenza dati e operazioni batch/sincronia.</td>
+</tr>
+<tr>
+<td>ATTIVITA_FATTURABILI</td>
+<td>Ibrido</td>
+<td>SQL forte su selezione/lock/normalize; Python usa le funzioni DB dentro flussi pipeline/applicativi.</td>
+</tr>
+<tr>
+<td>Legacy orchestration SQL</td>
+<td>Deprecato</td>
+<td>Da non usare come entrypoint runtime; mantenuto solo per compatibilità tecnica temporanea.</td>
+</tr>
+</tbody>
+</table>
+<p>Legenda owner:</p>
+<ul>
+<li><code>SQL guard</code>: enforcement dati/stati/integrità direttamente nel DB.</li>
+<li><code>Django orchestration</code>: controllo del flusso di processo (pipeline/task/error handling).</li>
+<li><code>Ibrido</code>: orchestration in Python con task calcolati/validati da funzioni SQL.</li>
 </ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
