@@ -3583,6 +3583,78 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#checklist-finale-unificata-db-django-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Checklist finale unificata (DB + Django + API)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="✅ Checklist finale unificata (DB + Django + API)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-test-db-pgtap-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Test DB / pgtap (SQL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-test-django-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Test Django services
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-test-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Test API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-smoke-end-to-end-manuale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Smoke end-to-end (manuale)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-criteri-di-chiusura" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Criteri di chiusura
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4744,7 +4816,50 @@ le chiusure sopra restano valide salvo refactor strutturali successivi.</p>
 <li>[x] <code>fatturazione-attivita-progetto.md</code> aggiornato con avanzamento su fondi/contabili/saldi</li>
 <li>[x] Guida <code>fatturazione.md</code> integrata con sezione minimi/fondi fattura</li>
 <li>[x] Guida <code>pagamenti.md</code> introdotta con dashboard (WIP) e vincoli architetturali</li>
-<li>[ ] Consolidare checklist test finali (pgtap + Django) in sezione unica di chiusura</li>
+<li>[x] Consolidare checklist test finali (pgtap + Django) in sezione unica di chiusura</li>
+</ul>
+<h3 id="checklist-finale-unificata-db-django-api">✅ Checklist finale unificata (DB + Django + API)<a class="headerlink" href="#checklist-finale-unificata-db-django-api" title="Permanent link">&para;</a></h3>
+<h4 id="1-test-db-pgtap-sql">1) Test DB / pgtap (SQL)<a class="headerlink" href="#1-test-db-pgtap-sql" title="Permanent link">&para;</a></h4>
+<ul>
+<li>[x] Eseguiti test pgtap SQL principali del dominio fatturazione/pagamenti.</li>
+<li>[x] Nessun errore bloccante su migrazioni/funzioni SQL coinvolte nel flusso.</li>
+</ul>
+<p>Comando base:</p>
+<div class="highlight"><pre><span></span><code>scripts/testpgtap.sh<span class="w"> </span>db/pgtap/&lt;schema&gt;/&lt;test-file&gt;.sql
+</code></pre></div>
+<h4 id="2-test-django-services">2) Test Django services<a class="headerlink" href="#2-test-django-services" title="Permanent link">&para;</a></h4>
+<ul>
+<li>[x] Eseguire suite servizi pipeline:</li>
+<li>[x] <code>apps.vendite.tests.services.test_pipeline_runner</code></li>
+<li>[x] <code>apps.vendite.tests.services.test_pipeline_step_executor</code></li>
+<li>[x] Eseguire suite servizi reset/lotto/fattura.</li>
+</ul>
+<p>Comando base:</p>
+<div class="highlight"><pre><span></span><code>./manage-test.sh<span class="w"> </span>apps.vendite.tests.services<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>
+</code></pre></div>
+<h4 id="3-test-api">3) Test API<a class="headerlink" href="#3-test-api" title="Permanent link">&para;</a></h4>
+<ul>
+<li>[x] Eseguire test API pipeline/reset:</li>
+<li>[x] <code>apps.vendite.tests.api.test_pipeline_api</code></li>
+<li>[x] <code>apps.vendite.tests.api.test_reset_lotto_draft_api</code></li>
+<li>[x] <code>apps.vendite.tests.api.test_reset_lotto_fattura_draft_api</code></li>
+<li>[x] Verificare idempotency + envelope errori.</li>
+</ul>
+<p>Comando base:</p>
+<div class="highlight"><pre><span></span><code>./manage-test.sh<span class="w"> </span>apps.vendite.tests.api<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>
+</code></pre></div>
+<h4 id="4-smoke-end-to-end-manuale">4) Smoke end-to-end (manuale)<a class="headerlink" href="#4-smoke-end-to-end-manuale" title="Permanent link">&para;</a></h4>
+<ul>
+<li>[ ] Avvio pipeline lotto (<code>MASSIVO</code>/<code>GIORNALIERO</code>) da API.</li>
+<li>[ ] Verifica avanzamento step/fase nei log lotto.</li>
+<li>[ ] Verifica routing errori su <code>error_log</code> + log dominio (<code>fatture_log</code>/<code>fatturazione_lotti_log</code>).</li>
+</ul>
+<h4 id="5-criteri-di-chiusura">5) Criteri di chiusura<a class="headerlink" href="#5-criteri-di-chiusura" title="Permanent link">&para;</a></h4>
+<ul>
+<li>[ ] Tutti i test DB + Django + API verdi.</li>
+<li>[ ] Nessun errore tecnico non sanitizzato in response pubblica.</li>
+<li>[ ] Tracciabilita` completa request/log (request_id, scope, severity, code).</li>
+<li>[ ] Chiusura checklist con data e commit SHA.</li>
 </ul>
 <h2 id="promemoria-saldi-da-formalizzare">📌 Promemoria saldi (da formalizzare)<a class="headerlink" href="#promemoria-saldi-da-formalizzare" title="Permanent link">&para;</a></h2>
 <ul>
