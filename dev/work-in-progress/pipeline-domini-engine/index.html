@@ -3988,22 +3988,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#102-pipeline-giornaliera-doppio-canale-di-chiusura-lotto" class="md-nav__link">
+  <a href="#102-pipeline-giornaliera-convergenza-canale-unico-chiusura-lotto" class="md-nav__link">
     <span class="md-ellipsis">
       
-        10.2 Pipeline giornaliera: doppio canale di chiusura lotto
+        10.2 Pipeline giornaliera: convergenza canale unico chiusura lotto
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="10.2 Pipeline giornaliera: doppio canale di chiusura lotto">
+    <nav class="md-nav" aria-label="10.2 Pipeline giornaliera: convergenza canale unico chiusura lotto">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#problema_1" class="md-nav__link">
+  <a href="#esito-adottato" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Problema
+        Esito adottato
       
     </span>
   </a>
@@ -4022,10 +4022,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#soluzioni-possibili_1" class="md-nav__link">
+  <a href="#regole-operative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Soluzioni possibili
+        Regole operative
       
     </span>
   </a>
@@ -4205,7 +4205,7 @@ in fatturazione, alimentazione attivita`, pratiche o utility verticali (idrico/g
 <li>[x] Tabelle <code>dbops.domini_task</code>, <code>dbops.pipeline_task_registry</code>, <code>dbops.pipeline_task_registry_impl</code></li>
 <li>[x] Funzioni <code>dbops.fn_check_pipeline_task_registered</code> e <code>dbops.fn_get_pipeline_task_implementation</code></li>
 <li>[x] Seed CSV iniziali per dominio FATTURAZIONE e task base</li>
-<li>[x] Task <code>close_lotto</code> registrato con handler <code>close_lotto_default</code></li>
+<li>[x] Chiusura lotto standardizzata via flag <code>config.stati_doc_fiscale.chiude_lotto</code> a fine step (runner)</li>
 </ul>
 <hr />
 <h2 id="42-pipeline-fatturazione-db-integrazioni">4.2 Pipeline fatturazione (DB) - integrazioni<a class="headerlink" href="#42-pipeline-fatturazione-db-integrazioni" title="Permanent link">&para;</a></h2>
@@ -4238,7 +4238,7 @@ in fatturazione, alimentazione attivita`, pratiche o utility verticali (idrico/g
 <ul>
 <li>[x] Seed <code>fatturazione_pipeline.csv</code> aggiornato con <code>implementation_key: default</code></li>
 <li>[x] Python usa <code>implementation_key</code> e registry DB per dispatch</li>
-<li>[x] Pipeline massiva (EMESSA) include task <code>close_lotto</code></li>
+<li>[x] Chiusura operativa lotto gestita a fine step via <code>chiude_lotto</code> (nessun task dedicato richiesto in pipeline)</li>
 <li>[x] Runner Django: policy rerun su lotto <code>MASSIVO</code> in errore (resume dallo step corrente + rollback step opzionale via <code>meta.auto_step_rollback=true</code>, con skip automatico dei rollback distruttivi)</li>
 <li>[x] Resume <code>DEFINITIVA</code> per fattura (senza reset globale lotto)</li>
 <li>[x] Seed transizioni <code>config.stati_doc_fiscale_transizioni</code> coerente con avanzamento step lotto</li>
@@ -4370,7 +4370,7 @@ stessa logica di risoluzione configurazione, ma limitata al dominio attivita.</p
 <li>[x] Funzioni DB registry operative (<code>fn_check_pipeline_task_registered</code>, <code>fn_get_pipeline_task_implementation</code>)</li>
 <li>[x] Seed pipeline fatturazione con <code>implementation_key: default</code></li>
 <li>[x] Dispatch Django su registry DB + <code>implementation_key</code></li>
-<li>[x] Task <code>close_lotto</code> integrato nella pipeline massiva</li>
+<li>[x] Chiusura lotto centralizzata nel runner (<code>_process_close_lotto_by_flag</code>)</li>
 <li>[ ] Registry runtime Python completo multi-dominio (mappa per dominio)</li>
 <li>[ ] Pipeline dedicata <code>attivita_fatturabili</code> (log + runner/handler dominio)</li>
 <li>[ ] Pacchetto test completo dominio attivita (pgtap + python)</li>
@@ -4532,46 +4532,26 @@ stessa logica di risoluzione configurazione, ma limitata al dominio attivita.</p
 <h3 id="decisione-proposta">Decisione proposta<a class="headerlink" href="#decisione-proposta" title="Permanent link">&para;</a></h3>
 <p>Adottare opzione 1: una sola baseline <code>3.14</code> su tutti gli ambienti.</p>
 <hr />
-<h2 id="102-pipeline-giornaliera-doppio-canale-di-chiusura-lotto">10.2 Pipeline giornaliera: doppio canale di chiusura lotto<a class="headerlink" href="#102-pipeline-giornaliera-doppio-canale-di-chiusura-lotto" title="Permanent link">&para;</a></h2>
-<h3 id="problema_1">Problema<a class="headerlink" href="#problema_1" title="Permanent link">&para;</a></h3>
-<p>Nell'implementazione attuale convivono due meccanismi di chiusura:</p>
+<h2 id="102-pipeline-giornaliera-convergenza-canale-unico-chiusura-lotto">10.2 Pipeline giornaliera: convergenza canale unico chiusura lotto<a class="headerlink" href="#102-pipeline-giornaliera-convergenza-canale-unico-chiusura-lotto" title="Permanent link">&para;</a></h2>
+<h3 id="esito-adottato">Esito adottato<a class="headerlink" href="#esito-adottato" title="Permanent link">&para;</a></h3>
+<p>La chiusura operativa lotto avviene con un solo meccanismo:</p>
 <ol>
-<li>chiusura implicita in runner (<code>fn_close_giornaliero_lotto</code> quando step = <code>INVIATA</code>)</li>
-<li>task pipeline <code>close_lotto</code> che chiude operativamente con update diretto</li>
+<li>a fine step, il runner verifica <code>config.stati_doc_fiscale.chiude_lotto</code></li>
+<li>se <code>true</code>, chiude il lotto operativamente</li>
+<li>se lo step fallisce, non avviene chiusura</li>
 </ol>
-<p>Se la configurazione pipeline non e` rigorosa, i due canali possono concorrere sullo stesso stato operativo/documentale.</p>
 <h3 id="rischio-tecnico_1">Rischio tecnico<a class="headerlink" href="#rischio-tecnico_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>transizioni duplicate o non deterministiche</li>
-<li>log step meno leggibili (chiusura avvenuta fuori task esplicito)</li>
+<li>log step meno leggibili (chiusura non centralizzata)</li>
 <li>maggior rischio regressioni quando si estende a nuovi domini pipeline</li>
 </ul>
-<h3 id="soluzioni-possibili_1">Soluzioni possibili<a class="headerlink" href="#soluzioni-possibili_1" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>Canale unico via task pipeline (consigliato)</strong></li>
-<li>il runner non chiude automaticamente allo step <code>INVIATA</code></li>
-<li>la chiusura avviene solo tramite task esplicito (<code>close_lotto</code>) risolto da registry</li>
-<li>
-<p>il task deve delegare a funzione DB canonica (no update diretto duplicato)</p>
-</li>
-<li>
-<p><strong>Canale unico via runner</strong></p>
-</li>
-<li>mantenere chiusura automatica nel runner</li>
-<li>rimuovere <code>close_lotto</code> dagli step giornalieri</li>
-<li>
-<p>vietare da validazione pre-run l'uso del task <code>close_lotto</code> per <code>GIORNALIERO</code></p>
-</li>
-<li>
-<p><strong>Hardening ibrido transitorio</strong></p>
-</li>
-<li>mantenere assetto attuale ma con guard espliciti:<ul>
-<li>validazione pre-run: errore se in pipeline <code>GIORNALIERO</code> coesistono auto-close e task <code>close_lotto</code></li>
-<li>idempotenza forte lato DB: seconda chiusura no-op con log warning</li>
+<h3 id="regole-operative">Regole operative<a class="headerlink" href="#regole-operative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Niente chiusure implicite per stato specifico (<code>INVIATA</code>) hardcoded nel runner.</li>
+<li>Niente task pipeline dedicati <code>close_lotto</code>.</li>
+<li>Parametrizzazione solo su stato configurato (<code>chiude_lotto=true</code>).</li>
 </ul>
-</li>
-<li>pianificare convergenza a canale unico</li>
-</ol>
 <h3 id="decisione-proposta_1">Decisione proposta<a class="headerlink" href="#decisione-proposta_1" title="Permanent link">&para;</a></h3>
 <p>Convergere a canale unico (opzione 1) per avere comportamento esplicito, testabile e coerente con il modello registry/task.</p>
 <hr />
