@@ -3386,8 +3386,63 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="✅ Recap operativo pipeline fatturazione (DB + Django)">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roadmap-runtime-taskstato_lotto-nuova" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛣️ Roadmap runtime task/stato_lotto (nuova)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛣️ Roadmap runtime task/stato_lotto (nuova)">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#decisioni-confermate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisioni confermate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sviluppi-db-da-introdurre" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sviluppi DB da introdurre
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sviluppi-django-successivi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sviluppi Django successivi
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#criteri-di-completamento-roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Criteri di completamento roadmap
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#stato-sdi-dettaglio-operativo" class="md-nav__link">
@@ -4546,6 +4601,35 @@ La guida principale resta <code>docs/it/guide/fatturazione.md</code>.</p>
 <li>[x] <code>DEFINITIVA</code> in modalita resume (no reset globale lotto).</li>
 <li>[x] Error envelope + idempotency API centralizzati e allineati al flusso.</li>
 <li>[x] Test unit runner aggiornati e verdi (<code>apps.vendite.tests.services.test_pipeline_runner</code>).</li>
+</ul>
+<h2 id="roadmap-runtime-taskstato_lotto-nuova">🛣️ Roadmap runtime task/stato_lotto (nuova)<a class="headerlink" href="#roadmap-runtime-taskstato_lotto-nuova" title="Permanent link">&para;</a></h2>
+<p>Obiettivo: rendere esplicita la gestione runtime per task, mantenendo <code>stato_lotto</code>
+come stato tecnico di esecuzione e <code>stato_operativo</code> come stato business del lotto.</p>
+<h3 id="decisioni-confermate">Decisioni confermate<a class="headerlink" href="#decisioni-confermate" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] Chiusura lotto solo via flag <code>config.stati_doc_fiscale.chiude_lotto</code> a fine step.</li>
+<li>[x] Nessuna chiusura hardcoded su stato specifico.</li>
+<li>[x] In errore step/task: stop del flusso e blocco task successivi nello stesso run.</li>
+<li>[x] Annulla/reset gestiti fuori dal flusso di avanzamento standard.</li>
+</ul>
+<h3 id="sviluppi-db-da-introdurre">Sviluppi DB da introdurre<a class="headerlink" href="#sviluppi-db-da-introdurre" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] <code>vendite.fatturazione_pipeline_task_policy</code></li>
+<li>policy task per pipeline (<code>annullabile</code>, strategia resume/reset, metadati operativi).</li>
+<li>[ ] <code>vendite.fatturazione_lotti_task_runs</code></li>
+<li>traccia runtime per task (start/end, esito, tentativo, errore, contesto step/lotto).</li>
+</ul>
+<h3 id="sviluppi-django-successivi">Sviluppi Django successivi<a class="headerlink" href="#sviluppi-django-successivi" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] runner aggiornato per leggere policy task da DB prima dell'esecuzione.</li>
+<li>[ ] gestione resume/reset per task in base alla policy (<code>annullabile</code>, <code>resume_mode</code>).</li>
+<li>[ ] blocco rilancio task quando policy non consente retry automatico.</li>
+</ul>
+<h3 id="criteri-di-completamento-roadmap">Criteri di completamento roadmap<a class="headerlink" href="#criteri-di-completamento-roadmap" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] policy task applicata in runtime su almeno i task DRAFT/EMESSA/DEFINITIVA.</li>
+<li>[ ] tracing task consultabile da API/log dominio senza parsing del solo <code>error_log</code>.</li>
+<li>[ ] test pgtap + test service Django verdi su flussi: ok, errore task, resume/reset.</li>
 </ul>
 <h3 id="stato-sdi-dettaglio-operativo">Stato SDI (dettaglio operativo)<a class="headerlink" href="#stato-sdi-dettaglio-operativo" title="Permanent link">&para;</a></h3>
 <p>Gia` implementato:</p>

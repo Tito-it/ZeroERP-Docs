@@ -3927,76 +3927,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#101-baseline-runtime-python-non-allineata-cidev-vs-docker" class="md-nav__link">
+  <a href="#101-pipeline-giornaliera-convergenza-canale-unico-chiusura-lotto" class="md-nav__link">
     <span class="md-ellipsis">
       
-        10.1 Baseline runtime Python non allineata (CI/dev vs Docker)
+        10.1 Pipeline giornaliera: convergenza canale unico chiusura lotto
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="10.1 Baseline runtime Python non allineata (CI/dev vs Docker)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#problema" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problema
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rischio-tecnico" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rischio tecnico
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#soluzioni-possibili" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Soluzioni possibili
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#decisione-proposta" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Decisione proposta
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#102-pipeline-giornaliera-convergenza-canale-unico-chiusura-lotto" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        10.2 Pipeline giornaliera: convergenza canale unico chiusura lotto
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="10.2 Pipeline giornaliera: convergenza canale unico chiusura lotto">
+    <nav class="md-nav" aria-label="10.1 Pipeline giornaliera: convergenza canale unico chiusura lotto">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -4011,7 +3950,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rischio-tecnico_1" class="md-nav__link">
+  <a href="#rischio-tecnico" class="md-nav__link">
     <span class="md-ellipsis">
       
         Rischio tecnico
@@ -4033,7 +3972,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#decisione-proposta_1" class="md-nav__link">
+  <a href="#decisione-proposta" class="md-nav__link">
     <span class="md-ellipsis">
       
         Decisione proposta
@@ -4375,6 +4314,9 @@ stessa logica di risoluzione configurazione, ma limitata al dominio attivita.</p
 <li>[ ] Pipeline dedicata <code>attivita_fatturabili</code> (log + runner/handler dominio)</li>
 <li>[ ] Pacchetto test completo dominio attivita (pgtap + python)</li>
 <li>[ ] Validazione pre-run unificata per tutti i domini pipeline</li>
+<li>[ ] Governance runtime task/stato_lotto:</li>
+<li>introdurre policy task per pipeline (<code>vendite.fatturazione_pipeline_task_policy</code>)</li>
+<li>introdurre tracing runtime task per lotto (<code>vendite.fatturazione_lotti_task_runs</code>)</li>
 </ul>
 <h2 id="9-test-gravita-stato-corrente">9) Test gravita (stato corrente)<a class="headerlink" href="#9-test-gravita-stato-corrente" title="Permanent link">&para;</a></h2>
 <h3 id="alta">Alta<a class="headerlink" href="#alta" title="Permanent link">&para;</a></h3>
@@ -4499,40 +4441,7 @@ stessa logica di risoluzione configurazione, ma limitata al dominio attivita.</p
 </ul>
 <hr />
 <h2 id="10-note-critiche-aperte-da-chiudere">10) Note critiche aperte (da chiudere)<a class="headerlink" href="#10-note-critiche-aperte-da-chiudere" title="Permanent link">&para;</a></h2>
-<h2 id="101-baseline-runtime-python-non-allineata-cidev-vs-docker">10.1 Baseline runtime Python non allineata (CI/dev vs Docker)<a class="headerlink" href="#101-baseline-runtime-python-non-allineata-cidev-vs-docker" title="Permanent link">&para;</a></h2>
-<h3 id="problema">Problema<a class="headerlink" href="#problema" title="Permanent link">&para;</a></h3>
-<p>Ad oggi la baseline runtime non e` unica:</p>
-<ul>
-<li>linee guida e toolchain backend puntano a Python <code>3.14</code></li>
-<li>CI usa Python <code>3.14</code></li>
-<li><code>Dockerfile</code> usa ancora base image Python <code>3.13</code></li>
-</ul>
-<p>Questa divergenza puo` introdurre bug non riproducibili tra locale, CI e container runtime.</p>
-<h3 id="rischio-tecnico">Rischio tecnico<a class="headerlink" href="#rischio-tecnico" title="Permanent link">&para;</a></h3>
-<ul>
-<li>differenze di risoluzione dipendenze e wheel</li>
-<li>differenze di comportamento runtime (stdlib/interprete)</li>
-<li>falsi verdi in CI o regressioni solo in produzione</li>
-</ul>
-<h3 id="soluzioni-possibili">Soluzioni possibili<a class="headerlink" href="#soluzioni-possibili" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>Allineamento completo a 3.14 (consigliato)</strong></li>
-<li>aggiornare <code>Dockerfile</code> a base <code>python:3.14-slim</code></li>
-<li>mantenere <code>backend/.python-version</code> e CI su 3.14</li>
-<li>
-<p>verificare lock/compile requirements con 3.14</p>
-</li>
-<li>
-<p><strong>Rollback coordinato a 3.13</strong></p>
-</li>
-<li>portare CI, <code>.python-version</code> e linee guida a 3.13</li>
-<li>rigenerare requirements su 3.13</li>
-<li>documentare motivazione e data target per ritorno a 3.14</li>
-</ol>
-<h3 id="decisione-proposta">Decisione proposta<a class="headerlink" href="#decisione-proposta" title="Permanent link">&para;</a></h3>
-<p>Adottare opzione 1: una sola baseline <code>3.14</code> su tutti gli ambienti.</p>
-<hr />
-<h2 id="102-pipeline-giornaliera-convergenza-canale-unico-chiusura-lotto">10.2 Pipeline giornaliera: convergenza canale unico chiusura lotto<a class="headerlink" href="#102-pipeline-giornaliera-convergenza-canale-unico-chiusura-lotto" title="Permanent link">&para;</a></h2>
+<h2 id="101-pipeline-giornaliera-convergenza-canale-unico-chiusura-lotto">10.1 Pipeline giornaliera: convergenza canale unico chiusura lotto<a class="headerlink" href="#101-pipeline-giornaliera-convergenza-canale-unico-chiusura-lotto" title="Permanent link">&para;</a></h2>
 <h3 id="esito-adottato">Esito adottato<a class="headerlink" href="#esito-adottato" title="Permanent link">&para;</a></h3>
 <p>La chiusura operativa lotto avviene con un solo meccanismo:</p>
 <ol>
@@ -4540,7 +4449,7 @@ stessa logica di risoluzione configurazione, ma limitata al dominio attivita.</p
 <li>se <code>true</code>, chiude il lotto operativamente</li>
 <li>se lo step fallisce, non avviene chiusura</li>
 </ol>
-<h3 id="rischio-tecnico_1">Rischio tecnico<a class="headerlink" href="#rischio-tecnico_1" title="Permanent link">&para;</a></h3>
+<h3 id="rischio-tecnico">Rischio tecnico<a class="headerlink" href="#rischio-tecnico" title="Permanent link">&para;</a></h3>
 <ul>
 <li>transizioni duplicate o non deterministiche</li>
 <li>log step meno leggibili (chiusura non centralizzata)</li>
@@ -4552,7 +4461,7 @@ stessa logica di risoluzione configurazione, ma limitata al dominio attivita.</p
 <li>Niente task pipeline dedicati <code>close_lotto</code>.</li>
 <li>Parametrizzazione solo su stato configurato (<code>chiude_lotto=true</code>).</li>
 </ul>
-<h3 id="decisione-proposta_1">Decisione proposta<a class="headerlink" href="#decisione-proposta_1" title="Permanent link">&para;</a></h3>
+<h3 id="decisione-proposta">Decisione proposta<a class="headerlink" href="#decisione-proposta" title="Permanent link">&para;</a></h3>
 <p>Convergere a canale unico (opzione 1) per avere comportamento esplicito, testabile e coerente con il modello registry/task.</p>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
