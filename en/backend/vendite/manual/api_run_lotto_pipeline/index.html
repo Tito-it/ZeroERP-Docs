@@ -3472,10 +3472,19 @@
 <ul>
 <li>Metodo: <code>POST</code></li>
 <li>Path canonico: <code>/api/v1/vendite/pipeline/run/</code></li>
-<li>Path legacy (deprecato): <code>/api/vendite/pipeline/run/</code> (disabilitato di default)</li>
 <li>Header richiesto: <code>Idempotency-Key</code></li>
-<li>Header sicurezza (solo path <code>/api/v1/...</code>): <code>Authorization: Bearer &lt;access_token&gt;</code></li>
-<li>Body JSON: <code>lotto_id</code>, <code>competenza_mese</code>, <code>tipo_doc_fiscale_id</code>, <code>utility_id</code>, <code>billing_account_id</code>, <code>lock_batch_id</code>, <code>meta</code>, <code>dry_run</code>, <code>tipo_lotto</code></li>
+<li>Header sicurezza: <code>Authorization: Bearer &lt;access_token&gt;</code></li>
+<li>Body JSON (tutti i campi opzionali):</li>
+<li><code>lotto_id</code> (int) — <code>0</code>/<code>null</code> = crea/risolvi lotto</li>
+<li><code>competenza_mese</code> (date <code>YYYY-MM-DD</code>) — mese di competenza</li>
+<li><code>tipo_doc_fiscale_id</code> (int) — tipo documento fiscale</li>
+<li><code>utility_id</code> (int) — filtro utility</li>
+<li><code>billing_account_id</code> (int) — filtro billing account</li>
+<li><code>emittente_soggetto_ruolo_id</code> (int) — emittente fiscale (ruolo <code>anagrafiche.soggetti_ruoli</code>)</li>
+<li><code>lock_batch_id</code> (uuid) — correlatore lotto (vedi Regole)</li>
+<li><code>meta</code> (object) — metadati liberi del run</li>
+<li><code>dry_run</code> (bool) — esegue senza effetti reali</li>
+<li><code>tipo_lotto</code> (string) — <code>MASSIVO</code> (default) o <code>GIORNALIERO</code></li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3486,21 +3495,28 @@
 <ul>
 <li>Valida JSON e formato date (<code>YYYY-MM-DD</code>).</li>
 <li>Converte <code>dry_run</code> in boolean.</li>
-<li>Per input compatibili UI/legacy, converte <code>0</code> in <code>null</code> sugli ID opzionali (<code>lotto_id</code>, <code>tipo_doc_fiscale_id</code>, <code>utility_id</code>, <code>billing_account_id</code>).</li>
-<li><code>lock_batch_id</code> e<code>il correlatore del lotto: se lo passi e</code> <strong>RIUSO</strong> lotto; per creare un lotto nuovo devi <strong>ometterlo</strong> o passare <code>null</code> (il DB lo genera). Riutilizzare un <code>lock_batch_id</code> di un lotto <code>COMPLETATO</code> produce errore.</li>
-<li>Usa parser/request helper condivisi area core.</li>
-<li>Traduce eccezioni con envelope errore core.</li>
+<li>Converte <code>0</code> in <code>null</code> sugli ID opzionali (<code>lotto_id</code>, <code>tipo_doc_fiscale_id</code>, <code>utility_id</code>, <code>billing_account_id</code>, <code>emittente_soggetto_ruolo_id</code>).</li>
+<li><code>lock_batch_id</code> è il correlatore del lotto: se passato è <strong>RIUSO</strong> lotto; per creare un lotto nuovo <strong>ometterlo</strong> o passare <code>null</code> (il DB lo genera). Riutilizzare un <code>lock_batch_id</code> di un lotto <code>COMPLETATO</code> produce errore.</li>
+<li><strong>Risoluzione emittente fiscale</strong> — delegata a <code>vendite.fn_get_or_create_lotto</code> nel DB con questa priorità:</li>
+<li><code>emittente_soggetto_ruolo_id</code> esplicito nel payload → validato e usato direttamente.</li>
+<li>Dedotto dal mapping <code>billing_account_id</code> → emittente fiscale, se <code>billing_account_id</code> valorizzato.</li>
+<li>Unico emittente fiscale attivo nel sistema → usato come default.</li>
+<li>Se non determinabile → errore bloccante.</li>
+<li><strong><code>emittente_soggetto_ruolo_id</code> è attributo del lotto</strong>, non del billing account: viene persistito su <code>vendite.fatturazione_lotti.emittente_soggetto_ruolo_id</code> e usato da tutti i task pipeline (es. <code>select_attivita</code>) come fonte primaria. Il valore nei <code>params</code> JSON della config pipeline non sovrascrive quello del lotto.</li>
 <li>Implementa il pattern standard core <code>handle_post_json(...)</code>.</li>
-<li>Non usa <code>try/except Exception</code> locale: fallback errori non gestiti delegato al middleware API globale.</li>
 <li>Endpoint write protetto con obbligo <code>Idempotency-Key</code>.</li>
+<li>Endpoint v1 richiede JWT.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Dipendenze indirette via <code>services/pipeline_runner.py</code> e <code>db/pipeline_repository.py</code>.</li>
+<li><code>vendite.fn_get_or_create_lotto</code> (creazione/risoluzione lotto + emittente)</li>
+<li><code>vendite.fatturazione_lotti.emittente_soggetto_ruolo_id</code> (attributo lotto persistito)</li>
+<li>Dipendenze indirette via <code>services/pipeline_runner.py</code> e <code>db/pipeline_repository.py</code></li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Primo endpoint operativo per pilotare la migrazione SQL -&gt; Django della pipeline vendite.</li>
+<li>L'emittente fiscale era in precedenza dedotto a runtime dai parametri; ora è attributo esplicito del lotto (persistito in DB alla creazione).</li>
 </ul>
 
 

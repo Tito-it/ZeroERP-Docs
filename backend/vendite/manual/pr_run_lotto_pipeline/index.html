@@ -3419,6 +3419,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Regole">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#risoluzione-emittente-fiscale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risoluzione emittente fiscale
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3447,7 +3464,7 @@
   <a href="#matrice-responsabilita-python-vs-db" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Matrice responsabilita` (Python vs DB)
+        Matrice responsabilità (Python vs DB)
       
     </span>
   </a>
@@ -3487,16 +3504,20 @@
 
 <h1 id="pr_run_lotto_pipeline-django">pr_run_lotto_pipeline (Django)<a class="headerlink" href="#pr_run_lotto_pipeline-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Orchestrare l'esecuzione della pipeline di fatturazione per un lotto, gestendo:
-- avanzamento step configurati
-- aggiornamento stato lotto/job
-- logging di fase e gestione errori applicativi</p>
+<p>Orchestrare l'esecuzione della pipeline di fatturazione per un lotto, gestendo:</p>
+<ul>
+<li>avanzamento step configurati</li>
+<li>aggiornamento stato lotto/job</li>
+<li>logging di fase e gestione errori applicativi</li>
+</ul>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>La procedura SQL <code>vendite.pr_run_lotto_pipeline()</code> e<code>stata migrata lato backend Django.
-L'orchestrazione ora vive in:
--</code>apps/vendite/services/pipeline_service.py<code>(</code>pr_run_lotto_pipeline<code>)
--</code>apps/vendite/services/pipeline_runner.py<code>(</code>LottoPipelineRunner.run_pipeline<code>)
--</code>apps/vendite/services/pipeline_error_logger.py<code>(</code>PipelineErrorLogger<code>, routing errori</code>LOTTO<code>/</code>FATTURA`)</p>
+<p>La procedura SQL <code>vendite.pr_run_lotto_pipeline()</code> è stata migrata lato backend Django.
+L'orchestrazione ora vive in:</p>
+<ul>
+<li><code>apps/vendite/services/pipeline_service.py</code> (<code>pr_run_lotto_pipeline</code>)</li>
+<li><code>apps/vendite/services/pipeline_runner.py</code> (<code>LottoPipelineRunner.run_pipeline</code>)</li>
+<li><code>apps/vendite/services/pipeline_error_logger.py</code> (<code>PipelineErrorLogger</code>, routing errori <code>LOTTO</code>/<code>FATTURA</code>)</li>
+</ul>
 <p>I vincoli di coerenza dati e le operazioni DB specialistiche restano delegate al database.</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3519,41 +3540,50 @@ L'orchestrazione ora vive in:
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Se il lotto non esiste viene creato/risolto via DB.</li>
+<li>Se il lotto non esiste viene creato/risolto via DB (<code>vendite.fn_get_or_create_lotto</code>).</li>
 <li>Il tipo lotto effettivo usa DB come fonte autoritativa; input come fallback.</li>
-<li>Se <code>stato_lotto = IN_ESECUZIONE</code> il rilancio pipeline e` bloccato.</li>
-<li>Se il lotto e<code>chiuso (</code>COMPLETATO<code>/</code>ERRORE<code>), le transizioni di stato documento sono governate da</code>config.stati_doc_fiscale_transizioni` (enforcement DB).</li>
+<li>Se <code>stato_lotto = IN_ESECUZIONE</code> il rilancio pipeline è bloccato.</li>
+<li>Se il lotto è chiuso (<code>COMPLETATO</code>/<code>ERRORE</code>), le transizioni di stato documento sono governate da <code>config.stati_doc_fiscale_transizioni</code> (enforcement DB).</li>
 <li>Per lotto <code>GIORNALIERO</code>, allo stato <code>INVIATA</code> viene eseguita chiusura operativa lotto.</li>
 <li>Errori applicativi (<code>ServiceError</code>) preservano codice dominio e marcano lotto in errore.</li>
-<li>Errori inattesi vengono wrappati in <code>E_PIPELINE</code> con causa agganciata (<code>raise ... from ...</code>).</li>
+<li>Errori inattesi vengono wrappati in <code>E_PIPELINE</code> con causa agganciata.</li>
 </ul>
+<h3 id="risoluzione-emittente-fiscale">Risoluzione emittente fiscale<a class="headerlink" href="#risoluzione-emittente-fiscale" title="Permanent link">&para;</a></h3>
+<p>L'emittente viene risolto <strong>una sola volta</strong> alla creazione/risoluzione del lotto, con questa priorità (implementata in <code>vendite.fn_get_or_create_lotto</code>):</p>
+<ol>
+<li><code>emittente_soggetto_ruolo_id</code> esplicito in input → validato e persistito.</li>
+<li>Dedotto dal mapping <code>billing_account_id</code> → emittente fiscale (tabella <code>anagrafiche.emittenti_fiscali_billing_account</code>).</li>
+<li>Unico emittente fiscale attivo nel sistema → usato come default.</li>
+<li>Se non determinabile → errore bloccante.</li>
+</ol>
+<p>Il valore viene persistito su <code>vendite.fatturazione_lotti.emittente_soggetto_ruolo_id</code> e letto da <code>LottoContext</code> a ogni step pipeline. I task (es. <code>select_attivita</code>) usano <strong>esclusivamente</strong> il valore del lotto — i params JSON della config pipeline non sovrascrivono l'emittente.</p>
 <h2 id="logging-e-routing-errori">Logging e routing errori<a class="headerlink" href="#logging-e-routing-errori" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Log tecnico centralizzato: <code>dbops.error_log</code> (via <code>ErrorManager</code> lato backend e <code>fn_log_and_raise_error</code> lato SQL).</li>
-<li>Log dominio lotto: <code>vendite.fatturazione_lotti_log</code> (fasi step + esito severita` dedotto).</li>
-<li>Log dominio fattura: <code>vendite.fatture_log</code> solo per errori attribuibili alla singola fattura (non massivamente a tutto il lotto).</li>
-<li>Contratto consigliato per errori applicativi: <code>scope</code> (<code>LOTTO</code>/<code>FATTURA</code>), <code>severity</code> (<code>I/W/C</code>), <code>code</code>, <code>lotto_id</code>, <code>fattura_id</code> (se <code>FATTURA</code>), <code>context/meta</code>.</li>
+<li>Log dominio lotto: <code>vendite.fatturazione_lotti_log</code> (fasi step + esito severità dedotto).</li>
+<li>Log dominio fattura: <code>vendite.fatture_log</code> solo per errori attribuibili alla singola fattura.</li>
+<li>Contratto errori: <code>scope</code> (<code>LOTTO</code>/<code>FATTURA</code>), <code>severity</code> (<code>I/W/C</code>), <code>code</code>, <code>lotto_id</code>, <code>fattura_id</code> (se <code>FATTURA</code>), <code>context/meta</code>.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>vendite.fn_get_or_create_lotto(...)</code></li>
-<li><code>vendite.fn_set_fatturazione_lotto_stato(...)</code></li>
+<li><code>vendite.fn_get_or_create_lotto(...)</code> — creazione/risoluzione lotto + risoluzione emittente</li>
+<li><code>vendite.fatturazione_lotti.emittente_soggetto_ruolo_id</code> — attributo lotto persistito</li>
+<li><code>anagrafiche.emittenti_fiscali_billing_account</code> — mapping BA → emittente (usato in DB)</li>
 <li><code>vendite.fn_log_pipeline_fase(...)</code></li>
-<li><code>vendite.fn_select_attivita_fatturabili(...)</code></li>
-<li><code>vendite.fn_close_giornaliero_lotto(...)</code></li>
+<li><code>vendite.fn_sync_lotto_fatture_stato(...)</code> — sync <code>stato_esecuzione</code> e <code>stato_doc_fiscale_id</code> sul ponte lotto-fatture</li>
 </ul>
-<h2 id="matrice-responsabilita-python-vs-db">Matrice responsabilita` (Python vs DB)<a class="headerlink" href="#matrice-responsabilita-python-vs-db" title="Permanent link">&para;</a></h2>
+<h2 id="matrice-responsabilita-python-vs-db">Matrice responsabilità (Python vs DB)<a class="headerlink" href="#matrice-responsabilita-python-vs-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Python (service/runner): orchestrazione flusso pipeline, sequencing step, gestione errori applicativi, policy <code>dry_run</code>.</li>
-<li>DB (funzioni/tabelle): creazione/risoluzione lotto, persistenza stati e log, operazioni set-based sulle fatture, vincoli di integrita`.</li>
+<li><strong>Python</strong> (service/runner): orchestrazione flusso pipeline, sequencing step, gestione errori applicativi, policy <code>dry_run</code>.</li>
+<li><strong>DB</strong> (funzioni/tabelle): creazione/risoluzione lotto, risoluzione emittente, persistenza stati e log, operazioni set-based sulle fatture, vincoli di integrità.</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Stato attuale: orchestrazione e step executor migrati in Python.</li>
-<li>Il mapping task e<code>esplicito nel servizio (</code>PipelineStepExecutor`) con whitelist funzioni ammesse.</li>
+<li>Orchestrazione e step executor migrati in Python.</li>
+<li>Il mapping task è esplicito nel servizio (<code>PipelineStepExecutor</code>) con whitelist funzioni ammesse.</li>
 <li>La configurazione step resta su <code>vendite.fatturazione_pipeline</code> (source of truth).</li>
-<li>La selezione step usa fallback di specificita<code>: match su</code>utility_id<code>/</code>tipo_doc_fiscale_id<code>,
-  poi fallback su valori</code>NULL` (configurazione base).</li>
+<li>La selezione step usa fallback di specificità: match su <code>utility_id</code>/<code>tipo_doc_fiscale_id</code>, poi fallback su valori <code>NULL</code> (configurazione base).</li>
+<li>L'emittente fiscale era in precedenza dedotto a runtime; ora è attributo esplicito del lotto, persistito in DB alla creazione e propagato via <code>LottoContext</code>.</li>
 </ul>
 
 
