@@ -12,7 +12,7 @@
       
       
         
-          <link rel="alternate" href="../../../../../backend/vendite/manual/api_reset_lotto_fattura_draft/" hreflang="it">
+          <link rel="alternate" href="../../../../../backend/vendite/manual/api_lotto_task_runs/" hreflang="it">
         
           <link rel="alternate" href="./" hreflang="en">
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>API reset_lotto_fattura_draft (Django) - Zero ERP Documentation</title>
+        <title>API lotto_task_runs (Django) - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-reset_lotto_fattura_draft-django" class="md-skip">
+        <a href="#api-lotto_task_runs-django" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API reset_lotto_fattura_draft (Django)
+              API lotto_task_runs (Django)
             
           </span>
         </div>
@@ -121,7 +121,7 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../../../../backend/vendite/manual/api_reset_lotto_fattura_draft/" hreflang="it" class="md-select__link">
+            <a href="../../../../../backend/vendite/manual/api_lotto_task_runs/" hreflang="it" class="md-select__link">
               Italiano
             </a>
           </li>
@@ -3463,24 +3463,25 @@
   
 
 
-<h1 id="api-reset_lotto_fattura_draft-django">API reset_lotto_fattura_draft (Django)<a class="headerlink" href="#api-reset_lotto_fattura_draft-django" title="Permanent link">&para;</a></h1>
+<h1 id="api-lotto_task_runs-django">API lotto_task_runs (Django)<a class="headerlink" href="#api-lotto_task_runs-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Esporre via HTTP il reset tecnico di una singola fattura in un lotto MASSIVO in DRAFT.</p>
+<p>Esporre via HTTP i task run runtime di un lotto per monitoraggio operativo e diagnostica pipeline.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Endpoint applicativo che invoca il servizio Python <code>fn_reset_lotto_fattura_draft</code>, wrapper della funzione SQL <code>vendite.fn_reset_lotto_fattura_draft</code>.</p>
+<p>Endpoint di consultazione che invoca <code>fn_get_lotto_task_runs</code> in <code>apps/vendite/services/pipeline_service.py</code>,
+il quale legge dalla tabella <code>vendite.fatturazione_lotti_task_runs</code> tramite <code>VenditePipelineRepository</code>.</p>
 <p>View in <code>apps/vendite/api/views.py</code>:</p>
 <ul>
-<li><code>ApiResetLottoFatturaDraft</code></li>
-<li><code>ApiResetLottoFatturaDraftV1</code></li>
+<li><code>ApiLottoTaskRuns</code></li>
+<li><code>ApiLottoTaskRunsV1</code></li>
 </ul>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Metodo: <code>POST</code></li>
-<li>Path canonico: <code>/api/v1/vendite/lotti/{lotto_id}/fatture/{fattura_id}/reset-draft/</code></li>
-<li>Header richiesto: <code>Idempotency-Key</code></li>
-<li>Header sicurezza (solo path <code>/api/v1/...</code>): <code>Authorization: Bearer &lt;access_token&gt;</code></li>
-<li>Path params: <code>lotto_id</code> (int), <code>fattura_id</code> (int)</li>
-<li>Body JSON: vuoto</li>
+<li>Metodo: <code>GET</code></li>
+<li>Path canonico: <code>/api/v1/vendite/lotti/{lotto_id}/task-runs/</code></li>
+<li>Header sicurezza: <code>Authorization: Bearer &lt;access_token&gt;</code></li>
+<li>Path params: <code>lotto_id</code> (int)</li>
+<li>Query params:</li>
+<li><code>limit</code> (int, opzionale): numero massimo di task run restituiti (default 100, max 500)</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3488,32 +3489,51 @@
 </ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;updated_attivita&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;deleted_fatture&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;deleted_righe&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="nt">&quot;lotto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;task_runs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;lotto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;pipeline_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;stato_doc_fiscale_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;task_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GENERA_FATTURE&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;fase&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MAIN&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;tentativo&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;task_stato&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;started_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-02-20T10:00:00&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;ended_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-02-20T10:00:05&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;error_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;error_message&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
-<li><code>400/409/404</code>: errore applicativo o stato lotto/fattura non valido</li>
+<li><code>400</code>: <code>lotto_id</code> non valido, o <code>limit</code> fuori intervallo 1-500</li>
+<li><code>500</code>: errore applicativo gestito dal middleware</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>lotto_id</code> e <code>fattura_id</code> validi e &gt; 0 (estratti dal path URL).</li>
-<li>Ammesso solo per fatture di lotti MASSIVO in DRAFT (validato dal DB).</li>
-<li>Usa il pattern standard core <code>handle_post_json(...)</code>.</li>
-<li>Endpoint write protetto con obbligo <code>Idempotency-Key</code>.</li>
+<li><code>lotto_id</code> obbligatorio e &gt; 0 (validato dal servizio con <code>ErrorManager.require</code>).</li>
+<li><code>limit</code> deve essere compreso tra 1 e 500 (default 100); il repository applica <code>max(1, min(limit, 500))</code> come guard aggiuntivo.</li>
+<li>I task run sono filtrati per <code>attivo = true</code> e ordinati per <code>started_at DESC, id DESC</code>.</li>
+<li><code>started_at</code> e <code>ended_at</code> sono restituiti in formato ISO 8601 (o <code>null</code>).</li>
+<li>Endpoint di sola lettura: nessun <code>Idempotency-Key</code> richiesto.</li>
 <li>Endpoint v1 richiede JWT.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>vendite.fn_reset_lotto_fattura_draft</code></li>
-<li><code>apps.vendite.services.pipeline_service.fn_reset_lotto_fattura_draft</code></li>
+<li><code>vendite.fatturazione_lotti_task_runs</code> (tabella sorgente)</li>
+<li><code>apps.vendite.db.pipeline_repository.VenditePipelineRepository.list_lotto_task_runs</code></li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Azione granulare per ripristino singola fattura senza impattare l'intero lotto.</li>
+<li>Endpoint introdotto con il runtime task tracing (<code>vendite.fatturazione_lotti_task_runs</code>).</li>
+<li>Utile per diagnostica step pipeline e verifica esiti task per lotto specifico.</li>
 </ul>
 
 

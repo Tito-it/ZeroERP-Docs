@@ -12,7 +12,7 @@
       
       
         
-          <link rel="alternate" href="../../../../../backend/vendite/manual/api_reset_lotto_fattura_draft/" hreflang="it">
+          <link rel="alternate" href="../../../../../backend/vendite/manual/api_lotto_segnalazioni_summary/" hreflang="it">
         
           <link rel="alternate" href="./" hreflang="en">
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>API reset_lotto_fattura_draft (Django) - Zero ERP Documentation</title>
+        <title>API lotto_segnalazioni_summary (Django) - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-reset_lotto_fattura_draft-django" class="md-skip">
+        <a href="#api-lotto_segnalazioni_summary-django" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API reset_lotto_fattura_draft (Django)
+              API lotto_segnalazioni_summary (Django)
             
           </span>
         </div>
@@ -121,7 +121,7 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../../../../backend/vendite/manual/api_reset_lotto_fattura_draft/" hreflang="it" class="md-select__link">
+            <a href="../../../../../backend/vendite/manual/api_lotto_segnalazioni_summary/" hreflang="it" class="md-select__link">
               Italiano
             </a>
           </li>
@@ -3463,24 +3463,23 @@
   
 
 
-<h1 id="api-reset_lotto_fattura_draft-django">API reset_lotto_fattura_draft (Django)<a class="headerlink" href="#api-reset_lotto_fattura_draft-django" title="Permanent link">&para;</a></h1>
+<h1 id="api-lotto_segnalazioni_summary-django">API lotto_segnalazioni_summary (Django)<a class="headerlink" href="#api-lotto_segnalazioni_summary-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Esporre via HTTP il reset tecnico di una singola fattura in un lotto MASSIVO in DRAFT.</p>
+<p>Esporre via HTTP il riepilogo segnalazioni attive di un lotto, con indicazione di blocco avanzamento step.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Endpoint applicativo che invoca il servizio Python <code>fn_reset_lotto_fattura_draft</code>, wrapper della funzione SQL <code>vendite.fn_reset_lotto_fattura_draft</code>.</p>
+<p>Endpoint di consultazione che invoca <code>fn_get_lotto_segnalazioni_summary</code> in <code>apps/vendite/services/pipeline_service.py</code>,
+il quale delega a <code>LottoSegnalazioniService.evaluate_lotto_status</code>.</p>
 <p>View in <code>apps/vendite/api/views.py</code>:</p>
 <ul>
-<li><code>ApiResetLottoFatturaDraft</code></li>
-<li><code>ApiResetLottoFatturaDraftV1</code></li>
+<li><code>ApiLottoSegnalazioniSummary</code></li>
+<li><code>ApiLottoSegnalazioniSummaryV1</code></li>
 </ul>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Metodo: <code>POST</code></li>
-<li>Path canonico: <code>/api/v1/vendite/lotti/{lotto_id}/fatture/{fattura_id}/reset-draft/</code></li>
-<li>Header richiesto: <code>Idempotency-Key</code></li>
-<li>Header sicurezza (solo path <code>/api/v1/...</code>): <code>Authorization: Bearer &lt;access_token&gt;</code></li>
-<li>Path params: <code>lotto_id</code> (int), <code>fattura_id</code> (int)</li>
-<li>Body JSON: vuoto</li>
+<li>Metodo: <code>GET</code></li>
+<li>Path canonico: <code>/api/v1/vendite/lotti/{lotto_id}/segnalazioni/</code></li>
+<li>Header sicurezza: <code>Authorization: Bearer &lt;access_token&gt;</code></li>
+<li>Path params: <code>lotto_id</code> (int)</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3488,32 +3487,47 @@
 </ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;updated_attivita&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;deleted_fatture&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;deleted_righe&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="nt">&quot;lotto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;critical_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;warning_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;attention_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;is_error&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;blocks_next_step&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;fatture_critical_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;fatture_warning_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;lotto_critical_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;lotto_warning_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;lotto_info_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
-<li><code>400/409/404</code>: errore applicativo o stato lotto/fattura non valido</li>
+<li><code>400</code>: <code>lotto_id</code> non valido o &lt;= 0</li>
+<li><code>500</code>: errore applicativo gestito dal middleware</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>lotto_id</code> e <code>fattura_id</code> validi e &gt; 0 (estratti dal path URL).</li>
-<li>Ammesso solo per fatture di lotti MASSIVO in DRAFT (validato dal DB).</li>
-<li>Usa il pattern standard core <code>handle_post_json(...)</code>.</li>
-<li>Endpoint write protetto con obbligo <code>Idempotency-Key</code>.</li>
+<li><code>lotto_id</code> obbligatorio e &gt; 0 (validato dal servizio con <code>ErrorManager.require</code>).</li>
+<li><code>critical_count</code> = somma <code>fatture_critical_count</code> + <code>lotto_critical_count</code>.</li>
+<li><code>warning_count</code> = somma <code>fatture_warning_count</code> + <code>lotto_warning_count</code>.</li>
+<li><code>attention_count</code> = <code>lotto_info_count</code> (livello "I" — info operativa).</li>
+<li><code>is_error = true</code> se <code>critical_count &gt; 0</code>.</li>
+<li><code>blocks_next_step = true</code> se <code>is_error = true</code> (nessun avanzamento pipeline ammesso).</li>
+<li>Endpoint di sola lettura: nessun <code>Idempotency-Key</code> richiesto.</li>
 <li>Endpoint v1 richiede JWT.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>vendite.fn_reset_lotto_fattura_draft</code></li>
-<li><code>apps.vendite.services.pipeline_service.fn_reset_lotto_fattura_draft</code></li>
+<li><code>vendite.fn_get_lotto_segnalazioni_summary</code> (funzione SQL)</li>
+<li><code>vendite.fatture_log</code> (sorgente segnalazioni fattura)</li>
+<li><code>apps.vendite.services.lotto_segnalazioni_service.LottoSegnalazioniService</code></li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Azione granulare per ripristino singola fattura senza impattare l'intero lotto.</li>
+<li>Endpoint introdotto per supporto UI nella visualizzazione stato segnalazioni prima di avanzare step pipeline.</li>
 </ul>
 
 

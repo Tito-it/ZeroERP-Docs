@@ -23,7 +23,7 @@
     
     
       
-        <title>API reset lotto fattura draft - Zero ERP Documentation</title>
+        <title>API reset_lotto_fattura_draft (Django) - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-reset-lotto-fattura-draft" class="md-skip">
+        <a href="#api-reset_lotto_fattura_draft-django" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API reset lotto fattura draft
+              API reset_lotto_fattura_draft (Django)
             
           </span>
         </div>
@@ -3389,10 +3389,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#request" class="md-nav__link">
+  <a href="#input" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Request
+        Input
       
     </span>
   </a>
@@ -3400,10 +3400,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#response-200" class="md-nav__link">
+  <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Response (200)
+        Output
       
     </span>
   </a>
@@ -3422,10 +3422,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dipendenze" class="md-nav__link">
+  <a href="#dipendenze-db" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dipendenze
+        Dipendenze DB
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#note-di-migrazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Note di migrazione
       
     </span>
   </a>
@@ -3452,36 +3463,57 @@
   
 
 
-<h1 id="api-reset-lotto-fattura-draft">API reset lotto fattura draft<a class="headerlink" href="#api-reset-lotto-fattura-draft" title="Permanent link">&para;</a></h1>
+<h1 id="api-reset_lotto_fattura_draft-django">API reset_lotto_fattura_draft (Django)<a class="headerlink" href="#api-reset_lotto_fattura_draft-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Endpoint applicativo che invoca il servizio Python <code>fn_reset_lotto_fattura_draft</code>.</p>
+<p>Esporre via HTTP il reset tecnico di una singola fattura in un lotto MASSIVO in DRAFT.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Reset di una singola fattura in lotto MASSIVO DRAFT.</p>
-<h2 id="request">Request<a class="headerlink" href="#request" title="Permanent link">&para;</a></h2>
+<p>Endpoint applicativo che invoca il servizio Python <code>fn_reset_lotto_fattura_draft</code>, wrapper della funzione SQL <code>vendite.fn_reset_lotto_fattura_draft</code>.</p>
+<p>View in <code>apps/vendite/api/views.py</code>:</p>
 <ul>
-<li>Method: <code>POST</code></li>
-<li>URL: <code>/api/vendite/lotti/{lotto_id}/fatture/{fattura_id}/reset-draft/</code></li>
-<li>Header: <code>Idempotency-Key</code> obbligatorio</li>
-<li>Body: vuoto</li>
+<li><code>ApiResetLottoFatturaDraft</code></li>
+<li><code>ApiResetLottoFatturaDraftV1</code></li>
 </ul>
-<h2 id="response-200">Response (200)<a class="headerlink" href="#response-200" title="Permanent link">&para;</a></h2>
+<h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Metodo: <code>POST</code></li>
+<li>Path canonico: <code>/api/v1/vendite/lotti/{lotto_id}/fatture/{fattura_id}/reset-draft/</code></li>
+<li>Header richiesto: <code>Idempotency-Key</code></li>
+<li>Header sicurezza (solo path <code>/api/v1/...</code>): <code>Authorization: Bearer &lt;access_token&gt;</code></li>
+<li>Path params: <code>lotto_id</code> (int), <code>fattura_id</code> (int)</li>
+<li>Body JSON: vuoto</li>
+</ul>
+<h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>200</code>:</li>
+</ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;updated_attivita&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;deleted_fatture&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;deleted_righe&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
-<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
+<ul>
+<li><code>400/409/404</code>: errore applicativo o stato lotto/fattura non valido</li>
+</ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>Idempotency-Key</code> obbligatorio.</li>
-<li>Autenticazione JWT per <code>/api/v1/*</code>.</li>
+<li><code>lotto_id</code> e <code>fattura_id</code> validi e &gt; 0 (estratti dal path URL).</li>
+<li>Ammesso solo per fatture di lotti MASSIVO in DRAFT (validato dal DB).</li>
+<li>Usa il pattern standard core <code>handle_post_json(...)</code>.</li>
+<li>Endpoint write protetto con obbligo <code>Idempotency-Key</code>.</li>
+<li>Endpoint v1 richiede JWT.</li>
 </ul>
-<h2 id="dipendenze">Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h2>
+<h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>vendite.fn_reset_lotto_fattura_draft</code></li>
 <li><code>apps.vendite.services.pipeline_service.fn_reset_lotto_fattura_draft</code></li>
+</ul>
+<h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Azione granulare per ripristino singola fattura senza impattare l'intero lotto.</li>
 </ul>
 
 
