@@ -4528,6 +4528,78 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#21-refactor-lottofatture-analisi-consolidata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21) Refactor lotto/fatture (analisi consolidata)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="21) Refactor lotto/fatture (analisi consolidata)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#descrizione-funzionale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Descrizione funzionale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modifiche-db-da-fare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifiche DB da fare
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verificarefactor-funzioni-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifica/refactor funzioni SQL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-django-refactor-richiesto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API / Django (refactor richiesto)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#promemoria-attivita_fatturabili-prima-di-riprendere-sviluppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Promemoria attivita_fatturabili (prima di riprendere sviluppo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4629,7 +4701,7 @@ come stato tecnico di esecuzione e <code>stato_operativo</code> come stato busin
 <ul>
 <li>[x] policy task applicata in runtime su almeno i task DRAFT/EMESSA/DEFINITIVA.</li>
 <li>[x] tracing task consultabile da API/log dominio senza parsing del solo <code>error_log</code>.</li>
-<li>[ ] test pgtap + test service Django verdi su flussi: ok, errore task, resume/reset.</li>
+<li>[x] test pgtap + test service Django verdi su flussi: ok, errore task, resume/reset.</li>
 <li>Django/API verdi; pgtap runtime da rieseguire in ambiente con <code>internal.env</code> disponibile.</li>
 </ul>
 <h3 id="stato-sdi-dettaglio-operativo">Stato SDI (dettaglio operativo)<a class="headerlink" href="#stato-sdi-dettaglio-operativo" title="Permanent link">&para;</a></h3>
@@ -5671,6 +5743,84 @@ per evitare fatture miste o ambiguita`.</p>
 <li><code>SQL guard</code>: enforcement dati/stati/integrità direttamente nel DB.</li>
 <li><code>Django orchestration</code>: controllo del flusso di processo (pipeline/task/error handling).</li>
 <li><code>Ibrido</code>: orchestration in Python con task calcolati/validati da funzioni SQL.</li>
+</ul>
+<hr />
+<h3 id="21-refactor-lottofatture-analisi-consolidata">21) Refactor lotto/fatture (analisi consolidata)<a class="headerlink" href="#21-refactor-lottofatture-analisi-consolidata" title="Permanent link">&para;</a></h3>
+<h4 id="descrizione-funzionale">Descrizione funzionale<a class="headerlink" href="#descrizione-funzionale" title="Permanent link">&para;</a></h4>
+<p>Si conferma la separazione dei ruoli:</p>
+<ul>
+<li><code>vendite.fatturazione_lotti</code>: stato del processo lotto (driver pipeline).</li>
+<li><code>vendite.fatture</code>: stato reale del documento fiscale.</li>
+<li><code>vendite.fatturazione_lotti_fatture</code>: stato tecnico per-fattura nel contesto lotto.</li>
+</ul>
+<p>Inoltre, su testata lotto e<code>necessario aggiungere l'emittente fiscale
+(</code>emittente_soggetto_ruolo_id<code>) come attributo di processo;</code>billing_account_id`
+resta opzionale solo come filtro operativo di creazione lotto.</p>
+<h4 id="modifiche-db-da-fare">Modifiche DB da fare<a class="headerlink" href="#modifiche-db-da-fare" title="Permanent link">&para;</a></h4>
+<p><strong><code>vendite.fatturazione_lotti</code></strong></p>
+<ul>
+<li>aggiungere <code>emittente_soggetto_ruolo_id</code> (FK su <code>anagrafiche.soggetti_ruoli.id</code>, ruolo EF).</li>
+<li>mantenere <code>billing_account_id</code> opzionale come filtro run (non chiave concettuale del lotto).</li>
+<li>aggiornare funzioni di creazione/risoluzione lotto per usare prioritariamente emittente.</li>
+</ul>
+<p>Nota operativa fallback emittente in creazione lotto:</p>
+<ol>
+<li>se <code>p_emittente_soggetto_ruolo_id</code> e` valorizzato -&gt; usare/validare quello.</li>
+<li>altrimenti, se <code>p_billing_account_id</code> e` valorizzato -&gt; risolvere da mapping BA.</li>
+<li>altrimenti, se esiste un solo emittente fiscale attivo -&gt; usare quello.</li>
+<li>se non risolto -&gt; errore bloccante (emittente non determinabile).</li>
+</ol>
+<p><strong><code>vendite.fatturazione_lotti_fatture</code></strong></p>
+<ul>
+<li>aggiungere <code>stato_doc_fiscale_id</code> (FK su <code>config.stati_doc_fiscale.id</code>).</li>
+<li>aggiungere <code>stato_esecuzione</code> con set minimo: <code>OK | ERRORE</code>.</li>
+<li>non introdurre <code>SKIPPATA</code> (equivalente funzionale di <code>esclusa=true</code>).</li>
+<li>mantenere <code>esclusa</code> come flag separato.</li>
+</ul>
+<p><strong>Allineamento <code>critical</code></strong></p>
+<ul>
+<li>regola di coerenza: <code>fatture.critical=true</code> &lt;-&gt; <code>lotti_fatture.stato_esecuzione='ERRORE'</code>.</li>
+<li>tutte le fatture <code>critical=true</code> devono essere bloccate dagli step successivi.</li>
+<li>introdurre funzione SQL unica di sync per evitare update sparsi incoerenti.</li>
+</ul>
+<h4 id="verificarefactor-funzioni-sql">Verifica/refactor funzioni SQL<a class="headerlink" href="#verificarefactor-funzioni-sql" title="Permanent link">&para;</a></h4>
+<p>Da aggiornare (priorita`):</p>
+<ul>
+<li><code>vendite.fn_create_fatturazione_lotto</code></li>
+<li><code>vendite.fn_get_or_create_lotto</code></li>
+<li><code>vendite.fn_sync_lotto_fatture_stato</code></li>
+<li><code>vendite.fn_log_lotto_esito_fatture</code></li>
+<li>eventuali funzioni reset/sync che aggiornano stato fattura o ponte lotto-fattura</li>
+</ul>
+<p>Da introdurre:</p>
+<ul>
+<li>funzione centralizzata di sync esito fattura nel lotto
+  (aggiorna insieme <code>stato_esecuzione</code>, <code>stato_doc_fiscale_id</code> ponte, <code>fatture.critical</code>).</li>
+</ul>
+<h4 id="api-django-refactor-richiesto">API / Django (refactor richiesto)<a class="headerlink" href="#api-django-refactor-richiesto" title="Permanent link">&para;</a></h4>
+<p>Runner/Service:</p>
+<ul>
+<li>leggere e aggiornare <code>stato_esecuzione</code> per ogni fattura task-by-task.</li>
+<li>usare <code>emittente_soggetto_ruolo_id</code> da lotto come riferimento primario.</li>
+<li>bloccare avanzamento su fatture <code>critical</code> o <code>stato_esecuzione='ERRORE'</code> secondo policy step.</li>
+</ul>
+<p>Endpoint/DTO:</p>
+<ul>
+<li>estendere dettaglio lotto con stato per-fattura (<code>stato_doc_fiscale_id</code>, <code>stato_esecuzione</code>, <code>critical</code>).</li>
+<li>mantenere <code>billing_account_id</code> come filtro input opzionale (non attributo centrale di stato).</li>
+</ul>
+<p>Test:</p>
+<ul>
+<li>pgtap: coerenza <code>critical</code> &lt;-&gt; <code>stato_esecuzione</code>.</li>
+<li>Django service/API: gestione errore parziale per-fattura dentro lotto.</li>
+</ul>
+<h4 id="promemoria-attivita_fatturabili-prima-di-riprendere-sviluppo">Promemoria <code>attivita_fatturabili</code> (prima di riprendere sviluppo)<a class="headerlink" href="#promemoria-attivita_fatturabili-prima-di-riprendere-sviluppo" title="Permanent link">&para;</a></h4>
+<p>Prima di riprendere implementazioni pipeline <code>attivita_fatturabili</code> verificare:</p>
+<ul>
+<li>coerenza del legame lotto <code>attivita_fatturabili_lotti</code> con nuovo modello emittente su lotto.</li>
+<li>regole di transizione/errore per-fattura allineate al nuovo <code>stato_esecuzione</code>.</li>
+<li>allineamento filtri pipeline (utility/tipo_doc/emittente) tra alimentazione e fatturazione.</li>
+<li>evitare di reintrodurre logiche su <code>billing_account_id</code> come chiave di testata lotto.</li>
 </ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
