@@ -4600,6 +4600,78 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#22-allineamento-log-fatturalotto-chiuso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22) Allineamento log fattura/lotto (chiuso)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="22) Allineamento log fattura/lotto (chiuso)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chiarimento-ruoli-tabelle-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chiarimento ruoli tabelle log
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#problema-operativo-rilevato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problema operativo rilevato
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decisione-tecnica-proposta-db-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisione tecnica proposta (DB-first)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regole-funzionali-confermate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regole funzionali confermate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esito-implementazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Esito implementazione
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5821,6 +5893,41 @@ resta opzionale solo come filtro operativo di creazione lotto.</p>
 <li>regole di transizione/errore per-fattura allineate al nuovo <code>stato_esecuzione</code>.</li>
 <li>allineamento filtri pipeline (utility/tipo_doc/emittente) tra alimentazione e fatturazione.</li>
 <li>evitare di reintrodurre logiche su <code>billing_account_id</code> come chiave di testata lotto.</li>
+</ul>
+<hr />
+<h3 id="22-allineamento-log-fatturalotto-chiuso">22) Allineamento log fattura/lotto (chiuso)<a class="headerlink" href="#22-allineamento-log-fatturalotto-chiuso" title="Permanent link">&para;</a></h3>
+<h4 id="chiarimento-ruoli-tabelle-log">Chiarimento ruoli tabelle log<a class="headerlink" href="#chiarimento-ruoli-tabelle-log" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>vendite.fatture_log</code>: log <strong>per-fattura</strong> (<code>fattura_id</code> presente), sorgente ufficiale per warning/critical documento.</li>
+<li><code>vendite.fatturazione_lotti_log</code>: log <strong>per-lotto/processo</strong> (<code>lotto_id</code>, <code>fase</code>, <code>status</code>), senza riferimento diretto a singola fattura.</li>
+</ul>
+<p>Quindi gli errori documento non devono essere forzati su <code>fatturazione_lotti_log</code>: il dettaglio resta in <code>fatture_log</code>.</p>
+<h4 id="problema-operativo-rilevato">Problema operativo rilevato<a class="headerlink" href="#problema-operativo-rilevato" title="Permanent link">&para;</a></h4>
+<p>Nel runtime attuale <code>fn_sync_lotto_fatture_stato</code> legge <code>vendite.fatture.critical</code>, ma la sincronizzazione di <code>critical</code> dipende da chiamate esplicite (<code>fn_sync_fattura_critical</code>) e non da un automatismo unico su ogni modifica log.</p>
+<h4 id="decisione-tecnica-proposta-db-first">Decisione tecnica proposta (DB-first)<a class="headerlink" href="#decisione-tecnica-proposta-db-first" title="Permanent link">&para;</a></h4>
+<p>Introdurre trigger su <code>vendite.fatture_log</code> per sincronizzazione automatica:</p>
+<ul>
+<li>evento: <code>AFTER INSERT OR UPDATE OR DELETE</code>;</li>
+<li>logica: ricalcolo <code>vendite.fatture.critical</code> considerando solo log attivi
+  (<code>disabilitato = false</code> e <code>status = 'C'</code>);</li>
+<li>propagazione su <code>vendite.fatturazione_lotti_fatture.stato_esecuzione</code>:</li>
+<li><code>ERRORE</code> se <code>fatture.critical = true</code></li>
+<li><code>OK</code> se <code>fatture.critical = false</code> (salvo <code>esclusa = true</code>);</li>
+<li>perimetro aggiornamento ponte lotto-fattura: solo lotti con
+  <code>stato_lotto = 'IN_ESECUZIONE'</code> <strong>oppure</strong> <code>stato_operativo = 'APERTO'</code>.</li>
+</ul>
+<h4 id="regole-funzionali-confermate">Regole funzionali confermate<a class="headerlink" href="#regole-funzionali-confermate" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Azioni su <code>fatture_log</code> per lotti fuori perimetro (<code>stato_lotto != IN_ESECUZIONE</code> e <code>stato_operativo != APERTO</code>) non devono alterare <code>stato_esecuzione</code> nel ponte.</li>
+<li>Un log <code>disabilitato = true</code> non contribuisce al <code>critical</code>: la fattura torna “corretta” se non restano critical attivi.</li>
+<li><code>DELETE</code> su <code>fatture_log</code> e <code>fatturazione_lotti_log</code> bloccato di default; ammesso solo con GUC dedicata
+  (<code>zeroerp.maintenance_allow_delete_logs=on</code>, compatibile con GUC reset tecnico).</li>
+</ul>
+<h4 id="esito-implementazione">Esito implementazione<a class="headerlink" href="#esito-implementazione" title="Permanent link">&para;</a></h4>
+<ul>
+<li>✅ trigger <code>AFTER INSERT/UPDATE/DELETE</code> su <code>vendite.fatture_log</code> attivi per sync automatica (<code>vendite.fatture.critical</code> + ponte lotto-fattura).</li>
+<li>✅ guard <code>DELETE</code> su <code>vendite.fatture_log</code> e <code>vendite.fatturazione_lotti_log</code> con sblocco solo via GUC.</li>
+<li>✅ refactor servizi Django/test allineato al modello corretto (<code>status</code> su <code>fatture_log</code>, non colonna <code>critical</code>).</li>
 </ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
