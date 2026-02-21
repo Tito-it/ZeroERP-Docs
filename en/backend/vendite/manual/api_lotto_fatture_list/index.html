@@ -12,7 +12,7 @@
       
       
         
-          <link rel="alternate" href="../../../../../backend/vendite/manual/api_lotti_list/" hreflang="it">
+          <link rel="alternate" href="../../../../../backend/vendite/manual/api_lotto_fatture_list/" hreflang="it">
         
           <link rel="alternate" href="./" hreflang="en">
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>API list_lotti (Django) - Zero ERP Documentation</title>
+        <title>API list_lotto_fatture (Django) - Zero ERP Documentation</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-list_lotti-django" class="md-skip">
+        <a href="#api-list_lotto_fatture-django" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API list_lotti (Django)
+              API list_lotto_fatture (Django)
             
           </span>
         </div>
@@ -121,7 +121,7 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../../../../backend/vendite/manual/api_lotti_list/" hreflang="it" class="md-select__link">
+            <a href="../../../../../backend/vendite/manual/api_lotto_fatture_list/" hreflang="it" class="md-select__link">
               Italiano
             </a>
           </li>
@@ -3463,23 +3463,23 @@
   
 
 
-<h1 id="api-list_lotti-django">API list_lotti (Django)<a class="headerlink" href="#api-list_lotti-django" title="Permanent link">&para;</a></h1>
+<h1 id="api-list_lotto_fatture-django">API list_lotto_fatture (Django)<a class="headerlink" href="#api-list_lotto_fatture-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Esporre via HTTP l'elenco paginato dei lotti di fatturazione con filtri opzionali e decodifica delle FK.</p>
+<p>Esporre via HTTP l'elenco paginato delle fatture appartenenti a un lotto, con decodifiche FK, filtri opzionali e ordinamento configurabile.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Endpoint di sola lettura che interroga direttamente <code>vendite.fatturazione_lotti</code> con LEFT JOIN su tabelle di decodifica (<code>config.utilities</code>, <code>config.stati_doc_fiscale</code>, <code>config.tipi_doc_fiscale</code>, <code>vendite.area_geografica_fatturazione</code>). Nessuna funzione SQL intermedia: query raw nel repository.</p>
+<p>Endpoint di sola lettura che interroga <code>vendite.fatturazione_lotti_fatture</code> con INNER JOIN su <code>vendite.fatture</code>, <code>anagrafiche.billing_account</code>, <code>anagrafiche.vw_soggetti_ruoli_dettaglio</code> e LEFT JOIN su <code>config.stati_sdi</code>, <code>config.stati_doc_fiscale</code>. Nessuna funzione SQL intermedia: query raw nel repository.</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Metodo: <code>GET</code></li>
-<li>Path canonico: <code>/api/v1/vendite/lotti/</code></li>
+<li>Path canonico: <code>/api/v1/vendite/lotti/{lotto_id}/fatture/</code></li>
 <li>Header sicurezza: <code>Authorization: Bearer &lt;access_token&gt;</code></li>
+<li>Path param:</li>
+<li><code>lotto_id</code> (int) — id del lotto; obbligatorio</li>
 <li>Query param (tutti opzionali; assente o vuoto = nessun filtro):</li>
-<li><code>competenza_mese</code> (date <code>YYYY-MM-DD</code>) — filtro mese di competenza</li>
-<li><code>utility_id</code> (int) — filtro per utility</li>
-<li><code>stato_lotto</code> (string) — filtro stato lotto (es. <code>DRAFT</code>, <code>COMPLETATO</code>)</li>
-<li><code>area_geografica_id</code> (int) — filtro per area geografica fatturazione</li>
-<li><code>tipo_doc_fiscale_id</code> (int) — filtro per tipo documento fiscale</li>
-<li><code>emittente_soggetto_ruolo_id</code> (int) — filtro per emittente fiscale</li>
+<li><code>stato_esecuzione</code> (string) — filtro esito tecnico fattura nel lotto (<code>OK</code> | <code>ERRORE</code>)</li>
+<li><code>esclusa</code> (bool) — filtro fatture escluse (<code>true</code> | <code>false</code>); assente = tutte</li>
+<li><code>sort_by</code> (string) — colonna ordinamento: <code>fattura_id</code> (default), <code>nominativo</code>, <code>totale_doc</code></li>
+<li><code>sort_dir</code> (string) — direzione: <code>asc</code> (default) | <code>desc</code></li>
 <li><code>page</code> (int) — numero pagina, default <code>1</code></li>
 <li><code>page_size</code> (int) — righe per pagina, default <code>50</code>, max <code>200</code></li>
 </ul>
@@ -3494,55 +3494,59 @@
 <span class="w">    </span><span class="nt">&quot;total_pages&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">      </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LOT-2026-001&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;competenza_mese&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-02-01&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;tipo_lotto&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MASSIVO&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;utility_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Energia Elettrica&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;stato_lotto&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DRAFT&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;stato_operativo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;APERTO&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;lotto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;fattura_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">101</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;stato_sdi_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;stato_sdi_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;stato_doc_fiscale_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;stato_doc_fiscale_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Fattura emessa&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;tipo_doc_fiscale_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;tipo_doc_fiscale_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Fattura&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;area_geografica_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;area_geografica_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Nord&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;emittente_soggetto_ruolo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;data_insert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-02-18T10:00:00+01:00&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;user_insert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;zeroerp&quot;</span>
+<span class="w">        </span><span class="nt">&quot;stato_esecuzione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;esclusa&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;numero&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">234</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;serie&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-02-01&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;billing_account_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;totale_doc&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1234.560000&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;totale_a_pagare&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1234.560000&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;soggetto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;ragione_sociale_completa&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Mario Rossi Srl&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;id_fiscale_univoco_cf_piva&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;01234567890&quot;</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">]</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;request_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div></li>
-<li><code>400</code>: parametri paginazione non validi (<code>E_PIPELINE_VALIDATION</code>)</li>
+<li><code>400</code>: parametri non validi (<code>E_VENDITE_VALIDATION</code>)</li>
 <li><code>401</code>: JWT mancante o non valido</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Tutti i filtri sono opzionali; assenza o valore vuoto equivale a nessun filtro.</li>
+<li><code>lotto_id</code> proviene dal path URL; il WHERE <code>fllf.lotto_id = :lotto_id</code> e' sempre presente.</li>
+<li>Filtri opzionali: assenza equivale a nessun filtro; <code>esclusa</code> accetta <code>true</code>/<code>false</code>.</li>
+<li><code>sort_by</code> accetta solo valori nella whitelist (<code>fattura_id</code>, <code>nominativo</code>, <code>totale_doc</code>); valore non valido → 400.</li>
+<li><code>sort_dir</code> accetta solo <code>asc</code> o <code>desc</code>; valore non valido → 400.</li>
+<li>Quando <code>sort_by != fattura_id</code> viene aggiunto <code>fllf.fattura_id ASC</code> come tiebreaker deterministico.</li>
 <li><code>page</code> deve essere &gt;= 1; <code>page_size</code> deve essere compreso tra 1 e 200.</li>
-<li>Ordinamento fisso: <code>data_insert DESC, id DESC</code> (deterministico).</li>
-<li>LEFT JOIN su tutte le tabelle di decodifica: lotti con FK nullable restituiscono <code>null</code> nei campi descrizione corrispondenti.</li>
-<li>La JOIN su <code>area_geografica_id</code> punta a <code>vendite.area_geografica_fatturazione</code> (non <code>config.aree_geografiche</code>).</li>
 <li><code>is_search_endpoint = True</code> sulla view: attiva throttling <code>SearchBurstRateThrottle</code>.</li>
 <li>Endpoint di sola lettura: nessun <code>Idempotency-Key</code> richiesto.</li>
 <li>Endpoint v1 richiede JWT.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>vendite.fatturazione_lotti</code> (tabella principale)</li>
-<li><code>config.utilities</code> (LEFT JOIN decodifica utility)</li>
-<li><code>config.stati_doc_fiscale</code> (LEFT JOIN decodifica stato doc fiscale)</li>
-<li><code>config.tipi_doc_fiscale</code> (LEFT JOIN decodifica tipo doc fiscale)</li>
-<li><code>vendite.area_geografica_fatturazione</code> (LEFT JOIN decodifica area geografica)</li>
+<li><code>vendite.fatturazione_lotti_fatture</code> (tabella principale)</li>
+<li><code>vendite.fatture</code> (INNER JOIN — billing_account_id, numero, serie, data, totali)</li>
+<li><code>anagrafiche.billing_account</code> (INNER JOIN — recupero soggetto_ruolo_id)</li>
+<li><code>anagrafiche.vw_soggetti_ruoli_dettaglio</code> (INNER JOIN — ragione_sociale_completa, id_fiscale_univoco_cf_piva)</li>
+<li><code>config.stati_sdi</code> (LEFT JOIN — decodifica stato SDI)</li>
+<li><code>config.stati_doc_fiscale</code> (LEFT JOIN — decodifica stato documento fiscale)</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Query raw nel repository (<code>VenditeRepository.list_lotti</code>); nessuna funzione SQL dedicata.</li>
+<li>Query raw nel repository (<code>VenditeRepository.list_lotto_fatture</code>); nessuna funzione SQL dedicata.</li>
 <li>Due query per request: <code>COUNT(*)</code> + dati con <code>LIMIT/OFFSET</code> (pattern offset pagination).</li>
+<li>L'ordinamento per colonne diverse da <code>fattura_id</code> usa la whitelist <code>_SORT_COLUMNS</code> nel repository; mai interpolazione diretta di input utente nel SQL.</li>
 </ul>
 
 
