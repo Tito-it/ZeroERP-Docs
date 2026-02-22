@@ -3871,10 +3871,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#81-fase-db-1-schema-allineamento-priorita-immediata" class="md-nav__link">
+  <a href="#81-fase-db-1-schema-allineamento-completata" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8.1 Fase DB-1 (schema allineamento, priorita immediata)
+        8.1 Fase DB-1 (schema allineamento) — ✓ COMPLETATA
       
     </span>
   </a>
@@ -3882,10 +3882,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#82-fase-db-2-funzioni-dominio-attivita" class="md-nav__link">
+  <a href="#82-fase-db-2-funzioni-dominio-attivita-completata" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8.2 Fase DB-2 (funzioni dominio attivita)
+        8.2 Fase DB-2 (funzioni dominio attivita) — ✓ COMPLETATA
       
     </span>
   </a>
@@ -3893,10 +3893,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#83-fase-db-3-test-pgtap-obbligatori" class="md-nav__link">
+  <a href="#83-fase-db-3-test-pgtap-obbligatori-completata" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8.3 Fase DB-3 (test pgtap obbligatori)
+        8.3 Fase DB-3 (test pgtap obbligatori) — ✓ COMPLETATA
       
     </span>
   </a>
@@ -3904,10 +3904,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#84-fase-be-1-runtime-services" class="md-nav__link">
+  <a href="#84-fase-be-1-runtime-services-completata" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8.4 Fase BE-1 (runtime services)
+        8.4 Fase BE-1 (runtime services) — ✓ COMPLETATA
       
     </span>
   </a>
@@ -4048,6 +4048,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#100-prerequisiti-backend-completati" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.0 Prerequisiti backend — ✓ COMPLETATI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#101-epic-be-att-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4096,6 +4107,34 @@
     <span class="md-ellipsis">
       
         10.5 Dipendenze e ordine di esecuzione
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-migliorie-db-future-riduzione-logica-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        §11) Migliorie DB future (riduzione logica backend)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="§11) Migliorie DB future (riduzione logica backend)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-unificare-query-blocco-lotto-in-fn_get_lotto_segnalazioni_summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        §11.1 Unificare query blocco lotto in fn_get_lotto_segnalazioni_summary
       
     </span>
   </a>
@@ -4164,7 +4203,7 @@
 <li>Policy runtime task dedicate:</li>
 <li><code>vendite.attivita_fatturabili_pipeline_task_policy</code></li>
 <li>Tracing runtime task dedicato:</li>
-<li><code>vendite.attivita_fatturabili_task_runs</code></li>
+<li><code>vendite.attivita_fatturabili_lotti_task_runs</code></li>
 <li>Estensione opzionale pipeline non lineare:</li>
 <li><code>branch_code</code></li>
 <li><code>block_scope</code> (<code>BRANCH|GLOBAL</code>)</li>
@@ -4272,6 +4311,12 @@
 <li><code>block_scope = GLOBAL</code>.</li>
 <li>Resume/rerun per branch, non per intera pipeline.</li>
 </ol>
+<p>Nota implementativa — precedenza <code>block_scope</code>:
+<code>block_scope</code> compare in entrambe le tabelle: <code>attivita_fatturabili_pipeline_task_policy</code> (livello task)
+e <code>attivita_fatturabili_sorgenti_branch_policy</code> (livello sorgente/branch).
+Regola adottata: il valore nella <strong>task policy ha precedenza</strong> (piu` specifico);
+se la task policy non definisce un override esplicito, si usa il valore della sorgente branch policy.
+Questa logica va implementata nell'executor (BE-1.2) e non nel runner.</p>
 <h2 id="52-estensioni-schema-bozza">5.2 Estensioni schema (bozza)<a class="headerlink" href="#52-estensioni-schema-bozza" title="Permanent link">&para;</a></h2>
 <p>Su <code>vendite.attivita_fatturabili_pipeline</code>:
 - <code>branch_code text</code> (default <code>DEFAULT</code>)
@@ -4279,7 +4324,7 @@
 - <code>depends_on jsonb</code> (opzionale)</p>
 <p>Nuove tabelle speculari a lotto:
 - <code>vendite.attivita_fatturabili_pipeline_task_policy</code>
-- <code>vendite.attivita_fatturabili_task_runs</code></p>
+- <code>vendite.attivita_fatturabili_lotti_task_runs</code></p>
 <h2 id="53-runtime-django-bozza">5.3 Runtime Django (bozza)<a class="headerlink" href="#53-runtime-django-bozza" title="Permanent link">&para;</a></h2>
 <p>Nuovi componenti:
 - <code>AttivitaPipelineRunner</code>
@@ -4475,7 +4520,7 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 </ul>
 <h2 id="8-piano-operativo-esecutivo-db-backend-go-live">8) Piano operativo esecutivo (DB -&gt; Backend -&gt; Go-live)<a class="headerlink" href="#8-piano-operativo-esecutivo-db-backend-go-live" title="Permanent link">&para;</a></h2>
 <p>Obiettivo operativo: completare il dominio <code>attivita_fatturabili</code> con logiche omogenee a <code>fatturazione_lotti</code>, riducendo refactor futuri e rischi di regressione.</p>
-<h3 id="81-fase-db-1-schema-allineamento-priorita-immediata">8.1 Fase DB-1 (schema allineamento, priorita immediata)<a class="headerlink" href="#81-fase-db-1-schema-allineamento-priorita-immediata" title="Permanent link">&para;</a></h3>
+<h3 id="81-fase-db-1-schema-allineamento-completata">8.1 Fase DB-1 (schema allineamento) — ✓ COMPLETATA<a class="headerlink" href="#81-fase-db-1-schema-allineamento-completata" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Changelog: aggiungere colonne e vincoli</li>
 <li><code>vendite.attivita_fatturabili_lotti.stato_operativo</code> (<code>not null</code>, default <code>APERTO</code>)</li>
@@ -4491,7 +4536,7 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 <p>Uscita fase:
 - migrazione applicabile in ambiente pulito e su snapshot reale.
 - nessun null residuo su nuove colonne obbligatorie.</p>
-<h3 id="82-fase-db-2-funzioni-dominio-attivita">8.2 Fase DB-2 (funzioni dominio attivita)<a class="headerlink" href="#82-fase-db-2-funzioni-dominio-attivita" title="Permanent link">&para;</a></h3>
+<h3 id="82-fase-db-2-funzioni-dominio-attivita-completata">8.2 Fase DB-2 (funzioni dominio attivita) — ✓ COMPLETATA<a class="headerlink" href="#82-fase-db-2-funzioni-dominio-attivita-completata" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Adeguare <code>fn_get_or_create_lotto_attivita(...)</code></li>
 <li>supporto pieno <code>emittente_soggetto_ruolo_id</code></li>
@@ -4511,7 +4556,7 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
   - <code>20260222-10</code> creata <code>vendite.attivita_fatturabili_pipeline_task_policy</code> (policy branch/global).
   - <code>20260222-11</code> creata <code>vendite.attivita_fatturabili_lotti_task_runs</code> (tracing runtime task per branch).
   - <code>20260222-12</code> introdotte funzioni runtime task-runs/policy dedicate al dominio attivita.</p>
-<h3 id="83-fase-db-3-test-pgtap-obbligatori">8.3 Fase DB-3 (test pgtap obbligatori)<a class="headerlink" href="#83-fase-db-3-test-pgtap-obbligatori" title="Permanent link">&para;</a></h3>
+<h3 id="83-fase-db-3-test-pgtap-obbligatori-completata">8.3 Fase DB-3 (test pgtap obbligatori) — ✓ COMPLETATA<a class="headerlink" href="#83-fase-db-3-test-pgtap-obbligatori-completata" title="Permanent link">&para;</a></h3>
 <ol>
 <li>DDL checks: colonne/default/FK/check.</li>
 <li>Test funzioni:</li>
@@ -4523,7 +4568,7 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 </ol>
 <p>Uscita fase:
 - suite pgtap del dominio verde.</p>
-<h3 id="84-fase-be-1-runtime-services">8.4 Fase BE-1 (runtime services)<a class="headerlink" href="#84-fase-be-1-runtime-services" title="Permanent link">&para;</a></h3>
+<h3 id="84-fase-be-1-runtime-services-completata">8.4 Fase BE-1 (runtime services) — ✓ COMPLETATA<a class="headerlink" href="#84-fase-be-1-runtime-services-completata" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Implementare/chiudere:</li>
 <li><code>AttivitaPipelineRunner</code></li>
@@ -4538,7 +4583,14 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 <li>aggiornamento <code>stato_esecuzione</code> da runtime (non da CRUD).</li>
 </ol>
 <p>Uscita fase:
-- esecuzione pipeline su branch indipendenti con tracing task.</p>
+- esecuzione pipeline su branch indipendenti con tracing task.
+- avanzamento 22-02-2026:
+  - <code>backend/apps/vendite/db/attivita_pipeline_repository.py</code> creato (BE-1.1).
+  - <code>backend/apps/vendite/services/attivita_pipeline_step_executor.py</code> creato (BE-1.2); 7 handler stub registrati.
+  - <code>backend/apps/vendite/services/attivita_pipeline_runner.py</code> creato (BE-1.3); branch-first con <code>_AttivitaBranchBlockError</code>/<code>_AttivitaGlobalBlockError</code>.
+  - <code>backend/apps/vendite/services/attivita_pipeline_error_logger.py</code> creato (BE-1.5).
+  - <code>backend/apps/vendite/types.py</code> esteso con <code>AttivitaTaskRunRow</code>.
+  - 26 test unitari aggiunti (repository 12, executor 8, runner 6); suite verde (98 test ok).</p>
 <h3 id="85-fase-be-2-api-dominio-attivita">8.5 Fase BE-2 (API dominio attivita)<a class="headerlink" href="#85-fase-be-2-api-dominio-attivita" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Endpoint run pipeline attivita.</li>
@@ -4626,14 +4678,16 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 <h3 id="92-be-2-api-operative-obbligatorio">9.2 BE-2 API Operative (obbligatorio)<a class="headerlink" href="#92-be-2-api-operative-obbligatorio" title="Permanent link">&para;</a></h3>
 <p>Esporre API minime per uso UI/ops:</p>
 <ol>
-<li><code>POST /attivita-fatturabili/pipeline/run</code></li>
+<li><code>POST /api/v1/vendite/attivita_fatturabili/pipeline/run</code></li>
 <li>input: lotto o criteri creazione lotto + filtro sorgenti/branch opzionale;</li>
 <li>output: id run/lotto + stato iniziale per branch.</li>
-<li><code>GET /attivita-fatturabili/pipeline/{lottoId}/status</code></li>
+<li><code>GET /api/v1/vendite/attivita_fatturabili/pipeline/{lotto_id}/status</code></li>
 <li>output: <code>stato_lotto</code>, <code>stato_operativo</code>, riepilogo <code>stato_esecuzione</code> per branch.</li>
-<li><code>GET /attivita-fatturabili/pipeline/{lottoId}/task-runs</code></li>
+<li><code>GET /api/v1/vendite/attivita_fatturabili/pipeline/{lotto_id}/task-runs</code></li>
 <li>output: lista task run ordinata per sequenza/tentativo con esito e dettagli errore.</li>
 </ol>
+<p>Nota convenzioni URL: snake_case e prefisso <code>/api/v1/vendite/</code> coerenti con gli endpoint esistenti
+(es. <code>/api/v1/vendite/lotti/{id}/fatture/</code>). Non usare kebab-case.</p>
 <p>Regole API:
 - nessun mapping hardcoded sorgente-&gt;branch lato Python: usare solo resolver DB;
 - error envelope uniforme e tracciabile (code, scope, severity, context).</p>
@@ -4675,6 +4729,39 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 <p>Legenda:
 - tipo: <code>EPIC</code>, <code>STORY</code>, <code>TASK</code>, <code>TEST</code>
 - priorita<code>:</code>P0<code>blocca go-live,</code>P1<code>necessario,</code>P2` migliorativo</p>
+<h3 id="100-prerequisiti-backend-completati">10.0 Prerequisiti backend — ✓ COMPLETATI<a class="headerlink" href="#100-prerequisiti-backend-completati" title="Permanent link">&para;</a></h3>
+<p>I deliverable Django dei punti 20 e 21 (§3.3 e §4.3) non sono coperti dai ticket BE-1/BE-2/BE-3
+e devono essere completati prima di aprire BE-1, pena regressioni sul runner lotto esistente.</p>
+<ol>
+<li><code>PRE-1</code> (TASK, P0) ✓ - aggiornare guard runner lotto (§4.3)</li>
+<li>output:<ul>
+<li><code>pipeline_repository.py</code>: nuovo metodo <code>count_fatture_stato_esecuzione_errore(lotto_id)</code>.</li>
+<li><code>lotto_segnalazioni_service.py</code>: <code>LottoSignalStatus</code> con campo <code>fatture_stato_esecuzione_errore_count</code>;
+   <code>evaluate_lotto_status</code> blocca se <code>critical_count &gt; 0 OR stato_esecuzione_errore_count &gt; 0</code>.</li>
+<li><code>pipeline_runner.py</code>: detail e context arricchiti con <code>stato_esecuzione_errore_count</code>.</li>
+</ul>
+</li>
+<li>
+<p>done:</p>
+<ul>
+<li>test 14/15 in <code>test_pipeline_runner.py</code>: <code>stato_esecuzione=ERRORE</code> blocca; warning non blocca.</li>
+<li>test 3 in <code>test_lotto_segnalazioni_service.py</code>: guard su ponte verificata a livello service.</li>
+</ul>
+</li>
+<li>
+<p><code>PRE-2</code> (TASK, P0) ✓ - codici errore dominio attivita (§3.3)</p>
+</li>
+<li>output:<ul>
+<li><code>error_policies.py</code>: aggiunti <code>E_ATTIVITA_PIPELINE</code> (HTTP 400), <code>E_ATTIVITA_VALIDATION</code> (HTTP 400),
+   <code>E_ATTIVITA_LOTTO_NOT_FOUND</code> (HTTP 404).</li>
+</ul>
+</li>
+<li>done:<ul>
+<li>codici errore <code>E_ATTIVITA_*</code> disponibili nel registry; il runner attivita (BE-1) li usera`.</li>
+</ul>
+</li>
+<li>nota: helper payload <code>build_pipeline_error_context</code> rimandato a BE-1.5 (contesto piu` ricco).</li>
+</ol>
 <h3 id="101-epic-be-att-pipeline">10.1 EPIC BE-ATT-PIPELINE<a class="headerlink" href="#101-epic-be-att-pipeline" title="Permanent link">&para;</a></h3>
 <ol>
 <li><code>BE-ATT-PIPELINE</code> (EPIC, P0)</li>
@@ -4700,13 +4787,20 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 </li>
 <li>output:<ul>
 <li>dispatch task via registry dominio <code>ATTIVITA_FATTURABILI</code>;</li>
-<li>gestione esiti <code>SUCCESS|WARNING|ERROR</code>.</li>
+<li>gestione esiti <code>SUCCESS|WARNING|ERROR</code>;</li>
+<li><code>handler_registry</code> Python (dict statico <code>handler_code -&gt; callable</code>) per tutti i task
+   seedati in <code>dbops.pipeline_task_registry_impl</code> del dominio:
+   <code>acquisisci_preventivi_default</code>, <code>acquisisci_contratti_default</code>,
+   <code>acquisisci_ordini_default</code>, <code>acquisisci_attivita_consumi_default</code>,
+   <code>normalizza_attivita_default</code>, <code>valida_attivita_default</code>, <code>deduplica_attivita_default</code>.</li>
 </ul>
 </li>
 <li>
 <p>done:</p>
 <ul>
-<li>supporto <code>block_scope=BRANCH|GLOBAL</code> rispettato.</li>
+<li>supporto <code>block_scope=BRANCH|GLOBAL</code> rispettato (task policy ha precedenza su sorgente policy);</li>
+<li>nessun import dinamico: mapping statico come in <code>PipelineStepExecutor</code> del dominio lotto;</li>
+<li>stub funzionanti per tutti e 7 gli handler (anche se non implementati nel dettaglio).</li>
 </ul>
 </li>
 <li>
@@ -4754,7 +4848,7 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 <ol>
 <li><code>BE-2.1</code> (TASK, P0) - endpoint run</li>
 <li>output:<ul>
-<li><code>POST /attivita-fatturabili/pipeline/run</code>.</li>
+<li><code>POST /api/v1/vendite/attivita_fatturabili/pipeline/run</code>.</li>
 </ul>
 </li>
 <li>
@@ -4767,7 +4861,7 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 <p><code>BE-2.2</code> (TASK, P0) - endpoint status</p>
 </li>
 <li>output:<ul>
-<li><code>GET /attivita-fatturabili/pipeline/{lottoId}/status</code>.</li>
+<li><code>GET /api/v1/vendite/attivita_fatturabili/pipeline/{lotto_id}/status</code>.</li>
 </ul>
 </li>
 <li>
@@ -4780,7 +4874,7 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 <p><code>BE-2.3</code> (TASK, P0) - endpoint task-runs</p>
 </li>
 <li>output:<ul>
-<li><code>GET /attivita-fatturabili/pipeline/{lottoId}/task-runs</code>.</li>
+<li><code>GET /api/v1/vendite/attivita_fatturabili/pipeline/{lotto_id}/task-runs</code>.</li>
 </ul>
 </li>
 <li>
@@ -4851,9 +4945,38 @@ gestire l'upstream in fasi successive, con scope sorgenti controllato.</p>
 <li><code>BE-2.1</code>/<code>BE-2.2</code>/<code>BE-2.3</code> -&gt; <code>BE-2.4</code></li>
 <li><code>BE-3.1</code> -&gt; <code>BE-3.2</code> -&gt; <code>BE-3.3</code></li>
 <li>Gate:</li>
+<li>non aprire <code>BE-1</code> senza <code>PRE-1</code> e <code>PRE-2</code> chiusi.</li>
 <li>non aprire <code>BE-2</code> senza runner stabile (<code>BE-1.3</code> minimo).</li>
 <li>non chiudere epic senza smoke <code>BE-3.3</code>.</li>
 </ol>
+<hr />
+<h2 id="11-migliorie-db-future-riduzione-logica-backend">§11) Migliorie DB future (riduzione logica backend)<a class="headerlink" href="#11-migliorie-db-future-riduzione-logica-backend" title="Permanent link">&para;</a></h2>
+<p>Raccolta di interventi DB che semplificherebbero o eliminerebbero logica duplicata
+nel layer Python. Da pianificare dopo il completamento di BE-1/BE-2/BE-3.
+Non bloccano nessun ticket corrente.</p>
+<h3 id="111-unificare-query-blocco-lotto-in-fn_get_lotto_segnalazioni_summary">§11.1 Unificare query blocco lotto in <code>fn_get_lotto_segnalazioni_summary</code><a class="headerlink" href="#111-unificare-query-blocco-lotto-in-fn_get_lotto_segnalazioni_summary" title="Permanent link">&para;</a></h3>
+<p><strong>Contesto</strong>: <code>evaluate_lotto_status</code> in <code>lotto_segnalazioni_service.py</code> esegue
+attualmente due query DB separate per valutare se il lotto e` bloccato:</p>
+<ol>
+<li><code>get_lotto_segnalazioni_summary()</code> — chiama <code>vendite.fn_get_lotto_segnalazioni_summary</code>
+   e restituisce i contatori segnalazioni per severita`.</li>
+<li><code>count_fatture_stato_esecuzione_errore()</code> — query diretta su
+   <code>vendite.fatturazione_lotti_fatture</code> per contare le fatture con
+   <code>stato_esecuzione = 'ERRORE'</code>.</li>
+</ol>
+<p><strong>Miglioramento</strong>: estendere <code>vendite.fn_get_lotto_segnalazioni_summary</code> per
+restituire anche la colonna <code>fatture_stato_esecuzione_errore_count</code>
+(COUNT su <code>fatturazione_lotti_fatture.stato_esecuzione = 'ERRORE'</code>).
+Questo eliminerebbe la seconda query e ridurrebbe i round-trip DB per ogni
+valutazione blocco lotto.</p>
+<p><strong>Impatto backend</strong>:</p>
+<ul>
+<li>rimuovere il metodo <code>count_fatture_stato_esecuzione_errore</code> dal repository;</li>
+<li>leggere <code>fatture_stato_esecuzione_errore_count</code> direttamente dal summary
+  restituito dalla funzione DB;</li>
+<li>aggiornare <code>evaluate_lotto_status</code> di conseguenza (nessun cambio all'interfaccia
+  pubblica di <code>LottoSignalStatus</code>).</li>
+</ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
