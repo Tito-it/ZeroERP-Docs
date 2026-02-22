@@ -2354,6 +2354,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="🔎 Analisi – Lotto “giornaliero” vs massivo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pipeline-attivita_fatturabili-modello-a-branch-implementazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline attivita_fatturabili (modello a branch, implementazione)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3969,6 +3986,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="🔎 Analisi – Lotto “giornaliero” vs massivo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pipeline-attivita_fatturabili-modello-a-branch-implementazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline attivita_fatturabili (modello a branch, implementazione)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4451,6 +4485,8 @@
 <p>👀 <strong>Vedi anche</strong></p>
 <ul>
 <li><a href="../../dbzero/vendite/manual/attivita_fatturabili"><code>Documentazione attivita_fatturabili</code></a>  </li>
+<li><a href="../../dbzero/vendite/manual/attivita_fatturabili_pipeline_task_policy"><code>Pipeline attivita: policy task</code></a>  </li>
+<li><a href="../../dbzero/vendite/manual/attivita_fatturabili_lotti_task_runs"><code>Pipeline attivita: task-runs</code></a>  </li>
 <li><a href="../../dbzero/vendite/manual/fatture"><code>Documentazione fatture</code></a>  </li>
 <li><a href="../../dbzero/vendite/manual/fatture_righe"><code>Documentazione fatture_righe</code></a>  </li>
 <li><a href="../../dbzero/vendite/manual/note"><code>Documentazione note (partizionata)</code></a>  </li>
@@ -4507,6 +4543,53 @@ introduciamo due concetti:</p>
 * uso nel runner Django per resume/reset deterministico per task.</p>
 <p>Questo consente di <strong>accorpare più fatture</strong> nello stesso lotto giornaliero,
 senza perdere la governance documentale.</p>
+<h3 id="pipeline-attivita_fatturabili-modello-a-branch-implementazione">Pipeline <code>attivita_fatturabili</code> (modello a branch, implementazione)<a class="headerlink" href="#pipeline-attivita_fatturabili-modello-a-branch-implementazione" title="Permanent link">&para;</a></h3>
+<p>Dal 22-02-2026 il dominio <code>ATTIVITA_FATTURABILI</code> adotta una pipeline runtime
+dedicata con gestione <strong>a branch indipendenti</strong> (es. <code>PREVENTIVI</code>, <code>ORDINI</code>),
+coerente con il requisito "pipeline libera" non rigidamente sequenziale.</p>
+<p>Riferimenti principali:
+* <code>vendite.attivita_fatturabili_pipeline</code>
+* <code>vendite.attivita_fatturabili_pipeline_task_policy</code>
+* <code>vendite.attivita_fatturabili_lotti_task_runs</code>
+* <code>vendite.fn_get_attivita_pipeline_task_policy</code>
+* <code>vendite.fn_start_attivita_lotto_task_run</code>
+* <code>vendite.fn_complete_attivita_lotto_task_run</code>
+* <code>vendite.fn_fail_attivita_lotto_task_run</code>
+* <code>vendite.fn_cancel_attivita_lotto_task_run</code>
+* <code>vendite.fn_list_attivita_lotto_task_runs</code>
+* <code>vendite.fn_set_runtime_task_run_esito</code> (helper condiviso con dominio <code>LOTTO</code>)</p>
+<p>Regole runtime adottate:
+* policy per task su chiave <code>(pipeline_id, branch_code, task_code)</code>;
+* fallback policy <code>branch_code -&gt; DEFAULT</code>;
+* <code>block_scope</code> configurabile:
+  * <code>BRANCH</code>: blocca solo il ramo corrente;
+  * <code>GLOBAL</code>: blocca l'intera run;
+* dipendenze opzionali in <code>depends_on</code> (jsonb);
+* resume mode esteso a <code>RESUME_BRANCH</code>.</p>
+<p>Semantica operativa:
+* <strong>start task</strong>: inserisce run in <code>IN_ESECUZIONE</code>, incrementa <code>tentativo</code> per <code>(lotto_attivita_id, pipeline_id, branch_code, task_code)</code>;
+* <strong>complete/fail/cancel</strong>: chiusura uniforme via helper <code>fn_set_runtime_task_run_esito</code>;
+* <strong>list task-runs</strong>: diagnostica per lotto con filtri <code>branch_code</code> e <code>task_code</code>.</p>
+<p>Esempio lettura policy con fallback branch:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_get_attivita_pipeline_task_policy</span><span class="p">(</span>
+<span class="w">  </span><span class="n">p_pipeline_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">:</span><span class="n">pipeline_id</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_task_code</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">:</span><span class="n">task_code</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_branch_code</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;PREVENTIVI&#39;</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>Esempio apertura task-run:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_start_attivita_lotto_task_run</span><span class="p">(</span>
+<span class="w">  </span><span class="n">p_lotto_attivita_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">:</span><span class="n">lotto_attivita_id</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_pipeline_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">:</span><span class="n">pipeline_id</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_task_code</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">:</span><span class="n">task_code</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_branch_code</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;PREVENTIVI&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_block_scope</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;BRANCH&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_depends_on</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;[]&#39;</span><span class="p">::</span><span class="n">jsonb</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_meta</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;{}&#39;</span><span class="p">::</span><span class="n">jsonb</span>
+<span class="p">);</span>
+</code></pre></div>
 <hr />
 <h2 id="tabelle-coinvolte-core">🧱 Tabelle coinvolte (core)<a class="headerlink" href="#tabelle-coinvolte-core" title="Permanent link">&para;</a></h2>
 <ul>
@@ -4767,6 +4850,13 @@ questa parte e</code> demandata al processo di generazione righe (Python).</p>
 <li><code>MASSIVO</code> step <code>DRAFT/EMESSA</code> rieseguibili con reset tecnico step.</li>
 <li><code>DEFINITIVA</code> in resume per fattura (no reset globale).</li>
 <li><code>GIORNALIERO</code> senza reset lotto su emissione.</li>
+<li>Verificare pipeline attivita (branch):</li>
+<li><code>vendite.attivita_fatturabili_pipeline</code> popolata per gli step attesi.</li>
+<li><code>vendite.attivita_fatturabili_pipeline_task_policy</code> valorizzata almeno per <code>branch_code='DEFAULT'</code>.</li>
+<li><code>block_scope</code> coerente con il comportamento desiderato (<code>BRANCH</code> vs <code>GLOBAL</code>).</li>
+<li>Verificare tracciamento runtime attivita:</li>
+<li>scrittura in <code>vendite.attivita_fatturabili_lotti_task_runs</code> disponibile.</li>
+<li>funzioni runtime attivita (<code>fn_start/complete/fail/cancel/list_attivita_lotto_task_runs</code>) installate.</li>
 </ol>
 <p>Query di controllo rapido:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Step risolti per tipo lotto</span>

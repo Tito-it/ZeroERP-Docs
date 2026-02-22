@@ -3497,7 +3497,7 @@
 <li>Converte <code>dry_run</code> in boolean.</li>
 <li>Converte <code>0</code> in <code>null</code> sugli ID opzionali (<code>lotto_id</code>, <code>tipo_doc_fiscale_id</code>, <code>utility_id</code>, <code>billing_account_id</code>, <code>emittente_soggetto_ruolo_id</code>).</li>
 <li><code>lock_batch_id</code> è il correlatore del lotto: se passato è <strong>RIUSO</strong> lotto; per creare un lotto nuovo <strong>ometterlo</strong> o passare <code>null</code> (il DB lo genera). Riutilizzare un <code>lock_batch_id</code> di un lotto <code>COMPLETATO</code> produce errore.</li>
-<li><strong>Risoluzione emittente fiscale</strong> — delegata a <code>vendite.fn_get_or_create_lotto</code> nel DB con questa priorità:</li>
+<li><strong>Risoluzione emittente fiscale</strong> — delegata a <code>vendite.fn_get_or_create_lotto</code> nel DB (via helper condiviso <code>vendite.fn_resolve_lotto_utility_emittente</code>) con questa priorità:</li>
 <li><code>emittente_soggetto_ruolo_id</code> esplicito nel payload → validato e usato direttamente.</li>
 <li>Dedotto dal mapping <code>billing_account_id</code> → emittente fiscale, se <code>billing_account_id</code> valorizzato.</li>
 <li>Unico emittente fiscale attivo nel sistema → usato come default.</li>
@@ -3510,6 +3510,7 @@
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>vendite.fn_get_or_create_lotto</code> (creazione/risoluzione lotto + emittente)</li>
+<li><code>vendite.fn_resolve_lotto_utility_emittente</code> (helper condiviso coerenza BA/utility/emittente)</li>
 <li><code>vendite.fatturazione_lotti.emittente_soggetto_ruolo_id</code> (attributo lotto persistito)</li>
 <li>Dipendenze indirette via <code>services/pipeline_runner.py</code> e <code>db/pipeline_repository.py</code></li>
 </ul>

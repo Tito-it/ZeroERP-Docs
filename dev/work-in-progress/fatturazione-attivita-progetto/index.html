@@ -3378,6 +3378,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#release-notes-db-2-22-02-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧾 Release Notes DB-2 (22-02-2026)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#recap-operativo-pipeline-fatturazione-db-django" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4701,6 +4712,9 @@
 <blockquote>
 <p>Documento di lavoro per pianificazione e avanzamento attivita. Contiene appendici e note operative.
 La guida principale resta <code>docs/it/guide/fatturazione.md</code>.</p>
+<p>⚠️ <strong>Nota operativa (22-02-2026):</strong> per la ripresa implementativa del dominio
+<code>attivita_fatturabili</code>, il documento WIP di riferimento unico e<code>:</code>docs/it/dev/work-in-progress/ripresa-lavori-attivita-fatturabili.md`.
+Questo file resta storico/contestuale.</p>
 </blockquote>
 <hr />
 <h2 id="recap-stato-sintesi">✅ Recap stato (sintesi)<a class="headerlink" href="#recap-stato-sintesi" title="Permanent link">&para;</a></h2>
@@ -4735,6 +4749,102 @@ La guida principale resta <code>docs/it/guide/fatturazione.md</code>.</p>
 <li>[x] Policy rerun <code>MASSIVO</code> nel runner Django: resume dallo step corrente + rollback step opzionale con <code>meta.auto_step_rollback=true</code> (skip rollback distruttivi in auto-run).</li>
 <li>[x] Seed transizioni <code>config.stati_doc_fiscale_transizioni</code> allineato agli step lotto (incluso <code>MASSIVO</code> 8 -&gt; 3).</li>
 </ul>
+<h2 id="release-notes-db-2-22-02-2026">🧾 Release Notes DB-2 (22-02-2026)<a class="headerlink" href="#release-notes-db-2-22-02-2026" title="Permanent link">&para;</a></h2>
+<p>Stato: implementazione DB-2 avanzata e riallineata tra domini <code>fatturazione_lotti</code> e <code>attivita_fatturabili</code>.</p>
+<p>Changeset principali:</p>
+<ol>
+<li><code>20260222-01</code><br />
+<code>00_schema/vendite/20260222-01-update-attivita-fatturabili-lotti-stati-emittente-mctit.yaml</code></li>
+<li>aggiunti su <code>attivita_fatturabili_lotti</code>: <code>stato_operativo</code>, <code>emittente_soggetto_ruolo_id</code></li>
+<li>aggiunto su <code>attivita_fatturabili</code>: <code>stato_esecuzione</code></li>
+<li>indici e vincoli iniziali</li>
+<li><code>20260222-01-02</code><br />
+   nello stesso file:</li>
+<li><code>stato_esecuzione</code> su <code>attivita_fatturabili</code> reso nullable (<code>NULL</code> fuori pipeline)</li>
+<li>check aggiornato: <code>NULL</code> oppure <code>PENDING|RUNNING|COMPLETED|ERRORE</code></li>
+<li><code>20260222-02</code><br />
+<code>00_schema/vendite/20260222-02-update-fatturazione-lotti-fatture-stato-esecuzione-v2-mctit.yaml</code></li>
+<li>convergenza <code>fatturazione_lotti_fatture.stato_esecuzione</code> a <code>PENDING|RUNNING|COMPLETED|ERRORE</code></li>
+<li>backfill <code>OK -&gt; COMPLETED</code></li>
+<li><code>20260222-03</code><br />
+<code>20_code/vendite/20260222-03-update-fn-lotto-stato-esecuzione-v2-mctit.yaml</code></li>
+<li>update funzioni lotto/fatture per nuovi stati runtime (<code>RUNNING/COMPLETED/ERRORE</code>)</li>
+<li><code>20260222-04</code><br />
+<code>20_code/vendite/20260222-04-update-fn-attivita-stato-esecuzione-mctit.yaml</code></li>
+<li>update funzioni attività:<ul>
+<li>lock selezione -&gt; <code>PENDING</code></li>
+<li>generazione righe -&gt; <code>RUNNING</code>/<code>COMPLETED</code></li>
+<li>cleanup/reset -&gt; <code>NULL</code></li>
+</ul>
+</li>
+<li><code>20260222-05</code><br />
+<code>20_code/vendite/20260222-05-create-fn-attivita-lotti-core-mctit.yaml</code></li>
+<li>nuove funzioni core dominio attività:<ul>
+<li><code>fn_get_or_create_lotto_attivita</code></li>
+<li><code>fn_set_attivita_lotto_stato</code></li>
+<li><code>fn_sync_attivita_stato_esecuzione</code></li>
+</ul>
+</li>
+<li><code>20260222-06</code><br />
+<code>20_code/vendite/20260222-06-refactor-lotti-resolve-emittente-utility-helper-mctit.yaml</code></li>
+<li>refactor anti-duplicazione:<ul>
+<li>nuovo helper condiviso <code>fn_resolve_lotto_utility_emittente</code></li>
+<li>riuso helper in <code>fn_get_or_create_lotto</code> e <code>fn_get_or_create_lotto_attivita</code></li>
+</ul>
+</li>
+<li><code>20260222-07</code><br />
+<code>20_code/vendite/20260222-07-refactor-stato-esecuzione-mapping-helper-mctit.yaml</code></li>
+<li>secondo refactor anti-duplicazione:<ul>
+<li>nuovo helper condiviso <code>fn_resolve_stato_esecuzione</code></li>
+<li>riuso helper in:</li>
+<li><code>fn_set_fatturazione_lotto_stato</code></li>
+<li><code>fn_sync_lotto_fatture_stato</code></li>
+<li><code>fn_sync_fatture_log_critical_lotto</code></li>
+<li><code>fn_sync_attivita_stato_esecuzione</code></li>
+</ul>
+</li>
+<li><code>20260222-08</code><br />
+<code>20_code/vendite/20260222-08-fix-trgfn-attivita-guard-log-variadic-casts-mctit.yaml</code></li>
+<li>fix trigger function guard attività con cast espliciti su parametri variadici verso <code>script.fn_log_and_raise_error(...)</code></li>
+<li>riallineate:<ul>
+<li><code>trgfn_attivita_fatturabili_guard_ba_coerenza</code></li>
+<li><code>trgfn_attivita_fatturabili_guard_fonte</code></li>
+</ul>
+</li>
+<li><code>20260222-10</code><br />
+<code>00_schema/vendite/20260222-10-create-attivita-fatturabili-pipeline-task-policy-mctit.yaml</code><ul>
+<li>nuova tabella <code>attivita_fatturabili_pipeline_task_policy</code></li>
+<li>policy task runtime dedicate al dominio attività con:</li>
+<li><code>branch_code</code></li>
+<li><code>resume_mode</code> esteso (<code>...|RESUME_BRANCH</code>)</li>
+<li><code>block_scope</code> (<code>BRANCH|GLOBAL</code>)</li>
+<li><code>depends_on</code> (<code>jsonb</code>)</li>
+</ul>
+</li>
+<li><code>20260222-11</code><br />
+<code>00_schema/vendite/20260222-11-create-attivita-fatturabili-lotti-task-runs-mctit.yaml</code><ul>
+<li>nuova tabella tracing <code>attivita_fatturabili_lotti_task_runs</code></li>
+<li>supporto runtime branch-oriented (<code>branch_code</code>, <code>block_scope</code>, <code>depends_on</code>)</li>
+<li>FK verso <code>attivita_fatturabili_lotti</code>, <code>attivita_fatturabili_pipeline</code>, <code>config.sorgenti</code></li>
+</ul>
+</li>
+<li><code>20260222-12</code><br />
+<code>20_code/vendite/20260222-12-create-fn-attivita-pipeline-task-runtime-support-mctit.yaml</code><ul>
+<li>nuove funzioni runtime attività:</li>
+<li><code>fn_get_attivita_pipeline_task_policy</code></li>
+<li><code>fn_start_attivita_lotto_task_run</code></li>
+<li><code>fn_complete_attivita_lotto_task_run</code></li>
+<li><code>fn_fail_attivita_lotto_task_run</code></li>
+<li><code>fn_cancel_attivita_lotto_task_run</code></li>
+<li><code>fn_list_attivita_lotto_task_runs</code></li>
+</ul>
+</li>
+</ol>
+<p>Nota operativa:
+- Prima della conferma finale del pacchetto DB-2, consigliata esecuzione test pgtap dedicati su:
+  - coerenza BA/emittente
+  - mapping stati esecuzione
+  - transizioni stato lotto attività.</p>
 <h2 id="recap-operativo-pipeline-fatturazione-db-django">✅ Recap operativo pipeline fatturazione (DB + Django)<a class="headerlink" href="#recap-operativo-pipeline-fatturazione-db-django" title="Permanent link">&para;</a></h2>
 <ul>
 <li>[x] Runner Django in produzione logica pipeline (<code>LottoPipelineRunner</code> + <code>PipelineStepExecutor</code>).</li>
