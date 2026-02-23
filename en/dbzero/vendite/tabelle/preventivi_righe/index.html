@@ -63,6 +63,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#documentazione-concettuale-tabella-venditepreventivi_righe" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -3353,6 +3358,108 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-concettuale-tabella-venditepreventivi_righe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📘 Documentazione Concettuale – Tabella vendite.preventivi_righe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Tabella vendite.preventivi_righe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Scopo Principale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quantita-e-uom-operativa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧮 Quantita` e UoM operativa
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regole-principali" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✅ Regole principali
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ruolo-nel-flusso-fatturazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔗 Ruolo nel flusso fatturazione
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#campi-chiave-funzionali" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Campi chiave funzionali
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audit-e-qualita-dati" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧷 Audit e qualità dati
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ruolo-nel-sistema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        👓 Ruolo nel sistema
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -3373,6 +3480,70 @@
 
   <h1>Preventivi righe</h1>
 
+<h2 id="documentazione-concettuale-tabella-venditepreventivi_righe">📘 Documentazione Concettuale – Tabella <code>vendite.preventivi_righe</code><a class="headerlink" href="#documentazione-concettuale-tabella-venditepreventivi_righe" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p><strong>Approfondimento tabelle:</strong></p>
+<p>• <a href="../../../../dbzero/vendite/tabelle/preventivi">vendite.preventivi</a><br />
+• <a href="../../../../dbzero/vendite/tabelle/attivita_fatturabili">vendite.attivita_fatturabili</a><br />
+• <a href="../../../../dbzero/catalogo/tabelle/articoli">catalogo.articoli</a><br />
+• <a href="../../../../dbzero/config/tabelle/iva">config.iva</a>  </p>
+<p><strong>Approfondimento funzioni/trigger:</strong></p>
+<p>• <a href="../../../../dbzero/script/funzioni/trgfn_qta_from_operativa">script.trgfn_qta_from_operativa</a>  </p>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p><code>vendite.preventivi_righe</code> contiene il dettaglio economico-tecnico del preventivo:
+articolo, quantita`, prezzo, sconto, IVA e snapshot UoM operativa.</p>
+<p>Le righe sono la base informativa per la successiva generazione di
+<code>attivita_fatturabili</code> nel ramo <code>PREVENTIVI</code>.</p>
+<hr />
+<h3 id="quantita-e-uom-operativa">🧮 Quantita` e UoM operativa<a class="headerlink" href="#quantita-e-uom-operativa" title="Permanent link">&para;</a></h3>
+<p>La tabella supporta doppia rappresentazione quantita`:</p>
+<ul>
+<li><code>qta_operativa</code> + <code>uom_operativa_id</code> (input operativo utente/sorgente)</li>
+<li><code>quantita</code> (valore base usato nei calcoli)</li>
+<li><code>factor_to_base</code> (fattore snapshot al momento della riga)</li>
+</ul>
+<p>Il trigger <code>script.trgfn_qta_from_operativa</code> mantiene l’allineamento dei valori.</p>
+<hr />
+<h3 id="regole-principali">✅ Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ogni riga appartiene a un preventivo (<code>preventivo_id</code> obbligatorio).</li>
+<li><code>articolo_id</code> obbligatorio e referenziato a catalogo.</li>
+<li>Controlli su valori economici e sconto (<code>chk_prevrighe_quantita_prezzo</code>, <code>chk_prevrighe_sconto</code>).</li>
+<li>Flag <code>attivo</code> per escludere righe senza cancellazione fisica.</li>
+</ol>
+<hr />
+<h3 id="ruolo-nel-flusso-fatturazione">🔗 Ruolo nel flusso fatturazione<a class="headerlink" href="#ruolo-nel-flusso-fatturazione" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Le righe alimentano la valutazione di eleggibilita` del preventivo.</li>
+<li>In stato testata idoneo (es. <code>ACCETTATO</code>) diventano fonte per creare
+   attività in <code>vendite.attivita_fatturabili</code>.</li>
+<li>Le attività, non le righe preventivo direttamente, entrano nel flusso lotto/fatture.</li>
+</ol>
+<hr />
+<h3 id="campi-chiave-funzionali">📄 Campi chiave funzionali<a class="headerlink" href="#campi-chiave-funzionali" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>preventivo_id</code>, <code>articolo_id</code></li>
+<li><code>descrizione</code></li>
+<li><code>quantita</code>, <code>qta_operativa</code>, <code>uom_operativa_id</code>, <code>factor_to_base</code></li>
+<li><code>prezzo_unitario</code>, <code>sconto_percentuale</code>, <code>iva_id</code></li>
+<li><code>ordine</code>, <code>attivo</code></li>
+<li><code>meta</code></li>
+</ul>
+<hr />
+<h3 id="audit-e-qualita-dati">🧷 Audit e qualità dati<a class="headerlink" href="#audit-e-qualita-dati" title="Permanent link">&para;</a></h3>
+<ul>
+<li>audit standard (<code>data_insert</code>, <code>user_insert</code>, <code>data_update</code>, <code>user_update</code>);</li>
+<li>trigger di validazione referenziale su articoli/IVA/UoM attivi;</li>
+<li>prevenzione disattivazione riga se esistono note collegate (<code>note_preventivo</code>).</li>
+</ul>
+<hr />
+<h3 id="ruolo-nel-sistema">👓 Ruolo nel sistema<a class="headerlink" href="#ruolo-nel-sistema" title="Permanent link">&para;</a></h3>
+<p><code>vendite.preventivi_righe</code> rappresenta il livello di granularita` commerciale
+necessario per trasformare il preventivo in elementi fatturabili in modo tracciabile,
+coerente e idempotente lungo la pipeline.</p>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
