@@ -3503,17 +3503,17 @@ con riepilogo aggregato per branch.</p>
 <li><code>stato_lotto</code> — stato tecnico della pipeline: <code>DRAFT</code> | <code>IN_ESECUZIONE</code> | <code>COMPLETATO</code> | <code>ERRORE</code>.</li>
 <li><code>stato_operativo</code> — stato business del lotto: <code>APERTO</code> | <code>CHIUSO</code> | <code>ANNULLATO</code>.</li>
 <li><code>branch_summary</code> — contatori task run aggregati per <code>branch_code</code> e <code>task_stato</code>.</li>
-<li>Derivato dai task run in <code>attivita_fatturabili_lotti_task_runs</code> (fino a 500 righe).</li>
+<li>Derivato da <code>vendite.fn_get_attivita_branch_summary</code> — aggregazione <code>GROUP BY</code> lato DB (nessun trasferimento righe).</li>
 <li>Chiavi del sommario: valori di <code>task_stato</code> presenti (<code>IN_ESECUZIONE</code>, <code>COMPLETATO</code>, <code>ERRORE</code>).</li>
 <li>Endpoint di sola lettura: nessun <code>Idempotency-Key</code> richiesto.</li>
 <li>Endpoint v1 richiede JWT.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>vendite.attivita_fatturabili_lotti</code> — <code>stato_lotto</code> e <code>stato_operativo</code></li>
-<li><code>vendite.fn_list_attivita_lotto_task_runs</code> — task run sorgente per <code>branch_summary</code></li>
+<li><code>vendite.fn_get_attivita_lotto_info</code> — <code>stato_lotto</code>, <code>stato_operativo</code>, <code>is_in_esecuzione</code> in un unico round-trip</li>
+<li><code>vendite.fn_get_attivita_branch_summary</code> — aggregazione <code>branch_code</code>/<code>task_stato</code>/<code>cnt</code> per <code>branch_summary</code></li>
 <li><code>apps.vendite.db.attivita_pipeline_repository.AttivitaPipelineRepository.get_lotto_attivita_full_stato</code></li>
-<li><code>apps.vendite.db.attivita_pipeline_repository.AttivitaPipelineRepository.list_attivita_task_runs</code></li>
+<li><code>apps.vendite.db.attivita_pipeline_repository.AttivitaPipelineRepository.get_attivita_branch_summary</code></li>
 </ul>
 
 

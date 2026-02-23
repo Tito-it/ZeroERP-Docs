@@ -5279,6 +5279,13 @@ valutazione blocco lotto.</p>
 <li>rimuovere query separata <code>count_fatture_stato_esecuzione_errore</code>;</li>
 <li>usare solo il summary funzione DB per il blocco lotto.</li>
 </ol>
+<p><strong>Integrazione backend (23-02-2026): COMPLETATA</strong></p>
+<ul>
+<li><code>types.py</code>: aggiunto <code>fatture_stato_esecuzione_errore_count</code> a <code>LottoSegnalazioniSummary</code>.</li>
+<li><code>pipeline_repository.py</code>: SELECT esteso a 6 colonne; rimosso metodo <code>count_fatture_stato_esecuzione_errore</code>.</li>
+<li><code>lotto_segnalazioni_service.py</code>: <code>evaluate_lotto_status</code> legge <code>summary["fatture_stato_esecuzione_errore_count"]</code>.</li>
+<li>Test aggiornati: <code>test_pipeline_repository.py</code>, <code>test_lotto_segnalazioni_service.py</code>, <code>test_pipeline_runner.py</code>.</li>
+</ul>
 <h3 id="112-spostare-_compute_branch_summary-nel-db">§11.2 Spostare <code>_compute_branch_summary</code> nel DB<a class="headerlink" href="#112-spostare-_compute_branch_summary-nel-db" title="Permanent link">&para;</a></h3>
 <p><strong>Contesto</strong>: <code>fn_get_attivita_pipeline_status</code> in <code>attivita_pipeline_service.py</code>
 recupera fino a 500 task run dal DB (<code>list_attivita_task_runs(limit=500)</code>)
@@ -5322,6 +5329,12 @@ solo per aggregarli in Python via <code>_compute_branch_summary</code>:</p>
 <li>Pulizia codice:</li>
 <li>rimuovere <code>_compute_branch_summary</code> dal service una volta agganciato il repository.</li>
 </ol>
+<p><strong>Integrazione backend (23-02-2026): COMPLETATA</strong></p>
+<ul>
+<li><code>attivita_pipeline_repository.py</code>: aggiunto <code>get_attivita_branch_summary</code> che chiama <code>fn_get_attivita_branch_summary</code>.</li>
+<li><code>attivita_pipeline_service.py</code>: <code>fn_get_attivita_pipeline_status</code> usa <code>repo.get_attivita_branch_summary</code>; rimossa <code>_compute_branch_summary</code>.</li>
+<li>Test: aggiunto <code>test_get_attivita_branch_summary_returns_dict</code> in <code>test_attivita_pipeline_repository.py</code>; aggiornato <code>test_attivita_pipeline_service.py</code>.</li>
+</ul>
 <h3 id="113-sostituire-query-dirette-su-attivita_fatturabili_lotti-con-funzione-db">§11.3 Sostituire query dirette su <code>attivita_fatturabili_lotti</code> con funzione DB<a class="headerlink" href="#113-sostituire-query-dirette-su-attivita_fatturabili_lotti-con-funzione-db" title="Permanent link">&para;</a></h3>
 <p><strong>Contesto</strong>: <code>AttivitaPipelineRepository</code> contiene tre metodi con SELECT separati
 sulla stessa tabella <code>vendite.attivita_fatturabili_lotti</code>:</p>
@@ -5359,6 +5372,11 @@ repository <code>get_lotto_attivita_info(lotto_id)</code>.</p>
      <code>is_lotto_attivita_in_esecuzione</code> devono delegare al nuovo metodo unico
      oppure essere deprecati/rimossi.</li>
 </ol>
+<p><strong>Integrazione backend (23-02-2026): COMPLETATA</strong></p>
+<ul>
+<li><code>attivita_pipeline_repository.py</code>: aggiunto <code>get_lotto_attivita_info</code> che chiama <code>fn_get_attivita_lotto_info</code>; i tre metodi esistenti delegano a questo.</li>
+<li>Test: aggiunto <code>test_get_lotto_attivita_info_returns_dict</code> con verifica SQL e delega metodi.</li>
+</ul>
 <h3 id="114-helper-interno-_decode_jsonb-nel-repository-attivita">§11.4 Helper interno <code>_decode_jsonb</code> nel repository attivita<a class="headerlink" href="#114-helper-interno-_decode_jsonb-nel-repository-attivita" title="Permanent link">&para;</a></h3>
 <p><strong>Contesto</strong>: <code>AttivitaPipelineRepository</code> ripete il pattern di decodifica JSONB
 in quattro metodi (<code>list_sorgenti_abilitate</code>, <code>get_attivita_step_processes</code>,
@@ -5399,6 +5417,10 @@ interfaccia pubblica). Riduce il rischio di evoluzione inconsistente tra i blocc
 <li><code>list_attivita_task_runs</code></li>
 <li>Mantenere invariata interfaccia pubblica repository/service.</li>
 </ol>
+<p><strong>Integrazione backend (23-02-2026): COMPLETATA</strong></p>
+<ul>
+<li><code>attivita_pipeline_repository.py</code>: aggiunto <code>_decode_jsonb</code> statico; applicato in tutti e 4 i metodi elencati.</li>
+</ul>
 <h3 id="115-wrappare-list_sorgenti_abilitate-in-funzione-db">§11.5 Wrappare <code>list_sorgenti_abilitate</code> in funzione DB<a class="headerlink" href="#115-wrappare-list_sorgenti_abilitate-in-funzione-db" title="Permanent link">&para;</a></h3>
 <p><strong>Contesto</strong>: <code>list_sorgenti_abilitate</code> esegue SELECT diretto su
 <code>vendite.attivita_fatturabili_sorgenti_branch_policy</code>
@@ -5435,6 +5457,11 @@ per allineare il pattern con le altre funzioni DB del dominio
 <li>mantenere la firma del metodo invariata;</li>
 <li>lasciare al DB l'ordinamento/filtro sorgenti abilitate.</li>
 </ol>
+<p><strong>Integrazione backend (23-02-2026): COMPLETATA</strong></p>
+<ul>
+<li><code>attivita_pipeline_repository.py</code>: <code>list_sorgenti_abilitate</code> usa <code>fn_list_attivita_sorgenti_abilitate</code>; mapping righe invariato.</li>
+<li>Test: <code>test_list_sorgenti_abilitate_returns_list</code> aggiornato con assert SQL su <code>fn_list_attivita_sorgenti_abilitate</code>.</li>
+</ul>
 <h2 id="12-acquisizione-reale-da-preventiviordini-verso-attivita_fatturabili">12) Acquisizione reale da PREVENTIVI/ORDINI verso ATTIVITA_FATTURABILI<a class="headerlink" href="#12-acquisizione-reale-da-preventiviordini-verso-attivita_fatturabili" title="Permanent link">&para;</a></h2>
 <h3 id="121-stato-reale-oggi">12.1 Stato reale (oggi)<a class="headerlink" href="#121-stato-reale-oggi" title="Permanent link">&para;</a></h3>
 <p>La base pipeline e<code>pronta, ma il caricamento reale non e</code> ancora implementato end-to-end:</p>
