@@ -3992,6 +3992,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#1810-stato-transizione-pipeline-commessa_only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.10 Stato transizione pipeline (COMMESSA_ONLY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1811-readiness-backfill-analisi-volumi-pre-not-null" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18.11 Readiness backfill (analisi volumi pre-NOT-NULL)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4434,6 +4456,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#24-uniformazione-canali-fatturabili-per-sorgente-contrattipreventiviordiniddt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24) Uniformazione canali fatturabili per sorgente (contratti/preventivi/ordini/ddt)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="24) Uniformazione canali fatturabili per sorgente (contratti/preventivi/ordini/ddt)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#241-decisione-modello" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.1 Decisione modello
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#242-perchesorgente_uid-text-e-non-uuid-obbligatorio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.2 Perchesorgente_uid text` (e non UUID obbligatorio)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#243-struttura-tabella-proposta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.3 Struttura tabella proposta
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#244-regola-funzionale-uniforme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.4 Regola funzionale uniforme
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#245-checklist-aggiuntiva-analisi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24.5 Checklist aggiuntiva (analisi)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4508,8 +4602,8 @@ ATTIVITÀ FATTURABILI
 <li><strong>Nessun bypass</strong> — nessuna scrittura diretta in <code>attivita_fatturabili</code> senza <code>commessa_id</code>.</li>
 <li><strong>Idempotenza by design</strong> — stessa sorgente + stesso <code>segment_key</code> non produce doppioni.</li>
 <li><strong>Pull sempre rieseguibile</strong> — il passaggio commessa → attività fatturabili è idempotente.</li>
-<li><strong>Prezzi gestiti a livello di fatturazione</strong> — la commessa non blocca i prezzi, li segnala
-   se stantii; la verifica definitiva avviene alla pipeline di fatturazione.</li>
+<li><strong>Prezzi con ownership su commessa, validazione in fatturazione</strong> — la commessa salva
+   <code>prezzo_snapshot</code>/<code>prezzo_bloccato</code>; la verifica finale avviene nello step prezzi della pipeline.</li>
 <li><strong>Estendibile senza refactor</strong> — aggiungere una nuova sorgente = registrare un nuovo handler,
    non toccare il modello core.</li>
 </ol>
@@ -4523,7 +4617,7 @@ ATTIVITÀ FATTURABILI
 - Ordine semplice (monoprestazione evasa) → commessa AUTO.
 - Consumi utility → commessa AUTO per accumulo mensile.</p>
 <p>Lifecycle:</p>
-<div class="highlight"><pre><span></span><code>CREATA → PRONTA_FATTURAZIONE → CHIUSA
+<div class="highlight"><pre><span></span><code>BOZZA → PRONTA_FATTURAZIONE → CHIUSA
 </code></pre></div>
 <ul>
 <li><code>CHIUSA</code> avviene automaticamente dopo emissione in <code>attivita_fatturabili</code> e conferma COMPLETED.</li>
@@ -4754,9 +4848,8 @@ FK esatte) sono delegati al team.</p>
 <p><strong><code>vendite.commesse</code></strong>
 <div class="highlight"><pre><span></span><code>id                      PK
 tipo_commessa           REALE | AUTO
-stato                   BOZZA | CREATA | APERTA | IN_ESECUZIONE |
-                        PRONTA_FATTURAZIONE | CHIUSA
-stato_operativo         APERTO | CHIUSO | ANNULLATO
+stato_commessa          BOZZA | APERTA | IN_ESECUZIONE |
+                        PRONTA_FATTURAZIONE | CHIUSA | ANNULLATA
 policy_fatturazione     DA_DOCUMENTO | DA_CONSUNTIVO | MISTA
 fatturazione_immediata  boolean
 priorita_operativa      ALTA | NORMALE | BASSA
@@ -4817,8 +4910,9 @@ commessa_attivita_id    FK → commesse_attivita   (NOT NULL dopo backfill)
 <li><code>attivita_fatturabili.prezzo_bloccato</code> e` requisito del dominio pricing/listini;</li>
 <li>viene introdotto nella roadmap <code>gestione-listini.md</code> (DB-L3), non in DB-1 core commesse.</li>
 </ol>
-<p>I campi <code>sorgente_tipo_id / sorgente_uid / sorgente_riga</code> restano invariati
-e continuano a rappresentare la root source originale.</p>
+<p>I campi <code>sorgente_tipo_id / sorgente_uid / sorgente_riga</code> restano su AF come contratto
+idempotenza del pull e vengono valorizzati come <code>COMMESSA + segment_key</code>.
+La sorgente esterna originale resta su <code>commesse_attivita.sorgente_*</code>.</p>
 <p><strong><code>vendite.preventivi</code></strong> (o tabella equivalente) — aggiungere:
 <div class="highlight"><pre><span></span><code>stato_commessa          LIBERO | CONVERTITO | ESCLUSO   (default LIBERO)
 </code></pre></div></p>
@@ -4841,11 +4935,10 @@ esempio: 42_2026-02_SAL_1
 </code></pre></div></p>
 <h3 id="94-vincoli-di-unicita-da-implementare-in-db-2">9.4 Vincoli di unicità (da implementare in DB-2)<a class="headerlink" href="#94-vincoli-di-unicita-da-implementare-in-db-2" title="Permanent link">&para;</a></h3>
 <p>Unicità operativa primaria:
-<div class="highlight"><pre><span></span><code><span class="k">UNIQUE</span><span class="w"> </span><span class="p">(</span><span class="n">commessa_attivita_id</span><span class="p">,</span><span class="w"> </span><span class="n">segment_key</span><span class="p">)</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span>
+<div class="highlight"><pre><span></span><code><span class="k">UNIQUE</span><span class="w"> </span><span class="p">(</span><span class="n">commessa_id</span><span class="p">,</span><span class="w"> </span><span class="n">segment_key</span><span class="p">)</span>
 </code></pre></div></p>
 <p>Unicità di sicurezza su root source:
-<div class="highlight"><pre><span></span><code><span class="k">UNIQUE</span><span class="w"> </span><span class="p">(</span><span class="n">sorgente_tipo_id</span><span class="p">,</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">sorgente_uid</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">sorgente_riga</span><span class="p">::</span><span class="nb">text</span><span class="p">),</span><span class="w"> </span><span class="n">segment_key</span><span class="p">)</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span>
+<div class="highlight"><pre><span></span><code><span class="k">UNIQUE</span><span class="w"> </span><span class="p">(</span><span class="n">sorgente_tipo_id</span><span class="p">,</span><span class="w"> </span><span class="n">sorgente_uid</span><span class="p">,</span><span class="w"> </span><span class="n">ruolo_link</span><span class="p">)</span>
 </code></pre></div></p>
 <p>Regola anti-doppio canale: impossibile avere due record attivi con stesso <code>segment_key</code>
 e stessa root source su commesse diverse (salvo split esplicito con <code>segment_key</code> diversa).</p>
@@ -5002,7 +5095,7 @@ Troppo restrittivo — impedisce la parzializzazione controllata della stessa so
 <h2 id="15-cosa-non-cambia">15) Cosa NON cambia<a class="headerlink" href="#15-cosa-non-cambia" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Pipeline di fatturazione</strong> (lotti, documenti fiscali, SDI) — invariata.</li>
-<li><strong>Campi <code>sorgente_*</code> su <code>attivita_fatturabili</code></strong> — restano e rappresentano la root source.</li>
+<li><strong>Campi <code>sorgente_*</code> su <code>attivita_fatturabili</code></strong> — restano con semantica idempotenza pull (<code>COMMESSA + segment_key</code>).</li>
 <li><strong>Logica <code>Idempotency-Key</code> sulle API</strong> — invariata.</li>
 <li><strong>Branch policy BRANCH/GLOBAL</strong> — invariata.</li>
 </ul>
@@ -5013,7 +5106,8 @@ Troppo restrittivo — impedisce la parzializzazione controllata della stessa so
 <li>per fatturazioni extra ad alto volume (energia/gas/idrico) non si introduce bypass diretto a <code>attivita_fatturabili</code>;</li>
 <li>si usa il percorso standard tramite <code>commessa AUTO</code>, come per i preventivi con <code>fatturazione_immediata</code>;</li>
 <li>in <code>AUTO</code> il codice commessa business puo<code>essere nullo (se previsto dal modello DB), mantenendo comunque</code>commessa_id<code>e</code>commessa_attivita_id` valorizzati sulle righe emesse;</li>
-<li>i campi <code>sorgente_*</code> restano sempre valorizzati con la provenienza originaria.</li>
+<li>i campi <code>sorgente_*</code> su AF restano valorizzati per idempotenza, con convenzione
+   <code>COMMESSA + segment_key</code>; la provenienza originaria vive su <code>commesse_attivita.sorgente_*</code>.</li>
 </ol>
 <p>Scopo della nota:</p>
 <ol>
@@ -5034,7 +5128,7 @@ Troppo restrittivo — impedisce la parzializzazione controllata della stessa so
 <div class="highlight"><pre><span></span><code>id
 codice
 tipo_commessa                 REALE | AUTO
-stato_commessa                APERTA | IN_ESECUZIONE | COMPLETATA | CHIUSA | BLOCCATA
+stato_commessa                BOZZA | APERTA | IN_ESECUZIONE | PRONTA_FATTURAZIONE | CHIUSA | ANNULLATA
 billing_account_id
 utility_id
 emittente_soggetto_ruolo_id
@@ -5058,6 +5152,7 @@ data_insert / user_insert / data_update / user_update / tx_id
 commessa_id
 segment_key
 articolo_id
+istanza_utility_id          FK → anagrafiche.istanze_utilities (sempre valorizzata)
 uom_id
 quantita
 competenza_dal
@@ -5137,8 +5232,8 @@ data_insert / user_insert
 </tr>
 <tr>
 <td><code>sorgente_*</code> root</td>
-<td><code>commesse_sorgenti</code></td>
-<td>mantenuti in AF come origine primaria</td>
+<td><code>commesse_attivita</code> + <code>commesse_sorgenti</code></td>
+<td>su AF valorizzati come <code>COMMESSA + segment_key</code></td>
 </tr>
 </tbody>
 </table>
@@ -5180,81 +5275,124 @@ data_insert / user_insert
 <ol>
 <li>nessun bypass <code>sorgente -&gt; attivita_fatturabili</code>,</li>
 <li>percorso unico <code>sorgente -&gt; commessa -&gt; attivita_fatturabili</code>,</li>
-<li><code>sorgente_*</code> su AF mantenuti per tracciabilita` origine primaria.</li>
+<li><code>sorgente_*</code> su AF mantenuti come contratto idempotenza (<code>COMMESSA + segment_key</code>).</li>
 </ol>
 <hr />
 <h2 id="18-checklist-tecnica-db-l3-esecutiva">18) Checklist tecnica DB-L3 (esecutiva)<a class="headerlink" href="#18-checklist-tecnica-db-l3-esecutiva" title="Permanent link">&para;</a></h2>
 <h3 id="181-schema-commesse_">18.1 Schema <code>commesse_*</code><a class="headerlink" href="#181-schema-commesse_" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] creare <code>vendite.commesse</code> con stati, tipo (<code>REALE/AUTO</code>), contesto BA/utility/emittente, audit</li>
-<li>[ ] creare <code>vendite.commesse_sorgenti</code> con vincolo una sola root attiva per commessa</li>
-<li>[ ] creare <code>vendite.commesse_attivita</code> con:</li>
-<li>[ ] <code>segment_key</code></li>
-<li>[ ] <code>competenza_dal</code>, <code>competenza_al</code>, <code>competenza_mese</code></li>
-<li>[ ] <code>posticipa_al</code></li>
-<li>[ ] <code>tipo_doc_fiscale_id</code>, <code>valuta_id</code></li>
-<li>[ ] <code>listino_versione_id</code>, <code>prezzo_snapshot numeric(22,10)</code>, <code>prezzo_bloccato</code></li>
-<li>[ ] <code>pricing_mode</code>, <code>prezzo_da_riallineare</code></li>
-<li>[ ] <code>sorgente_tipo_id</code> nullable, <code>sorgente_uid</code> nullable (per import da sistemi esterni)</li>
-<li>[ ] unique parziale <code>(sorgente_tipo_id, sorgente_uid) WHERE sorgente_tipo_id IS NOT NULL</code></li>
-<li>[ ] creare <code>vendite.commesse_attivita_log</code></li>
+<li>[x] creare <code>vendite.commesse</code> con stati, tipo (<code>REALE/AUTO</code>), contesto BA/utility/emittente, audit</li>
+<li>[x] creare <code>vendite.commesse_sorgenti</code> con vincolo una sola root attiva per commessa</li>
+<li>[x] creare <code>vendite.commesse_attivita</code> con:</li>
+<li>[x] <code>segment_key</code></li>
+<li>[x] <code>istanza_utility_id</code> (NOT NULL, anche fittizia)</li>
+<li>[x] <code>competenza_dal</code>, <code>competenza_al</code>, <code>competenza_mese</code></li>
+<li>[x] <code>posticipa_al</code></li>
+<li>[x] <code>tipo_doc_fiscale_id</code>, <code>valuta_id</code></li>
+<li>[x] <code>listino_versione_id</code>, <code>prezzo_snapshot numeric(22,10)</code>, <code>prezzo_bloccato</code></li>
+<li>[x] <code>pricing_mode</code>, <code>prezzo_da_riallineare</code></li>
+<li>[x] <code>sorgente_tipo_id</code> nullable, <code>sorgente_uid</code> nullable (per import da sistemi esterni)</li>
+<li>[x] unique parziale <code>(sorgente_tipo_id, sorgente_uid) WHERE sorgente_tipo_id IS NOT NULL</code></li>
+<li>[x] creare <code>vendite.commesse_attivita_log</code></li>
 </ul>
 <h3 id="182-estensioni-attivita_fatturabili">18.2 Estensioni <code>attivita_fatturabili</code><a class="headerlink" href="#182-estensioni-attivita_fatturabili" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] aggiungere <code>commessa_id</code> (nullable transizione)</li>
-<li>[ ] aggiungere <code>commessa_attivita_id</code> (nullable transizione)</li>
+<li>[x] aggiungere <code>commessa_id</code> (finalizzato <code>NOT NULL</code>)</li>
+<li>[x] aggiungere <code>commessa_attivita_id</code> (finalizzato <code>NOT NULL</code>)</li>
 <li>[x] aggiungere <code>prezzo_bloccato</code> (completato: <code>20260224-04</code>)</li>
 <li>[ ] valutare introduzione <code>segment_key</code> su AF (snapshot tecnico) se richiesta idempotenza runtime</li>
 </ul>
 <h3 id="183-vincoli-e-indici">18.3 Vincoli e indici<a class="headerlink" href="#183-vincoli-e-indici" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] FK <code>attivita_fatturabili.commessa_id -&gt; commesse.id</code></li>
-<li>[ ] FK <code>attivita_fatturabili.commessa_attivita_id -&gt; commesse_attivita.id</code></li>
-<li>[ ] unique operativa su <code>commesse_attivita (commessa_id, segment_key)</code> (o equivalente approvato)</li>
-<li>[ ] vincolo <code>competenza_mese</code> primo giorno mese su <code>commesse_attivita</code></li>
-<li>[ ] strategia per rimozione/sostituzione <code>uq_attivita_fatturabili_v_sorgente_fk</code></li>
-<li>[ ] unique parziale su <code>commesse_attivita (sorgente_tipo_id, sorgente_uid) WHERE sorgente_tipo_id IS NOT NULL</code></li>
+<li>[x] FK <code>attivita_fatturabili.commessa_id -&gt; commesse.id</code></li>
+<li>[x] FK <code>attivita_fatturabili.commessa_attivita_id -&gt; commesse_attivita.id</code></li>
+<li>[x] unique operativa su <code>commesse_attivita (commessa_id, segment_key)</code> (o equivalente approvato)</li>
+<li>[x] vincolo <code>competenza_mese</code> primo giorno mese su <code>commesse_attivita</code></li>
+<li>[x] strategia per rimozione/sostituzione <code>uq_attivita_fatturabili_v_sorgente_fk</code></li>
+<li>[x] unique parziale su <code>commesse_attivita (sorgente_tipo_id, sorgente_uid) WHERE sorgente_tipo_id IS NOT NULL</code></li>
 </ul>
 <h3 id="184-funzioni-db-core-commessa">18.4 Funzioni DB (core commessa)<a class="headerlink" href="#184-funzioni-db-core-commessa" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] <code>fn_get_or_create_commessa(...)</code></li>
-<li>[ ] <code>fn_link_commessa_sorgente(...)</code></li>
-<li>[ ] <code>fn_upsert_commessa_attivita(...)</code></li>
-<li>[ ] <code>fn_emit_attivita_fatturabili_da_commessa(...)</code></li>
-<li>[ ] propaga <code>commessa_id</code>, <code>commessa_attivita_id</code></li>
-<li>[ ] propaga <code>prezzo_bloccato</code></li>
-<li>[ ] copia <code>competenza_mese</code> da commessa (no ricalcolo in AF)</li>
-<li>[ ] copia <code>posticipa_al</code> e altri snapshot dominio</li>
-<li>[ ] <code>fn_get_commessa_stato(commessa_id)</code></li>
+<li>[x] <code>fn_get_or_create_commessa(...)</code></li>
+<li>[x] <code>fn_link_commessa_sorgente(...)</code></li>
+<li>[x] <code>fn_upsert_commessa_attivita(...)</code></li>
+<li>[x] <code>fn_emit_attivita_fatturabili_da_commessa(...)</code></li>
+<li>[x] propaga <code>commessa_id</code>, <code>commessa_attivita_id</code></li>
+<li>[x] propaga <code>prezzo_bloccato</code></li>
+<li>[x] copia <code>competenza_mese</code> da commessa (no ricalcolo in AF)</li>
+<li>[x] copia <code>posticipa_al</code> e altri snapshot dominio</li>
+<li>[x] <code>fn_get_commessa_stato(commessa_id)</code></li>
 </ul>
 <h3 id="185-backfill-e-guardrail">18.5 Backfill e guardrail<a class="headerlink" href="#185-backfill-e-guardrail" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] backfill storico AF -&gt; commesse AUTO (1:1 tecnico)</li>
-<li>[ ] popolamento <code>commessa_id</code>, <code>commessa_attivita_id</code> su storico</li>
-<li>[ ] attivazione guardrail anti-bypass su insert AF senza commessa</li>
-<li>[ ] passaggio finale FK a <code>NOT NULL</code> dopo backfill validato</li>
+<li>[x] backfill storico AF -&gt; commesse AUTO (1:1 tecnico) <em>(N/A ambiente v0 senza dati storici)</em></li>
+<li>[x] popolamento <code>commessa_id</code>, <code>commessa_attivita_id</code> su storico <em>(N/A ambiente v0 senza dati storici)</em></li>
+<li>[x] implementazione guardrail anti-bypass su insert/update AF senza commessa (toggle via <code>config.parameters</code>)</li>
+<li>[x] passaggio finale FK a <code>NOT NULL</code> dopo backfill validato</li>
 </ul>
 <h3 id="186-test-pgtap-minimi">18.6 Test pgTAP minimi<a class="headerlink" href="#186-test-pgtap-minimi" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] DDL <code>commesse_*</code> (vincoli/FK/unique/check)</li>
-<li>[ ] funzioni core create ed eseguibili</li>
-<li>[ ] <code>fn_emit_attivita_fatturabili_da_commessa</code> idempotente</li>
-<li>[ ] propagazione snapshot (<code>competenza_mese</code>, <code>posticipa_al</code>, <code>prezzo_bloccato</code>)</li>
-<li>[ ] guardrail anti-bypass attivo</li>
-<li>[ ] regressione su pipeline esistente non rotta</li>
+<li>[x] DDL <code>commesse_*</code> (vincoli/FK/unique/check)</li>
+<li>[x] funzioni core create ed eseguibili</li>
+<li>[x] <code>fn_emit_attivita_fatturabili_da_commessa</code> idempotente</li>
+<li>[x] propagazione snapshot (<code>competenza_mese</code>, <code>posticipa_al</code>, <code>prezzo_bloccato</code>)</li>
+<li>[x] guardrail anti-bypass attivo (switch parametro a <code>true</code> in go-live transizione, changeset <code>20260224-41</code>)</li>
+<li>[x] regressione su pipeline esistente non rotta (verifica con <code>test-attivita-guardrail-commessa-v1.sql</code>)</li>
+<li>Evidenza prevista: <code>db/pgtap/vendite/test-attivita-guardrail-commessa-v1.sql</code>
+    (caso guard ON + emit commessa operativo).</li>
 </ul>
 <h3 id="188-orchestratore-push-commessa-vedi-23">18.8 Orchestratore push commessa (vedi §23)<a class="headerlink" href="#188-orchestratore-push-commessa-vedi-23" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] Creare <code>vendite.commesse_push_log</code> (schema §23.4)</li>
-<li>[ ] Indice su <code>commesse_push_log.run_at</code></li>
-<li>[ ] Documentare uso di <code>pg_try_advisory_lock</code> come anti-concorrenza (nessuna tabella lock)</li>
+<li>[x] Creare <code>vendite.commesse_push_log</code> (schema §23.4)</li>
+<li>[x] Indice su <code>commesse_push_log.run_at</code></li>
+<li>[x] Documentare uso di <code>pg_try_advisory_lock</code> come anti-concorrenza (nessuna tabella lock)</li>
 </ul>
 <h3 id="189-gate-uscita-db-l3">18.9 Gate uscita DB-L3<a class="headerlink" href="#189-gate-uscita-db-l3" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] test pgTAP DB-L3 verdi</li>
-<li>[ ] WIP <code>gestione-listini.md</code> e <code>gestione-commesse-v2.md</code> allineati</li>
-<li>[ ] checklist 13.3 (<code>gestione-listini.md</code>) portata a completamento coerente</li>
+<li>[x] test pgTAP DB-L3 verdi</li>
+<li>[x] WIP <code>gestione-listini.md</code> e <code>gestione-commesse-v2.md</code> allineati</li>
+<li>[x] checklist 13.3 (<code>gestione-listini.md</code>) portata a completamento coerente</li>
 </ul>
+<h3 id="1810-stato-transizione-pipeline-commessa_only">18.10 Stato transizione pipeline (COMMESSA_ONLY)<a class="headerlink" href="#1810-stato-transizione-pipeline-commessa_only" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] decisione architetturale: pipeline legacy <code>attivita-da-fatturare</code> deprecata</li>
+<li>[x] applicare switch operativo <code>20260224-41-switch-attivita-to-commessa-only-mctit.yaml</code></li>
+<li>[x] validare switch con <code>db/pgtap/vendite/test-attivita-commessa-only-switch-v1.sql</code></li>
+</ul>
+<h3 id="1811-readiness-backfill-analisi-volumi-pre-not-null">18.11 Readiness backfill (analisi volumi pre-NOT-NULL)<a class="headerlink" href="#1811-readiness-backfill-analisi-volumi-pre-not-null" title="Permanent link">&para;</a></h3>
+<p>Obiettivo: misurare il perimetro reale del backfill prima di forzare
+<code>attivita_fatturabili.commessa_id/commessa_attivita_id</code> a <code>NOT NULL</code>.</p>
+<p>Query operative (solo analisi):</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- 1) Volume totale AF e quota senza link commessa</span>
+<span class="k">SELECT</span>
+<span class="w">  </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">total_af</span><span class="p">,</span>
+<span class="w">  </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="n">FILTER</span><span class="w"> </span><span class="p">(</span><span class="k">WHERE</span><span class="w"> </span><span class="n">commessa_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">commessa_attivita_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">af_missing_commessa_link</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">attivita_fatturabili</span><span class="p">;</span>
+
+<span class="c1">-- 2) Distribuzione missing per sorgente (diagnostica priorita backfill)</span>
+<span class="k">SELECT</span>
+<span class="w">  </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;N/D&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">sorgente_codice</span><span class="p">,</span>
+<span class="w">  </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">righe_missing</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">attivita_fatturabili</span><span class="w"> </span><span class="n">af</span>
+<span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">sorgenti</span><span class="w"> </span><span class="n">s</span>
+<span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">sorgente_tipo_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">commessa_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">   </span><span class="k">OR</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">commessa_attivita_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;N/D&#39;</span><span class="p">)</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">righe_missing</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span><span class="w"> </span><span class="n">sorgente_codice</span><span class="p">;</span>
+
+<span class="c1">-- 3) Controllo coerenza link presenti (FK logica commessa_attivita -&gt; commessa)</span>
+<span class="k">SELECT</span>
+<span class="w">  </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">incoerenti</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">attivita_fatturabili</span><span class="w"> </span><span class="n">af</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">commesse_attivita</span><span class="w"> </span><span class="n">ca</span>
+<span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">ca</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">commessa_attivita_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">commessa_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">ca</span><span class="p">.</span><span class="n">commessa_id</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">commessa_id</span><span class="p">;</span>
+</code></pre></div>
+<p>Criterio go/no-go per fase <code>NOT NULL</code>:
+- <code>af_missing_commessa_link = 0</code>
+- <code>incoerenti = 0</code></p>
 <hr />
 <h2 id="19-analisi-struttura-commesse_attivita-vs-attivita_fatturabili-gap-e-rischi">19) Analisi struttura <code>commesse_attivita</code> vs <code>attivita_fatturabili</code> — gap e rischi<a class="headerlink" href="#19-analisi-struttura-commesse_attivita-vs-attivita_fatturabili-gap-e-rischi" title="Permanent link">&para;</a></h2>
 <h3 id="191-obiettivo">19.1 Obiettivo<a class="headerlink" href="#191-obiettivo" title="Permanent link">&para;</a></h3>
@@ -5278,13 +5416,18 @@ prestazione). Importante per traceability e per utility billing.</p>
 <p>Presente in AF come FK a <code>anagrafiche.istanze_utilities</code> (il punto tecnico specifico
 — contatore, POD, PDR). Su <code>commesse</code> esiste <code>utility_id</code> che è il tipo di
 utility/fornitore — NON la stessa cosa.</p>
-<p>Questo è il gap più rilevante: una commessa governa un BA + utility, ma le righe
-fatturabili possono riferirsi a POD/PDR specifici. Con il modello commessa-centrico
-serve stabilire dove vive <code>istanza_utility_id</code>:</p>
-<ul>
-<li>Su <code>commesse_attivita</code> (una riga per punto tecnico) → consigliato per utilities</li>
-<li>Su <code>commesse</code> header (solo se una commessa = un solo punto tecnico)</li>
-</ul>
+<p>Decisione chiusa:</p>
+<ol>
+<li><code>istanza_utility_id</code> vive su <code>commesse_attivita</code>;</li>
+<li>nel dominio attuale e` <strong>sempre valorizzata</strong> (anche con istanza fittizia);</li>
+<li><code>commesse</code> puo` mantenerla come snapshot/testata opzionale solo se utile per query aggregate.</li>
+</ol>
+<p>Motivazione:</p>
+<ol>
+<li><code>anagrafiche.billing_account.istanza_utility_id</code> e<code></code>NOT NULL`;</li>
+<li><code>attivita_fatturabili.istanza_utility_id</code> e<code></code>NOT NULL`;</li>
+<li>la presenza di istanza fittizia standardizza il modello anche fuori da gas/energia legate a PDP.</li>
+</ol>
 <h3 id="gap-3-campi-misura-operativa">Gap 3 — campi misura operativa<a class="headerlink" href="#gap-3-campi-misura-operativa" title="Permanent link">&para;</a></h3>
 <p>Presenti in AF, assenti in <code>commesse_attivita</code>:</p>
 <ul>
@@ -5307,16 +5450,15 @@ La funzione pull deve mappare:</p>
 </ul>
 <hr />
 <h3 id="193-inconsistenza-stati-commessa-tra-4-e-172">19.3 Inconsistenza stati commessa tra §4 e §17.2<a class="headerlink" href="#193-inconsistenza-stati-commessa-tra-4-e-172" title="Permanent link">&para;</a></h3>
-<p>§4.1 (AUTO lifecycle): <code>CREATA → PRONTA_FATTURAZIONE → CHIUSA</code>
+<p>§4.1 (AUTO lifecycle): <code>BOZZA → PRONTA_FATTURAZIONE → CHIUSA</code>
 §4.2 (REALE lifecycle): <code>BOZZA → APERTA → IN_ESECUZIONE → PRONTA_FATTURAZIONE → CHIUSA</code></p>
-<p>§17.2 schema <code>commesse.stato_commessa</code>: <code>APERTA | IN_ESECUZIONE | COMPLETATA | CHIUSA | BLOCCATA</code></p>
-<p>Differenze:</p>
+<p>Set canonico approvato per <code>commesse.stato_commessa</code>:</p>
+<p><code>BOZZA | APERTA | IN_ESECUZIONE | PRONTA_FATTURAZIONE | CHIUSA | ANNULLATA</code></p>
+<p>Nota:</p>
 <ul>
-<li><code>CREATA</code> e <code>PRONTA_FATTURAZIONE</code> sono in §4 ma non in §17.2</li>
-<li><code>COMPLETATA</code> è in §17.2 ma non in §4 (usato <code>CHIUSA</code>)</li>
-<li><code>BLOCCATA</code> è in §17.2 ma non in §4</li>
+<li><code>COMPLETATA</code> e<code>sostituito da</code>CHIUSA`.</li>
+<li><code>BLOCCATA</code> non e<code>stato business; eventuale blocco e</code> gestito via eventi/log/meta.</li>
 </ul>
-<p>Il team DB deve usare il set di stati di §4 come riferimento. §17.2 va allineato.</p>
 <hr />
 <h3 id="194-rischi-trigger-su-attivita_fatturabili">19.4 Rischi trigger su <code>attivita_fatturabili</code><a class="headerlink" href="#194-rischi-trigger-su-attivita_fatturabili" title="Permanent link">&para;</a></h3>
 <p>Con il pull da commessa, AF riceve campi già valorizzati da <code>commesse_attivita</code>.
@@ -5382,15 +5524,19 @@ uom_operativa_id            FK → catalogo.uom (UoM operativa)
 factor_to_base              numeric — fattore conversione UoM operativa → base
 area_geografica_id          FK → config.aree_geografiche (opzionale)
 </code></pre></div>
-<p>Nota: <code>istanza_utility_id</code> e i campi misura sono opzionali per commesse
-non-utility. Nullable, valorizzati solo nei branch utility.</p>
+<p>Nota aggiornata:</p>
+<ol>
+<li><code>istanza_utility_id</code> e` da considerare sempre valorizzata anche per casi non-PDP
+   tramite istanza fittizia;</li>
+<li>i campi misura operativa restano opzionali e si valorizzano nei branch utility.</li>
+</ol>
 <hr />
 <h3 id="197-checklist-integrativa-da-aggiungere-a-18">19.7 Checklist integrativa (da aggiungere a §18)<a class="headerlink" href="#197-checklist-integrativa-da-aggiungere-a-18" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] Decidere ownership <code>istanza_utility_id</code>: su <code>commesse_attivita</code> o solo AF</li>
+<li>[x] Ownership <code>istanza_utility_id</code>: su <code>commesse_attivita</code> (sempre valorizzata, anche con istanza fittizia)</li>
 <li>[ ] Aggiungere <code>data_attivita</code> a <code>commesse_attivita</code> (o documentare esclusione)</li>
 <li>[ ] Aggiungere campi misura operativa a <code>commesse_attivita</code> (o documentare esclusione)</li>
-<li>[ ] Allineare stati <code>commesse.stato_commessa</code> con §4 (rimuovere <code>COMPLETATA</code>, aggiungere <code>CREATA</code>, <code>PRONTA_FATTURAZIONE</code>)</li>
+<li>[x] Allineare stati <code>commesse.stato_commessa</code> con set canonico (<code>BOZZA|APERTA|IN_ESECUZIONE|PRONTA_FATTURAZIONE|CHIUSA|ANNULLATA</code>)</li>
 <li>[ ] Aggiornare trigger <code>trg_attivita_fatturabili_normalize_ins_upd</code> per essere commessa-aware</li>
 <li>[ ] Aggiornare trigger <code>trg_attivita_fatturabili_a10_guard_ba_coerenza_ins_upd</code> per leggere BA da commessa</li>
 <li>[ ] Documentare mapping esplicito <code>stato_approvazione → approvato</code> nel pull</li>
@@ -5925,11 +6071,100 @@ audit trail minimo. Le tabelle commessa rispondono a "cosa è stato creato" ma n
 </ul>
 <h3 id="235-checklist-db-da-aggiungere-a-18">23.5 Checklist DB da aggiungere a §18<a class="headerlink" href="#235-checklist-db-da-aggiungere-a-18" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] Creare <code>vendite.commesse_push_log</code> con schema §23.4</li>
-<li>[ ] Indice su <code>run_at</code> per query audit (<code>WHERE run_at &gt;= ...</code>)</li>
-<li>[ ] <code>pg_try_advisory_lock</code> documentato come meccanismo anti-concorrenza (nessuna tabella)</li>
-<li>[ ] Inserimento in <code>commesse_push_log</code> eseguito dalla funzione DB o dal layer Python
-      al termine di ogni <code>CommessaPushOrchestrator.run()</code></li>
+<li>[x] Creare <code>vendite.commesse_push_log</code> con schema §23.4</li>
+<li>[x] Indice su <code>run_at</code> per query audit (<code>WHERE run_at &gt;= ...</code>)</li>
+<li>[x] <code>pg_try_advisory_lock</code> documentato come meccanismo anti-concorrenza (nessuna tabella)</li>
+<li>[x] Inserimento in <code>commesse_push_log</code> eseguito via funzione DB <code>vendite.fn_log_commessa_push_run(...)</code>;
+      il layer Python la invoca al termine di ogni <code>CommessaPushOrchestrator.run()</code></li>
+</ul>
+<hr />
+<h2 id="24-uniformazione-canali-fatturabili-per-sorgente-contrattipreventiviordiniddt">24) Uniformazione canali fatturabili per sorgente (contratti/preventivi/ordini/ddt)<a class="headerlink" href="#24-uniformazione-canali-fatturabili-per-sorgente-contrattipreventiviordiniddt" title="Permanent link">&para;</a></h2>
+<h3 id="241-decisione-modello">24.1 Decisione modello<a class="headerlink" href="#241-decisione-modello" title="Permanent link">&para;</a></h3>
+<p>Per uniformita<code>cross-dominio, il controllo canali non usa</code>documento_tipo<code>hardcoded.
+Usa invece il pattern standard gia</code> adottato nel progetto:</p>
+<ul>
+<li><code>sorgente_tipo_id</code> (<code>config.sorgenti.id</code>)</li>
+<li><code>sorgente_uid</code> (<code>text</code>)</li>
+</ul>
+<p>Questa scelta e` allineata a:</p>
+<ul>
+<li><code>vendite.commesse_sorgenti</code> (<code>sorgente_uid text</code>)</li>
+<li><code>vendite.commesse_attivita</code> (<code>sorgente_uid text</code>)</li>
+</ul>
+<p>e consente di estendere la logica a nuove sorgenti senza alterazioni strutturali.</p>
+<h3 id="242-perchesorgente_uid-text-e-non-uuid-obbligatorio">24.2 Perche<code></code>sorgente_uid text` (e non UUID obbligatorio)<a class="headerlink" href="#242-perchesorgente_uid-text-e-non-uuid-obbligatorio" title="Permanent link">&para;</a></h3>
+<p>Motivazioni:</p>
+<ol>
+<li>Alcune sorgenti sono naturalmente non-UUID (chiavi esterne, codici tecnici, composite key serializzate).</li>
+<li>Evita conversioni forzate <code>text -&gt; uuid</code> e collisioni applicative inutili.</li>
+<li>Mantiene coerenza con <code>commesse_*</code> dove l'identificazione sorgente e<code>gia</code> testuale.</li>
+<li>Riduce coupling tra domini diversi (vendite, utility, future integrazioni ticket/API).</li>
+</ol>
+<p>Nota:
+nelle tabelle che oggi hanno <code>uuid</code> (es. <code>attivita_fatturabili.sorgente_uid</code>) la mappatura
+deterministica resta possibile per compatibilita<code>runtime, ma il modello canonico
+di tracciamento sorgente resta</code>text`.</p>
+<h3 id="243-struttura-tabella-proposta">24.3 Struttura tabella proposta<a class="headerlink" href="#243-struttura-tabella-proposta" title="Permanent link">&para;</a></h3>
+<p>Tabella tecnica unica (nome da confermare in DB design):
+<code>vendite.documenti_fatturazione_canali</code></p>
+<p>Campi minimi:</p>
+<ul>
+<li><code>id bigserial</code></li>
+<li><code>sorgente_tipo_id bigint not null</code></li>
+<li><code>sorgente_uid text not null</code></li>
+<li><code>canale_codice varchar(32) not null</code> (<code>COMMESSA|PREVENTIVO|ORDINE|DDT|DIRETTO</code>)</li>
+<li><code>stato_canale varchar(16) not null</code> (<code>APERTO|CONSUMATO|BLOCCATO</code>)</li>
+<li><code>target_sorgente_tipo_id bigint null</code> (es. sorgente target creata)</li>
+<li><code>target_sorgente_uid text null</code></li>
+<li><code>motivo_blocco text null</code></li>
+<li><code>meta jsonb not null default '{}'::jsonb</code></li>
+<li>audit standard (<code>data_insert</code>, <code>user_insert</code>, <code>data_update</code>, <code>user_update</code>)</li>
+</ul>
+<p>Vincoli minimi:</p>
+<ul>
+<li>unique parziale: un solo <code>stato_canale='APERTO'</code> per (<code>sorgente_tipo_id</code>,<code>sorgente_uid</code>)</li>
+<li>check su domini <code>canale_codice</code> / <code>stato_canale</code></li>
+<li>FK su <code>config.sorgenti</code> per <code>sorgente_tipo_id</code> e <code>target_sorgente_tipo_id</code></li>
+</ul>
+<h3 id="244-regola-funzionale-uniforme">24.4 Regola funzionale uniforme<a class="headerlink" href="#244-regola-funzionale-uniforme" title="Permanent link">&para;</a></h3>
+<p>Regola generale:</p>
+<ul>
+<li>quando un documento viene instradato su un canale, quel canale viene <code>CONSUMATO</code>;</li>
+<li>i canali alternativi diventano <code>BLOCCATO</code> (se policy esclusiva attiva).</li>
+</ul>
+<p>Applicazioni immediate:</p>
+<ul>
+<li><code>PREVENTIVO -&gt; ORDINE</code>: canale preventivo bloccato per fatturazione diretta</li>
+<li><code>ORDINE -&gt; DDT</code>: in base alla policy, blocco fatturazione diretta ordine oppure coesistenza controllata</li>
+<li><code>CONTRATTO</code>: routing esplicito (<code>DIRETTO_COMMESSA</code> / <code>VIA_PREVENTIVO</code> / <code>VIA_ORDINE</code>)</li>
+</ul>
+<p>Policy esclusivita` v0 (definitiva in sviluppo):</p>
+<ul>
+<li><strong>PREVENTIVO (root)</strong>:</li>
+<li><code>PREVENTIVO</code> APERTO finche<code>non nasce</code>ORDINE_VENDITA` da quel preventivo;</li>
+<li>alla conversione: <code>PREVENTIVO -&gt; CONSUMATO</code> con target ordine.</li>
+<li><strong>ORDINE_VENDITA (root)</strong>:</li>
+<li><code>ORDINE_VENDITA</code> APERTO finche<code>non nasce</code>DDT_VENDITA` collegato;</li>
+<li>alla conversione: <code>ORDINE_VENDITA -&gt; CONSUMATO</code> con target ddt.</li>
+<li><strong>DDT_VENDITA (root)</strong>:</li>
+<li><code>DDT_VENDITA</code> APERTO come canale corrente;</li>
+<li>eventuali canali alternativi APERTI sulla stessa sorgente vengono auto-bloccati dalla funzione canali.</li>
+<li><strong>CONTRATTO (root)</strong>:</li>
+<li>apertura <code>DIRETTO</code> su inserimento contratto;</li>
+<li>eventuali altri canali APERTI sulla stessa sorgente vengono auto-bloccati dalla funzione canali.</li>
+</ul>
+<p>Implementazione DB di riferimento:
+- <code>vendite.fn_set_documento_canale_stato(...)</code>
+- <code>vendite.trgfn_documenti_sync_canali()</code>
+- pgTAP: <code>db/pgtap/vendite/test-documenti-fatturazione-canali-v1.sql</code>,
+  <code>db/pgtap/vendite/test-documenti-canali-sync-v1.sql</code></p>
+<h3 id="245-checklist-aggiuntiva-analisi">24.5 Checklist aggiuntiva (analisi)<a class="headerlink" href="#245-checklist-aggiuntiva-analisi" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] Definire la tabella canali sorgente-based (<code>sorgente_tipo_id</code> + <code>sorgente_uid text</code>)</li>
+<li>[x] Definire policy esclusivita` per ciascuna sorgente primaria (contratto/preventivo/ordine/ddt)</li>
+<li>[x] Introdurre funzione DB unica di transizione stato canale (set/open/consume/block)</li>
+<li>[x] Copertura pgTAP tabella/funzione canali (<code>test-documenti-fatturazione-canali-v1.sql</code>)</li>
+<li>[x] Allineare i trigger/flow di conversione (<code>preventivo-&gt;ordine</code>, <code>ordine-&gt;ddt</code>) al nuovo registro canali</li>
 </ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>

@@ -4368,6 +4368,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#129-aggiornamento-stato-24-02-2026-canali-documento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.9 Aggiornamento stato (24-02-2026) - canali documento
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4394,6 +4405,11 @@
 
 
 <h1 id="ripresa-lavori-attivita_fatturabili-22-02-2026">Ripresa lavori - attivita_fatturabili (22-02-2026)<a class="headerlink" href="#ripresa-lavori-attivita_fatturabili-22-02-2026" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Nota stato (24-02-2026):
+la pipeline legacy <code>attivita-da-fatturare</code> e<code>da considerare deprecata;
+la modalita</code> target e<code></code>COMMESSA_ONLY<code>(push/pull via</code>commesse_*`).</p>
+</blockquote>
 <h2 id="1-obiettivo">1) Obiettivo<a class="headerlink" href="#1-obiettivo" title="Permanent link">&para;</a></h2>
 <p>Riprendere il dominio <code>attivita_fatturabili</code> allineandolo al livello raggiunto dalla pipeline lotto, partendo prima dai refactor trasversali dei punti 20 e 21 del documento WIP.</p>
 <p>Riferimento base:
@@ -5546,6 +5562,20 @@ per allineare il pattern con le altre funzioni DB del dominio
 <p>Fase 4 - Hardening:</p>
 <ol>
 <li>aggiungere guardrail anti-bypass layer commessa;</li>
+</ol>
+<h3 id="129-aggiornamento-stato-24-02-2026-canali-documento">12.9 Aggiornamento stato (24-02-2026) - canali documento<a class="headerlink" href="#129-aggiornamento-stato-24-02-2026-canali-documento" title="Permanent link">&para;</a></h3>
+<p>Completato allineamento DB del registro canali su conversioni documento:</p>
+<ol>
+<li>funzione <code>vendite.fn_set_documento_canale_stato</code> introdotta (upsert/transizioni <code>APERTO|CONSUMATO|BLOCCATO</code>);</li>
+<li>trigger function <code>vendite.trgfn_documenti_sync_canali</code> introdotta;</li>
+<li>trigger su <code>vendite.ordini</code>, <code>vendite.ddt</code>, <code>vendite.contratti</code> attivati;</li>
+<li>gestione conversioni coperta:</li>
+<li><code>PREVENTIVO -&gt; ORDINE_VENDITA</code></li>
+<li><code>ORDINE_VENDITA -&gt; DDT_VENDITA</code></li>
+<li><code>CONTRATTO -&gt; DIRETTO</code></li>
+<li>pgTAP dedicati predisposti:</li>
+<li><code>db/pgtap/vendite/test-documenti-fatturazione-canali-v1.sql</code></li>
+<li><code>db/pgtap/vendite/test-documenti-canali-sync-v1.sql</code></li>
 <li>verificare consistency stati lotto/attivita;</li>
 <li>validare resume branch-level su scenari reali.</li>
 </ol>
