@@ -3555,6 +3555,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#74-override-prezzo-documento-e-riallineamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 Override prezzo documento e riallineamento
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3787,6 +3798,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#16-nota-futura-utilities-su-commessa-auto-senza-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16) Nota futura — Utilities su commessa AUTO (senza bypass)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4009,8 +4031,17 @@ HandlerFuturoXYZ    — aggiunto senza toccare il modello core
 <td><code>prezzo_bloccato</code></td>
 <td>Se TRUE il prezzo non viene mai ricalcolato</td>
 </tr>
+<tr>
+<td><code>prezzo_da_riallineare</code></td>
+<td>Flag tecnico: TRUE se il documento sorgente <code>LIBERO</code> cambia prezzo dopo il push</td>
+</tr>
 </tbody>
 </table>
+<p>Nota naming:</p>
+<ol>
+<li><code>listino_id</code> nel documento indica la versione listino applicata al push;</li>
+<li>in implementazione DB il campo raccomandato e<code></code>listino_versione_id`.</li>
+</ol>
 <h3 id="72-policy-prezzo-per-tipo-sorgente">7.2 Policy prezzo per tipo sorgente<a class="headerlink" href="#72-policy-prezzo-per-tipo-sorgente" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -4060,6 +4091,19 @@ con <code>dry_run</code> disponibile:</p>
 <p><strong>Per piccole realtà</strong>: conferma manuale sempre.
 <strong>Per utility su grandi volumi</strong>: ricalcolo automatico con log audit.
 Configurabile per commessa/policy.</p>
+<h3 id="74-override-prezzo-documento-e-riallineamento">7.4 Override prezzo documento e riallineamento<a class="headerlink" href="#74-override-prezzo-documento-e-riallineamento" title="Permanent link">&para;</a></h3>
+<p>Regole:</p>
+<ol>
+<li>se il documento applica override manuale:</li>
+<li><code>prezzo_snapshot = prezzo_documento</code>,</li>
+<li><code>prezzo_bloccato = TRUE</code>,</li>
+<li><code>listino_versione_id</code> valorizzato alla versione risolta alla data (se disponibile) per audit comparativo.</li>
+<li>se il preventivo e<code>ancora</code>LIBERO` e il prezzo cambia dopo push:</li>
+<li>non si introduce nuovo stato business commessa,</li>
+<li>si imposta <code>commesse_attivita.prezzo_da_riallineare = TRUE</code>,</li>
+<li>riallineamento solo su conferma esplicita.</li>
+<li>se il documento non e<code>piu</code> <code>LIBERO</code> (es. convertito/confermato), la modifica prezzo non altera la commessa consolidata.</li>
+</ol>
 <hr />
 <h2 id="8-pull-commessa-attivita-fatturabili">8) Pull commessa → attività fatturabili<a class="headerlink" href="#8-pull-commessa-attivita-fatturabili" title="Permanent link">&para;</a></h2>
 <h3 id="81-posizione-nel-flusso">8.1 Posizione nel flusso<a class="headerlink" href="#81-posizione-nel-flusso" title="Permanent link">&para;</a></h3>
@@ -4125,6 +4169,7 @@ quantita
 listino_id              FK → listino versione
 prezzo_snapshot         numeric — prezzo al momento del push
 prezzo_bloccato         boolean
+prezzo_da_riallineare   boolean — flag tecnico di riallineamento post-push
 data_competenza         date
 segment_key             varchar — chiave idempotenza (vedi §9.3)
 stato_approvazione      BOZZA | APPROVATA | RIFIUTATA
@@ -4143,6 +4188,7 @@ created_at
 <p><strong><code>vendite.attivita_fatturabili</code></strong> — aggiungere:
 <div class="highlight"><pre><span></span><code>commessa_id             FK → commesse   (NOT NULL dopo backfill)
 commessa_attivita_id    FK → commesse_attivita   (NOT NULL dopo backfill)
+prezzo_bloccato         boolean snapshot prezzo (usato nello step verifica prezzi)
 </code></pre></div></p>
 <p>I campi <code>sorgente_tipo_id / sorgente_uid / sorgente_riga</code> restano invariati
 e continuano a rappresentare la root source originale.</p>
@@ -4323,9 +4369,23 @@ Troppo restrittivo — impedisce la parzializzazione controllata della stessa so
 <li><strong>Campi <code>sorgente_*</code> su <code>attivita_fatturabili</code></strong> — restano e rappresentano la root source.</li>
 <li><strong>Logica <code>Idempotency-Key</code> sulle API</strong> — invariata.</li>
 <li><strong>Branch policy BRANCH/GLOBAL</strong> — invariata.</li>
+</ul>
+<hr />
+<h2 id="16-nota-futura-utilities-su-commessa-auto-senza-bypass">16) Nota futura — Utilities su commessa AUTO (senza bypass)<a class="headerlink" href="#16-nota-futura-utilities-su-commessa-auto-senza-bypass" title="Permanent link">&para;</a></h2>
+<p>Decisione di indirizzo (da implementare in fase successiva, non ora):</p>
+<ol>
+<li>per fatturazioni extra ad alto volume (energia/gas/idrico) non si introduce bypass diretto a <code>attivita_fatturabili</code>;</li>
+<li>si usa il percorso standard tramite <code>commessa AUTO</code>, come per i preventivi con <code>fatturazione_immediata</code>;</li>
+<li>in <code>AUTO</code> il codice commessa business puo<code>essere nullo (se previsto dal modello DB), mantenendo comunque</code>commessa_id<code>e</code>commessa_attivita_id` valorizzati sulle righe emesse;</li>
+<li>i campi <code>sorgente_*</code> restano sempre valorizzati con la provenienza originaria.</li>
+</ol>
+<p>Scopo della nota:</p>
+<ol>
+<li>preservare il modello v2 come riferimento unico;</li>
+<li>evitare future deviazioni architetturali quando si aprira` il cantiere utilities.</li>
 <li><strong><code>fatturazione_immediata</code> come flag</strong> — resta sul preventivo, cambia solo il significato
   (vedi §4.3).</li>
-</ul>
+</ol>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
