@@ -3516,6 +3516,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#54-policy-precisione-prezzo-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Policy precisione prezzo (v1)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3737,6 +3748,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#13-tracking-avanzamento-checklist-operativa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13) Tracking avanzamento (checklist operativa)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13) Tracking avanzamento (checklist operativa)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-db-l1-schema-base-listini" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 DB-L1 Schema base listini
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-db-l2-resolver-pricing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 DB-L2 Resolver pricing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133-db-l3-integrazione-commessa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 DB-L3 Integrazione commessa
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#134-db-l4-rettifiche" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.4 DB-L4 Rettifiche
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#135-gate-di-chiusura-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.5 Gate di chiusura DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3901,6 +3984,19 @@
 <li>no overlap temporale per stessa combinazione dimensionale nella stessa versione logica,</li>
 <li>unique su chiave completa dimensionale + versione,</li>
 <li>coerenza date (<code>valido_al &gt; valido_dal</code> o null open-ended).</li>
+</ol>
+<h3 id="54-policy-precisione-prezzo-v1">5.4 Policy precisione prezzo (v1)<a class="headerlink" href="#54-policy-precisione-prezzo-v1" title="Permanent link">&para;</a></h3>
+<p>Decisione operativa confermata:</p>
+<ol>
+<li>fino a <code>attivita_fatturabili</code> (inclusa) il prezzo usa precisione alta <code>numeric(22,10)</code>;</li>
+<li>in <code>fatture_righe</code> il prezzo di aggregazione/esposizione resta a <code>6</code> decimali;</li>
+<li>il resolver listino e le funzioni di push/pull non devono introdurre arrotondamenti anticipati.</li>
+</ol>
+<p>Motivazione:</p>
+<ol>
+<li>nel dominio utilities (gas/energia/idrico) sono frequenti importi unitari molto piccoli;</li>
+<li>mantenere <code>22,10</code> a monte evita perdita di informazione prima della fase fiscale;</li>
+<li>l'arrotondamento a <code>6</code> decimali rimane confinato al layer righe fattura.</li>
 </ol>
 <hr />
 <h2 id="6-resolver-prezzo-deterministico">6) Resolver prezzo (deterministico)<a class="headerlink" href="#6-resolver-prezzo-deterministico" title="Permanent link">&para;</a></h2>
@@ -4082,6 +4178,11 @@
 <li>funzione <code>fn_resolve_commessa_prezzi(lotto_id)</code> per analisi prezzi stantii nel perimetro lotto,</li>
 <li>precedenze ufficiali implementate e testate.</li>
 </ol>
+<p>Nota implementativa corrente:</p>
+<ol>
+<li>finche<code>il layer</code>commesse_*<code>non e</code> introdotto (DB-L3), <code>fn_resolve_commessa_prezzi</code>
+   opera come equivalente operativo su <code>attivita_fatturabili</code> del lotto.</li>
+</ol>
 <h3 id="db-l3-integrazione-commessa">DB-L3 Integrazione commessa<a class="headerlink" href="#db-l3-integrazione-commessa" title="Permanent link">&para;</a></h3>
 <ol>
 <li>campi snapshot pricing in <code>commesse_attivita</code>,</li>
@@ -4135,6 +4236,48 @@
 <li>simulazioni tariffarie previsionali.</li>
 </ol>
 <p>Queste parti sono previste nella v2 pricing, non bloccano la partenza del modello.</p>
+<hr />
+<h2 id="13-tracking-avanzamento-checklist-operativa">13) Tracking avanzamento (checklist operativa)<a class="headerlink" href="#13-tracking-avanzamento-checklist-operativa" title="Permanent link">&para;</a></h2>
+<h3 id="131-db-l1-schema-base-listini">13.1 DB-L1 Schema base listini<a class="headerlink" href="#131-db-l1-schema-base-listini" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] creare tabelle <code>listini</code>, <code>listini_versioni</code>, <code>listini_righe</code>, <code>listini_associazioni</code></li>
+<li>[x] introdurre campo <code>listini_associazioni.priorita</code></li>
+<li>[x] introdurre campo <code>listini.dominio</code> con valori v1 (<code>UTILITY</code>, <code>COMMERCIO</code>)</li>
+<li>[x] vincoli date e no-overlap versioni</li>
+<li>[x] pgtap DDL base verde</li>
+</ul>
+<h3 id="132-db-l2-resolver-pricing">13.2 DB-L2 Resolver pricing<a class="headerlink" href="#132-db-l2-resolver-pricing" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] creare <code>fn_resolve_prezzo_listino(...)</code> con <code>p_data_riferimento</code> obbligatoria</li>
+<li>[x] implementare precedenze utility + non-utility</li>
+<li>[x] implementare tie-break multi-listino con <code>listini_associazioni.priorita</code></li>
+<li>[x] errore <code>AMBIGUOUS_PRICE_MATCH</code> su pareggio totale</li>
+<li>[x] creare <code>fn_resolve_commessa_prezzi(lotto_id)</code></li>
+<li>[x] pgtap resolver verde</li>
+</ul>
+<h3 id="133-db-l3-integrazione-commessa">13.3 DB-L3 Integrazione commessa<a class="headerlink" href="#133-db-l3-integrazione-commessa" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] estendere <code>commesse_attivita</code> con <code>pricing_mode</code></li>
+<li>[ ] estendere <code>commesse_attivita</code> con <code>prezzo_da_riallineare</code></li>
+<li>[x] estendere <code>attivita_fatturabili</code> con <code>prezzo_bloccato</code></li>
+<li>[ ] aggiornare <code>fn_emit_attivita_fatturabili_da_commessa</code> per propagare <code>prezzo_bloccato</code></li>
+<li>[ ] gestire override documento (<code>prezzo_bloccato=TRUE</code>, <code>listino_versione_id</code> audit)</li>
+<li>[ ] pgtap integrazione commessa verde</li>
+</ul>
+<h3 id="134-db-l4-rettifiche">13.4 DB-L4 Rettifiche<a class="headerlink" href="#134-db-l4-rettifiche" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] implementare motore delta rettifiche</li>
+<li>[ ] canale manuale</li>
+<li>[ ] canale automatico su modifica retroattiva listino</li>
+<li>[ ] audit rettifiche</li>
+<li>[ ] pgtap rettifiche verde</li>
+</ul>
+<h3 id="135-gate-di-chiusura-db">13.5 Gate di chiusura DB<a class="headerlink" href="#135-gate-di-chiusura-db" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] tutti i test pgtap listini/commessa verdi</li>
+<li>[ ] ownership campi/funzioni allineata tra <code>gestione-listini.md</code> e <code>gestione-commesse-v2.md</code></li>
+<li>[ ] chiusura bloccanti §11</li>
+</ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
