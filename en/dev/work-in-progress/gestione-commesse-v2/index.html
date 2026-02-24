@@ -4016,7 +4016,7 @@ HandlerFuturoXYZ    — aggiunto senza toccare il modello core
 <td>Quantità della prestazione</td>
 </tr>
 <tr>
-<td><code>listino_id</code></td>
+<td><code>listino_versione_id</code></td>
 <td>Riferimento alla versione listino al momento del push</td>
 </tr>
 <tr>
@@ -4037,11 +4037,6 @@ HandlerFuturoXYZ    — aggiunto senza toccare il modello core
 </tr>
 </tbody>
 </table>
-<p>Nota naming:</p>
-<ol>
-<li><code>listino_id</code> nel documento indica la versione listino applicata al push;</li>
-<li>in implementazione DB il campo raccomandato e<code></code>listino_versione_id`.</li>
-</ol>
 <h3 id="72-policy-prezzo-per-tipo-sorgente">7.2 Policy prezzo per tipo sorgente<a class="headerlink" href="#72-policy-prezzo-per-tipo-sorgente" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -4072,7 +4067,7 @@ HandlerFuturoXYZ    — aggiunto senza toccare il modello core
 <h3 id="73-allineamento-quando-il-listino-cambia">7.3 Allineamento quando il listino cambia<a class="headerlink" href="#73-allineamento-quando-il-listino-cambia" title="Permanent link">&para;</a></h3>
 <p>Quando una versione listino viene aggiornata, il sistema individua le righe commessa
 potenzialmente stantie:</p>
-<div class="highlight"><pre><span></span><code>righe con listino_id = versione aggiornata
+<div class="highlight"><pre><span></span><code>righe con listino_versione_id = versione aggiornata
 AND data_competenza &gt;= data_validita_nuova versione
 AND prezzo_bloccato = FALSE
 AND non ancora fatturate
@@ -4166,10 +4161,11 @@ commessa_id             FK → commesse
 tipo_attivita           TASK | ORE | MILESTONE | CONSUMO | TECNICA
 descrizione
 quantita
-listino_id              FK → listino versione
+listino_versione_id     FK → listini_versioni
 prezzo_snapshot         numeric — prezzo al momento del push
 prezzo_bloccato         boolean
 prezzo_da_riallineare   boolean — flag tecnico di riallineamento post-push
+pricing_mode            FIXED | FORMULA | SCAGLIONI
 data_competenza         date
 segment_key             varchar — chiave idempotenza (vedi §9.3)
 stato_approvazione      BOZZA | APPROVATA | RIFIUTATA
@@ -4188,8 +4184,12 @@ created_at
 <p><strong><code>vendite.attivita_fatturabili</code></strong> — aggiungere:
 <div class="highlight"><pre><span></span><code>commessa_id             FK → commesse   (NOT NULL dopo backfill)
 commessa_attivita_id    FK → commesse_attivita   (NOT NULL dopo backfill)
-prezzo_bloccato         boolean snapshot prezzo (usato nello step verifica prezzi)
 </code></pre></div></p>
+<p>Nota ownership:</p>
+<ol>
+<li><code>attivita_fatturabili.prezzo_bloccato</code> e` requisito del dominio pricing/listini;</li>
+<li>viene introdotto nella roadmap <code>gestione-listini.md</code> (DB-L3), non in DB-1 core commesse.</li>
+</ol>
 <p>I campi <code>sorgente_tipo_id / sorgente_uid / sorgente_riga</code> restano invariati
 e continuano a rappresentare la root source originale.</p>
 <p><strong><code>vendite.preventivi</code></strong> (o tabella equivalente) — aggiungere:
@@ -4267,8 +4267,13 @@ Troppo restrittivo — impedisce la parzializzazione controllata della stessa so
 - Legge sempre la ROOT da <code>commesse_sorgenti</code>.
 - Se ROOT mancante → errore bloccante.
 - Scrive <code>commessa_id</code> e <code>commessa_attivita_id</code> su ogni riga emessa.
+- Propaga <code>prezzo_bloccato</code> da <code>commesse_attivita</code> a <code>attivita_fatturabili</code>.
 - I campi <code>sorgente_*</code> in <code>attivita_fatturabili</code> prendono i valori dalla ROOT.
 - Idempotente su <code>segment_key</code>.</p>
+<p>Nota ownership funzioni pricing:</p>
+<ol>
+<li><code>fn_resolve_prezzo_listino(...)</code> e <code>fn_resolve_commessa_prezzi(lotto_id)</code> sono governate dalla roadmap pricing in <code>gestione-listini.md</code>.</li>
+</ol>
 <hr />
 <h2 id="11-guardrail-anti-bypass-db-3">11) Guardrail anti-bypass (DB-3)<a class="headerlink" href="#11-guardrail-anti-bypass-db-3" title="Permanent link">&para;</a></h2>
 <p>Il team DB deve implementare un meccanismo che impedisca inserimenti diretti in
