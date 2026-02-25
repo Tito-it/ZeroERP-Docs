@@ -4586,10 +4586,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2522-handler-sorgenti" class="md-nav__link">
+  <a href="#2522-handler-sorgenti-allineamento-db-refactor-10-punti" class="md-nav__link">
     <span class="md-ellipsis">
       
-        25.2.2 Handler sorgenti
+        25.2.2 Handler sorgenti (allineamento DB refactor — 10 punti)
       
     </span>
   </a>
@@ -6474,8 +6474,12 @@ La FASE 4.5 (rettifiche) precede le API per non esporre un ciclo prezzi incomple
 <li>[x] <code>log_push_run(...)</code> — wrappa <code>fn_log_commessa_push_run</code> → <code>vendite.commesse_push_log</code></li>
 <li>[x] <code>get_push_log(push_log_id)</code> — SELECT <code>vendite.commesse_push_log</code></li>
 <li>[x] TypedDict <code>CommessaEmitResult</code>, <code>CommessaStatoResult</code>, <code>CommessaPushLogRow</code> in <code>types.py</code></li>
-<li>[x] Dataclass <code>CommessaAttivitaInput</code> (28 campi, opzionali con default <code>None</code>)</li>
-<li>[x] Test <code>test_commesse_repository.py</code> — 10 test verdi (mock DB, verifica SQL e mapping)</li>
+<li>[x] Dataclass <code>CommessaAttivitaInput</code> — ristrutturato: 6 obbligatori + 10 con default + 13 opzionali</li>
+<li>[x] Dataclass <code>PushableRow</code> — 25 colonne condivise da tutte le fn_list_*_da_pushare</li>
+<li>[x] <code>_SORGENTE_FN_MAP</code> — mapping codice sorgente → fn SQL (5 sorgenti)</li>
+<li>[x] <code>fetch_pushable_rows(sorgente_codice)</code> — generico per tutte le 5 fn_list_*_da_pushare</li>
+<li>[x] Default su <code>get_or_create_commessa</code>: tipo_commessa=AUTO, priorita_operativa=NORMALE, etc.</li>
+<li>[x] Test <code>test_commesse_repository.py</code> — 15 test verdi (mock DB, verifica SQL, mapping, pushable rows)</li>
 </ul>
 <hr />
 <h3 id="252-fase-2-orchestratore-push-handler-sorgenti">25.2 FASE 2 — Orchestratore push + handler sorgenti<a class="headerlink" href="#252-fase-2-orchestratore-push-handler-sorgenti" title="Permanent link">&para;</a></h3>
@@ -6500,21 +6504,27 @@ La FASE 4.5 (rettifiche) precede le API per non esporre un ciclo prezzi incomple
 <li><code>_compute_stato</code>: COMPLETATO / PARZIALE / ERRORE (nessun handler = ERRORE)</li>
 <li><code>HandlerResult.as_dict()</code> serializza per JSONB risultato per handler</li>
 </ul>
-<h4 id="2522-handler-sorgenti">25.2.2 Handler sorgenti<a class="headerlink" href="#2522-handler-sorgenti" title="Permanent link">&para;</a></h4>
+<h4 id="2522-handler-sorgenti-allineamento-db-refactor-10-punti">25.2.2 Handler sorgenti (allineamento DB refactor — 10 punti)<a class="headerlink" href="#2522-handler-sorgenti-allineamento-db-refactor-10-punti" title="Permanent link">&para;</a></h4>
 <ul>
-<li>[x] <code>BaseSourceHandler</code> — classe astratta con interfaccia <code>run(dry_run) → HandlerResult</code></li>
+<li>[x] <code>BaseSourceHandler</code> — logica condivisa <code>_process_rows()</code> (zero duplicazione tra handler)</li>
 <li>[x] <code>HandlerResult</code> — dataclass: <code>handler_name</code>, <code>created</code>, <code>updated</code>, <code>skipped</code>, <code>errors</code></li>
-<li>[x] <code>HandlerPreventivi</code> — stub, richiede DB: <code>fn_list_preventivi_da_pushare</code></li>
-<li>[ ] Query selezione preventivi eleggibili — <strong>richiede fn_list_preventivi_da_pushare (team DB)</strong></li>
-<li>[ ] Mapping preventivo → <code>CommessaAttivitaInput</code> — da implementare dopo fn DB</li>
-<li>[ ] Gestione <code>stato_commessa = CONVERTITO</code> (skippa senza errore)</li>
-<li>[x] <code>HandlerOrdini</code> — stub, richiede DB: <code>fn_list_ordini_da_pushare</code></li>
-<li>[ ] Query selezione ordini eleggibili — <strong>richiede fn_list_ordini_da_pushare (team DB)</strong></li>
-<li>[ ] Mapping ordine → <code>CommessaAttivitaInput</code> — da implementare dopo fn DB</li>
-<li>[x] <code>HandlerConsumi</code> — stub, richiede DB: <code>fn_list_consumi_da_pushare</code></li>
-<li>[ ] Query selezione consumi eleggibili — <strong>richiede fn_list_consumi_da_pushare (team DB)</strong></li>
-<li>[ ] Mapping consumo → <code>CommessaAttivitaInput</code> — da implementare dopo fn DB</li>
-<li>[x] Test <code>test_commesse_push_orchestrator.py</code> — 9 test verdi (isolamento, dry_run, filtro, log, stato)</li>
+<li>[x] <code>#1</code> ORDINE → ORDINE_VENDITA corretto in <code>HandlerOrdini.sorgente_codice</code></li>
+<li>[x] <code>#3</code> <code>uom_id: int | None = None</code> in <code>CommessaAttivitaInput</code></li>
+<li>[x] <code>#4</code> <code>tipo_doc_fiscale_id: int | None = None</code> + hook <code>_resolve_tipo_doc_fiscale_id()</code></li>
+<li>[x] <code>#5</code> <code>prezzo_da_riallineare: bool = False</code></li>
+<li>[x] <code>#6</code> <code>_extract_tipo_commessa()</code> / <code>_extract_policy_fatturazione()</code> da <code>meta</code> JSONB</li>
+<li>[x] <code>#7</code> <code>priorita_operativa="NORMALE"</code> default in <code>get_or_create_commessa</code></li>
+<li>[x] <code>#8</code> <code>HandlerContratti</code> (CONTRATTO) e <code>HandlerDdt</code> (DDT_VENDITA) — nuovi</li>
+<li>[x] <code>#9</code> <code>HandlerConsumi._expand_rows()</code> — fan-out 1→N con <code>ComponenteConsumabile</code></li>
+<li>[ ] <code>_fetch_componenti()</code> — stub, richiede fn DB per lookup componenti utility</li>
+<li>[x] <code>#10</code> <code>stato_approvazione="BOZZA"</code>, <code>stato_emissione="NON_EMESSA"</code> default</li>
+<li>[x] <code>HandlerPreventivi</code> — implementato via <code>_process_rows()</code>, sorgente_codice=PREVENTIVO</li>
+<li>[x] <code>HandlerOrdini</code> — implementato via <code>_process_rows()</code>, sorgente_codice=ORDINE_VENDITA</li>
+<li>[x] <code>HandlerContratti</code> — implementato via <code>_process_rows()</code>, sorgente_codice=CONTRATTO</li>
+<li>[x] <code>HandlerDdt</code> — implementato via <code>_process_rows()</code>, sorgente_codice=DDT_VENDITA</li>
+<li>[x] <code>HandlerConsumi</code> — implementato con override <code>_expand_rows()</code>, sorgente_codice=ATTIVITA_CONSUMI</li>
+<li>[x] Test <code>test_commesse_push_orchestrator.py</code> — 9 test verdi (invariati, zero regressioni)</li>
+<li>[x] Test <code>test_commesse_source_handlers.py</code> — 12 test verdi (handler, _process_rows, defaults, fan-out)</li>
 </ul>
 <hr />
 <h3 id="253-fase-3-step-0-pull-nella-pipeline-fatturazione">25.3 FASE 3 — Step 0 pull nella pipeline fatturazione<a class="headerlink" href="#253-fase-3-step-0-pull-nella-pipeline-fatturazione" title="Permanent link">&para;</a></h3>
