@@ -3454,10 +3454,21 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#fatturazione-ordine-vs-ddt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fatturazione: ordine vs DDT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#regole-di-gestione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ⚙️ Regole di gestione
+        Regole di gestione
       
     </span>
   </a>
@@ -3599,12 +3610,40 @@
 <li><code>uq_ordini_v_anno_serie_numero</code> → numerazione univoca condizionata.</li>
 </ul>
 <hr />
-<h3 id="regole-di-gestione">⚙️ Regole di gestione<a class="headerlink" href="#regole-di-gestione" title="Permanent link">&para;</a></h3>
+<h3 id="fatturazione-ordine-vs-ddt">Fatturazione: ordine vs DDT<a class="headerlink" href="#fatturazione-ordine-vs-ddt" title="Permanent link">&para;</a></h3>
+<p>Il campo <code>fatturazione_trigger</code> controlla <strong>quando</strong> scatta il push a commessa:</p>
+<table>
+<thead>
+<tr>
+<th>Valore</th>
+<th>Comportamento</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CONFERMATO</code> (default)</td>
+<td>Push a commessa alla conferma ordine (<code>fn_list_ordini_da_pushare</code>)</td>
+</tr>
+<tr>
+<td><code>SPEDITO</code></td>
+<td>Ordine non pusha; il DDT pusha quando spedito (<code>fn_list_ddt_da_pushare</code>)</td>
+</tr>
+<tr>
+<td><code>CONSEGNATO</code></td>
+<td>Ordine non pusha; il DDT pusha quando consegnato (<code>fn_list_ddt_da_pushare</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Il valore e<code>ereditato da</code>billing_account.fatturazione_ordini<code>al momento
+dell'inserimento (via</code>trgfn_ordini_normalize<code>). Puo</code> essere sovrascritto
+manualmente per singolo ordine.</p>
+<hr />
+<h3 id="regole-di-gestione">Regole di gestione<a class="headerlink" href="#regole-di-gestione" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Creazione</strong> – ammessi solo stati iniziali (<em>bozza</em>).  </li>
-<li><strong>Aggiornamento numerazione</strong> – possibile solo da trigger di sistema durante conferma ordine.  </li>
-<li><strong>Cancellazione</strong> – vietata se ordine già confermato o collegato a DDT/fatture (vincolo logico).  </li>
-<li><strong>Cambio valuta</strong> – ammesso solo finché non esistono righe evase.  </li>
+<li><strong>Creazione</strong> – ammessi solo stati iniziali (<em>bozza</em>).</li>
+<li><strong>Aggiornamento numerazione</strong> – possibile solo da trigger di sistema durante conferma ordine.</li>
+<li><strong>Cancellazione</strong> – vietata se ordine gia` confermato o collegato a DDT/fatture (vincolo logico).</li>
+<li><strong>Cambio valuta</strong> – ammesso solo finche` non esistono righe evase.</li>
 <li><strong>Sorgente esterna</strong> – se popolata, blocca rinumerazione automatica e update su <code>serie/numero</code>.  </li>
 </ol>
 <hr />

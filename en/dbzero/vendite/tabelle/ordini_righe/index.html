@@ -3519,21 +3519,21 @@
 <p>Righe dell’<strong>ordine cliente</strong> con snapshot di descrizione/UoM/IVA e idempotenza della sorgente. Supporta <strong>doppia rappresentazione delle quantità</strong>:</p>
 <ul>
 <li><strong>Operativa</strong>: <code>qta_operativa</code> + <code>uom_operativa_id</code> → <em>sorgente principale</em> di inserimento.</li>
-<li><strong>Base</strong>: <code>qta</code> (derivata) per calcoli, residui e reporting normalizzato.</li>
+<li><strong>Base</strong>: <code>quantita</code> (derivata) per calcoli, residui e reporting normalizzato.</li>
 </ul>
 <p><code>factor_to_base</code> memorizza il <strong>fattore di conversione snapshot</strong> (operativa → base) applicato alla riga.</p>
 <hr />
 <h3 id="regole-di-dominio-quantitauom">🧠 Regole di dominio (quantità/UoM)<a class="headerlink" href="#regole-di-dominio-quantitauom" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Sorgente</strong>: <code>qta_operativa</code> + <code>uom_operativa_id</code>.</li>
-<li><strong>Derivazione</strong>: <code>qta = qta_operativa * factor_to_base</code> (scala 6). <code>factor_to_base</code> è lo <strong>snapshot</strong> della regola valida al momento dell’inserimento (o update coerente).</li>
+<li><strong>Derivazione</strong>: <code>quantita = qta_operativa * factor_to_base</code> (scala 6). <code>factor_to_base</code> è lo <strong>snapshot</strong> della regola valida al momento dell’inserimento (o update coerente).</li>
 <li><strong>Co‑presenza</strong>: o <strong>entrambi NULL</strong> (non ammesso in produzione) o <strong>entrambi valorizzati</strong>; la validazione è demandata alla trigger <code>script.trgfn_qta_from_operativa(...)</code>.</li>
-<li><strong>Aggiornamenti</strong>: se cambia <code>qta_operativa</code> o <code>uom_operativa_id</code>, ricalcola <code>qta</code> e aggiorna <code>factor_to_base</code>. Aggiornare direttamente <code>qta</code> non è previsto: eventuali tentativi vanno normalizzati o rifiutati dalla trigger.</li>
+<li><strong>Aggiornamenti</strong>: se cambia <code>qta_operativa</code> o <code>uom_operativa_id</code>, ricalcola <code>quantita</code> e aggiorna <code>factor_to_base</code>. Aggiornare direttamente <code>quantita</code> non è previsto: eventuali tentativi vanno normalizzati o rifiutati dalla trigger.</li>
 </ul>
 <hr />
 <h3 id="vincoli">🛡️ Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>chk_ordini_v_r_qta_pos</code> → (da correggere nel DDL: oggi ripete prezzo) <strong>deve validare <code>qta &gt; 0</code></strong>.</li>
+<li><code>chk_ordini_v_r_qta_pos</code> → (da correggere nel DDL: oggi ripete prezzo) <strong>deve validare <code>quantita &gt; 0</code></strong>.</li>
 <li><code>check_ordini_righe_qta_operativa_pos</code> → <code>qta_operativa &gt; 0</code> (consente <code>NULL</code>).</li>
 <li><code>chk_ordini_v_r_prezzo_pos</code> → <code>prezzo_unitario &gt;= 0</code>.</li>
 <li><code>chk_ordini_v_r_sconto_perc</code> → tra 0 e 100.</li>
@@ -3546,20 +3546,20 @@
 <h3 id="trigger-funzioni-collegate">⚙️ Trigger &amp; funzioni collegate<a class="headerlink" href="#trigger-funzioni-collegate" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Delete‑block</strong>: <code>trg_a10_dlt_block</code> → vieta hard delete (policy).</li>
-<li><strong>Quantità da operativa</strong>: <code>trg_a10_ins_upd_ordini_righe_qta_from_operativa</code> → invoca <code>script.trgfn_qta_from_operativa('true','false')</code> per calcolare <code>qta</code> e aggiornare <code>factor_to_base</code> a ogni INSERT/UPDATE.</li>
+<li><strong>Quantità da operativa</strong>: <code>trg_a10_ins_upd_ordini_righe_qta_from_operativa</code> → invoca <code>script.trgfn_qta_from_operativa('true','false')</code> per calcolare <code>quantita</code> e aggiornare <code>factor_to_base</code> a ogni INSERT/UPDATE.</li>
 <li><strong>Sync stato ordine</strong>: gestito a livello testata dal trigger su fulfillment (vedi doc dedicata), senza usare terminologia “ortogonale”.</li>
 </ul>
 <hr />
 <h3 id="interazione-con-fulfillment-ddt-fatture">🔄 Interazione con fulfillment / DDT / Fatture<a class="headerlink" href="#interazione-con-fulfillment-ddt-fatture" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Il <strong>residuo</strong> ordine si calcola su <code>qta</code> (base) per coerenza con stock e confronti multipli.</li>
+<li>Il <strong>residuo</strong> ordine si calcola su <code>quantita</code> (base) per coerenza con stock e confronti multipli.</li>
 <li>In <strong>fulfillment</strong>, la guardia riga↔riga confronta <strong>articolo</strong> e, se presente, la <strong>UoM</strong> coerente; la quantità evasa non può superare il residuo dell’ordine.</li>
 <li>In fatturazione differita da DDT, conviene propagare <strong>entrambe</strong> le quantità (operativa+base) nelle <code>attivita_fatturabili</code> per stampa e calcoli coerenti.</li>
 </ul>
 <hr />
 <h3 id="tabella-note-migliorie-dal-ddl-ricevuto">🔍 Tabella note migliorie (dal DDL ricevuto)<a class="headerlink" href="#tabella-note-migliorie-dal-ddl-ricevuto" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>BUG vincolo quantità</strong>: <code>chk_ordini_v_r_qta_pos</code> oggi replica <code>prezzo_unitario &gt;= 0</code> → <strong>correggere</strong> a <code>qta &gt; 0</code>.</li>
+<li><strong>BUG vincolo quantità</strong>: <code>chk_ordini_v_r_qta_pos</code> oggi replica <code>prezzo_unitario &gt;= 0</code> → <strong>correggere</strong> a <code>quantita &gt; 0</code>.</li>
 <li><strong>Co‑presenza operativa</strong>: aggiungere <code>CHECK ((uom_operativa_id IS NULL) = (qta_operativa IS NULL))</code> per impedire stati ibridi.</li>
 <li><strong>Chiarezza <code>qta_operativa &gt; 0</code></strong>: il <code>CHECK</code> attuale passa con <code>NULL</code> (comportamento desiderato). Per leggibilità, si può rendere esplicito: <code>CHECK (qta_operativa IS NULL OR qta_operativa &gt; 0)</code>.</li>
 <li><strong>Deduplicate items</strong>: uniformare <code>deduplicate_items=True</code> → <code>true</code> (stile SQL coerente con il resto del progetto).</li>
@@ -3569,7 +3569,7 @@
 <ul>
 <li>Righe di un ordine, con totale base:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">qta</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">prezzo_unitario</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">sconto_perc</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="mi">100</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">imponibile_riga</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">quantita</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">prezzo_unitario</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">sconto_perc</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="mi">100</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">imponibile_riga</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">ordini_righe</span><span class="w"> </span><span class="n">r</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">ordine_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">ordine_id</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">riga_nr</span><span class="p">;</span>
@@ -3578,7 +3578,7 @@
 <li>Residuo riga (base) con fulfillment:</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
-<span class="w">       </span><span class="n">r</span><span class="p">.</span><span class="n">qta</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">f</span><span class="p">.</span><span class="n">qta_evasa</span><span class="p">),</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">residuo</span>
+<span class="w">       </span><span class="n">r</span><span class="p">.</span><span class="n">quantita</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">f</span><span class="p">.</span><span class="n">qta_evasa</span><span class="p">),</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">residuo</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">ordini_righe</span><span class="w"> </span><span class="n">r</span>
 <span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">ordini_righe_fulfillment</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">ordine_riga_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">id</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">ordine_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">ordine_id</span>
@@ -3589,7 +3589,7 @@
 <ul>
 <li>[ ] Trigger <strong>delete‑block</strong> attiva.</li>
 <li>[ ] Trigger <strong>qta_from_operativa</strong> attiva e copre INSERT/UPDATE.</li>
-<li>[ ] <code>chk_ordini_v_r_qta_pos</code> <strong>corretto</strong> a <code>qta &gt; 0</code>.</li>
+<li>[ ] <code>chk_ordini_v_r_qta_pos</code> <strong>corretto</strong> a <code>quantita &gt; 0</code>.</li>
 <li>[ ] <code>factor_to_base</code> aggiornato a ogni variazione UoM/quantità.</li>
 <li>[ ] UQ progressivo riga per testata.</li>
 <li>[ ] UQ idempotenza import attiva.</li>
