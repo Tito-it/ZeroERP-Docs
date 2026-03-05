@@ -23,7 +23,7 @@
     
     
       
-        <title>📗 Guida Tecnica – Implementazione di un Unico Transaction ID in Zero ERP - Zero ERP Documentation</title>
+        <title>Guida – Gestione del Transaction ID (tx_id) - Zero ERP Documentation</title>
       
     
     
@@ -67,7 +67,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#guida-tecnica-implementazione-di-un-unico-transaction-id-in-zero-erp" class="md-skip">
+        <a href="#guida-gestione-del-transaction-id-tx_id" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -101,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              📗 Guida Tecnica – Implementazione di un Unico Transaction ID in Zero ERP
+              Guida – Gestione del Transaction ID (tx_id)
             
           </span>
         </div>
@@ -1697,7 +1697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../dbzero/pratiche/index.md" class="md-nav__link">
+      <a href="../../dbzero/pratiche/" class="md-nav__link">
         
   
   
@@ -2737,10 +2737,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-introduzione" class="md-nav__link">
+  <a href="#introduzione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Introduzione
+        Introduzione
       
     </span>
   </a>
@@ -2748,10 +2748,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-motivazioni-e-obiettivi" class="md-nav__link">
+  <a href="#tabelle-coinvolte" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Motivazioni e Obiettivi
+        Tabelle coinvolte
       
     </span>
   </a>
@@ -2759,22 +2759,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-architettura-e-componenti" class="md-nav__link">
+  <a href="#il-modello-in-sintesi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Architettura e Componenti
+        Il modello in sintesi
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. Architettura e Componenti">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registro-transaction_ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registro: transaction_ids
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#funzioni-di-generazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Funzioni di generazione
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Funzioni di generazione">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#31-tabella-centrale" class="md-nav__link">
+  <a href="#fn_generate_tx_id-generazione-e-registrazione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.1 Tabella Centrale
+        fn_generate_tx_id — generazione e registrazione
       
     </span>
   </a>
@@ -2782,21 +2804,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#32-funzioni-plpgsql" class="md-nav__link">
+  <a href="#fn_get_or_create_session_tx_id-recupero-o-creazione-per-sessione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.2 Funzioni PL/pgSQL
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#33-trigger-e-trigger-functions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.3 Trigger e Trigger Functions
+        fn_get_or_create_session_tx_id — recupero o creazione per sessione
       
     </span>
   </a>
@@ -2809,22 +2820,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-modalita-di-integrazione" class="md-nav__link">
+  <a href="#trigger-function-trgfn_tx_id_managed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Modalità di Integrazione
+        Trigger function: trgfn_tx_id_managed
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4. Modalità di Integrazione">
+    <nav class="md-nav" aria-label="Trigger function: trgfn_tx_id_managed">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#41-lato-database-con-trigger" class="md-nav__link">
+  <a href="#fase-1-verifica-bypass-globale" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.1 Lato Database con Trigger
+        Fase 1 — Verifica bypass globale
       
     </span>
   </a>
@@ -2832,10 +2843,43 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#42-lato-backend-con-function" class="md-nav__link">
+  <a href="#fase-2-override-bypass-di-sessione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.2 Lato Backend con Function
+        Fase 2 — Override bypass di sessione
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fase-3-lettura-tx_id-di-sessione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 3 — Lettura tx_id di sessione
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fase-4-determinazione-del-valore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 4 — Determinazione del valore
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fase-5-assegnazione-a-newtx_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 5 — Assegnazione a NEW.tx_id
       
     </span>
   </a>
@@ -2848,10 +2892,149 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-linee-guida-per-limplementazione" class="md-nav__link">
+  <a href="#parametri-guc-e-configurazione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Linee Guida per l’Implementazione
+        Parametri GUC e configurazione
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parametri GUC e configurazione">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guc-di-sessione-scope-connessione-corrente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUC di sessione (scope: connessione corrente)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parametri-applicativi-in-configparameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parametri applicativi (in config.parameters)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automazione-provisioning-dei-trigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automazione: provisioning dei trigger
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Automazione: provisioning dei trigger">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fn_run_automations_tx_id-scansione-e-creazione-trigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fn_run_automations_tx_id — scansione e creazione trigger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regole-di-automazione-automation_rules_tbl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regole di automazione: automation_rules_tbl
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proc_automations_tx_id_job-esecuzione-schedulata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        proc_automations_tx_id_job — esecuzione schedulata
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integrazione-con-il-backend-django" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrazione con il backend Django
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integrazione con il backend Django">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#approccio-consigliato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approccio consigliato
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-pre-impostare-il-tx_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando pre-impostare il tx_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-non-e-necessario" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando non e necessario
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regole-di-dominio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regole di dominio
       
     </span>
   </a>
@@ -2859,10 +3042,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-esempi-di-codice-backend-pseudo" class="md-nav__link">
+  <a href="#best-practice" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Esempi di Codice Backend (Pseudo)
+        Best practice
       
     </span>
   </a>
@@ -2870,10 +3053,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-conclusioni-e-raccomandazioni" class="md-nav__link">
+  <a href="#diagrammi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7. Conclusioni e Raccomandazioni
+        Diagrammi
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Diagrammi">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#flusso-di-assegnazione-del-tx_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flusso di assegnazione del tx_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architettura-del-sistema-tx_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architettura del sistema tx_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#note-finali" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Note finali
       
     </span>
   </a>
@@ -4107,10 +4329,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-introduzione" class="md-nav__link">
+  <a href="#introduzione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Introduzione
+        Introduzione
       
     </span>
   </a>
@@ -4118,10 +4340,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-motivazioni-e-obiettivi" class="md-nav__link">
+  <a href="#tabelle-coinvolte" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Motivazioni e Obiettivi
+        Tabelle coinvolte
       
     </span>
   </a>
@@ -4129,22 +4351,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-architettura-e-componenti" class="md-nav__link">
+  <a href="#il-modello-in-sintesi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Architettura e Componenti
+        Il modello in sintesi
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. Architettura e Componenti">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registro-transaction_ids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registro: transaction_ids
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#funzioni-di-generazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Funzioni di generazione
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Funzioni di generazione">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#31-tabella-centrale" class="md-nav__link">
+  <a href="#fn_generate_tx_id-generazione-e-registrazione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.1 Tabella Centrale
+        fn_generate_tx_id — generazione e registrazione
       
     </span>
   </a>
@@ -4152,21 +4396,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#32-funzioni-plpgsql" class="md-nav__link">
+  <a href="#fn_get_or_create_session_tx_id-recupero-o-creazione-per-sessione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.2 Funzioni PL/pgSQL
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#33-trigger-e-trigger-functions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.3 Trigger e Trigger Functions
+        fn_get_or_create_session_tx_id — recupero o creazione per sessione
       
     </span>
   </a>
@@ -4179,22 +4412,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-modalita-di-integrazione" class="md-nav__link">
+  <a href="#trigger-function-trgfn_tx_id_managed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Modalità di Integrazione
+        Trigger function: trgfn_tx_id_managed
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4. Modalità di Integrazione">
+    <nav class="md-nav" aria-label="Trigger function: trgfn_tx_id_managed">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#41-lato-database-con-trigger" class="md-nav__link">
+  <a href="#fase-1-verifica-bypass-globale" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.1 Lato Database con Trigger
+        Fase 1 — Verifica bypass globale
       
     </span>
   </a>
@@ -4202,10 +4435,43 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#42-lato-backend-con-function" class="md-nav__link">
+  <a href="#fase-2-override-bypass-di-sessione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.2 Lato Backend con Function
+        Fase 2 — Override bypass di sessione
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fase-3-lettura-tx_id-di-sessione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 3 — Lettura tx_id di sessione
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fase-4-determinazione-del-valore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 4 — Determinazione del valore
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fase-5-assegnazione-a-newtx_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fase 5 — Assegnazione a NEW.tx_id
       
     </span>
   </a>
@@ -4218,10 +4484,149 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-linee-guida-per-limplementazione" class="md-nav__link">
+  <a href="#parametri-guc-e-configurazione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Linee Guida per l’Implementazione
+        Parametri GUC e configurazione
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parametri GUC e configurazione">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guc-di-sessione-scope-connessione-corrente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUC di sessione (scope: connessione corrente)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parametri-applicativi-in-configparameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parametri applicativi (in config.parameters)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automazione-provisioning-dei-trigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automazione: provisioning dei trigger
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Automazione: provisioning dei trigger">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fn_run_automations_tx_id-scansione-e-creazione-trigger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fn_run_automations_tx_id — scansione e creazione trigger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regole-di-automazione-automation_rules_tbl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regole di automazione: automation_rules_tbl
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proc_automations_tx_id_job-esecuzione-schedulata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        proc_automations_tx_id_job — esecuzione schedulata
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integrazione-con-il-backend-django" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrazione con il backend Django
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integrazione con il backend Django">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#approccio-consigliato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approccio consigliato
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-pre-impostare-il-tx_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando pre-impostare il tx_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-non-e-necessario" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando non e necessario
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regole-di-dominio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regole di dominio
       
     </span>
   </a>
@@ -4229,10 +4634,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-esempi-di-codice-backend-pseudo" class="md-nav__link">
+  <a href="#best-practice" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Esempi di Codice Backend (Pseudo)
+        Best practice
       
     </span>
   </a>
@@ -4240,10 +4645,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-conclusioni-e-raccomandazioni" class="md-nav__link">
+  <a href="#diagrammi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7. Conclusioni e Raccomandazioni
+        Diagrammi
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Diagrammi">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#flusso-di-assegnazione-del-tx_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flusso di assegnazione del tx_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architettura-del-sistema-tx_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architettura del sistema tx_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#note-finali" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Note finali
       
     </span>
   </a>
@@ -4268,129 +4712,594 @@
   
 
 
-<h1 id="guida-tecnica-implementazione-di-un-unico-transaction-id-in-zero-erp">📗 Guida Tecnica – Implementazione di un Unico Transaction ID in Zero ERP<a class="headerlink" href="#guida-tecnica-implementazione-di-un-unico-transaction-id-in-zero-erp" title="Permanent link">&para;</a></h1>
+<h1 id="guida-gestione-del-transaction-id-tx_id">Guida – Gestione del Transaction ID (<code>tx_id</code>)<a class="headerlink" href="#guida-gestione-del-transaction-id-tx_id" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p>📋 <strong><em>Destinatari</em></strong>: sviluppatori database, sviluppatori backend</p>
-<p>👀 <strong>Vedi anche</strong></p>
+<p>(latest review 05-03-26)</p>
+<p>Destinatari: sviluppatori database e backend</p>
+<p>Questa guida descrive il sistema di identificazione transazionale (<code>tx_id</code>) di
+Zero ERP: come viene generato, propagato, validato e automatizzato su tutte le
+tabelle del sistema.</p>
+<p>Vedi anche</p>
 <ul>
-<li>Documento configurazione fondamentale per <a href="..//postgresql/dblink"><code>Dblink</code></a></li>
+<li><a href=".././automazione-db/">Guida Automazione DB</a> — framework di automazione trigger e policy</li>
+<li><a href=".././Messaggi-di-Errore-e-Generazione-Log/">Guida Messaggi di Errore e Log</a> — logging errori con tx_id</li>
+<li><a href=".././messaggi-audit/">Guida Messaggi Audit</a> — audit trail con tx_id</li>
 </ul>
-<p>Approfondimento Tabelle: <br />
-- <a href="../../dbzero/dbops/tabelle/transaction_ids">dbops.transaction_ids</a>    <br />
-- <a href="../../dbzero/config/tabelle/parameters">config.parameters</a>      </p>
-<p>Approfondimento funzioni :  <br />
-- <a href="../../dbzero/dbops/funzioni/fn_get_or_create_session_tx_id">dbops.fn_get_or_create_session_tx_id</a>  <br />
-- <a href="../../dbzero/dbops/funzioni/fn_generate_tx_id">dbops.fn_generate_tx_id</a> <br />
-- <a href="../../dbzero/dbops/funzioni/trgfn_tx_id_managed">dbops.trgfn_tx_id_managed</a> <br />
-<strong>Esempio di utilizzo :</strong>    <br />
-- <a href="../../dbzero/script/funzioni/fn_log_and_raise_error">script.fn_log_and_raise_error</a>    </p>
-</blockquote>
-<h2 id="1-introduzione">1. Introduzione<a class="headerlink" href="#1-introduzione" title="Permanent link">&para;</a></h2>
-<p>In Zero ERP è essenziale poter <strong>correlare</strong> tutte le operazioni legate a una singola transazione (inserimenti, aggiornamenti, cancellazioni) attraverso diverse tabelle e componenti. Questa guida spiega:</p>
-<ul>
-<li>Il <strong>perché</strong> della scelta di un identificativo di transazione centralizzato (<code>tx_id</code>).</li>
-<li>L’<strong>architettura</strong> e i <strong>componenti</strong> coinvolti.</li>
-<li>Le <strong>modalità di integrazione</strong> sia lato database (trigger, function) sia lato backend.</li>
-<li>Le <strong>linee guida</strong> per implementazione, test e manutenzione.</li>
-</ul>
-<hr />
-<h2 id="2-motivazioni-e-obiettivi">2. Motivazioni e Obiettivi<a class="headerlink" href="#2-motivazioni-e-obiettivi" title="Permanent link">&para;</a></h2>
-<ol>
-<li><strong>Tracciabilità completa</strong>: poter ricostruire il flusso di una transazione in un’unica vista cronologica.</li>
-<li><strong>Coerenza cross-tabella</strong>: garantire che ogni riga coinvolta in un’operazione condivida lo stesso <code>tx_id</code>.</li>
-<li><strong>Supporto audit e debugging</strong>: semplificare ricerca di errori e analisi delle performance.</li>
-<li><strong>Flessibilità</strong>: permettere bypass o personalizzazione in fase di test, migrazione o debug.</li>
-</ol>
-<hr />
-<h2 id="3-architettura-e-componenti">3. Architettura e Componenti<a class="headerlink" href="#3-architettura-e-componenti" title="Permanent link">&para;</a></h2>
-<h3 id="31-tabella-centrale">3.1 Tabella Centrale<a class="headerlink" href="#31-tabella-centrale" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong><code>dbops.transaction_ids</code></strong>: registro master di tutti i <code>tx_id</code>. Ogni record memorizza UUID, timestamp, contesto di generazione.</li>
-</ul>
-<h3 id="32-funzioni-plpgsql">3.2 Funzioni PL/pgSQL<a class="headerlink" href="#32-funzioni-plpgsql" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong><code>fn_generate_tx_id(...)</code></strong>: genera e inserisce un nuovo <code>tx_id</code>, restituendolo.</li>
-<li><strong><code>fn_get_or_create_session_tx_id()</code></strong>: recupera o crea, se mancante, il <code>tx_id</code> di sessione tramite GUC e dblink.</li>
-<li><strong><code>fn_get_or_create_session_tx_id</code></strong> è consigliata per uso lato backend.</li>
-</ul>
-<h3 id="33-trigger-e-trigger-functions">3.3 Trigger e Trigger Functions<a class="headerlink" href="#33-trigger-e-trigger-functions" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong><code>trgfn_tx_id_managed()</code></strong>: centralizza logica di controllo, bypass, validazione e assegnazione <code>NEW.tx_id</code>. È attaccata via trigger <strong><code>BEFORE INSERT OR UPDATE</code></strong> su tabelle che contengono il campo <code>tx_id</code>.</li>
-<li><strong>Pro</strong>: garantisce coerenza automatica senza dipendere dal client.</li>
-<li><strong>Contro</strong>: può limitare rapidità di sviluppo e complicare rollback di test.</li>
-</ul>
-<hr />
-<h2 id="4-modalita-di-integrazione">4. Modalità di Integrazione<a class="headerlink" href="#4-modalita-di-integrazione" title="Permanent link">&para;</a></h2>
-<h3 id="41-lato-database-con-trigger">4.1 Lato Database con Trigger<a class="headerlink" href="#41-lato-database-con-trigger" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>DDL</strong>: aggiungere colonna <code>tx_id UUID NOT NULL</code> in ogni tabella.</li>
-<li><strong>Trigger</strong>:</li>
-</ol>
-<p><div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">trg_assign_tx_id</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">my_table</span>
-<span class="w">  </span><span class="k">BEFORE</span><span class="w"> </span><span class="k">INSERT</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">UPDATE</span>
-<span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">ROW</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">trgfn_tx_id_managed</span><span class="p">();</span>
-</code></pre></div>
-3. <strong>Vantaggi</strong>: operazioni garantite lato DB, nessun intervento lato client.
-4. <strong>Svantaggi</strong>: potenziali errori mascherati, dipendenze DB forti.</p>
-<h3 id="42-lato-backend-con-function">4.2 Lato Backend con Function<a class="headerlink" href="#42-lato-backend-con-function" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>Colonna DDL</strong>: <code>tx_id UUID NOT NULL</code> su tabelle.</li>
-<li><strong>Chiamata esplicita</strong>: prima di operazioni SQL, backend esegue:</li>
-</ol>
-<p><div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_or_create_session_tx_id</span><span class="p">()</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tx_id</span><span class="p">;</span>
-</code></pre></div>
-3. <strong>Iniezione</strong>: popola il campo <code>tx_id</code> nelle istruzioni <code>INSERT/UPDATE</code>.
-4. <strong>Vantaggi</strong>: completa visibilità e controllo lato applicazione; facile debugging.
-5. <strong>Svantaggi</strong>: responsabilità di implementazione distribuita tra team.</p>
-<blockquote>
-<p><strong>Scelta consigliata</strong>: per ambienti di sviluppo/test o architetture microservizi, preferire la gestione da backend; in contesti monolitici DB-centrici, adottare trigger.</p>
 </blockquote>
 <hr />
-<h2 id="5-linee-guida-per-limplementazione">5. Linee Guida per l’Implementazione<a class="headerlink" href="#5-linee-guida-per-limplementazione" title="Permanent link">&para;</a></h2>
+<h2 id="introduzione">Introduzione<a class="headerlink" href="#introduzione" title="Permanent link">&para;</a></h2>
+<p>In un sistema ERP che opera su decine di tabelle, schemi e processi concorrenti, poter correlare tutte le operazioni di una singola transazione e fondamentale per tracciabilita, debugging e audit.</p>
+<p>Il <code>tx_id</code> e un UUID (formato UUIDv7, ordinabile cronologicamente) che identifica una transazione applicativa. Ogni riga inserita o aggiornata in una tabella che contiene la colonna <code>tx_id</code> riceve automaticamente questo identificativo tramite un trigger. Il valore e condiviso tra tutte le operazioni della stessa sessione, permettendo di ricostruire l'intera catena di modifiche con una singola query.</p>
+<p>Il sistema non richiede intervento esplicito del backend: il trigger <code>trgfn_tx_id_managed</code> si occupa di tutto automaticamente. Tuttavia, il backend puo opzionalmente pre-impostare il <code>tx_id</code> di sessione per un controllo piu fine.</p>
+<p><strong>Cosa troverai in questa guida:</strong></p>
+<ul>
+<li>La tabella registro <code>transaction_ids</code> e la sua struttura</li>
+<li>Le funzioni di generazione e recupero del <code>tx_id</code></li>
+<li>Il trigger di gestione automatica e il suo flusso decisionale</li>
+<li>Il sistema di automazione per il provisioning dei trigger</li>
+<li>I parametri GUC e di configurazione coinvolti</li>
+<li>L'integrazione con il backend Django</li>
+</ul>
+<hr />
+<h2 id="tabelle-coinvolte">Tabelle coinvolte<a class="headerlink" href="#tabelle-coinvolte" title="Permanent link">&para;</a></h2>
+<p><strong>Registro:</strong></p>
+<ul>
+<li><a href="../../dbzero/dbops/tabelle/transaction_ids/">dbops.transaction_ids</a> — registro master dei tx_id generati</li>
+</ul>
+<p><strong>Configurazione automazione:</strong></p>
+<ul>
+<li><a href="../../dbzero/dbops/tabelle/automation_rules_tbl/">dbops.automation_rules_tbl</a> — regole per il provisioning automatico dei trigger</li>
+<li><a href="../../dbzero/config/tabelle/parameters/">config.parameters</a> — parametro <code>tx_id_bypass_enabled</code></li>
+</ul>
+<p><strong>Funzioni:</strong></p>
+<ul>
+<li><a href="../../dbzero/dbops/funzioni/fn_generate_tx_id/">dbops.fn_generate_tx_id</a> — generazione e registrazione di un nuovo tx_id</li>
+<li><a href="../../dbzero/dbops/funzioni/fn_get_or_create_session_tx_id/">dbops.fn_get_or_create_session_tx_id</a> — recupero o creazione del tx_id di sessione</li>
+<li><a href="../../dbzero/dbops/funzioni/trgfn_tx_id_managed/">dbops.trgfn_tx_id_managed</a> — trigger function di gestione automatica</li>
+<li><a href="../../dbzero/dbops/funzioni/fn_run_automations_tx_id/">dbops.fn_run_automations_tx_id</a> — provisioning automatico dei trigger</li>
+<li><a href="../../dbzero/maintenance/funzioni/proc_automations_tx_id_job/">maintenance.proc_automations_tx_id_job</a> — procedura schedulata</li>
+</ul>
+<hr />
+<h2 id="il-modello-in-sintesi">Il modello in sintesi<a class="headerlink" href="#il-modello-in-sintesi" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>config.parameters
+└── tx_id_bypass_enabled          -- abilita/disabilita bypass globale
+
+dbops
+├── transaction_ids               -- registro master UUID generati (immutabile)
+├── automation_rules_tbl          -- regole provisioning trigger (rule_type=&#39;TX_ID&#39;)
+├── fn_generate_tx_id()           -- genera UUID + INSERT in transaction_ids
+├── fn_get_or_create_session_tx_id()  -- riusa GUC o genera via dblink
+├── trgfn_tx_id_managed()         -- trigger BEFORE INSERT/UPDATE su ogni tabella
+└── fn_run_automations_tx_id()    -- crea trigger dove mancano
+
+maintenance
+└── proc_automations_tx_id_job()  -- wrapper schedulato con lock e logging
+
+GUC di sessione
+├── dbops.tx_id                   -- tx_id corrente (session-scoped)
+├── myapp.bypass_tx_id_check      -- override bypass per sessione
+└── myapp.dblink_log_connection   -- stringa di connessione dblink
+</code></pre></div>
+<hr />
+<h2 id="registro-transaction_ids">Registro: <code>transaction_ids</code><a class="headerlink" href="#registro-transaction_ids" title="Permanent link">&para;</a></h2>
+<p>La tabella <code>dbops.transaction_ids</code> e il registro centrale di tutti i transaction ID generati nel sistema. Ogni record e immutabile: una volta creato, non puo essere ne aggiornato ne cancellato (protetto da <code>trgfn_prevent_modification_generic</code>).</p>
+<p>Da un punto di vista tecnico:</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th style="text-align: center;">Nullable</th>
+<th>Default</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>UUID, PK</td>
+<td style="text-align: center;">no</td>
+<td><code>uuidv7()</code></td>
+<td>Transaction ID (UUIDv7, ordinabile cronologicamente)</td>
+</tr>
+<tr>
+<td><code>generating_function</code></td>
+<td>TEXT</td>
+<td style="text-align: center;">si</td>
+<td>—</td>
+<td>Nome della funzione che ha richiesto la generazione</td>
+</tr>
+<tr>
+<td><code>session_info</code></td>
+<td>JSONB</td>
+<td style="text-align: center;">no</td>
+<td><code>'{}'</code></td>
+<td>Dati di contesto (utente, IP, fonte)</td>
+</tr>
+<tr>
+<td><code>user_insert</code></td>
+<td>TEXT</td>
+<td style="text-align: center;">no</td>
+<td><code>CURRENT_USER</code></td>
+<td>Utente che ha creato il record</td>
+</tr>
+<tr>
+<td><code>data_insert</code></td>
+<td>TIMESTAMPTZ</td>
+<td style="text-align: center;">no</td>
+<td><code>now()</code></td>
+<td>Timestamp di creazione</td>
+</tr>
+<tr>
+<td><code>user_update</code></td>
+<td>TEXT</td>
+<td style="text-align: center;">si</td>
+<td>—</td>
+<td>Sempre NULL (record immutabile)</td>
+</tr>
+<tr>
+<td><code>data_update</code></td>
+<td>TIMESTAMPTZ</td>
+<td style="text-align: center;">si</td>
+<td>—</td>
+<td>Sempre NULL (record immutabile)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Protezione immutabilita:</strong> trigger <code>trgfn_prevent_modification_generic</code> blocca UPDATE e DELETE.</p>
+<blockquote>
+<p>Documentazione dettagliata: <a href="../../dbzero/dbops/tabelle/transaction_ids/">dbops.transaction_ids</a></p>
+</blockquote>
+<hr />
+<h2 id="funzioni-di-generazione">Funzioni di generazione<a class="headerlink" href="#funzioni-di-generazione" title="Permanent link">&para;</a></h2>
+<h3 id="fn_generate_tx_id-generazione-e-registrazione"><code>fn_generate_tx_id</code> — generazione e registrazione<a class="headerlink" href="#fn_generate_tx_id-generazione-e-registrazione" title="Permanent link">&para;</a></h3>
+<p>Questa funzione e il punto unico di creazione di un nuovo <code>tx_id</code>. Genera un UUIDv7, lo inserisce in <code>transaction_ids</code> con il contesto di chiamata, e lo restituisce. E dichiarata <code>SECURITY DEFINER</code> per permettere l'invocazione da ruoli con privilegi limitati.</p>
+<p>Da un punto di vista tecnico:</p>
+<table>
+<thead>
+<tr>
+<th>Parametro</th>
+<th>Tipo</th>
+<th>Default</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>p_generating_function</code></td>
+<td>TEXT</td>
+<td>—</td>
+<td>Nome della funzione/processo chiamante</td>
+</tr>
+<tr>
+<td><code>p_session_info</code></td>
+<td>JSONB</td>
+<td><code>'{}'</code></td>
+<td>Dati di contesto (utente, IP, sessione)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Restituisce:</strong> <code>UUID</code> — il nuovo tx_id generato.</p>
+<p><strong>Logica:</strong></p>
 <ol>
-<li><strong>Estensione DDL</strong>: aggiungere colonna <code>tx_id</code> e trigger o documentare chiamata function.</li>
-<li><strong>Configurazione Bypass</strong>: utilizzare parametro <code>tx_id_bypass_enabled</code> e GUC <code>app.bypass_tx_id_check</code> per disabilitare logica in contesti speciali.</li>
+<li>Genera <code>v_tx := uuidv7()</code></li>
+<li>INSERT in <code>dbops.transaction_ids</code> con <code>id</code>, <code>generating_function</code>, <code>session_info</code></li>
+<li>Restituisce <code>v_tx</code></li>
+</ol>
+<blockquote>
+<p>Documentazione dettagliata: <a href="../../dbzero/dbops/funzioni/fn_generate_tx_id/">dbops.fn_generate_tx_id</a></p>
+</blockquote>
+<hr />
+<h3 id="fn_get_or_create_session_tx_id-recupero-o-creazione-per-sessione"><code>fn_get_or_create_session_tx_id</code> — recupero o creazione per sessione<a class="headerlink" href="#fn_get_or_create_session_tx_id-recupero-o-creazione-per-sessione" title="Permanent link">&para;</a></h3>
+<p>Questa funzione e il punto d'ingresso consigliato sia per il trigger sia per il backend. Garantisce che all'interno di una sessione database tutte le operazioni condividano lo stesso <code>tx_id</code>, generandone uno nuovo solo se necessario.</p>
+<p>E dichiarata <code>SECURITY DEFINER</code> e non accetta parametri.</p>
+<p>Da un punto di vista tecnico:</p>
+<p><strong>Restituisce:</strong> <code>UUID</code> — il tx_id di sessione (mai NULL).</p>
+<p><strong>Flusso di esecuzione:</strong></p>
+<ol>
 <li>
-<p><strong>Test &amp; QA</strong>:</p>
+<p><strong>Riuso GUC</strong>: legge <code>current_setting('dbops.tx_id', true)</code>. Se esiste un UUID valido, lo restituisce immediatamente.</p>
 </li>
 <li>
-<p>Verificare che ogni operazione in una sessione condivida lo stesso <code>tx_id</code>.</p>
+<p><strong>Verifica dblink</strong>: legge <code>myapp.dblink_log_connection</code>. Se non impostato, WARNING e fallback a <code>uuidv7()</code> locale (impostato nella GUC di sessione).</p>
 </li>
-<li>Simulare errori <code>dblink</code> e controllare fallback a <code>uuid_nil()</code>.</li>
-<li><strong>Documentazione</strong>: includere esempi di codice lato backend (es. repository, servizi) e script SQL di verifica.</li>
+<li>
+<p><strong>Generazione via dblink</strong>: chiama <code>dbops.fn_generate_tx_id</code> tramite dblink sulla connessione di log. Questo permette la registrazione in <code>transaction_ids</code> anche in caso di rollback della transazione principale.</p>
+</li>
+<li>
+<p><strong>Fallback errore dblink</strong>: se dblink fallisce, WARNING e fallback a <code>uuidv7()</code> locale.</p>
+</li>
+<li>
+<p><strong>Impostazione GUC</strong>: in tutti i casi, imposta <code>dbops.tx_id</code> nella sessione con <code>set_config</code>.</p>
+</li>
 </ol>
-<hr />
-<h2 id="6-esempi-di-codice-backend-pseudo">6. Esempi di Codice Backend (Pseudo)<a class="headerlink" href="#6-esempi-di-codice-backend-pseudo" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="c1">// Node.js + pg</span>
-<span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">withTxId</span><span class="p">(</span><span class="nx">client</span><span class="p">,</span><span class="w"> </span><span class="nx">callback</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// Recupera o crea tx_id</span>
-<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="sb">`SELECT dbops.fn_get_or_create_session_tx_id() AS tx_id`</span><span class="p">);</span>
-<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">txId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">tx_id</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">// Esegui operazioni con tx_id</span>
-<span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">callback</span><span class="p">(</span><span class="nx">txId</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="k">await</span><span class="w"> </span><span class="nx">withTxId</span><span class="p">(</span><span class="nx">dbClient</span><span class="p">,</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">txId</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">dbClient</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span>
-<span class="w">    </span><span class="sb">`INSERT INTO orders (customer_id, total, tx_id) VALUES ($1,$2,$3)`</span><span class="p">,</span>
-<span class="w">    </span><span class="p">[</span><span class="nx">custId</span><span class="p">,</span><span class="w"> </span><span class="nx">total</span><span class="p">,</span><span class="w"> </span><span class="nx">txId</span><span class="p">]</span>
-<span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="c1">// Altre query...</span>
-<span class="p">});</span>
+<p><strong>Catena di fallback:</strong></p>
+<div class="highlight"><pre><span></span><code>GUC dbops.tx_id gia impostato?
+  SI → riusa
+  NO → dblink disponibile?
+         SI → fn_generate_tx_id via dblink → registrato in transaction_ids
+         NO → uuidv7() locale (WARNING, non registrato)
 </code></pre></div>
-<hr />
-<h2 id="7-conclusioni-e-raccomandazioni">7. Conclusioni e Raccomandazioni<a class="headerlink" href="#7-conclusioni-e-raccomandazioni" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>Coerenza</strong>: definire uno standard di implementazione (trigger vs function) e applicarlo su tutte le tabelle.</li>
-<li><strong>Collaborazione</strong>: condividere la guida con team backend e DB per evitare disallineamenti.</li>
-<li><strong>Manutenzione</strong>: tenere aggiornate le trigger functions e le funzioni helper in caso di nuovi requisiti.</li>
-</ul>
 <blockquote>
-<p>🧠 <strong>“Scegliere il giusto compromesso tra automazione DB e controllo applicativo è fondamentale: questa guida aiuta a definire policy chiare e processi replicabili in Zero ERP.”</strong></p>
+<p>Documentazione dettagliata: <a href="../../dbzero/dbops/funzioni/fn_get_or_create_session_tx_id/">dbops.fn_get_or_create_session_tx_id</a></p>
 </blockquote>
 <hr />
+<h2 id="trigger-function-trgfn_tx_id_managed">Trigger function: <code>trgfn_tx_id_managed</code><a class="headerlink" href="#trigger-function-trgfn_tx_id_managed" title="Permanent link">&para;</a></h2>
+<p>Questa e la trigger function centrale del sistema. Viene eseguita <code>BEFORE INSERT OR UPDATE</code> su ogni tabella che contiene la colonna <code>tx_id</code>. E dichiarata <code>SECURITY DEFINER</code>.</p>
+<p>Il suo compito e assegnare a <code>NEW.tx_id</code> un valore valido, seguendo un flusso decisionale che bilancia rigore (verifica del tx_id nel registro) e flessibilita (bypass configurabili per test e migrazioni).</p>
+<p>Da un punto di vista tecnico:</p>
+<p><strong>Flusso di esecuzione completo:</strong></p>
+<h3 id="fase-1-verifica-bypass-globale">Fase 1 — Verifica bypass globale<a class="headerlink" href="#fase-1-verifica-bypass-globale" title="Permanent link">&para;</a></h3>
+<p>Legge il parametro <code>tx_id_bypass_enabled</code> da <code>config.parameters</code>.</p>
+<ul>
+<li>Se il parametro non esiste: logga via <code>fn_log_error_only</code> e prosegue con bypass disabilitato.</li>
+<li>Se errore di lettura: logga via <code>fn_log_and_raise_error</code> e rilancia.</li>
+</ul>
+<h3 id="fase-2-override-bypass-di-sessione">Fase 2 — Override bypass di sessione<a class="headerlink" href="#fase-2-override-bypass-di-sessione" title="Permanent link">&para;</a></h3>
+<p>Se il bypass non e gia attivo, prova a leggere la GUC <code>myapp.bypass_tx_id_check</code>. Se impostata a <code>true</code>, abilita il bypass per questa invocazione. Errori di lettura sono ignorati.</p>
+<h3 id="fase-3-lettura-tx_id-di-sessione">Fase 3 — Lettura tx_id di sessione<a class="headerlink" href="#fase-3-lettura-tx_id-di-sessione" title="Permanent link">&para;</a></h3>
+<p>Legge <code>current_setting('dbops.tx_id', true)</code> per ottenere un eventuale tx_id gia presente in sessione.</p>
+<h3 id="fase-4-determinazione-del-valore">Fase 4 — Determinazione del valore<a class="headerlink" href="#fase-4-determinazione-del-valore" title="Permanent link">&para;</a></h3>
+<p><strong>Se bypass attivo:</strong></p>
+<ul>
+<li>Usa il tx_id di sessione se presente, altrimenti <code>script.uuid_nil()</code> (<code>00000000-...</code>)</li>
+</ul>
+<p><strong>Se bypass disattivo:</strong></p>
+<ul>
+<li><strong>Se tx_id di sessione presente:</strong> verifica l'esistenza in <code>dbops.transaction_ids</code><ul>
+<li>Se trovato: lo riusa</li>
+<li>Se non trovato: logga WARNING <code>W_TXID_NOT_REGISTERED</code> e assegna <code>uuid_nil()</code></li>
+</ul>
+</li>
+<li><strong>Se tx_id di sessione assente:</strong> chiama <code>fn_get_or_create_session_tx_id()</code><ul>
+<li>Se errore: logga <code>E_TXID_GENERATION</code> e assegna <code>uuid_nil()</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="fase-5-assegnazione-a-newtx_id">Fase 5 — Assegnazione a <code>NEW.tx_id</code><a class="headerlink" href="#fase-5-assegnazione-a-newtx_id" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Se <code>NEW.tx_id</code> e gia valorizzato (impostato esplicitamente dal client): lo mantiene</li>
+<li>Altrimenti: <code>NEW.tx_id = COALESCE(GUC dbops.tx_id, v_new_tx_id, uuidv7())</code></li>
+</ul>
+<p>La catena COALESCE finale garantisce che <code>NEW.tx_id</code> non sia mai NULL, con <code>uuidv7()</code> come ultimo fallback.</p>
+<blockquote>
+<p>Documentazione dettagliata: <a href="../../dbzero/dbops/funzioni/trgfn_tx_id_managed/">dbops.trgfn_tx_id_managed</a></p>
+</blockquote>
+<hr />
+<h2 id="parametri-guc-e-configurazione">Parametri GUC e configurazione<a class="headerlink" href="#parametri-guc-e-configurazione" title="Permanent link">&para;</a></h2>
+<p>Il sistema tx_id si appoggia a una combinazione di parametri di sessione (GUC) e parametri applicativi persistenti.</p>
+<h3 id="guc-di-sessione-scope-connessione-corrente">GUC di sessione (scope: connessione corrente)<a class="headerlink" href="#guc-di-sessione-scope-connessione-corrente" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>GUC</th>
+<th>Tipo</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dbops.tx_id</code></td>
+<td>UUID</td>
+<td>Transaction ID corrente di sessione. Impostato da <code>fn_get_or_create_session_tx_id</code>, letto da <code>trgfn_tx_id_managed</code></td>
+</tr>
+<tr>
+<td><code>myapp.bypass_tx_id_check</code></td>
+<td>BOOLEAN</td>
+<td>Override di sessione per disabilitare la validazione tx_id (utile in test/migrazioni)</td>
+</tr>
+<tr>
+<td><code>myapp.dblink_log_connection</code></td>
+<td>TEXT</td>
+<td>Stringa di connessione dblink per la generazione remota del tx_id</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parametri-applicativi-in-configparameters">Parametri applicativi (in <code>config.parameters</code>)<a class="headerlink" href="#parametri-applicativi-in-configparameters" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Codice</th>
+<th>Tipo</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tx_id_bypass_enabled</code></td>
+<td>BOOLEAN</td>
+<td>Bypass globale della validazione tx_id. Se <code>true</code>, il trigger non genera ne verifica, usa il tx_id di sessione o <code>uuid_nil()</code></td>
+</tr>
+</tbody>
+</table>
+<p>Il bypass ha due livelli: il parametro globale in <code>config.parameters</code> e l'override di sessione via GUC <code>myapp.bypass_tx_id_check</code>. Basta che uno dei due sia <code>true</code> per attivare il bypass.</p>
+<hr />
+<h2 id="automazione-provisioning-dei-trigger">Automazione: provisioning dei trigger<a class="headerlink" href="#automazione-provisioning-dei-trigger" title="Permanent link">&para;</a></h2>
+<h3 id="fn_run_automations_tx_id-scansione-e-creazione-trigger"><code>fn_run_automations_tx_id</code> — scansione e creazione trigger<a class="headerlink" href="#fn_run_automations_tx_id-scansione-e-creazione-trigger" title="Permanent link">&para;</a></h3>
+<p>Questa funzione automatizza la creazione del trigger <code>trgfn_tx_id_managed</code> su tutte le tabelle che contengono una colonna <code>tx_id uuid</code>. E il componente che garantisce la copertura uniforme del sistema.</p>
+<p>Da un punto di vista tecnico:</p>
+<table>
+<thead>
+<tr>
+<th>Parametro</th>
+<th>Tipo</th>
+<th>Default</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>p_exec_mode</code></td>
+<td>TEXT</td>
+<td>—</td>
+<td>Modalita: <code>AUTO</code>, <code>SCHEDULED</code>, <code>FORCE</code></td>
+</tr>
+<tr>
+<td><code>p_schemas</code></td>
+<td>TEXT[]</td>
+<td>—</td>
+<td>Schemi da processare. Se NULL, risolti da <code>fn_resolve_scope</code></td>
+</tr>
+<tr>
+<td><code>p_dry_run</code></td>
+<td>BOOLEAN</td>
+<td>—</td>
+<td>Se true, simula senza creare trigger</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Restituisce:</strong> <code>void</code></p>
+<p><strong>Flusso logico:</strong></p>
+<ol>
+<li><strong>Scope</strong>: risolve gli schemi target con <code>dbops.fn_resolve_scope</code></li>
+<li><strong>Scansione tabelle</strong>: itera tutte le tabelle fisiche (<code>relkind='r'</code>) in scope, filtrate da <code>fn_table_in_scope</code></li>
+<li><strong>Selezione regole</strong>: per ciascuna tabella, filtra in <code>automation_rules_tbl</code> le regole con <code>rule_type='TX_ID'</code>, rispettando <code>enabled</code>, <code>exec_mode</code>, <code>priority</code> e pattern di match su schema/tabella</li>
+<li><strong>Pre-condizione</strong>: verifica che la tabella abbia una colonna <code>tx_id</code> di tipo <code>uuid</code> (non crea colonne, solo trigger)</li>
+<li><strong>Naming</strong>: genera il nome trigger dal template (default: <code>trg_{table}_gen_tx_id_ins_upd</code>) tramite <code>fn_name_from_template</code></li>
+<li><strong>Verifica esistenza</strong>: controlla se il trigger esiste gia, con strategia configurabile:<ul>
+<li><code>BY_NAME</code> — verifica per nome trigger</li>
+<li><code>BY_FUNCTION</code> — verifica per funzione trigger</li>
+<li><code>BOTH</code> — presente se almeno uno dei due e vero</li>
+</ul>
+</li>
+<li><strong>Azione</strong>: se il trigger non esiste:<ul>
+<li><code>p_dry_run = true</code> → registra evento <code>DRYRUN_CREATE_TRIGGER</code> via <code>fn_audit_log_once</code></li>
+<li><code>p_dry_run = false</code> → crea il trigger <code>BEFORE INSERT OR UPDATE ... EXECUTE FUNCTION dbops.trgfn_tx_id_managed()</code></li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>Documentazione dettagliata: <a href="../../dbzero/dbops/funzioni/fn_run_automations_tx_id/">dbops.fn_run_automations_tx_id</a></p>
+</blockquote>
+<hr />
+<h3 id="regole-di-automazione-automation_rules_tbl">Regole di automazione: <code>automation_rules_tbl</code><a class="headerlink" href="#regole-di-automazione-automation_rules_tbl" title="Permanent link">&para;</a></h3>
+<p>Le regole di automazione sono configurate nella tabella <code>dbops.automation_rules_tbl</code>. Per il sistema tx_id, le regole hanno <code>rule_type = 'TX_ID'</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th>Default</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>BIGINT, PK</td>
+<td>—</td>
+<td>Chiave primaria</td>
+</tr>
+<tr>
+<td><code>enabled</code></td>
+<td>BOOLEAN</td>
+<td>true</td>
+<td>Regola attiva</td>
+</tr>
+<tr>
+<td><code>rule_type</code></td>
+<td>TEXT</td>
+<td>—</td>
+<td>Tipo regola (es. <code>TX_ID</code>, <code>AUDIT</code>, <code>FK_INDEX</code>)</td>
+</tr>
+<tr>
+<td><code>target_schema</code></td>
+<td>TEXT</td>
+<td><code>*all</code></td>
+<td>Schema target (pattern o <code>*all</code>)</td>
+</tr>
+<tr>
+<td><code>target_table</code></td>
+<td>TEXT</td>
+<td><code>*all</code></td>
+<td>Tabella target (pattern ILIKE o <code>*ALL</code>)</td>
+</tr>
+<tr>
+<td><code>exec_mode</code></td>
+<td>TEXT</td>
+<td><code>AUTO</code></td>
+<td>Modalita: <code>AUTO</code>, <code>SCHEDULED</code>, <code>FORCE</code></td>
+</tr>
+<tr>
+<td><code>name_template</code></td>
+<td>TEXT</td>
+<td>—</td>
+<td>Template nome trigger (default: <code>trg_{table}_gen_tx_id_ins_upd</code>)</td>
+</tr>
+<tr>
+<td><code>existence_strategy</code></td>
+<td>TEXT</td>
+<td><code>BY_NAME</code></td>
+<td>Strategia verifica: <code>BY_NAME</code>, <code>BY_FUNCTION</code>, <code>BOTH</code></td>
+</tr>
+<tr>
+<td><code>params</code></td>
+<td>JSONB</td>
+<td><code>'{}'</code></td>
+<td>Parametri aggiuntivi</td>
+</tr>
+<tr>
+<td><code>priority</code></td>
+<td>INTEGER</td>
+<td>100</td>
+<td>Ordine di applicazione (minore = prima)</td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td>TEXT</td>
+<td>—</td>
+<td>Note descrittive</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Documentazione dettagliata: <a href="../../dbzero/dbops/tabelle/automation_rules_tbl/">dbops.automation_rules_tbl</a></p>
+</blockquote>
+<hr />
+<h3 id="proc_automations_tx_id_job-esecuzione-schedulata"><code>proc_automations_tx_id_job</code> — esecuzione schedulata<a class="headerlink" href="#proc_automations_tx_id_job-esecuzione-schedulata" title="Permanent link">&para;</a></h3>
+<p>La procedura <code>maintenance.proc_automations_tx_id_job</code> incapsula l'esecuzione di <code>fn_run_automations_tx_id</code> in un wrapper robusto con advisory lock e logging strutturato tramite <code>maintenance.fn_run_and_log</code>.</p>
+<p>Da un punto di vista tecnico:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CALL</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">proc_automations_tx_id_job</span><span class="p">();</span>
+<span class="c1">-- Equivale a:</span>
+<span class="c1">-- SELECT dbops.fn_run_automations_tx_id(&#39;SCHEDULED&#39;, NULL, false);</span>
+<span class="c1">-- Con: advisory lock, logging inizio/fine, gestione errori</span>
+</code></pre></div>
+<p><strong>Caratteristiche:</strong></p>
+<ul>
+<li><strong>Advisory lock</strong>: chiave derivata da <code>hashtext('automations_tx_id')</code>, previene esecuzioni parallele</li>
+<li><strong>Logging</strong>: registra inizio, fine, esito (OK/KO) e dettagli in <code>maintenance.job_run_log</code></li>
+<li><strong>Idempotenza</strong>: puo essere chiamata piu volte senza duplicazioni (i trigger esistenti non vengono ricreati)</li>
+</ul>
+<p><strong>Scheduling consigliato:</strong> via pgAgent o cron, in finestra di bassa attivita (es. 02:50 notturno).</p>
+<blockquote>
+<p>Documentazione dettagliata: <a href="../../dbzero/maintenance/funzioni/proc_automations_tx_id_job/">maintenance.proc_automations_tx_id_job</a></p>
+</blockquote>
+<hr />
+<h2 id="integrazione-con-il-backend-django">Integrazione con il backend Django<a class="headerlink" href="#integrazione-con-il-backend-django" title="Permanent link">&para;</a></h2>
+<p>In Zero ERP il trigger <code>trgfn_tx_id_managed</code> gestisce automaticamente il <code>tx_id</code> senza intervento del backend. Tuttavia, per una correlazione piu precisa, il backend Django puo pre-impostare il tx_id di sessione all'apertura della connessione.</p>
+<h3 id="approccio-consigliato">Approccio consigliato<a class="headerlink" href="#approccio-consigliato" title="Permanent link">&para;</a></h3>
+<p>Il backend esegue una volta per sessione/richiesta:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_or_create_session_tx_id</span><span class="p">()</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tx_id</span><span class="p">;</span>
+</code></pre></div>
+<p>Questo imposta la GUC <code>dbops.tx_id</code> per tutte le operazioni successive nella stessa connessione. Il trigger <code>trgfn_tx_id_managed</code> trovera il valore gia in sessione e lo riusera senza rigenararlo.</p>
+<h3 id="quando-pre-impostare-il-tx_id">Quando pre-impostare il tx_id<a class="headerlink" href="#quando-pre-impostare-il-tx_id" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Richieste API</strong>: all'inizio della request, per correlare tutte le operazioni della stessa chiamata</li>
+<li><strong>Task asincroni</strong>: all'inizio del task, per correlare le operazioni del batch</li>
+<li><strong>Migrazioni/import</strong>: per identificare le righe inserite da un singolo processo</li>
+</ul>
+<h3 id="quando-non-e-necessario">Quando non e necessario<a class="headerlink" href="#quando-non-e-necessario" title="Permanent link">&para;</a></h3>
+<p>Se il backend non imposta il tx_id, il trigger lo genera automaticamente alla prima operazione sulla tabella. Il tx_id viene poi condiviso con le operazioni successive nella stessa sessione tramite la GUC.</p>
+<hr />
+<h2 id="regole-di-dominio">Regole di dominio<a class="headerlink" href="#regole-di-dominio" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p><strong>Colonna <code>tx_id</code> nullable</strong>: la colonna e dichiarata <code>UUID</code> nullable nelle tabelle operative. Il trigger la popola automaticamente; il valore non e mai NULL dopo l'esecuzione del trigger.</p>
+</li>
+<li>
+<p><strong>Unicita per sessione</strong>: all'interno di una connessione database, tutte le operazioni condividono lo stesso <code>tx_id</code> (memorizzato nella GUC <code>dbops.tx_id</code>).</p>
+</li>
+<li>
+<p><strong>Immutabilita del registro</strong>: i record in <code>transaction_ids</code> non possono essere modificati ne cancellati (trigger di protezione).</p>
+</li>
+<li>
+<p><strong>Generazione via dblink</strong>: quando disponibile, il tx_id e generato tramite dblink verso il DB di log. Questo garantisce la persistenza del record anche in caso di rollback della transazione principale.</p>
+</li>
+<li>
+<p><strong>Fallback locale</strong>: se dblink non e disponibile o fallisce, il sistema genera un <code>uuidv7()</code> locale con WARNING. Il tx_id resta valido ma non e registrato in <code>transaction_ids</code>.</p>
+</li>
+<li>
+<p><strong>Bypass configurabile</strong>: il bypass disabilita generazione e validazione. Attivabile globalmente (<code>config.parameters.tx_id_bypass_enabled</code>) o per sessione (<code>myapp.bypass_tx_id_check</code>). In bypass, il tx_id e <code>uuid_nil()</code> se non gia impostato.</p>
+</li>
+<li>
+<p><strong>Rispetto del valore esplicito</strong>: se il client imposta <code>NEW.tx_id</code> prima del trigger, il valore viene mantenuto. Questo permette import e migrazioni con tx_id predefiniti.</p>
+</li>
+<li>
+<p><strong>Provisioning automatico</strong>: il trigger viene creato automaticamente da <code>fn_run_automations_tx_id</code> su tutte le tabelle con colonna <code>tx_id uuid</code>, secondo le regole in <code>automation_rules_tbl</code>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="best-practice">Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Non impostare <code>tx_id</code> manualmente nelle INSERT/UPDATE</strong> — lasciare che il trigger lo gestisca, salvo casi specifici (import, migrazioni)</li>
+<li><strong>Pre-impostare il tx_id dal backend</strong> all'inizio della request per una correlazione precisa</li>
+<li><strong>Non disabilitare il bypass in produzione</strong> — il parametro <code>tx_id_bypass_enabled</code> deve essere <code>false</code> in ambienti operativi</li>
+<li><strong>Usare <code>session_info</code> JSONB</strong> nella generazione per tracciare il contesto (utente, IP, processo)</li>
+<li><strong>Monitorare i WARNING</strong> da <code>fn_get_or_create_session_tx_id</code> — indicano problemi di configurazione dblink</li>
+<li><strong>Eseguire <code>proc_automations_tx_id_job</code> regolarmente</strong> per garantire che nuove tabelle abbiano il trigger</li>
+<li><strong>Usare il tx_id per il debugging</strong> — query come <code>SELECT * FROM ... WHERE tx_id = '&lt;uuid&gt;'</code> across multiple tabelle ricostruiscono l'intera transazione</li>
+</ul>
+<hr />
+<h2 id="diagrammi">Diagrammi<a class="headerlink" href="#diagrammi" title="Permanent link">&para;</a></h2>
+<h3 id="flusso-di-assegnazione-del-tx_id">Flusso di assegnazione del tx_id<a class="headerlink" href="#flusso-di-assegnazione-del-tx_id" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TD
+    A[INSERT/UPDATE su tabella con tx_id] --&gt; B[trgfn_tx_id_managed]
+    B --&gt; C{NEW.tx_id gia impostato?}
+    C --&gt;|Si| Z[Mantieni valore esplicito]
+    C --&gt;|No| D{Bypass attivo?}
+    D --&gt;|Si| E{GUC dbops.tx_id presente?}
+    E --&gt;|Si| F[Usa GUC]
+    E --&gt;|No| G[Assegna uuid_nil]
+    D --&gt;|No| H{GUC dbops.tx_id presente?}
+    H --&gt;|Si| I{Esiste in transaction_ids?}
+    I --&gt;|Si| J[Riusa tx_id]
+    I --&gt;|No| K[WARNING + uuid_nil]
+    H --&gt;|No| L[fn_get_or_create_session_tx_id]
+    L --&gt; M{dblink disponibile?}
+    M --&gt;|Si| N[fn_generate_tx_id via dblink]
+    M --&gt;|No| O[uuidv7 locale + WARNING]
+    N --&gt; P[Imposta GUC + restituisce]
+    O --&gt; P</code></pre>
+<h3 id="architettura-del-sistema-tx_id">Architettura del sistema tx_id<a class="headerlink" href="#architettura-del-sistema-tx_id" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>erDiagram
+    transaction_ids {
+        uuid id PK
+        text generating_function
+        jsonb session_info
+        text user_insert
+        timestamptz data_insert
+    }
+
+    automation_rules_tbl {
+        bigint id PK
+        boolean enabled
+        text rule_type
+        text target_schema
+        text target_table
+        text existence_strategy
+        text name_template
+    }
+
+    parameters {
+        text code
+        text default_value
+    }
+
+    tabella_operativa {
+        uuid tx_id FK
+    }
+
+    transaction_ids ||--o{ tabella_operativa : "tx_id referenziato in"
+    automation_rules_tbl ||--|{ tabella_operativa : "provisioning trigger su"
+    parameters ||--|| transaction_ids : "tx_id_bypass_enabled"</code></pre>
+<hr />
+<h2 id="note-finali">Note finali<a class="headerlink" href="#note-finali" title="Permanent link">&para;</a></h2>
+<p>Questa guida copre il sistema completo di gestione del transaction ID in Zero ERP. Per approfondimenti sulle componenti collegate:</p>
+<ul>
+<li><a href=".././automazione-db/">Guida Automazione DB</a> — framework di automazione (FK index, audit, tx_id)</li>
+<li><a href=".././Messaggi-di-Errore-e-Generazione-Log/">Guida Messaggi di Errore e Log</a> — <code>fn_log_and_raise_error</code> con tx_id</li>
+<li><a href=".././messaggi-audit/">Guida Messaggi Audit</a> — audit trail con correlazione tx_id</li>
+<li><a href=".././configurazione-e-gestione-parametri/">Guida Configurazione e Parametri</a> — sistema parametri e GUC</li>
+</ul>
+<p>Per il dettaglio delle singole funzioni e tabelle:</p>
+<ul>
+<li><a href="../../dbzero/dbops/tabelle/transaction_ids/">dbops.transaction_ids</a> — registro master</li>
+<li><a href="../../dbzero/dbops/funzioni/fn_generate_tx_id/">dbops.fn_generate_tx_id</a> — generazione</li>
+<li><a href="../../dbzero/dbops/funzioni/fn_get_or_create_session_tx_id/">dbops.fn_get_or_create_session_tx_id</a> — sessione</li>
+<li><a href="../../dbzero/dbops/funzioni/trgfn_tx_id_managed/">dbops.trgfn_tx_id_managed</a> — trigger function</li>
+<li><a href="../../dbzero/dbops/funzioni/fn_run_automations_tx_id/">dbops.fn_run_automations_tx_id</a> — automazione</li>
+<li><a href="../../dbzero/maintenance/funzioni/proc_automations_tx_id_job/">maintenance.proc_automations_tx_id_job</a> — scheduling</li>
+</ul>
 <hr />
 <p><strong>© 2025 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
