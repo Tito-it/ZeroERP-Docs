@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../guide/soggetti-e-ruoli-anagrafici/" class="md-tabs__link">
+        <a href="../guide/gestione-pratiche/" class="md-tabs__link">
           
   
   Guide tecniche
@@ -2305,6 +2305,8 @@
       
         
       
+        
+      
     
     
     
@@ -2351,6 +2353,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/gestione-pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione pratiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2802,10 +2832,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_16" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_17" >
         
           
-          <label class="md-nav__link" for="__nav_7_16" id="__nav_7_16_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_17" id="__nav_7_17_label" tabindex="0">
             
   
   
@@ -2823,8 +2853,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_16">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3937,6 +3967,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#evoluzione-pianificata-wip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evoluzione pianificata (WIP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stabilita" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4197,7 +4238,7 @@
 <p>Documento vivo. Aggiornare ad ogni milestone significativa.</p>
 <p>Riferimento metodologico: <a href="../sviluppo-concentrico/">sviluppo-concentrico.md</a></p>
 </blockquote>
-<p><em>Ultimo aggiornamento: 4 marzo 2026</em></p>
+<p><em>Ultimo aggiornamento: 6 marzo 2026</em></p>
 <hr />
 <h2 id="visione-dinsieme">Visione d'insieme<a class="headerlink" href="#visione-dinsieme" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>                    ┌─────────────────────────────────────────────┐
@@ -4211,7 +4252,8 @@
                     │  │                                       │  │
                     │  │          pratiche                      │  │
                     │  │    (workflow, giornale,                │  │
-                    │  │     generazione, handler)              │  │
+                    │  │     generazione, handler,              │  │
+                    │  │     sospensioni, calcoli tempo)        │  │
                     │  │                                       │  │
                     │  │  ┌─────────────────────────────────┐  │  │
                     │  │  │  ANELLO 1 — DATI BASE           │  │  │
@@ -4249,13 +4291,13 @@
 <td><code>core</code></td>
 <td>App Django</td>
 <td>Operativo</td>
-<td>error_manager, middleware, permissions, endpoint_helpers, pagination, throttling</td>
+<td>error_manager, middleware, permissions, endpoint_helpers, pagination, throttling, tracciamento processi/job</td>
 </tr>
 <tr>
 <td><code>dbops</code></td>
 <td>Schema DB</td>
 <td>Operativo</td>
-<td>fn_run_automations, apply_fk_index_policy, registry task, vw_duplicate_indexes</td>
+<td>fn_run_automations, apply_fk_index_policy, registry task, vw_duplicate_indexes, audit_log</td>
 </tr>
 <tr>
 <td><code>script</code></td>
@@ -4273,7 +4315,7 @@
 <td><code>maintenance</code></td>
 <td>Schema DB</td>
 <td>Operativo</td>
-<td>Job schedulati pgAgent</td>
+<td>Job schedulati pgAgent, job_run_log</td>
 </tr>
 </tbody>
 </table>
@@ -4283,9 +4325,43 @@
 <li>Middleware API (exception handling, JWT audit, request context)</li>
 <li>Pattern uniformi: <code>handle_post_json</code>, paginazione, throttling, search validators</li>
 <li>Automazioni DB: audit fields, tx_id, storicizzazione, lock colonne, protezione attivo</li>
+<li><strong>Tracciamento processi e job</strong>: API per audit log, task registry multi-dominio, job run log (6 endpoint REST, 27 test)</li>
 <li>Policy indici FK automatica</li>
 <li>Logging e raise errori DB (<code>script.fn_log_and_raise_error</code>)</li>
 </ul>
+<h3 id="evoluzione-pianificata-wip">Evoluzione pianificata (WIP)<a class="headerlink" href="#evoluzione-pianificata-wip" title="Permanent link">&para;</a></h3>
+<p>Le seguenti capacita' sono in fase di progettazione (vedi <a href="../dev/work-in-progress/Audit-logging-sessionii-request-token/">Audit-logging-sessionii-request-token.md</a>):</p>
+<table>
+<thead>
+<tr>
+<th>Capacita'</th>
+<th>Componente DB</th>
+<th>Componente Backend</th>
+<th>Stato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Audit sessioni (login/refresh/logout)</td>
+<td><code>dbops.sessioni_utente</code></td>
+<td><code>session_audit_service</code> + auth views override</td>
+<td>Pianificato</td>
+</tr>
+<tr>
+<td>Request logging (chi chiama cosa)</td>
+<td><code>dbops.request_log</code></td>
+<td><code>RequestLogMiddleware</code></td>
+<td>Pianificato</td>
+</tr>
+<tr>
+<td>Token blacklist e revoca</td>
+<td>SimpleJWT <code>token_blacklist</code></td>
+<td>Settings rotation + integrazione disabilitazione</td>
+<td>Pianificato</td>
+</tr>
+</tbody>
+</table>
+<p>Queste estensioni sono non-breaking: nuove tabelle in <code>dbops</code>, nuovi middleware in <code>core</code>, override view JWT. Nessun contratto esistente viene modificato. Gli anelli esterni ne beneficiano automaticamente senza alcuna modifica al proprio codice.</p>
 <h3 id="stabilita">Stabilita'<a class="headerlink" href="#stabilita" title="Permanent link">&para;</a></h3>
 <p>Stabile. Modifiche solo per correzioni o estensioni non-breaking (nuove policy, nuovi middleware).</p>
 <hr />
@@ -4356,7 +4432,7 @@
 <td>App Django</td>
 <td>Operativo</td>
 <td>Operativo</td>
-<td>Workflow engine, giornale di bordo, generazione cross-pratica, handler dispatch</td>
+<td>Workflow engine, giornale di bordo, generazione cross-pratica, handler dispatch, sospensioni, calcoli tempo, macchina a stati rigida</td>
 </tr>
 </tbody>
 </table>
@@ -4368,6 +4444,9 @@
 <li><strong>Generazione cross-pratica</strong>: un flusso completato puo' generare automaticamente nuove pratiche</li>
 <li><strong>Handler dispatch</strong>: mapping <code>handler_key</code> → classe Python per automazione step</li>
 <li><strong>Canali</strong>: visibilita' dei flussi su sorgenti esterne (WEB_CLIENTI, APP_TECNICA, PORTALE_FORNITORI)</li>
+<li><strong>Sospensioni</strong>: fermo temporaneo pratica/flusso con propagazione automatica e riattivazione (manuale o pgAgent)</li>
+<li><strong>Calcoli tempo</strong>: tracking tempi netti tra coppie di flussi (formula da/a), con esclusione giorni sospensione</li>
+<li><strong>Macchina a stati rigida</strong>: transizioni ammesse validate da trigger DB (config-driven)</li>
 <li><strong>API interna</strong>: <code>pratiche_service</code> come facade per gli anelli esterni</li>
 </ul>
 <h3 id="perche-e-un-anello-separato-non-anello-1">Perche' e' un anello separato (non anello 1)<a class="headerlink" href="#perche-e-un-anello-separato-non-anello-1" title="Permanent link">&para;</a></h3>
@@ -4407,12 +4486,22 @@
 <tr>
 <td>BE-4 API</td>
 <td>FATTO</td>
-<td>views.py, urls_v1.py, 13 endpoint REST</td>
+<td>views.py, urls_v1.py, 19 endpoint REST</td>
 </tr>
 <tr>
 <td>BE-5 Test</td>
 <td>FATTO</td>
-<td>63 test (38 service + 25 API) con mock</td>
+<td>90 test (55 service + 35 API) con mock</td>
+</tr>
+<tr>
+<td>BE-6 Sospensioni + Calcoli</td>
+<td>FATTO</td>
+<td>Service, repository, API, 26 test unitari, 18 smoke test curl</td>
+</tr>
+<tr>
+<td>BE-7 Macchina a stati</td>
+<td>FATTO</td>
+<td>Transizioni validate da trigger DB (config-driven)</td>
 </tr>
 </tbody>
 </table>
@@ -4560,7 +4649,8 @@ contabilita      usa     usa       -        -     (futuro)      -
 <h3 id="breve-termine-marzo-2026">Breve termine (marzo 2026)<a class="headerlink" href="#breve-termine-marzo-2026" title="Permanent link">&para;</a></h3>
 <ul>
 <li>~~Completamento BE-1..BE-5 per <code>pratiche</code>~~ — <strong>FATTO</strong> (4 marzo 2026)</li>
-<li><code>pratiche</code> e' consumabile dagli anelli esterni (13 endpoint REST, 63 test)</li>
+<li>~~Sospensioni, calcoli tempo, macchina a stati (BE-6..BE-7)~~ — <strong>FATTO</strong> (6 marzo 2026)</li>
+<li><code>pratiche</code> e' consumabile dagli anelli esterni (19 endpoint REST, 90 test unitari, 18 smoke test)</li>
 </ul>
 <h3 id="medio-termine">Medio termine<a class="headerlink" href="#medio-termine" title="Permanent link">&para;</a></h3>
 <ul>

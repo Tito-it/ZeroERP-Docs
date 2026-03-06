@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../guide/soggetti-e-ruoli-anagrafici/" class="md-tabs__link">
+        <a href="../../../guide/gestione-pratiche/" class="md-tabs__link">
           
   
   Guide tecniche
@@ -2305,6 +2305,8 @@
       
         
       
+        
+      
     
     
     
@@ -2351,6 +2353,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione pratiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2802,10 +2832,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_16" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_17" >
         
           
-          <label class="md-nav__link" for="__nav_7_16" id="__nav_7_16_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_17" id="__nav_7_17_label" tabindex="0">
             
   
   
@@ -2823,8 +2853,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_16">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3982,7 +4012,9 @@
 <li><a href="../manual/idempotency_keys/">idempotency_keys</a> — (latest review 06-02-26) * Prevenire doppie esecuzioni in caso di retry o chiamate duplicate. * Restituire <strong>la stessa risposta</strong> quando arriva la stessa <code>idempotency_key</code>. * Collegare operazioni applicative alla <strong>tracciabilità transazionale</strong> tramite <code>tx_id</code>.</li>
 <li><a href="../manual/pipeline_task_registry/">pipeline_task_registry</a> — (latest review 08-02-2026) <code>dbops.pipeline_task_registry</code> e` il catalogo dei <strong>task ammessi</strong> per ciascun dominio pipeline. Impedisce l'esecuzione di task non registrati e centralizza la governance delle azioni eseguibili dal motore applicativo.</li>
 <li><a href="../manual/pipeline_task_registry_impl/">pipeline_task_registry_impl</a> — (latest review 08-02-2026) <code>dbops.pipeline_task_registry_impl</code> definisce le <strong>implementazioni consentite</strong> per ciascun task. Serve a gestire in modo controllato le varianti (<code>default</code>, <code>v2</code>, <code>gas_v1</code>, ecc.) senza dispatch dinamico libero.</li>
+<li><a href="../manual/request_log/">request_log</a></li>
 <li><a href="../manual/sec_functions_owner/">sec_functions_owner</a> — * <strong>Centralizzare l'elenco delle funzioni "sensibili"</strong> che richiedono owner dedicato. * <strong>Garantire automaticamente la corretta assegnazione dei permessi</strong>, tramite <code>dbops.fn_sync_functions_owner()</code>. * <strong>Prevenire errori operativi o di sicurezza</strong> derivanti da modifiche accidentali o ripristini non controllati. * Supportare la procedura di <em>hardening post-deploy</em>, mantenendo coerenza anche in CI, dopo migrazioni o clonazioni del database.</li>
+<li><a href="../manual/sessioni_utente/">sessioni_utente</a></li>
 <li><a href="../manual/transaction_ids/">transaction_ids</a> — (latest review 10-01-26) La tabella <strong><code>dbops.transaction_ids</code></strong> funge da <strong>registro centrale</strong> di tutti gli identificativi di transazione (UUID) utilizzati in Zero ERP: ogni volta che viene avviata un’operazione di modifica dati (inserimento, aggiornamento o cancellazione) che coinvolge più tabelle, si genera un nuovo <strong><code>tx_id</code></strong> in questa tabella e lo si propaga a tutte le righe interessate, garantendo la <strong>tracciabilità</strong> e il <strong>raggruppamento</strong> coerente delle modifiche.</li>
 </ul>
 <h2 id="funzioni-manuale">⚙️ Funzioni (manuale)<a class="headerlink" href="#funzioni-manuale" title="Permanent link">&para;</a></h2>
@@ -4010,18 +4042,18 @@
 <li><a href="../manual/fn_name_from_template/">fn_name_from_template</a> — La funzione <strong><code>fn_name_from_template</code></strong> genera in modo consistente un <strong>nome normalizzato</strong> (per trigger, constraint, indici, ecc.) a partire da un <strong>template testuale</strong> con <em>placeholder</em> e da un set di parametri (schema, tabella, parent/child, nome FK, operazione).</li>
 <li><a href="../manual/fn_populate_fk_index_policy/">fn_populate_fk_index_policy</a> — * <strong>Coerenza iniziale</strong>   Garantire che ogni FK rilevata nella view senza indice abbia la propria entry di policy, evitando omissioni. * <strong>Popolamento “a freddo”</strong>   Tutti i nuovi record vengono creati con <code>consentito = false</code>, lasciando in carico all’operatore la decisione di abilitare o meno l’indice. * <strong>Automazione</strong>   Riduce il lavoro manuale di inserimento di policy per nuove FKs.</li>
 <li><a href="../manual/fn_purge_cleanup_expired/">fn_purge_cleanup_expired</a> — (latest review 07-02-26) La funzione <strong><code>dbops.fn_purge_cleanup_expired</code></strong> elimina i record con <strong><code>cleanup_at</code> scaduto</strong> usando una strategia a <strong>batch</strong>, per ridurre lock e impatti sulle tabelle più grandi.</li>
-<li><a href="../manual/fn_resolve_scope/">fn_resolve_scope</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_resolve_scope(p_schemas text[])</code></strong> restituisce la lista effettiva di schemi da considerare come <em>scope</em> per l’esecuzione delle automazioni. Serve a normalizzare e centralizzare la logica di determinazione dello scope operativo, evitando duplicazioni e incoerenze.</li>
-<li><a href="../manual/fn_run_automations/">fn_run_automations</a> — (latest review 07-02-26) La funzione <strong><code>dbops.fn_run_automations</code></strong> è l’<strong>orchestratore principale</strong> del framework di automazioni. Coordina l’applicazione delle regole di sistema (Tx ID, aggiornamento audit, storico, lock colonne, gestione flag attivo, cleanup) sugli schemi e tabelle in scope.</li>
+<li><a href="../manual/fn_resolve_scope/">fn_resolve_scope</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_resolve_scope(p_schemas text[])</code></strong> restituisce la lista effettiva di schemi da considerare come <em>ambito</em> per l’esecuzione delle automazioni. Serve a normalizzare e centralizzare la logica di determinazione dell’ambito operativo, evitando duplicazioni e incoerenze.</li>
+<li><a href="../manual/fn_run_automations/">fn_run_automations</a> — (latest review 07-02-26) La funzione <strong><code>dbops.fn_run_automations</code></strong> è l’<strong>orchestratore principale</strong> del framework di automazioni. Coordina l’applicazione delle regole di sistema (Tx ID, aggiornamento audit, storico, lock colonne, gestione flag attivo, cleanup) sugli schemi e tabelle nell'ambito.</li>
 <li><a href="../manual/fn_run_automations_attivo/">fn_run_automations_attivo</a> — <em>(latest review 13‑11‑2026)</em> La funzione <strong><code>dbops.fn_run_automations_attivo(p_exec_mode, p_schemas, p_dry_run)</code></strong> applica in modo automatico e coerente le <strong>regole di gestione del campo <code>attivo</code></strong> (soft‑delete / stato di validità) <strong>sulle relazioni di chiave esterna</strong>, creando e riconciliando <strong>trigger di BLOCCO sul padre</strong> e <strong>trigger REQUIRE sul figlio</strong>.</li>
-<li><a href="../manual/fn_run_automations_audit_update/">fn_run_automations_audit_update</a> — (latest review 25-12-25) La funzione <strong><code>dbops.fn_run_automations_audit_update(p_exec_mode, p_schemas, p_dry_run)</code></strong> applica in modo automatico (o simula) la <strong>regola di aggiornamento audit</strong> sulle tabelle in scope, creando – dove mancante secondo le policy – un <strong>trigger BEFORE UPDATE</strong> che aggiorna <code>data_update</code> e <code>user_update</code> tramite la funzione <code>script.trgfn_audit_data_user_generic()</code>.</li>
+<li><a href="../manual/fn_run_automations_audit_update/">fn_run_automations_audit_update</a> — (latest review 25-12-25) La funzione <strong><code>dbops.fn_run_automations_audit_update(p_exec_mode, p_schemas, p_dry_run)</code></strong> applica in modo automatico (o simula) la <strong>regola di aggiornamento audit</strong> sulle tabelle nell'ambito, creando – dove mancante secondo le policy – un <strong>trigger BEFORE UPDATE</strong> che aggiorna <code>data_update</code> e <code>user_update</code> tramite la funzione <code>script.trgfn_audit_data_user_generic()</code>.</li>
 <li><a href="../manual/fn_run_automations_cleanup/">fn_run_automations_cleanup</a> — (latest review 07-02-26) La funzione <strong><code>dbops.fn_run_automations_cleanup(p_exec_mode, p_schemas, p_dry_run)</code></strong> è l’orchestratore del framework di cleanup basato su <code>cleanup_at</code>.</li>
 <li><a href="../manual/fn_run_automations_delete_block/">fn_run_automations_delete_block</a> — (latest review 23-01-26) La funzione <strong><code>dbops.fn_run_automations_delete_block(p_exec_mode, p_schemas, p_dry_run)</code></strong> applica (o simula) i trigger <strong>DELETE_BLOCK</strong> sulle tabelle configurate in <code>dbops.automation_delete_block</code>, con bypass via GUC.</li>
 <li><a href="../manual/fn_run_automations_drop_lock_trg/">fn_run_automations_drop_lock_trg</a> — La funzione <strong><code>dbops.fn_run_automations_drop_lock_trg(p_exec_mode, p_schemas, p_dry_run)</code></strong> elimina i trigger <strong>LOCK_COLUMNS</strong> obsoleti, quando <strong>non esistono colonne da bloccare</strong> (<code>codice_interno</code> assente e nessuna colonna extra attiva in <code>automation_lock_columns</code>).</li>
-<li><a href="../manual/fn_run_automations_lock_columns/">fn_run_automations_lock_columns</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_run_automations_lock_columns(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza la creazione (o la simulazione) dei trigger <strong>LOCK_COLUMNS</strong> sulle tabelle in scope, bloccando la modifica delle colonne critiche tramite <code>script.trgfn_lock_columns</code>.</li>
+<li><a href="../manual/fn_run_automations_lock_columns/">fn_run_automations_lock_columns</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_run_automations_lock_columns(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza la creazione (o la simulazione) dei trigger <strong>LOCK_COLUMNS</strong> sulle tabelle nell'ambito, bloccando la modifica delle colonne critiche tramite <code>script.trgfn_lock_columns</code>.</li>
 <li><a href="../manual/fn_run_automations_storico/">fn_run_automations_storico</a> — (latest review 26-12-25) La funzione <strong><code>dbops.fn_run_automations_storico(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza la creazione (o la simulazione) del <strong>trigger unico di storicizzazione</strong> <code>BEFORE UPDATE OR DELETE</code> per le tabelle applicative, delegando la logica alla funzione <code>script.trgfn_storico_generic</code>. È uno dei moduli orchestrati da <code>fn_run_automations</code>.</li>
-<li><a href="../manual/fn_run_automations_storico_provision/">fn_run_automations_storico_provision</a> — (latest review 26-12-25) La funzione <strong><code>dbops.fn_run_automations_storico_provision(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza il <strong>provisioning delle tabelle nello schema <code>storico</code></strong> per tutte le tabelle applicative che adottano la colonna di storicizzazione (es. <code>storicizza</code>). Per ogni tabella in scope, verifica prerequisiti e demanda la creazione/adeguamento dell’omologa tabella storico a <code>fn_ensure_storico_table</code> (con eventuale indice GIN opzionale).</li>
+<li><a href="../manual/fn_run_automations_storico_provision/">fn_run_automations_storico_provision</a> — (latest review 26-12-25) La funzione <strong><code>dbops.fn_run_automations_storico_provision(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza il <strong>provisioning delle tabelle nello schema <code>storico</code></strong> per tutte le tabelle applicative che adottano la colonna di storicizzazione (es. <code>storicizza</code>). Per ogni tabella nell'ambito, verifica prerequisiti e demanda la creazione/adeguamento dell’omologa tabella storico a <code>fn_ensure_storico_table</code> (con eventuale indice GIN opzionale).</li>
 <li><a href="../manual/fn_run_automations_tx_id/">fn_run_automations_tx_id</a> — (latest review 26-12-25) La funzione <strong><code>dbops.fn_run_automations_tx_id(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza la creazione (o la simulazione) del <strong>trigger di gestione <code>tx_id</code></strong> (<code>BEFORE INSERT OR UPDATE</code>) sulle tabelle applicative che possiedono una colonna <code>tx_id uuid</code>. Il trigger invoca <code>dbops.trgfn_tx_id_managed()</code> per generare/propagare l’ID di transazione.</li>
-<li><a href="../manual/fn_schema_in_scope/">fn_schema_in_scope</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_schema_in_scope(p_rule_target, p_schemas)</code></strong> è un <strong>helper booleano</strong> utilizzato dalle automazioni per verificare se uno schema specificato da una regola (<code>p_rule_target</code>) appartiene all’insieme di schemi effettivamente in scope (<code>p_schemas</code>).</li>
+<li><a href="../manual/fn_schema_in_scope/">fn_schema_in_scope</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_schema_in_scope(p_rule_target, p_schemas)</code></strong> è un <strong>helper booleano</strong> utilizzato dalle automazioni per verificare se uno schema specificato da una regola (<code>p_rule_target</code>) appartiene all’insieme di schemi effettivamente nell’ambito (<code>p_schemas</code>).</li>
 <li><a href="../manual/fn_schema_match/">fn_schema_match</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_schema_match(p_rule_target, p_schema)</code></strong> è un <strong>helper booleano</strong> che verifica se uno schema specifico (<code>p_schema</code>) corrisponde al target di una regola (<code>p_rule_target</code>). Gestisce anche la keyword speciale <code>*all</code> per indicare corrispondenza universale.</li>
 <li><a href="../manual/fn_search_column_usage/">fn_search_column_usage</a> — * Individuare rapidamente tutte le occorrenze di un campo in definizioni SQL presenti nel database. * Facilitare attività di refactoring, pulizia del codice, e verifica di dipendenze tra oggetti del database.</li>
 <li><a href="../manual/fn_seed_automazione_guard_utility_tipo_ruolo/">fn_seed_automazione_guard_utility_tipo_ruolo</a> — La funzione <strong><code>dbops.fn_seed_automazione_guard_utility_tipo_ruolo(p_schemas)</code></strong> popola la tabella di configurazione automazione individuando in modo automatico le tabelle candidate.</li>
@@ -4029,7 +4061,7 @@
 <li><a href="../manual/fn_seed_fk_index_policy/">fn_seed_fk_index_policy</a> — (latest review 16-01-26) * <strong>Sincronizzazione iniziale</strong>   Aggiunge in <code>fk_index_policy</code> tutte le FK con indice esistente rilevate in <code>vw_fk_con_indice_missing_policy</code>. * <strong>Automazione</strong>   Evita inserimenti manuali per policy già coperte da indice. * <strong>Flag di origine</strong>   Imposta <code>generated_by_script = true</code> per distinguere le righe create automaticamente.</li>
 <li><a href="../manual/fn_set_gucs_conn/">fn_set_gucs_conn</a> — (latest review 29-12-25) La funzione <code>dbops.fn_set_gucs_conn</code> serve a impostare in modo centralizzato le <strong>GUC (Grand Unified Configuration)</strong> custom di PostgreSQL per la <strong>connessione corrente</strong>. Queste variabili sono usate da trigger, funzioni e policy RLS per conoscere l’utente applicativo e il contesto di esecuzione (es. sessione Django, gruppi, tenant).</li>
 <li><a href="../manual/fn_sync_functions_owner/">fn_sync_functions_owner</a> — * <strong>Applicare automaticamente la policy di sicurezza</strong> definita in <code>dbops.sec_functions_owner</code>. * <strong>Rilevare e correggere</strong> owner incoerenti di funzioni critiche. * Rendere ripetibile e idempotente il processo di <em>hardening</em> dopo:</li>
-<li><a href="../manual/fn_table_in_scope/">fn_table_in_scope</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_table_in_scope(p_schema, p_table)</code></strong> è un <strong>helper di filtro tabellare</strong> che determina se una specifica tabella appartiene allo scope di automazione, basandosi sulle regole definite in <code>dbops.automation_scope</code>. In questo modo, le automazioni possono applicarsi solo alle tabelle consentite.</li>
+<li><a href="../manual/fn_table_in_scope/">fn_table_in_scope</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_table_in_scope(p_schema, p_table)</code></strong> è un <strong>helper di filtro tabellare</strong> che determina se una specifica tabella appartiene all'ambito di automazione, basandosi sulle regole definite in <code>dbops.automation_scope</code>. In questo modo, le automazioni possono applicarsi solo alle tabelle consentite.</li>
 <li><a href="../manual/fn_trigger_exists_block_by_args/">fn_trigger_exists_block_by_args</a> — (last review 31-12-25) La funzione <strong><code>dbops.fn_trigger_exists_block_by_args(p_parent_rel, p_child_schema, p_child_table, p_fk_col)</code></strong> verifica l’esistenza di un <strong>trigger di blocco</strong> basato sulla funzione <code>trgfn_prevent_deactivate_if_children</code>, applicato ad una tabella padre per impedire la disattivazione se esistono righe figlio attive.</li>
 <li><a href="../manual/fn_trigger_exists_by_function/">fn_trigger_exists_by_function</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_trigger_exists_by_function(p_rel, p_fn_schema, p_fn_name)</code></strong> verifica l’esistenza di un trigger su una tabella specifica, identificandolo in base alla <strong>funzione associata</strong>. È pensata come utility per le automazioni, per evitare la duplicazione di trigger già creati.</li>
 <li><a href="../manual/fn_trigger_exists_by_name/">fn_trigger_exists_by_name</a> — (latest review 10-01-26) La funzione <strong><code>dbops.fn_trigger_exists_by_name(p_rel, p_trigger_name)</code></strong> verifica l’esistenza di un <strong>trigger non interno</strong> su una tabella specifica <strong>in base al nome</strong> del trigger.</li>

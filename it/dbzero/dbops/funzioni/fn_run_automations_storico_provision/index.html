@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../guide/soggetti-e-ruoli-anagrafici/" class="md-tabs__link">
+        <a href="../../../../guide/gestione-pratiche/" class="md-tabs__link">
           
   
   Guide tecniche
@@ -2305,6 +2305,8 @@
       
         
       
+        
+      
     
     
     
@@ -2351,6 +2353,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione pratiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2802,10 +2832,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_16" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_17" >
         
           
-          <label class="md-nav__link" for="__nav_7_16" id="__nav_7_16_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_17" id="__nav_7_17_label" tabindex="0">
             
   
   
@@ -2823,8 +2853,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_16">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4059,7 +4089,7 @@
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <p>(latest review 26-12-25)
-La funzione <strong><code>dbops.fn_run_automations_storico_provision(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza il <strong>provisioning delle tabelle nello schema <code>storico</code></strong> per tutte le tabelle applicative che adottano la colonna di storicizzazione (es. <code>storicizza</code>). Per ogni tabella in scope, verifica prerequisiti e demanda la creazione/adeguamento dell’omologa tabella storico a <code>fn_ensure_storico_table</code> (con eventuale indice GIN opzionale).</p>
+La funzione <strong><code>dbops.fn_run_automations_storico_provision(p_exec_mode, p_schemas, p_dry_run)</code></strong> automatizza il <strong>provisioning delle tabelle nello schema <code>storico</code></strong> per tutte le tabelle applicative che adottano la colonna di storicizzazione (es. <code>storicizza</code>). Per ogni tabella nell'ambito, verifica prerequisiti e demanda la creazione/adeguamento dell’omologa tabella storico a <code>fn_ensure_storico_table</code> (con eventuale indice GIN opzionale).</p>
 <hr />
 <h3 id="parametri-di-input">🔍 Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -4094,12 +4124,12 @@ La funzione <strong><code>dbops.fn_run_automations_storico_provision(p_exec_mode
 </table>
 <hr />
 <h3 id="valore-di-ritorno">📤 Valore di ritorno<a class="headerlink" href="#valore-di-ritorno" title="Permanent link">&para;</a></h3>
-<p><code>void</code> – orchestration pura: cicla le tabelle in scope e delega le operazioni all’helper <code>fn_ensure_storico_table</code>.</p>
+<p><code>void</code> – orchestration pura: cicla le tabelle nell'ambito e delega le operazioni all’helper <code>fn_ensure_storico_table</code>.</p>
 <hr />
 <h3 id="flusso-logico">⚙️ Flusso logico<a class="headerlink" href="#flusso-logico" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Scope</strong>: determina gli schemi target tramite <code>fn_resolve_scope(p_schemas)</code>; esclude sempre lo schema <code>storico</code>.</li>
-<li><strong>Enumerazione tabelle</strong>: scorre tutte le tabelle "user" in scope filtrate da <code>fn_table_in_scope</code>.</li>
+<li><strong>Ambito</strong>: determina gli schemi target tramite <code>fn_resolve_scope(p_schemas)</code>; esclude sempre lo schema <code>storico</code>.</li>
+<li><strong>Enumerazione tabelle</strong>: scorre tutte le tabelle "user" nell'ambito filtrate da <code>fn_table_in_scope</code>.</li>
 <li><strong>Selezione regole</strong>: per ciascuna tabella applica le regole abilitate in <code>automation_rules_tbl</code> con <code>rule_type='STORICO_PROVISION'</code>, in base a <code>exec_mode</code>, <code>target_schema</code> e <code>target_table</code> (supporto wildcard con <code>fn_schema_match</code>).</li>
 <li><strong>Parametri regola</strong>: legge da <code>params</code> l’opzione <code>create_gin_index</code> (boolean) per abilitare la creazione dell’indice GIN sul JSON di storico (se previsto dall’helper).</li>
 <li><strong>Prerequisito flag</strong>: risolve il nome della colonna storicizzazione con <code>fn_get_override_col(..., 'STORICIZZA_COL', 'storicizza')</code> e verifica esistenza con <code>fn_col_exists</code>.</li>

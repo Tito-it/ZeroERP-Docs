@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../guide/soggetti-e-ruoli-anagrafici/" class="md-tabs__link">
+        <a href="../../../../guide/gestione-pratiche/" class="md-tabs__link">
           
   
   Guide tecniche
@@ -2305,6 +2305,8 @@
       
         
       
+        
+      
     
     
     
@@ -2351,6 +2353,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione pratiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2802,10 +2832,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_16" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_17" >
         
           
-          <label class="md-nav__link" for="__nav_7_16" id="__nav_7_16_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_17" id="__nav_7_17_label" tabindex="0">
             
   
   
@@ -2823,8 +2853,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_16">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3970,6 +4000,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sospensioni" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sospensioni
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#supporto" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4129,6 +4170,55 @@
 </tr>
 </tbody>
 </table>
+<h3 id="sospensioni">Sospensioni<a class="headerlink" href="#sospensioni" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Funzione</th>
+<th>Input</th>
+<th>Output</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sospendi_pratica(pratica_id, motivo, *, data_riattivazione_prevista?)</code></td>
+<td>pratica_id, motivo, data opzionale</td>
+<td><code>int</code> (sospensione_id)</td>
+<td>Sospende pratica intera; trigger propaga ai flussi</td>
+</tr>
+<tr>
+<td><code>riattiva_pratica(pratica_id)</code></td>
+<td>pratica_id</td>
+<td><code>None</code></td>
+<td>Riattiva pratica sospesa; trigger ripristina flussi</td>
+</tr>
+<tr>
+<td><code>sospendi_flusso(pratica_id, flusso_id, motivo, *, data_riattivazione_prevista?)</code></td>
+<td>pratica_id, flusso_id, motivo, data opzionale</td>
+<td><code>int</code> (sospensione_id)</td>
+<td>Sospende singolo flusso</td>
+</tr>
+<tr>
+<td><code>riattiva_flusso(pratica_id, flusso_id)</code></td>
+<td>pratica_id, flusso_id</td>
+<td><code>None</code></td>
+<td>Riattiva singolo flusso sospeso</td>
+</tr>
+<tr>
+<td><code>get_sospensioni(pratica_id)</code></td>
+<td>pratica_id</td>
+<td><code>list[SospensioneRow]</code></td>
+<td>Lista sospensioni pratica (tutte)</td>
+</tr>
+<tr>
+<td><code>get_calcoli_tempo(pratica_id)</code></td>
+<td>pratica_id</td>
+<td><code>list[CalcoloTempoRow]</code></td>
+<td>Calcoli tempo prestazione da/a</td>
+</tr>
+</tbody>
+</table>
 <h3 id="supporto">Supporto<a class="headerlink" href="#supporto" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -4173,6 +4263,8 @@
 <li>Esiti flusso ammessi: <code>POSITIVO</code>, <code>NEGATIVO</code>, <code>PARZIALE</code>, <code>NON_APPLICABILE</code>.</li>
 <li><code>dispatch_handler</code>: import inline di <code>handler_registry.get_handler</code> per evitare import circolari; ritorna <code>None</code> se il flusso non ha template, non ha handler_key, o l'handler non e' registrato.</li>
 <li><code>assegna_pratica</code>: noop se nessun campo di assegnazione fornito.</li>
+<li>Le funzioni sospensione verificano unicita' sospensione attiva prima dell'INSERT.</li>
+<li><code>_verifica_flusso_pratica(repo, pratica_id, flusso_id)</code>: helper privato per ownership check flusso/pratica riusato da <code>sospendi_flusso</code> e <code>riattiva_flusso</code>.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
@@ -4184,6 +4276,8 @@
 <li><code>pratiche.handler_flussi</code> (lookup handler_key)</li>
 <li><code>pratiche.fn_check_prerequisiti_flusso</code> (verifica prerequisiti)</li>
 <li><code>pratiche.template_flussi_canali</code> + <code>config.canali_pratiche</code> (canali)</li>
+<li><code>pratiche.sospensioni</code> (CRUD sospensioni via PraticheRepository)</li>
+<li><code>pratiche.calcoli_tempo</code> (lettura via PraticheRepository)</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>

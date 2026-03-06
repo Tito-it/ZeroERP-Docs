@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../guide/soggetti-e-ruoli-anagrafici/" class="md-tabs__link">
+        <a href="../../../../guide/gestione-pratiche/" class="md-tabs__link">
           
   
   Guide tecniche
@@ -2305,6 +2305,8 @@
       
         
       
+        
+      
     
     
     
@@ -2351,6 +2353,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione pratiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2802,10 +2832,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_16" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_17" >
         
           
-          <label class="md-nav__link" for="__nav_7_16" id="__nav_7_16_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_17" id="__nav_7_17_label" tabindex="0">
             
   
   
@@ -2823,8 +2853,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_16">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3943,6 +3973,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="⚙️ Colonne specifiche">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#matrice-prepost-attivazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matrice pre/post attivazione
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -4017,6 +4064,14 @@
 <td>Raggruppamento libero (nullable). Non vincolato da CHECK — flessibilita' operativa.</td>
 </tr>
 <tr>
+<td><code>pre_attivazione</code></td>
+<td>BOOLEAN NOT NULL DEFAULT true. Se true, il tipo prestazione e' applicabile <strong>prima</strong> dell'attivazione del cliente (billing_account senza data_attivazione).</td>
+</tr>
+<tr>
+<td><code>post_attivazione</code></td>
+<td>BOOLEAN NOT NULL DEFAULT true. Se true, il tipo prestazione e' applicabile <strong>dopo</strong> l'attivazione del cliente (billing_account con data_attivazione valorizzata).</td>
+</tr>
+<tr>
 <td><code>storicizza</code></td>
 <td>Se true, le modifiche vengono tracciate in <code>storico.tipi_prestazione</code>.</td>
 </tr>
@@ -4026,6 +4081,39 @@
 </tr>
 </tbody>
 </table>
+<h4 id="matrice-prepost-attivazione">Matrice pre/post attivazione<a class="headerlink" href="#matrice-prepost-attivazione" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th><code>pre_attivazione</code></th>
+<th><code>post_attivazione</code></th>
+<th>Significato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>true</td>
+<td>true</td>
+<td>Universale — applicabile sempre (default).</td>
+</tr>
+<tr>
+<td>true</td>
+<td>false</td>
+<td>Solo pre-attivazione — esclusa dopo l'attivazione del cliente.</td>
+</tr>
+<tr>
+<td>false</td>
+<td>true</td>
+<td>Solo post-attivazione — richiede cliente attivato.</td>
+</tr>
+<tr>
+<td>false</td>
+<td>false</td>
+<td>Interna — prestazione non vincolata al ciclo di vita del cliente.</td>
+</tr>
+</tbody>
+</table>
+<p>La validazione avviene nel <strong>service Django</strong> (non nel DB) perche' richiede lookup cross-schema su <code>anagrafiche.billing_account</code>.</p>
 <hr />
 <h3 id="convenzioni">✅ Convenzioni<a class="headerlink" href="#convenzioni" title="Permanent link">&para;</a></h3>
 <ul>
