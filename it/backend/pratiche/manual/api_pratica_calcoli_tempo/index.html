@@ -4048,7 +4048,7 @@
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Esporre via HTTP i calcoli tempo (prestazione da/a) di una pratica.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Endpoint di sola lettura che delega a <code>pratiche_service.get_calcoli_tempo</code>. Restituisce i record di <code>pratiche.calcoli_tempo</code> per una pratica specifica. Ogni record traccia il tempo trascorso tra due flussi (da/a), con giorni lordi, sospensione e netti calcolati dal trigger DB.</p>
+<p>Endpoint di sola lettura che delega a <code>pratiche_service.get_calcoli_tempo</code>. Restituisce i record di <code>pratiche.calcoli_tempo</code> per una pratica specifica, arricchiti con <code>stato_tempo</code> e <code>giorni_rimanenti</code> calcolati in tempo reale dalla funzione DB <code>fn_valuta_tempo_esecuzione_da_a</code>. Ogni record traccia il tempo trascorso tra due flussi (da/a), con giorni lordi, sospensione e netti calcolati dal trigger DB.</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Metodo: <code>GET</code></li>
@@ -4073,7 +4073,9 @@
 <span class="w">        </span><span class="nt">&quot;giorni_sospensione&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;giorni_netti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;giorni_formula&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;sforato&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">        </span><span class="nt">&quot;sforato&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;giorni_rimanenti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">26</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;stato_tempo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
@@ -4090,12 +4092,15 @@
 <li><code>data_fine_calcolo</code>: data completamento flusso_a. NULL se il flusso_a non e' ancora completato.</li>
 <li><code>giorni_lordi</code>, <code>giorni_sospensione</code>, <code>giorni_netti</code>: calcolati solo quando <code>data_fine_calcolo</code> e' valorizzata.</li>
 <li><code>sforato</code>: <code>true</code> se <code>giorni_netti &gt; giorni_formula</code>.</li>
+<li><code>giorni_rimanenti</code>: giorni restanti prima dello sforamento (calcolati live da <code>fn_valuta_tempo_esecuzione_da_a</code>). NULL se non esiste formula applicabile.</li>
+<li><code>stato_tempo</code>: valutazione live del semaforo: <code>OK</code>, <code>WARNING</code>, <code>CRITICO</code>, <code>SFORATO</code>. NULL se non esiste formula applicabile.</li>
 <li>Permission: area <code>pratiche</code> (lettura implicita).</li>
 <li>Endpoint v1 richiede JWT.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>pratiche.calcoli_tempo</code> (SELECT con filtro pratica_id)</li>
+<li><code>pratiche.fn_valuta_tempo_esecuzione_da_a</code> (LEFT JOIN LATERAL per stato_tempo e giorni_rimanenti live)</li>
 <li><code>pratiche.formule_tempo</code> (giorni_esecuzione come riferimento formula)</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>

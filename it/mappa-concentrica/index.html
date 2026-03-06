@@ -3967,10 +3967,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#evoluzione-pianificata-wip" class="md-nav__link">
+  <a href="#audit-sessioni-request-logging-e-token-blacklist" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Evoluzione pianificata (WIP)
+        Audit sessioni, request logging e token blacklist
       
     </span>
   </a>
@@ -4291,13 +4291,13 @@
 <td><code>core</code></td>
 <td>App Django</td>
 <td>Operativo</td>
-<td>error_manager, middleware, permissions, endpoint_helpers, pagination, throttling, tracciamento processi/job</td>
+<td>error_manager, middleware, permissions, endpoint_helpers, pagination, throttling, tracciamento processi/job, audit sessioni, request log</td>
 </tr>
 <tr>
 <td><code>dbops</code></td>
 <td>Schema DB</td>
 <td>Operativo</td>
-<td>fn_run_automations, apply_fk_index_policy, registry task, vw_duplicate_indexes, audit_log</td>
+<td>fn_run_automations, apply_fk_index_policy, registry task, vw_duplicate_indexes, audit_log, sessioni_utente, request_log</td>
 </tr>
 <tr>
 <td><code>script</code></td>
@@ -4322,15 +4322,18 @@
 <h3 id="cosa-fornisce-agli-anelli-esterni">Cosa fornisce agli anelli esterni<a class="headerlink" href="#cosa-fornisce-agli-anelli-esterni" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Error handling centralizzato (<code>ServiceError</code>, <code>ErrorManager.require</code>)</li>
-<li>Middleware API (exception handling, JWT audit, request context)</li>
+<li>Middleware API (exception handling, JWT audit, request context, request log)</li>
 <li>Pattern uniformi: <code>handle_post_json</code>, paginazione, throttling, search validators</li>
 <li>Automazioni DB: audit fields, tx_id, storicizzazione, lock colonne, protezione attivo</li>
 <li><strong>Tracciamento processi e job</strong>: API per audit log, task registry multi-dominio, job run log (6 endpoint REST, 27 test)</li>
+<li><strong>Audit sessioni</strong>: login/refresh JWT tracciati in <code>dbops.sessioni_utente</code> con IP, user_agent, request_id (19 test)</li>
+<li><strong>Request logging</strong>: ogni request <code>/api/*</code> registrata in <code>dbops.request_log</code> con metodo, path, status, durata</li>
+<li><strong>Token blacklist</strong>: refresh token rotation con blacklist automatica (SimpleJWT <code>token_blacklist</code>)</li>
 <li>Policy indici FK automatica</li>
 <li>Logging e raise errori DB (<code>script.fn_log_and_raise_error</code>)</li>
 </ul>
-<h3 id="evoluzione-pianificata-wip">Evoluzione pianificata (WIP)<a class="headerlink" href="#evoluzione-pianificata-wip" title="Permanent link">&para;</a></h3>
-<p>Le seguenti capacita' sono in fase di progettazione (vedi <a href="../dev/work-in-progress/Audit-logging-sessionii-request-token/">Audit-logging-sessionii-request-token.md</a>):</p>
+<h3 id="audit-sessioni-request-logging-e-token-blacklist">Audit sessioni, request logging e token blacklist<a class="headerlink" href="#audit-sessioni-request-logging-e-token-blacklist" title="Permanent link">&para;</a></h3>
+<p>Implementato il 6 marzo 2026 (vedi <a href="../dev/work-in-progress/Audit-logging-sessionii-request-token/">Audit-logging-sessionii-request-token.md</a>):</p>
 <table>
 <thead>
 <tr>
@@ -4342,26 +4345,26 @@
 </thead>
 <tbody>
 <tr>
-<td>Audit sessioni (login/refresh/logout)</td>
+<td>Audit sessioni (login/refresh)</td>
 <td><code>dbops.sessioni_utente</code></td>
-<td><code>session_audit_service</code> + auth views override</td>
-<td>Pianificato</td>
+<td><code>session_audit_service</code> + <code>AuditTokenObtainPairView</code> / <code>AuditTokenRefreshView</code></td>
+<td>Operativo</td>
 </tr>
 <tr>
 <td>Request logging (chi chiama cosa)</td>
 <td><code>dbops.request_log</code></td>
 <td><code>RequestLogMiddleware</code></td>
-<td>Pianificato</td>
+<td>Operativo</td>
 </tr>
 <tr>
 <td>Token blacklist e revoca</td>
 <td>SimpleJWT <code>token_blacklist</code></td>
-<td>Settings rotation + integrazione disabilitazione</td>
-<td>Pianificato</td>
+<td>Settings <code>ROTATE_REFRESH_TOKENS</code> + <code>BLACKLIST_AFTER_ROTATION</code></td>
+<td>Operativo</td>
 </tr>
 </tbody>
 </table>
-<p>Queste estensioni sono non-breaking: nuove tabelle in <code>dbops</code>, nuovi middleware in <code>core</code>, override view JWT. Nessun contratto esistente viene modificato. Gli anelli esterni ne beneficiano automaticamente senza alcuna modifica al proprio codice.</p>
+<p>Estensioni non-breaking: nuove tabelle in <code>dbops</code>, nuovo middleware in <code>core</code>, override view JWT. Nessun contratto esistente modificato. Gli anelli esterni ne beneficiano automaticamente senza alcuna modifica al proprio codice.</p>
 <h3 id="stabilita">Stabilita'<a class="headerlink" href="#stabilita" title="Permanent link">&para;</a></h3>
 <p>Stabile. Modifiche solo per correzioni o estensioni non-breaking (nuove policy, nuovi middleware).</p>
 <hr />
@@ -4651,6 +4654,8 @@ contabilita      usa     usa       -        -     (futuro)      -
 <li>~~Completamento BE-1..BE-5 per <code>pratiche</code>~~ — <strong>FATTO</strong> (4 marzo 2026)</li>
 <li>~~Sospensioni, calcoli tempo, macchina a stati (BE-6..BE-7)~~ — <strong>FATTO</strong> (6 marzo 2026)</li>
 <li><code>pratiche</code> e' consumabile dagli anelli esterni (19 endpoint REST, 90 test unitari, 18 smoke test)</li>
+<li>~~Audit sessioni, request logging, token blacklist~~ — <strong>FATTO</strong> (6 marzo 2026)</li>
+<li>Anello 0 traccia sessioni JWT, request API e supporta revoca token (19 test unitari)</li>
 </ul>
 <h3 id="medio-termine">Medio termine<a class="headerlink" href="#medio-termine" title="Permanent link">&para;</a></h3>
 <ul>
