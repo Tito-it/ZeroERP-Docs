@@ -2541,6 +2541,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#canali-e-visibilita-esterna" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canali e visibilita' esterna
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4874,6 +4885,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#canali-e-visibilita-esterna" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canali e visibilita' esterna
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5554,7 +5576,7 @@
 
 <h1 id="guida-gestione-pratiche-e-workflow">Guida – Gestione Pratiche e Workflow<a class="headerlink" href="#guida-gestione-pratiche-e-workflow" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p>(latest review 06-03-26)</p>
+<p>(latest review 07-03-26)</p>
 <p>Destinatari: sviluppatori database, backend e analisti funzionali</p>
 <p>Questa guida descrive il motore pratiche di Zero ERP: modello dati, ciclo di vita, flussi operativi, giornale di bordo e integrazione cross-dominio.</p>
 <p>Vedi anche</p>
@@ -5658,9 +5680,11 @@ pratiche -------------------- note_pratiche
 <p>Un <strong>tipo prestazione</strong> e' una macro-categoria di attivita' gestibile: ONBOARDING_CLIENTE, GESTIONE_ORDINE, RECLAMO, REVISIONE_CONTRATTO.</p>
 <ul>
 <li><strong>categoria</strong>: raggruppamento libero (es. UTILITIES, COMMERCIALE, AMMINISTRATIVO)</li>
-<li><strong>flussi_vincolanti</strong>: <code>true</code> = controllo sequenza/prerequisiti attivo, <code>false</code> = giornale senza vincoli</li>
 </ul>
 <p>Il catalogo e' <strong>condiviso</strong> tra tutti gli emittenti fiscali. La segregazione multi-company avviene sulla tabella <code>pratiche.pratiche</code> tramite <code>emittente_fiscale_id</code>.</p>
+<blockquote>
+<p>Un tipo prestazione e' vincolante o libero non tramite un flag, ma tramite la configurazione dei prerequisiti. Se non esistono righe in <code>template_flussi_prerequisiti</code> per un tipo prestazione, i flussi si creano liberamente in qualsiasi ordine. La presenza di prerequisiti obbligatori e' il meccanismo che rende il workflow sequenziale.</p>
+</blockquote>
 <h3 id="2-i-template-flussi-la-configurazione-del-workflow">2. I template flussi: la configurazione del workflow<a class="headerlink" href="#2-i-template-flussi-la-configurazione-del-workflow" title="Permanent link">&para;</a></h3>
 <p>Ogni tipo prestazione ha un insieme di <strong>template flussi</strong> che definiscono gli step operativi previsti:</p>
 <ul>
@@ -5737,12 +5761,7 @@ pratiche -------------------- note_pratiche
 <tr>
 <td><code>canale_origine_id</code></td>
 <td>INTEGER</td>
-<td>Sorgente esterna (NULL = interna)</td>
-</tr>
-<tr>
-<td><code>solo_interna</code></td>
-<td>BOOLEAN</td>
-<td>Se true, niente canali su flussi</td>
+<td>Sorgente esterna, informativo (NULL = creata internamente)</td>
 </tr>
 <tr>
 <td><code>codice</code></td>
@@ -5773,6 +5792,13 @@ pratiche -------------------- note_pratiche
 <li><code>data_fine</code>: timestamp di completamento del flusso (impostato dal trigger al passaggio a COMPLETATO). Usato dai calcoli tempo per determinare la durata</li>
 <li><code>flusso_padre_id</code>: per albero di sotto-flussi (self-reference)</li>
 </ul>
+<h3 id="canali-e-visibilita-esterna">Canali e visibilita' esterna<a class="headerlink" href="#canali-e-visibilita-esterna" title="Permanent link">&para;</a></h3>
+<p>La visibilita' di un flusso verso l'esterno si configura interamente sul template, non sull'istanza pratica:</p>
+<ul>
+<li><strong><code>template_flussi.direzione</code></strong> (ENTRATA, USCITA, INTERNA): descrive il verso del flusso rispetto al canale</li>
+<li><strong><code>template_flussi_canali</code></strong> (M:N): associa i canali abilitati a ciascun template flusso. Un flusso senza associazioni e' de facto interno</li>
+<li><strong><code>canale_origine_id</code></strong> sulla pratica: campo informativo che registra da quale ingresso e' arrivata la richiesta (NULL = creata internamente). Usato per reportistica, non come vincolo operativo</li>
+</ul>
 <hr />
 <h2 id="macchina-a-stati">Macchina a stati<a class="headerlink" href="#macchina-a-stati" title="Permanent link">&para;</a></h2>
 <p>Le transizioni di stato di pratiche e flussi sono governate da due tabelle di configurazione:</p>
@@ -5790,8 +5816,12 @@ SOSPESA     → APERTA
 <div class="highlight"><pre><span></span><code>DA_ESEGUIRE → IN_CORSO, ANNULLATO, SOSPESO
 IN_CORSO    → COMPLETATO, SOSPESO, ERRORE
 SOSPESO     → IN_CORSO, DA_ESEGUIRE
+ERRORE      → IN_CORSO (retry), ANNULLATO (abbandono)
 </code></pre></div>
 <p>La transizione <code>DA_ESEGUIRE → SOSPESO</code> e' necessaria per la propagazione: quando una pratica viene sospesa, il trigger mette in SOSPESO anche i flussi DA_ESEGUIRE (oltre a quelli IN_CORSO). La transizione <code>SOSPESO → DA_ESEGUIRE</code> e' il percorso inverso: alla riattivazione, i flussi che erano DA_ESEGUIRE vengono ripristinati al loro stato originale.</p>
+<blockquote>
+<p><strong>ERRORE</strong> e' prodotto esclusivamente da handler automatici (mai da operatori). Non blocca la pratica: gli altri flussi continuano normalmente. La risoluzione richiede intervento esplicito: retry (→ IN_CORSO) o abbandono (→ ANNULLATO).</p>
+</blockquote>
 <p>Questo approccio ha tre vantaggi rispetto a validare le transizioni nel codice applicativo:</p>
 <ol>
 <li><strong>Nessun bypass</strong>: anche un UPDATE diretto via SQL rispetta le regole</li>
@@ -5822,7 +5852,9 @@ SOSPESO     → IN_CORSO, DA_ESEGUIRE
     |   |          |        |
     |   +----------+--------+  (riattivazione ripristina stato originale)
     |              |
-    |              +--&gt; ERRORE
+    |              +--&gt; ERRORE --&gt; IN_CORSO  (retry)
+    |                        |
+    |                        +--&gt; ANNULLATO (abbandono)
     |
     +--&gt; SOSPESO (propagazione da pratica)
     |
@@ -5834,7 +5866,7 @@ SOSPESO     → IN_CORSO, DA_ESEGUIRE
 <li>Da IN_CORSO puo' essere <strong>sospeso</strong> (SOSPESO) e poi ripreso (torna IN_CORSO)</li>
 <li>Da DA_ESEGUIRE puo' passare a <strong>SOSPESO</strong> per propagazione da sospensione pratica</li>
 <li>Da SOSPESO puo' tornare a <strong>DA_ESEGUIRE</strong> (se era DA_ESEGUIRE prima della sospensione) o a <strong>IN_CORSO</strong> (se era IN_CORSO). Il trigger di riattivazione consulta il giornale per ripristinare lo stato originale</li>
-<li>Da IN_CORSO puo' andare in <strong>ERRORE</strong> (errore tecnico/handler)</li>
+<li>Da IN_CORSO puo' andare in <strong>ERRORE</strong> (errore tecnico/handler). ERRORE non blocca la pratica: gli altri flussi continuano. Da ERRORE si puo' fare <strong>retry</strong> (→ IN_CORSO) o <strong>abbandonare</strong> il flusso (→ ANNULLATO)</li>
 <li>Da DA_ESEGUIRE puo' essere <strong>ANNULLATO</strong> direttamente</li>
 <li>Al completamento con <code>auto = true</code>, il trigger DB puo' generare automaticamente nuove pratiche</li>
 </ul>
@@ -6451,7 +6483,7 @@ Giornale registra:
 <tr>
 <td><code>fn_calcola_tempo_netto_da_a</code></td>
 <td>calcolo (STABLE)</td>
-<td>Calcola giorni netti tra due flussi, sottraendo le sospensioni pratica-level</td>
+<td>Calcola giorni netti tra due flussi, sottraendo solo le sospensioni pratica-level (<code>flusso_id IS NULL</code>)</td>
 </tr>
 <tr>
 <td><code>fn_valuta_tempo_esecuzione_da_a</code></td>
@@ -6847,8 +6879,8 @@ PostgreSQL (schema pratiche)
 <h3 id="1-configurazione-db-catalogo">1. Configurazione DB (catalogo)<a class="headerlink" href="#1-configurazione-db-catalogo" title="Permanent link">&para;</a></h3>
 <p>Inserire seed data nelle tabelle catalogo:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Tipo prestazione</span>
-<span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">tipi_prestazione</span><span class="w"> </span><span class="p">(</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">,</span><span class="w"> </span><span class="n">categoria</span><span class="p">,</span><span class="w"> </span><span class="n">flussi_vincolanti</span><span class="p">)</span>
-<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;RECLAMO&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Gestione reclamo cliente&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;COMMERCIALE&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">);</span>
+<span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">tipi_prestazione</span><span class="w"> </span><span class="p">(</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">,</span><span class="w"> </span><span class="n">categoria</span><span class="p">)</span>
+<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;RECLAMO&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Gestione reclamo cliente&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;COMMERCIALE&#39;</span><span class="p">);</span>
 
 <span class="c1">-- Template flussi (3 step con sequenza)</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">template_flussi</span>
@@ -7001,7 +7033,7 @@ PostgreSQL (schema pratiche)
 <h2 id="checklist-operativa">Checklist operativa<a class="headerlink" href="#checklist-operativa" title="Permanent link">&para;</a></h2>
 <h3 id="per-configurare-un-nuovo-tipo-prestazione">Per configurare un nuovo tipo prestazione<a class="headerlink" href="#per-configurare-un-nuovo-tipo-prestazione" title="Permanent link">&para;</a></h3>
 <ol>
-<li>INSERT in <code>pratiche.tipi_prestazione</code> (codice, categoria, flussi_vincolanti)</li>
+<li>INSERT in <code>pratiche.tipi_prestazione</code> (codice, categoria)</li>
 <li>INSERT in <code>pratiche.template_flussi</code> per ogni step del workflow</li>
 <li>INSERT in <code>pratiche.template_flussi_prerequisiti</code> per il grafo di dipendenze</li>
 <li>(opzionale) INSERT in <code>pratiche.template_flussi_canali</code> per visibilita' esterna</li>

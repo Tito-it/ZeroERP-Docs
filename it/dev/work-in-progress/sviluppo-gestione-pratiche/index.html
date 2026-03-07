@@ -5248,10 +5248,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#161-stato-errore-meccanismo-di-retry" class="md-nav__link">
+  <a href="#161-stato-errore-non-terminale-con-recovery" class="md-nav__link">
     <span class="md-ellipsis">
       
-        16.1 Stato ERRORE — meccanismo di retry
+        16.1 Stato ERRORE — non terminale, con recovery
       
     </span>
   </a>
@@ -5259,10 +5259,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#162-guard-di-coerenza-per-flussi_vincolanti" class="md-nav__link">
+  <a href="#162-flussi_vincolanti-rimosso-dal-modello" class="md-nav__link">
     <span class="md-ellipsis">
       
-        16.2 Guard di coerenza per flussi_vincolanti
+        16.2 flussi_vincolanti — rimosso dal modello
       
     </span>
   </a>
@@ -5270,10 +5270,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#163-enforcement-db-per-solo_interna" class="md-nav__link">
+  <a href="#163-solo_interna-rimosso-dal-modello" class="md-nav__link">
     <span class="md-ellipsis">
       
-        16.3 Enforcement DB per solo_interna
+        16.3 solo_interna — rimosso dal modello
       
     </span>
   </a>
@@ -5285,6 +5285,17 @@
     <span class="md-ellipsis">
       
         16.4 Endpoint generazione manuale flusso
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#165-backend-rimozione-solo_interna-da-tutti-i-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16.5 Backend — rimozione solo_interna da tutti i layer
       
     </span>
   </a>
@@ -5400,7 +5411,6 @@ La segregazione multi-company avviene sulla tabella <code>pratiche.pratiche</cod
 <p>Catalogo dei tipi di prestazione. Macro-categorie di attivita' gestibili.</p>
 <ul>
 <li><strong>categoria</strong>: raggruppamento libero (es. UTILITIES, COMMERCIALE, AMMINISTRATIVO)</li>
-<li><strong>flussi_vincolanti</strong>: <code>true</code> = controllo sequenza/prerequisiti attivo, <code>false</code> = giornale senza vincoli</li>
 <li><strong>pre_attivazione</strong>: BOOLEAN NOT NULL DEFAULT true — la prestazione e' applicabile nella fase precedente all'attivazione del cliente/servizio</li>
 <li><strong>post_attivazione</strong>: BOOLEAN NOT NULL DEFAULT true — la prestazione e' applicabile nella fase successiva all'attivazione</li>
 </ul>
@@ -5529,8 +5539,7 @@ Segue il pattern <code>implementation_key</code> del sistema (no path Python nel
 <li><strong>unita_organizzativa_id</strong>: INTEGER — reparto assegnato (FK a <code>config.unita_organizzative</code>)</li>
 <li><strong>pratica_padre_id</strong>: BIGINT — per sotto-pratiche e pratiche collegate (self-reference)</li>
 <li><strong>flusso_origine_id</strong>: BIGINT — tracciabilita' cross-pratica: il flusso che ha generato questa pratica (FK differita a <code>pratiche.flussi</code>)</li>
-<li><strong>canale_origine_id</strong>: INTEGER — FK a <code>config.canali_pratiche</code>: sorgente esterna (NULL = creata internamente)</li>
-<li><strong>solo_interna</strong>: BOOLEAN NOT NULL DEFAULT false — se true, la pratica non abilita configurazione canali sui flussi</li>
+<li><strong>canale_origine_id</strong>: INTEGER — FK a <code>config.canali_pratiche</code>: sorgente esterna, informativo per reportistica (NULL = creata internamente)</li>
 <li><strong>codice</strong>: TEXT — codice pratica (generato da trigger)</li>
 <li><strong>descrizione</strong>: TEXT — descrizione libera</li>
 <li><strong>data_scadenza</strong>: DATE</li>
@@ -6984,10 +6993,10 @@ CHIUSA     → (terminale)
 ANNULLATA  → (terminale)
 </code></pre></div>
 <h4 id="flusso">Flusso<a class="headerlink" href="#flusso" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code>DA_ESEGUIRE  → IN_CORSO, ANNULLATO
+<div class="highlight"><pre><span></span><code>DA_ESEGUIRE  → IN_CORSO, ANNULLATO, SOSPESO
 IN_CORSO     → COMPLETATO, SOSPESO, ERRORE
 SOSPESO      → IN_CORSO, DA_ESEGUIRE
-ERRORE       → (terminale)
+ERRORE       → IN_CORSO (retry), ANNULLATO (abbandono)
 COMPLETATO   → (terminale)
 ANNULLATO    → (terminale)
 </code></pre></div>
@@ -7185,6 +7194,10 @@ e <code>config.stati_flussi_pratiche</code>.</p>
 <td>ANNULLATO</td>
 </tr>
 <tr>
+<td>DA_ESEGUIRE</td>
+<td>SOSPESO</td>
+</tr>
+<tr>
 <td>IN_CORSO</td>
 <td>COMPLETATO</td>
 </tr>
@@ -7203,6 +7216,14 @@ e <code>config.stati_flussi_pratiche</code>.</p>
 <tr>
 <td>SOSPESO</td>
 <td>DA_ESEGUIRE</td>
+</tr>
+<tr>
+<td>ERRORE</td>
+<td>IN_CORSO</td>
+</tr>
+<tr>
+<td>ERRORE</td>
+<td>ANNULLATO</td>
 </tr>
 </tbody>
 </table>
@@ -7732,119 +7753,137 @@ del tipo prestazione o da un campo dedicato sul tipo prestazione stesso.</p>
 <hr />
 <h2 id="16-da-fare-punti-aperti-dalla-revisione-della-guida-operativa">16. Da Fare: Punti Aperti dalla Revisione della Guida Operativa<a class="headerlink" href="#16-da-fare-punti-aperti-dalla-revisione-della-guida-operativa" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p>Stato: <strong>da fare</strong>. Emersi dalla revisione di <code>docs/it/guide/gestione-pratiche.md</code> (marzo 2026).</p>
+<p>Stato: <strong>FATTO</strong> (07-03-2026). Decisioni prese e implementate. Emersi dalla revisione di <code>docs/it/guide/gestione-pratiche.md</code>.</p>
 </blockquote>
-<h3 id="161-stato-errore-meccanismo-di-retry">16.1 Stato ERRORE — meccanismo di retry<a class="headerlink" href="#161-stato-errore-meccanismo-di-retry" title="Permanent link">&para;</a></h3>
-<p>Oggi lo stato <code>ERRORE</code> sui flussi e' <strong>terminale</strong>: non esistono transizioni in uscita
-in <code>config.transizioni_stati_flussi_pratiche</code>. Questo significa che un flusso in errore
-non puo' essere ritentato senza intervento diretto sul DB.</p>
-<p><strong>Da decidere e implementare:</strong></p>
-<ul>
-<li>Aggiungere la transizione <code>ERRORE → DA_ESEGUIRE</code> nella tabella config</li>
-<li>Definire chi puo' effettuare il retry (operatore manuale? pgAgent automatico?)</li>
-<li>Decidere se il retry resetta i campi di esecuzione (<code>data_inizio</code>, <code>data_fine</code>, <code>esito</code>)
-  o se mantiene lo storico nel giornale</li>
-<li>Valutare se servono limiti al numero di retry (contatore tentativi)</li>
-</ul>
-<p><strong>Oggetti coinvolti:</strong></p>
+<h3 id="161-stato-errore-non-terminale-con-recovery">16.1 Stato ERRORE — non terminale, con recovery<a class="headerlink" href="#161-stato-errore-non-terminale-con-recovery" title="Permanent link">&para;</a></h3>
+<p><strong>Decisione</strong>: ERRORE e' uno stato <strong>di attesa intervento</strong>, non terminale.
+E' prodotto esclusivamente da handler automatici (mai da operatori).
+Non blocca la pratica: gli altri flussi continuano normalmente.</p>
+<p>Servono due transizioni in uscita:</p>
+<table>
+<thead>
+<tr>
+<th>Transizione</th>
+<th>Semantica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ERRORE → IN_CORSO</code></td>
+<td>Retry: l'operatore o un job riprende il flusso dopo aver risolto la causa</td>
+</tr>
+<tr>
+<td><code>ERRORE → ANNULLATO</code></td>
+<td>Abbandono: il flusso viene scartato, la pratica prosegue</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Implementato:</strong></p>
 <table>
 <thead>
 <tr>
 <th>Tipo</th>
 <th>Oggetto</th>
+<th>Stato</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Seed data</td>
-<td>Nuova riga in <code>config.transizioni_stati_flussi_pratiche</code></td>
+<td>2 righe in <code>config.transizioni_stati_flussi_pratiche</code> (CSV)</td>
+<td>FATTO</td>
 </tr>
 <tr>
-<td>Trigger</td>
-<td>Eventuale <code>trgfn_flussi_guard_retry</code> per validazione pre-retry</td>
-</tr>
-<tr>
-<td>Backend</td>
-<td>Endpoint API retry + service logic</td>
+<td>Guida</td>
+<td>Macchina a stati + ciclo di vita flusso</td>
+<td>FATTO</td>
 </tr>
 <tr>
 <td>Test pgTAP</td>
 <td>Estendere test transizioni flussi</td>
+<td>Da fare</td>
 </tr>
 </tbody>
 </table>
-<h3 id="162-guard-di-coerenza-per-flussi_vincolanti">16.2 Guard di coerenza per <code>flussi_vincolanti</code><a class="headerlink" href="#162-guard-di-coerenza-per-flussi_vincolanti" title="Permanent link">&para;</a></h3>
-<p>Quando <code>tipi_prestazione.flussi_vincolanti = false</code>, il tipo prestazione funziona
-in modalita' "solo giornale": i flussi vengono registrati ma i prerequisiti
-<strong>non devono essere imposti</strong>. Oggi pero' nulla impedisce di configurare prerequisiti
-su un template flusso appartenente a un tipo prestazione non vincolante.</p>
-<p><strong>Da implementare:</strong></p>
+<h3 id="162-flussi_vincolanti-rimosso-dal-modello">16.2 <code>flussi_vincolanti</code> — rimosso dal modello<a class="headerlink" href="#162-flussi_vincolanti-rimosso-dal-modello" title="Permanent link">&para;</a></h3>
+<p><strong>Decisione</strong>: il campo <code>flussi_vincolanti</code> su <code>tipi_prestazione</code> <strong>non viene implementato</strong>.
+Il concetto "workflow vincolante vs libero" e' gia' espresso interamente dalla configurazione
+dei prerequisiti:</p>
+<table>
+<thead>
+<tr>
+<th>Configurazione</th>
+<th>Comportamento risultante</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tipo prestazione senza righe in <code>template_flussi_prerequisiti</code></td>
+<td>De facto libero: i flussi si creano in qualsiasi ordine</td>
+</tr>
+<tr>
+<td>Tipo prestazione con prerequisiti obbligatori</td>
+<td>Vincolante: il guard blocca se i prerequisiti non sono soddisfatti</td>
+</tr>
+<tr>
+<td>Tipo prestazione con prerequisiti non obbligatori</td>
+<td>Advisory: warning senza blocco</td>
+</tr>
+</tbody>
+</table>
+<p>Un flag separato sarebbe ridondante e non aggiunge potere espressivo.
+Il guard prerequisiti (<code>trgfn_flussi_guard_prerequisiti</code>) scatta solo per flussi template-based
+con prerequisiti configurati — se non ce ne sono, il workflow e' di fatto libero.</p>
+<p><strong>FATTO</strong>: menzioni rimosse dalla guida (catalogo, esempio SQL, checklist).
+Nessuna migrazione DB necessaria (il campo non esiste).</p>
+<h3 id="163-solo_interna-rimosso-dal-modello">16.3 <code>solo_interna</code> — rimosso dal modello<a class="headerlink" href="#163-solo_interna-rimosso-dal-modello" title="Permanent link">&para;</a></h3>
+<p><strong>Decisione</strong>: il campo <code>pratiche.solo_interna</code> viene <strong>rimosso</strong> dal DB.</p>
+<p>La visibilita' di un flusso verso l'esterno si configura interamente sul template,
+non sull'istanza pratica:</p>
 <ul>
-<li>Trigger guard su <code>template_flussi_prerequisiti</code> che impedisca INSERT/UPDATE
-  se il <code>tipo_prestazione</code> del template padre ha <code>flussi_vincolanti = false</code></li>
-<li>Messaggio errore dedicato in <code>config.messaggi_errore</code></li>
+<li><code>template_flussi.direzione</code> (ENTRATA/USCITA/INTERNA) descrive il verso rispetto al canale</li>
+<li><code>template_flussi_canali</code> (M:N) abilita i canali per ogni template flusso</li>
+<li>Un flusso senza associazioni in <code>template_flussi_canali</code> e' de facto interno</li>
 </ul>
-<p><strong>Oggetti coinvolti:</strong></p>
+<p><code>canale_origine_id</code> sulla pratica resta come campo informativo: registra da quale
+ingresso e' arrivata la richiesta (NULL = creata internamente).</p>
+<p><strong>Implementato:</strong></p>
 <table>
 <thead>
 <tr>
 <th>Tipo</th>
 <th>Oggetto</th>
+<th>Stato</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Trigger function</td>
-<td><code>trgfn_template_flussi_prerequisiti_guard_vincolanti</code></td>
+<td>Changeset</td>
+<td><code>migrations_v2/00_schema/pratiche/</code></td>
+<td>FATTO — <code>ALTER TABLE pratiche.pratiche DROP COLUMN solo_interna</code></td>
 </tr>
 <tr>
-<td>Trigger</td>
-<td><code>trg_pratiche_template_flussi_prerequisiti_a10_guard_vincolanti_biu</code></td>
+<td>Guida</td>
+<td>Tabella campi pratica + sezione Canali</td>
+<td>FATTO</td>
 </tr>
 <tr>
-<td>Seed data</td>
-<td>Messaggio errore</td>
-</tr>
-<tr>
-<td>Test pgTAP</td>
-<td>Caso: INSERT prerequisito su tipo non vincolante → errore</td>
+<td>Backend</td>
+<td>Vedi sezione 16.5</td>
+<td>FATTO</td>
 </tr>
 </tbody>
 </table>
-<h3 id="163-enforcement-db-per-solo_interna">16.3 Enforcement DB per <code>solo_interna</code><a class="headerlink" href="#163-enforcement-db-per-solo_interna" title="Permanent link">&para;</a></h3>
-<p>Il campo <code>pratiche.solo_interna</code> (BOOLEAN, default false) indica che la pratica
-e' riservata alla gestione interna e non deve essere visibile al soggetto esterno.
-Oggi l'enforcement avviene <strong>solo a livello applicativo</strong> (Django).</p>
-<p><strong>Da decidere:</strong></p>
-<ul>
-<li>Confermare se l'enforcement resta solo applicativo (accettabile se il filtro
-  e' centralizzato nel repository/service Django)</li>
-<li>Oppure aggiungere un guard DB che impedisca l'associazione di canali esterni
-  (es. <code>canale_origine_id</code> con canale di tipo "portale cliente") su pratiche <code>solo_interna = true</code></li>
-</ul>
-<p>Se si sceglie il guard DB:</p>
-<table>
-<thead>
-<tr>
-<th>Tipo</th>
-<th>Oggetto</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Trigger function</td>
-<td><code>trgfn_pratiche_guard_solo_interna_canale</code></td>
-</tr>
-<tr>
-<td>Trigger</td>
-<td><code>trg_pratiche_pratiche_a10_guard_solo_interna_canale_biu</code></td>
-</tr>
-<tr>
-<td>Test pgTAP</td>
-<td>Caso: pratica solo_interna + canale esterno → errore</td>
-</tr>
-</tbody>
-</table>
+<p><strong>Discovery per canale</strong> (funzionalita' futura):</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Tipi prestazione che accettano richieste da un canale specifico</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="n">tp</span><span class="p">.</span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">tipi_prestazione</span><span class="w"> </span><span class="n">tp</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">template_flussi</span><span class="w"> </span><span class="n">tf</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">tf</span><span class="p">.</span><span class="n">tipo_prestazione_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tp</span><span class="p">.</span><span class="n">id</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">template_flussi_canali</span><span class="w"> </span><span class="n">tfc</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">tfc</span><span class="p">.</span><span class="n">template_flusso_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tf</span><span class="p">.</span><span class="n">id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">tfc</span><span class="p">.</span><span class="n">canale_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">canale_id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">tf</span><span class="p">.</span><span class="n">direzione</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ENTRATA&#39;</span><span class="p">;</span>
+</code></pre></div>
+<p>Endpoint da aggiungere in fase successiva:
+<code>GET /api/v1/pratiche/tipi-prestazione/?canale_id=N&amp;direzione=ENTRATA</code></p>
 <h3 id="164-endpoint-generazione-manuale-flusso">16.4 Endpoint generazione manuale flusso<a class="headerlink" href="#164-endpoint-generazione-manuale-flusso" title="Permanent link">&para;</a></h3>
 <p>Nella guida operativa e' documentato un endpoint per la generazione manuale
 di un flusso a partire da una pratica esistente:</p>
@@ -7887,6 +7926,62 @@ dalle regole di generazione.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="165-backend-rimozione-solo_interna-da-tutti-i-layer">16.5 Backend — rimozione <code>solo_interna</code> da tutti i layer<a class="headerlink" href="#165-backend-rimozione-solo_interna-da-tutti-i-layer" title="Permanent link">&para;</a></h3>
+<p><strong>FATTO.</strong> La colonna <code>pratiche.pratiche.solo_interna</code> rimossa dal DB (changeset creato)
+e da tutti i layer backend.</p>
+<p><strong>File modificati:</strong></p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Modifiche</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/pratiche/types.py</code></td>
+<td>Rimuovere campo <code>solo_interna: bool</code> da <code>PraticaRow</code></td>
+</tr>
+<tr>
+<td><code>apps/pratiche/services/pratiche_service.py</code></td>
+<td>Rimuovere parametro <code>solo_interna</code> da <code>crea_pratica()</code> e dalla dict passata al repository. Rimuovere parametro <code>solo_interna</code> da <code>cerca_pratiche()</code> e dal passaggio a <code>repo.list_pratiche()</code></td>
+</tr>
+<tr>
+<td><code>apps/pratiche/db/pratiche_repository.py</code></td>
+<td>Rimuovere parametro <code>solo_interna</code> da <code>list_pratiche()</code> e relativo filtro WHERE. Rimuovere <code>p.solo_interna</code> dalle SELECT in <code>list_pratiche()</code>, <code>get_pratica()</code>. Rimuovere <code>solo_interna</code> dalla INSERT in <code>create_pratica()</code> (colonna, placeholder, parametro). Aggiornare <code>_map_pratica_row()</code>: rimuovere <code>"solo_interna": bool(r[11])</code> e scalare gli indici successivi (da r[12]→r[11], r[13]→r[12], ecc.)</td>
+</tr>
+<tr>
+<td><code>apps/pratiche/db/generazione_repository.py</code></td>
+<td>Rimuovere <code>p.solo_interna</code> dalla SELECT in <code>get_pratiche_generate_da_flusso()</code> (il mapper e' condiviso con <code>PraticheRepository._map_pratica_row</code>)</td>
+</tr>
+<tr>
+<td><code>apps/pratiche/api/views.py</code></td>
+<td>Rimuovere <code>OpenApiParameter(name="solo_interna")</code> dalla lista GET. Rimuovere parsing <code>solo_interna_raw</code> dal metodo <code>get()</code>. Rimuovere passaggio <code>solo_interna=...</code> alla chiamata <code>cerca_pratiche()</code>. Rimuovere <code>"solo_interna": serializers.BooleanField(...)</code> dalla request POST. Rimuovere passaggio <code>solo_interna=...</code> alla chiamata <code>crea_pratica()</code></td>
+</tr>
+<tr>
+<td><code>apps/pratiche/tests/services/test_pratiche_service.py</code></td>
+<td>Rimuovere <code>"solo_interna": False</code> dal dict mock in <code>test_crea_pratica</code>. Rimuovere intero test <code>test_crea_pratica_solo_interna</code> e aggiornare l'indice test nel commento iniziale</td>
+</tr>
+<tr>
+<td><code>apps/pratiche/tests/api/test_pratiche_api.py</code></td>
+<td>Rimuovere <code>"solo_interna": False</code> dal dict mock</td>
+</tr>
+<tr>
+<td><code>scripts/smoke-test-pratiche.sh</code></td>
+<td>Rimuovere <code>"solo_interna": true</code> dal payload JSON</td>
+</tr>
+<tr>
+<td><code>scripts/smoke-test-sospensioni.sh</code></td>
+<td>Rimuovere <code>"solo_interna": true</code> dal payload JSON</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Attenzione:</strong> il mapper <code>_map_pratica_row</code> mappa le colonne per posizione (indice).
+Dopo la rimozione di <code>solo_interna</code> (che era all'indice 11), tutti gli indici successivi
+scalano di 1:</p>
+<div class="highlight"><pre><span></span><code>Prima:  r[10]=canale_origine_id, r[11]=solo_interna, r[12]=codice, r[13]=descrizione, ...
+Dopo:   r[10]=canale_origine_id, r[11]=codice, r[12]=descrizione, r[13]=data_scadenza, ...
+</code></pre></div>
 <hr />
 <p><em>Documento di sviluppo — Schema <code>pratiche</code> — ZeroERP (marzo 2026)</em></p>
 <hr />
