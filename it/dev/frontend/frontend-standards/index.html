@@ -4197,6 +4197,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#regola-critica-paginazione-deterministica-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚠️ REGOLA CRITICA: Paginazione deterministica (backend)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4623,6 +4634,89 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#catalogo-componenti-e-composable-riutilizzabili" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catalogo componenti e composable riutilizzabili
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Catalogo componenti e composable riutilizzabili">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#componenti-ui-corecomponents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Componenti UI (core/components/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#composable-corecomposables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composable (core/composables/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utility-coreutils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utility (core/utils/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#costanti-coreconstantsjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Costanti (core/constants.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#css-globale-assetsmaincss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSS globale (assets/main.css)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backend-utility-riutilizzabili" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backend — Utility riutilizzabili
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4865,6 +4959,21 @@ Se un pattern viene migliorato, il miglioramento si applica a tutte le schermate
 <div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">DataTable</span> <span class="na">v-bind</span><span class="o">=</span><span class="s">&quot;paginatorProps&quot;</span> <span class="na">lazy</span> <span class="err">@</span><span class="na">page</span><span class="o">=</span><span class="s">&quot;onPage&quot;</span> <span class="err">@</span><span class="na">sort</span><span class="o">=</span><span class="s">&quot;onSort&quot;</span> <span class="err">...</span><span class="p">&gt;</span>
 </code></pre></div>
 <p>Nessun componente lista deve implementare onPage/onSort/debounce manualmente.</p>
+<h3 id="regola-critica-paginazione-deterministica-backend">⚠️ REGOLA CRITICA: Paginazione deterministica (backend)<a class="headerlink" href="#regola-critica-paginazione-deterministica-backend" title="Permanent link">&para;</a></h3>
+<p><strong>Ogni query SQL paginata (LIMIT/OFFSET) DEVE avere <code>id</code> come tiebreaker nell'ORDER BY.</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- ❌ SBAGLIATO — ordine non deterministico, pagine duplicate a offset alti</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">descrizione</span><span class="w"> </span><span class="k">ASC</span>
+<span class="k">LIMIT</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="k">OFFSET</span><span class="w"> </span><span class="mi">700</span>
+
+<span class="c1">-- ✅ CORRETTO — id garantisce ordine unico per ogni riga</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">descrizione</span><span class="w"> </span><span class="k">ASC</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span>
+<span class="k">LIMIT</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="k">OFFSET</span><span class="w"> </span><span class="mi">700</span>
+</code></pre></div>
+<p><strong>Perche':</strong> senza tiebreaker, PostgreSQL non garantisce l'ordine tra righe con lo stesso
+valore nella colonna di sort. Con OFFSET alto il planner puo' restituire righe gia' viste
+nelle pagine precedenti, causando dati duplicati e pagine "bloccate".</p>
+<p>Stesso principio dei subfile AS/400 dove il RRN nascosto garantiva la posizione del cursore.</p>
+<p><strong>Dove applicare:</strong> TUTTE le query repository che usano <code>LIMIT %s OFFSET %s</code> — nessuna eccezione.</p>
 <hr />
 <h2 id="pattern-tab-view-viste-multi-sezione">Pattern Tab-View (viste multi-sezione)<a class="headerlink" href="#pattern-tab-view-viste-multi-sezione" title="Permanent link">&para;</a></h2>
 <p>Quando una pagina contiene piu' sezioni correlate (es. Gestione Geografica con 6 tab):</p>
@@ -5588,7 +5697,370 @@ Importato prima di <code>main.css</code> in <code>main.js</code>.</p>
 <li>CSS layout da <code>main.css</code> — mai <code>&lt;style scoped&gt;</code> per layout form/pagina</li>
 </ol>
 <hr />
-<p><em>ZeroERP Frontend Standards — rev. 5 (15 marzo 2026)</em>
+<h2 id="catalogo-componenti-e-composable-riutilizzabili">Catalogo componenti e composable riutilizzabili<a class="headerlink" href="#catalogo-componenti-e-composable-riutilizzabili" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>Prima di creare un nuovo componente o composable, verificare se esiste gia' in questo catalogo.
+I componenti in <code>core/</code> sono cross-dominio e non devono importare da domini specifici.</p>
+</blockquote>
+<h3 id="componenti-ui-corecomponents">Componenti UI (<code>core/components/</code>)<a class="headerlink" href="#componenti-ui-corecomponents" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Scopo</th>
+<th>Props chiave</th>
+<th>Usato da</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DrawerTitle</code></td>
+<td>Titolo standard drawer: azione sx + entita' centrata</td>
+<td><code>action</code>, <code>title</code></td>
+<td>Tutti i drawer</td>
+</tr>
+<tr>
+<td><code>DrawerFooter</code></td>
+<td>Footer drawer con Annulla/Salva</td>
+<td><code>loading</code>, <code>disabled</code></td>
+<td>Tutti i drawer</td>
+</tr>
+<tr>
+<td><code>NewButton</code></td>
+<td>Pulsante "Nuovo" nella toolbar</td>
+<td><code>tooltip</code></td>
+<td>Tutte le SearchTable</td>
+</tr>
+<tr>
+<td><code>TagList</code></td>
+<td>Lista tag con overflow +N e tooltip</td>
+<td><code>items</code>, <code>labelField</code>, <code>maxVisible</code>, <code>severity</code></td>
+<td>Ruoli in lista soggetti</td>
+</tr>
+<tr>
+<td><code>SoggettoForm</code></td>
+<td>Form universale PF/PG/ENTE con genera CF e validazione</td>
+<td><code>form</code>, <code>tipiSoggetto</code>, <code>isPF</code>, <code>showPartitaIva</code></td>
+<td>SoggettoDrawer, UtenteDrawer</td>
+</tr>
+<tr>
+<td><code>ContattoForm</code></td>
+<td>Form contatto (nominativo, email, tel, pec, tipo, UO)</td>
+<td><code>form</code>, <code>tipiContatto</code>, <code>unitaOrganizzative</code></td>
+<td>SoggettoDrawer</td>
+</tr>
+<tr>
+<td><code>IndirizzoSoggettoForm</code></td>
+<td>Form indirizzo multi-tipo con barra tag e auto-clone</td>
+<td><code>form</code>, <code>tipiStato</code>, <code>autoClone</code>, <code>toponomasticaLookup</code></td>
+<td>SoggettoDrawer</td>
+</tr>
+<tr>
+<td><code>DatiSocietariForm</code></td>
+<td>Form dati societari (FG, REA, capitale, FE)</td>
+<td><code>form</code>, <code>formeGiuridiche</code>, <code>provinceLookup</code></td>
+<td>SoggettoDrawer</td>
+</tr>
+<tr>
+<td><code>ComuneAutocomplete</code></td>
+<td>Autocomplete comune con ricerca server</td>
+<td><code>modelValue</code></td>
+<td>IndirizzoDrawer, SoggettoForm</td>
+</tr>
+<tr>
+<td><code>StradarioAutocomplete</code></td>
+<td>Autocomplete stradario filtrato per comune</td>
+<td><code>modelValue</code>, <code>comuneId</code></td>
+<td>IndirizzoDrawer, IndirizzoSoggettoForm</td>
+</tr>
+<tr>
+<td><code>AuthUserForm</code></td>
+<td>Form credenziali operatore</td>
+<td><code>form</code>, <code>isEdit</code></td>
+<td>UtenteDrawer</td>
+</tr>
+<tr>
+<td><code>ConfigTablePanel</code></td>
+<td>Pannello CRUD generico per tabelle config</td>
+<td>—</td>
+<td>ConfigView</td>
+</tr>
+<tr>
+<td><code>GenericConfigDrawer</code></td>
+<td>Drawer dinamico per record config</td>
+<td><code>rel</code>, <code>label</code>, <code>recordId</code></td>
+<td>ConfigTablePanel</td>
+</tr>
+<tr>
+<td><code>SearchDrawer</code></td>
+<td>Ricerca universale soggetti per ruolo</td>
+<td>—</td>
+<td>AppLayout (Ctrl+K)</td>
+</tr>
+<tr>
+<td><code>AppDrawer</code></td>
+<td>Drawer generico con header + footer + slot body</td>
+<td><code>title</code>, <code>width</code></td>
+<td>Utility wrapper</td>
+</tr>
+</tbody>
+</table>
+<h3 id="composable-corecomposables">Composable (<code>core/composables/</code>)<a class="headerlink" href="#composable-corecomposables" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Composable</th>
+<th>Scopo</th>
+<th>Usato da</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>useSearchTable</code></td>
+<td>Paginazione, sort, search debounce per DataTable lazy</td>
+<td>Tutte le SearchTable</td>
+</tr>
+<tr>
+<td><code>useDrawerState</code></td>
+<td>Stato drawer (visible, mode, itemId, itemData)</td>
+<td>Tutte le View con drawer</td>
+</tr>
+<tr>
+<td><code>useTabFreshness</code></td>
+<td>Refresh automatico lista su evento <code>dataChanged</code></td>
+<td>Tutte le SearchTable</td>
+</tr>
+<tr>
+<td><code>useTabEvents</code></td>
+<td>Event bus inter-tab per invalidazione dati</td>
+<td>Store (emit), SearchTable (listen)</td>
+</tr>
+<tr>
+<td><code>useApiHandler</code></td>
+<td>Execute con loading, toast successo, gestione errori</td>
+<td>Tutti i drawer</td>
+</tr>
+<tr>
+<td><code>useLookup</code></td>
+<td>Caricamento lazy/eager di dati lookup con cache</td>
+<td>Form con select</td>
+</tr>
+<tr>
+<td><code>useServerAutocomplete</code></td>
+<td>Autocomplete con ricerca server debounce</td>
+<td>ComuneAutocomplete, StradarioAutocomplete</td>
+</tr>
+<tr>
+<td><code>useSoggettoForm</code></td>
+<td>Stato form soggetto, matrice indirizzi, validazione</td>
+<td>SoggettoDrawer, UtenteDrawer</td>
+</tr>
+<tr>
+<td><code>useContattoForm</code></td>
+<td>Stato form contatto con lookup tipi</td>
+<td>SoggettoDrawer</td>
+</tr>
+<tr>
+<td><code>useIndirizzoSoggettoForm</code></td>
+<td>Stato form indirizzo multi-tipo con auto-clone</td>
+<td>SoggettoDrawer</td>
+</tr>
+<tr>
+<td><code>useDatiSocietariForm</code></td>
+<td>Stato form dati societari con policy FG</td>
+<td>SoggettoDrawer</td>
+</tr>
+<tr>
+<td><code>useIndirizzoDuplicato</code></td>
+<td>Check duplicato indirizzo via API</td>
+<td>IndirizzoDrawer, IndirizzoSoggettoForm</td>
+</tr>
+<tr>
+<td><code>useAuthUser</code></td>
+<td>Stato form credenziali + permessi operatore</td>
+<td>UtenteDrawer</td>
+</tr>
+<tr>
+<td><code>useNotify</code></td>
+<td>Toast PrimeVue centralizzato</td>
+<td>useApiHandler</td>
+</tr>
+<tr>
+<td><code>useConfirmAction</code></td>
+<td>Dialogo conferma azione</td>
+<td>UtenteDrawer</td>
+</tr>
+<tr>
+<td><code>useDirtyState</code></td>
+<td>Traccia modifiche non salvate</td>
+<td>Futuro</td>
+</tr>
+<tr>
+<td><code>useConfirmCloseTab</code></td>
+<td>Conferma chiusura tab con modifiche</td>
+<td>ContentTabs</td>
+</tr>
+</tbody>
+</table>
+<h3 id="utility-coreutils">Utility (<code>core/utils/</code>)<a class="headerlink" href="#utility-coreutils" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Utility</th>
+<th>Scopo</th>
+<th>Usato da</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>date.js</code> → <code>toDateString(d)</code></td>
+<td>Converte Date/string in 'YYYY-MM-DD' (ora locale, no bug UTC)</td>
+<td>SoggettoForm, SoggettoDrawer</td>
+</tr>
+</tbody>
+</table>
+<h3 id="costanti-coreconstantsjs">Costanti (<code>core/constants.js</code>)<a class="headerlink" href="#costanti-coreconstantsjs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Costante</th>
+<th>Scopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DRAWER_WIDTH</code></td>
+<td>Larghezze drawer: SIMPLE, STANDARD, COMPLEX, WIDE</td>
+</tr>
+<tr>
+<td><code>DATE_FORMAT</code></td>
+<td>Formato data PrimeVue DatePicker (<code>dd/mm/yy</code>)</td>
+</tr>
+<tr>
+<td><code>TOAST_DURATION</code></td>
+<td>Durata toast: SUCCESS, ERROR, SYSTEM_ERROR</td>
+</tr>
+<tr>
+<td><code>PAGINATION</code></td>
+<td>Default righe e opzioni righe/pagina</td>
+</tr>
+<tr>
+<td><code>TABS</code></td>
+<td>Max tab aperti</td>
+</tr>
+<tr>
+<td><code>BREAKPOINTS</code></td>
+<td>Breakpoint responsive (MOBILE, TABLET)</td>
+</tr>
+<tr>
+<td><code>SHORTCUTS</code></td>
+<td>Shortcut tastiera (Ctrl+K, Ctrl+Tab, ecc.)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="css-globale-assetsmaincss">CSS globale (<code>assets/main.css</code>)<a class="headerlink" href="#css-globale-assetsmaincss" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Classe</th>
+<th>Scopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.app-page</code></td>
+<td>Layout pagina full-height</td>
+</tr>
+<tr>
+<td><code>.app-tab-content</code></td>
+<td>Contenuto tab full-height</td>
+</tr>
+<tr>
+<td><code>.app-page-toolbar</code></td>
+<td>Toolbar con filtri + bottone nuovo</td>
+</tr>
+<tr>
+<td><code>.app-page-filters</code></td>
+<td>Container filtri nella toolbar</td>
+</tr>
+<tr>
+<td><code>.app-datatable</code></td>
+<td>Stile DataTable (stripe, padding, paginator compatto)</td>
+</tr>
+<tr>
+<td><code>.app-drawer-content</code></td>
+<td>Layout contenuto drawer (flex column, gap)</td>
+</tr>
+<tr>
+<td><code>.app-drawer-section</code></td>
+<td>Separatore sezione nel drawer (h4 + border)</td>
+</tr>
+<tr>
+<td><code>.app-input-with-action</code></td>
+<td>Input con bottone azione affiancato (es. genera CF)</td>
+</tr>
+<tr>
+<td><code>.form-grid</code></td>
+<td>Griglia form a colonna singola</td>
+</tr>
+<tr>
+<td><code>.form-grid-2col</code></td>
+<td>Griglia form a 2 colonne (responsive)</td>
+</tr>
+<tr>
+<td><code>.form-field</code></td>
+<td>Campo form con label + input</td>
+</tr>
+<tr>
+<td><code>.p-drawer-title</code></td>
+<td>Stile globale titolo drawer (centrato, verde)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backend-utility-riutilizzabili">Backend — Utility riutilizzabili<a class="headerlink" href="#backend-utility-riutilizzabili" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Modulo</th>
+<th>Scopo</th>
+<th>Usato da</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>anagrafiche/services/_validators.py</code></td>
+<td><code>require_str</code>, <code>optional_str</code>, <code>create_with_dedup</code>, <code>update_with_dedup</code></td>
+<td>Tutti i service anagrafiche</td>
+</tr>
+<tr>
+<td><code>anagrafiche/services/cf_validator_it.py</code></td>
+<td>Validazione congruenza CF + generazione CF (con omocodia)</td>
+<td>SoggettiService</td>
+</tr>
+<tr>
+<td><code>core/utils/date.js</code></td>
+<td><code>toDateString()</code> — conversione date frontend→backend</td>
+<td>SoggettoForm, SoggettoDrawer</td>
+</tr>
+<tr>
+<td><code>core/api/endpoint_helpers.py</code></td>
+<td><code>handle_post_json</code> — wrapper POST con parsing + error handling</td>
+<td>Tutte le view</td>
+</tr>
+<tr>
+<td><code>core/api/payload_validators.py</code></td>
+<td><code>optional_int</code>, <code>optional_bool</code>, <code>paginated_envelope</code>, <code>parse_list_params</code></td>
+<td>Tutte le view</td>
+</tr>
+<tr>
+<td><code>core/services/error_manager.py</code></td>
+<td><code>ErrorManager.require</code>, <code>ServiceError</code></td>
+<td>Tutti i service</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>ZeroERP Frontend Standards — rev. 6 (16 marzo 2026)</em>
 <em>Sviluppo Concentrico — anello esterno, radici nell'infrastruttura</em></p>
 <hr />
 <p><strong>© 2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
