@@ -1,0 +1,5501 @@
+
+<!doctype html>
+<html lang="it" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.27">
+    
+    
+      
+        <title>Audit Sessioni, Request Logging e Sicurezza Token - Zero ERP Documentation</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.50057488.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,a=__md_scope)=>JSON.parse(t.getItem(a.pathname+"."+e)),__md_set=(e,t,a=localStorage,_=__md_scope)=>{try{a.setItem(_.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-label="Navigazione"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#audit-sessioni-request-logging-e-sicurezza-token" class="md-skip">
+          Vai al contenuto
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Intestazione">
+    <a href="../../../" title="Zero ERP Documentation" class="md-header__button md-logo" aria-label="Zero ERP Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigazione">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Zero ERP Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Audit Sessioni, Request Logging e Sicurezza Token
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Cerca">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Cerca">
+  <button type="button" class="md-search__button">
+    Cerca
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/Tito-it/ZeroErp" title="Apri repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Tito-it/ZeroErp
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../" class="md-tabs__link">
+        
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../manifesto/" class="md-tabs__link">
+          
+  
+  Visione e Filosofia
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../installazione/" class="md-tabs__link">
+          
+  
+  Installazione
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../architettura/" class="md-tabs__link">
+          
+  
+  Architettura
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../dbzero/" class="md-tabs__link">
+          
+  
+  DB Zero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../backend/" class="md-tabs__link">
+          
+  
+  Backend (Django)
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../guide/gestione-pratiche/" class="md-tabs__link">
+          
+  
+  Guide tecniche
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../tutorial/framework-automazione-db/" class="md-tabs__link">
+          
+  
+  Tutorial
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../dbzero/tools/gen_db_docs/" class="md-tabs__link">
+          
+  
+  Strumenti
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  Sviluppatori
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../glossario/devops&db/" class="md-tabs__link">
+          
+  
+  Glossario
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigazione" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../" title="Zero ERP Documentation" class="md-nav__button md-logo" aria-label="Zero ERP Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    Zero ERP Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Tito-it/ZeroErp" title="Apri repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Tito-it/ZeroErp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visione e Filosofia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Visione e Filosofia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../manifesto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifesto
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../sviluppo-concentrico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sviluppo Concentrico
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduzione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cos’è Zero ERP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../perche-zeroerp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Perchè Zero ERP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installazione
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installazione
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../installazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prerequisiti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../LICENSE-GPL3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licenza
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architettura
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architettura
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architettura/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architettura
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Database
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../liquibase-setup-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Liquibase Setup & Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../linee-guida-sql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linee Guida SQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../linee-guida-trigger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linee Guida Trigger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2_4" id="__nav_4_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Db PostgresSQL
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Db PostgresSQL
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Panoramica
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/aggiornamento-versione-postgresql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aggiornamento versione
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/parametri-personalizzati-(GUC)/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parametri personalizzati (GUC)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2_4_4" id="__nav_4_2_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estensioni
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_2_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Estensioni
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/estensioni-utilizzate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utilizzate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/dblink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dblink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/pgAgent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pgAgent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../postgresql/pgcrypto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pgcrypto
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../dbzero/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DB Zero
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    DB Zero
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../dbzero/acquisti/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schemi
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Schemi
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/anagrafiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anagrafiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/catalogo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalogo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/dbops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dbops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/magazzino/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Magazzino
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/maintenance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintenance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pratiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/public/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/storico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storico
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/script/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/vendite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vendite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../backend/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backend (Django)
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Backend (Django)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../backend/acquisti/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aree
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Aree
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../backend/anagrafiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anagrafiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../backend/catalogo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalogo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../backend/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../backend/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../backend/contabilita/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contabilita
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../backend/magazzino/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Magazzino
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../backend/pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../backend/storico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storico
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../backend/vendite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vendite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide tecniche
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide tecniche
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione pratiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/soggetti-e-ruoli-anagrafici/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Soggetti e ruoli anagrafici
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/risorse-umane-e-accessi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risorse Umane e Accessi al Software
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/architettura-permessi-e-autorizzazioni/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architettura Permessi e Autorizzazioni
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/audit-e-tracciabilita/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit e tracciabilità
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-delle-istanze-utility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione delle Istanze Utility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/generazione-cliente/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generazione di un cliente
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-degli-indirizzi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione degli indirizzi
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/riclassificazione-vie/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Riclassificazione vie
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-dei-contatti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione dei contatti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-conti-bancari/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione conti bancari
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fatturazione
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione dei pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/tx_id_implementation_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementazione Transaction ID
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/storicizzazione-tabelle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storicizzazione Tabelle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/configurazione-e-gestione-parametri/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configurazione e gestione parametri
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/automazione-db/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Automazione DB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_18" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_18" id="__nav_7_18_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Log
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_18_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_18">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Log
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/Messaggi-di-Errore-e-Generazione-Log/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Messaggi di Errore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/messaggi-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Messaggi di Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/Analisi-tracciamento-processi-e-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi e Job
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorial
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorial
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tutorial/framework-automazione-db/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework automazione DB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strumenti
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Strumenti
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dbzero/tools/gen_db_docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generatore Documentazione
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sviluppatori
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sviluppatori
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontend-standards.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3" id="__nav_10_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Server
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3_1" id="__nav_10_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backend
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Backend
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/backend-dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guida backend-dev
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/checklist-post-upgrade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checklist post upgrade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/configurazione-django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configurazione Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3_2" id="__nav_10_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Database
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../db/dbdev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VM dbdev (PostgreSQL)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3_3" id="__nav_10_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infrastruttura
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Infrastruttura
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/proxmox/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proxmox
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3_4" id="__nav_10_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workstation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Workstation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workstation-dev/configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vm wrk1-dev (ubuntu)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_4" id="__nav_10_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    GitHub
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../github/configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentazione
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossario
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Glossario
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../glossario/devops&db/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dev&Ops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../glossario/process-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="Indice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Indice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#posizionamento-nello-sviluppo-concentrico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Posizionamento nello Sviluppo Concentrico
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Posizionamento nello Sviluppo Concentrico">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#perche-anello-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perche' Anello 0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-aggiunge-allanello-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cosa aggiunge all'Anello 0
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contesto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contesto
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#area-1-audit-sessioni-login-token-scadenza" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AREA 1: Audit Sessioni (login / token / scadenza)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AREA 1: Audit Sessioni (login &#x2f; token &#x2f; scadenza)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#obiettivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Obiettivo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1a-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1A — DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1b-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1B — Backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#area-2-request-logging-chi-chiama-cosa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AREA 2: Request Logging (chi chiama cosa)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AREA 2: Request Logging (chi chiama cosa)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#obiettivo_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Obiettivo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2a-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2A — DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2b-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2B — Backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#area-3-token-blacklist-e-revoca" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AREA 3: Token Blacklist e Revoca
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AREA 3: Token Blacklist e Revoca">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#obiettivo_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Obiettivo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3a-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3A — DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3b-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3B — Backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#riepilogo-dipendenze-e-ordine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Riepilogo dipendenze e ordine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Riepilogo dipendenze e ordine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tabella-riassuntiva" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabella riassuntiva
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-da-creare-modificare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File da creare / modificare
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="File da creare &#x2f; modificare">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nuovi-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nuovi file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-da-modificare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File da modificare
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-di-riferimento-pattern-esistenti-da-riusare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File di riferimento (pattern esistenti da riusare)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aggiornamenti-a-documenti-e-configurazioni-esistenti" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aggiornamenti a documenti e configurazioni esistenti
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Aggiornamenti a documenti e configurazioni esistenti">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#documenti-da-aggiornare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documenti da aggiornare
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configurazioni-runtime-da-aggiornare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configurazioni runtime da aggiornare
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smoke-test-da-aggiornare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smoke test da aggiornare
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-unitari-creati-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test unitari creati (DONE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentazione-backend-da-creare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentazione backend da creare
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifica" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifica
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analisi-post-implementazione-incongruenze-guida-vs-codice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analisi post-implementazione — Incongruenze guida vs codice
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Analisi post-implementazione — Incongruenze guida vs codice">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#riepilogo-incongruenze-trovate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Riepilogo incongruenze trovate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dettaglio-per-punto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dettaglio per punto
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dettaglio per punto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#punto-1-sez-52-passo-3-correlazione-tx_id-fuorviante" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punto 1 — Sez. 5.2 passo 3: correlazione tx_id fuorviante
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#punto-2-sez-52-passo-4-query-sql-errata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punto 2 — Sez. 5.2 passo 4: query SQL errata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#punto-3-sez-6-nome-middleware-mancante" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punto 3 — Sez. 6: nome middleware mancante
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#punto-4-idempotency_key-non-popolata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punto 4 — idempotency_key non popolata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#punto-5-cleanup_at-non-e-un-bug-ma-la-retention-dichiarata-non-corrisponde" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punto 5 — cleanup_at: non è un bug, ma la retention dichiarata non corrisponde
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#punto-6-job-pgagent-dedicato-vs-generico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punto 6 — Job pgAgent: dedicato vs generico
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#punto-7-audit-trail-permessi-stato-reale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punto 7 — Audit trail permessi: stato reale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#punto-8-incoerenza-tra-sez-5-e-sez-8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Punto 8 — Incoerenza tra sez. 5 e sez. 8
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#azioni-necessarie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Azioni necessarie
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+  
+  
+
+
+<h1 id="audit-sessioni-request-logging-e-sicurezza-token">Audit Sessioni, Request Logging e Sicurezza Token<a class="headerlink" href="#audit-sessioni-request-logging-e-sicurezza-token" title="Permanent link">&para;</a></h1>
+<p><strong>Data</strong>: 2026-03-05
+<strong>Stato</strong>: COMPLETATO — FASE 1 (DB) + FASE 2 (Backend) + FASE 3 (Test unitari) implementati il 6 marzo 2026
+<strong>Autore</strong>: tid / Claude</p>
+<hr />
+<h2 id="posizionamento-nello-sviluppo-concentrico">Posizionamento nello Sviluppo Concentrico<a class="headerlink" href="#posizionamento-nello-sviluppo-concentrico" title="Permanent link">&para;</a></h2>
+<p>Tutte e tre le aree di questo piano appartengono all'<strong>Anello 0 — Nucleo Infrastrutturale</strong>.</p>
+<div class="highlight"><pre><span></span><code>    Anello 0 (Nucleo)
+    ┌────────────────────────────────────────────────┐
+    │  core          dbops          script            │
+    │                                                │
+    │  + sessioni_utente  (AREA 1 — nuovo)           │
+    │  + request_log      (AREA 2 — nuovo)           │
+    │  + token_blacklist  (AREA 3 — nuovo)           │
+    │                                                │
+    │  + session_audit_service     (nuovo)            │
+    │  + request_log_middleware    (nuovo)            │
+    │  + auth_views audit         (nuovo)            │
+    └────────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="perche-anello-0">Perche' Anello 0<a class="headerlink" href="#perche-anello-0" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Infrastruttura trasversale</strong> — sessioni, request log e revoca token sono servizi che tutti gli anelli esterni consumano senza alcuna modifica al proprio codice. Un endpoint di vendite, pratiche o acquisti viene loggato automaticamente dal middleware.</p>
+</li>
+<li>
+<p><strong>Estensioni non-breaking</strong> — nuove tabelle in <code>dbops</code>, nuovi middleware in <code>core</code>, override view JWT. Nessun contratto esistente viene rotto. La mappa concentrica ammette esplicitamente <em>"modifiche solo per correzioni o estensioni non-breaking (nuove policy, nuovi middleware)"</em>.</p>
+</li>
+<li>
+<p><strong>Principio 3 applicato</strong> — <em>"Se un anello esterno rivela una debolezza interna, si corregge alla fonte."</em> I smoke test su vendite e pratiche hanno rivelato che il nucleo non traccia sessioni ne' request. La correzione va nel nucleo, non nei singoli domini.</p>
+</li>
+<li>
+<p><strong>Principio 5 — "Metti le regole dove non possono essere aggirate"</strong> — Il request log via middleware e' ineludibile: ogni request <code>/api/*</code> viene catturata. Non serve che i domini "si ricordino" di loggare.</p>
+</li>
+<li>
+<p><strong>Direzione dipendenze rispettata</strong> — Le nuove tabelle <code>dbops</code> non hanno FK verso anelli esterni. Il middleware <code>core</code> usa solo <code>request_context</code> (gia' Anello 0). Nessuna dipendenza inversa.</p>
+</li>
+</ol>
+<h3 id="cosa-aggiunge-allanello-0">Cosa aggiunge all'Anello 0<a class="headerlink" href="#cosa-aggiunge-allanello-0" title="Permanent link">&para;</a></h3>
+<p>Dopo implementazione, l'Anello 0 fornira' agli anelli esterni:</p>
+<table>
+<thead>
+<tr>
+<th>Capacita'</th>
+<th>Prima</th>
+<th>Dopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chi si e' connesso e quando</td>
+<td>Non tracciato</td>
+<td><code>dbops.sessioni_utente</code> con IP, user_agent, jti</td>
+</tr>
+<tr>
+<td>Quale utente ha chiamato quale endpoint</td>
+<td>Non tracciato</td>
+<td><code>dbops.request_log</code> con metodo, path, status, durata</td>
+</tr>
+<tr>
+<td>Revoca immediata token compromesso</td>
+<td>Solo blocco 403 via middleware</td>
+<td>Token rifiutato a livello di autenticazione</td>
+</tr>
+<tr>
+<td>Correlazione sessione-request</td>
+<td>Nessuna</td>
+<td><code>request_id</code> condiviso tra le due tabelle</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
+<p>Il sistema ha un buon audit a livello DB (trigger <code>user_insert/user_update</code> con JWT user reale via GUC <code>app.jwt_user</code>, storicizzazione temporale), ma <strong>manca completamente il tracking delle sessioni utente e delle request HTTP</strong>.</p>
+<p>Non c'e' modo di sapere:
+- Quando un utente ha fatto login (ottenuto token)
+- Quando il token e' stato refreshato
+- Quando la sessione e' scaduta
+- Quale utente ha chiamato quale endpoint, quando, e con quale esito
+- Se un token compromesso e' stato usato dopo la disabilitazione dell'utente</p>
+<p>Le funzionalita' da implementare si dividono in <strong>3 aree</strong>, ognuna con componente DB e backend.</p>
+<hr />
+<h2 id="area-1-audit-sessioni-login-token-scadenza">AREA 1: Audit Sessioni (login / token / scadenza)<a class="headerlink" href="#area-1-audit-sessioni-login-token-scadenza" title="Permanent link">&para;</a></h2>
+<h3 id="obiettivo">Obiettivo<a class="headerlink" href="#obiettivo" title="Permanent link">&para;</a></h3>
+<p>Tracciare il ciclo di vita delle sessioni JWT: emissione token, refresh, scadenza, revoca.</p>
+<h3 id="1a-db">1A — DB<a class="headerlink" href="#1a-db" title="Permanent link">&para;</a></h3>
+<p><strong>Prerequisiti</strong>: nessuno</p>
+<p><strong>Tabella <code>dbops.sessioni_utente</code></strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>BIGINT PK</td>
+<td>autoincrement (BY DEFAULT)</td>
+</tr>
+<tr>
+<td><code>auth_user_id</code></td>
+<td>INTEGER NOT NULL</td>
+<td>FK auth_user</td>
+</tr>
+<tr>
+<td><code>evento</code></td>
+<td>TEXT NOT NULL</td>
+<td>LOGIN, REFRESH, LOGOUT, SCADENZA, REVOCA</td>
+</tr>
+<tr>
+<td><code>jti</code></td>
+<td>TEXT</td>
+<td>JWT ID (claim univoco del token)</td>
+</tr>
+<tr>
+<td><code>ip_address</code></td>
+<td>INET</td>
+<td>IP del client</td>
+</tr>
+<tr>
+<td><code>user_agent</code></td>
+<td>TEXT</td>
+<td>browser/client</td>
+</tr>
+<tr>
+<td><code>request_id</code></td>
+<td>UUID</td>
+<td>correlazione con request_log</td>
+</tr>
+<tr>
+<td><code>dettaglio</code></td>
+<td>JSONB DEFAULT '{}'</td>
+<td>dati aggiuntivi</td>
+</tr>
+<tr>
+<td><code>tx_id</code></td>
+<td>UUID</td>
+<td>transaction ID (pattern dbops, trigger <code>trgfn_tx_id_managed</code>)</td>
+</tr>
+<tr>
+<td><code>cleanup_at</code></td>
+<td>TIMESTAMPTZ</td>
+<td>retention schedulata (pattern <code>dbops.audit_log</code>)</td>
+</tr>
+<tr>
+<td><code>data_insert</code></td>
+<td>TIMESTAMPTZ DEFAULT now()</td>
+<td></td>
+</tr>
+<tr>
+<td><code>user_insert</code></td>
+<td>TEXT DEFAULT CURRENT_USER</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Constraint</strong>:
+- PK: <code>pk_sessioni_utente</code>
+- CHECK: <code>chk_sessioni_utente_evento CHECK (evento IN ('LOGIN','REFRESH','LOGOUT','SCADENZA','REVOCA'))</code></p>
+<p><strong>Indici</strong>: <code>ix_sessioni_utente_auth_user_id</code>, <code>ix_sessioni_utente_data_insert</code>, <code>ix_sessioni_utente_jti</code>, <code>ix_sessioni_utente_cleanup_at</code></p>
+<p><strong>Trigger</strong>: <code>trg_sessioni_utente_gen_tx_id_ins_upd</code> -&gt; <code>dbops.trgfn_tx_id_managed()</code></p>
+<p><strong>GRANT</strong>: automatico via CI grant dinamico su schema <code>dbops</code> (SELECT, INSERT per <code>zeroerp_app</code>)</p>
+<p><strong>NO storicizzazione</strong> (e' gia' un log, non serve snapshot)
+<strong>NO data_update/user_update</strong> (insert-only, non aggiornabile)</p>
+<p><strong>Changeset</strong>: <code>db/changelog/migrations_v2/00_schema/dbops/20260305-01-create-sessioni-utente-mctit.yaml</code></p>
+<h3 id="1b-backend">1B — Backend<a class="headerlink" href="#1b-backend" title="Permanent link">&para;</a></h3>
+<p><strong>Prerequisiti</strong>: tabella 1A creata</p>
+<p><strong>Nuovo file</strong> <code>apps/core/db/session_audit_repository.py</code>:
+- <code>log_session_event(auth_user_id, evento, jti, ip_address, user_agent, request_id, dettaglio)</code>
+- INSERT diretto, nessuna logica complessa</p>
+<p><strong>Nuovo file</strong> <code>apps/core/services/session_audit_service.py</code>:
+- <code>record_login(user, request)</code> — chiamato dopo token emesso
+- <code>record_refresh(user, request)</code> — chiamato dopo token refreshato
+- <code>record_logout(user, request)</code> — chiamato su revoca esplicita (futuro)</p>
+<p><strong>Integrazione</strong>: Override delle view SimpleJWT per agganciare il logging:</p>
+<p><strong>Nuovo file</strong> <code>apps/core/api/auth_views.py</code>:
+- <code>AuditTokenObtainPairView(TokenObtainPairView)</code> — override <code>post()</code>, dopo successo chiama <code>record_login()</code>
+- <code>AuditTokenRefreshView(TokenRefreshView)</code> — override <code>post()</code>, dopo successo chiama <code>record_refresh()</code></p>
+<p><strong>Modifica</strong> <code>zeroerp_backend/urls.py</code> — sostituire le view JWT con quelle audit</p>
+<p><strong>API di consultazione</strong> (opzionale, fase 2):
+- <code>GET /api/v1/core/users/{user_id}/sessioni/</code> — lista sessioni con filtri data</p>
+<hr />
+<h2 id="area-2-request-logging-chi-chiama-cosa">AREA 2: Request Logging (chi chiama cosa)<a class="headerlink" href="#area-2-request-logging-chi-chiama-cosa" title="Permanent link">&para;</a></h2>
+<h3 id="obiettivo_1">Obiettivo<a class="headerlink" href="#obiettivo_1" title="Permanent link">&para;</a></h3>
+<p>Registrare ogni request API autenticata: utente, endpoint, metodo, status, durata.</p>
+<h3 id="2a-db">2A — DB<a class="headerlink" href="#2a-db" title="Permanent link">&para;</a></h3>
+<p><strong>Prerequisiti</strong>: nessuno (parallelo a 1A)</p>
+<p><strong>Tabella <code>dbops.request_log</code></strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>BIGINT PK</td>
+<td>autoincrement (BY DEFAULT)</td>
+</tr>
+<tr>
+<td><code>auth_user_id</code></td>
+<td>INTEGER</td>
+<td>NULL se anonimo</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td>TEXT</td>
+<td>JWT user</td>
+</tr>
+<tr>
+<td><code>request_id</code></td>
+<td>UUID</td>
+<td>da RequestContextMiddleware</td>
+</tr>
+<tr>
+<td><code>method</code></td>
+<td>TEXT NOT NULL</td>
+<td>GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>TEXT NOT NULL</td>
+<td>/api/v1/pratiche/</td>
+</tr>
+<tr>
+<td><code>query_string</code></td>
+<td>TEXT</td>
+<td>parametri query (senza dati sensibili)</td>
+</tr>
+<tr>
+<td><code>status_code</code></td>
+<td>SMALLINT</td>
+<td>200, 400, 500... (nullable: transazione interrotta)</td>
+</tr>
+<tr>
+<td><code>duration_ms</code></td>
+<td>INTEGER</td>
+<td>tempo di risposta (nullable: transazione interrotta)</td>
+</tr>
+<tr>
+<td><code>ip_address</code></td>
+<td>INET</td>
+<td></td>
+</tr>
+<tr>
+<td><code>user_agent</code></td>
+<td>TEXT</td>
+<td></td>
+</tr>
+<tr>
+<td><code>error_code</code></td>
+<td>TEXT</td>
+<td>codice errore se presente (E_PRATICA_NOT_FOUND)</td>
+</tr>
+<tr>
+<td><code>idempotency_key</code></td>
+<td>TEXT</td>
+<td>per correlazione replay</td>
+</tr>
+<tr>
+<td><code>tx_id</code></td>
+<td>UUID</td>
+<td>transaction ID (pattern dbops, trigger <code>trgfn_tx_id_managed</code>)</td>
+</tr>
+<tr>
+<td><code>cleanup_at</code></td>
+<td>TIMESTAMPTZ</td>
+<td>retention schedulata (es. 90 giorni)</td>
+</tr>
+<tr>
+<td><code>data_insert</code></td>
+<td>TIMESTAMPTZ DEFAULT now()</td>
+<td></td>
+</tr>
+<tr>
+<td><code>user_insert</code></td>
+<td>TEXT DEFAULT CURRENT_USER</td>
+<td>audit inserimento</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Constraint</strong>:</p>
+<ul>
+<li>PK: <code>pk_request_log</code></li>
+<li>CHECK: <code>chk_request_log_method CHECK (method IN ('GET','POST','PUT','PATCH','DELETE','OPTIONS','HEAD'))</code></li>
+</ul>
+<p><strong>Indici</strong>: <code>ix_request_log_auth_user_id</code>, <code>ix_request_log_data_insert</code>, <code>ix_request_log_path</code>, <code>ix_request_log_request_id</code>, <code>ix_request_log_cleanup_at</code></p>
+<p><strong>Trigger</strong>: <code>trg_request_log_gen_tx_id_ins_upd</code> -&gt; <code>dbops.trgfn_tx_id_managed()</code></p>
+<p><strong>GRANT</strong>: automatico via CI grant dinamico su schema <code>dbops</code> (SELECT, INSERT per <code>zeroerp_app</code>)</p>
+<p><strong>Volume</strong>: alto — valutare partizionamento per mese se necessario</p>
+<p><strong>Changeset</strong>: <code>db/changelog/migrations_v2/00_schema/dbops/20260305-02-create-request-log-mctit.yaml</code></p>
+<h3 id="2b-backend">2B — Backend<a class="headerlink" href="#2b-backend" title="Permanent link">&para;</a></h3>
+<p><strong>Prerequisiti</strong>: tabella 2A creata</p>
+<p><strong>Nuovo file</strong> <code>apps/core/middleware/request_log_middleware.py</code>:
+- <code>RequestLogMiddleware(MiddlewareMixin)</code>:
+  - <code>process_request()</code>: salva <code>start_time</code>
+  - <code>process_response()</code>: calcola durata, INSERT asincrono nel DB
+  - Filtra solo <code>/api/*</code> (ignora static, health, docs)
+  - NON logga body request/response (sicurezza + volume)
+  - Logga solo header-level: method, path, status, durata, user</p>
+<p><strong>Modifica</strong> <code>zeroerp_backend/settings.py</code> — aggiungere middleware DOPO <code>JwtAuditMiddleware</code></p>
+<p><strong>Configurazione</strong>:
+- <code>DJANGO_REQUEST_LOG_ENABLED</code> — flag on/off (default True)
+- <code>DJANGO_REQUEST_LOG_EXCLUDE_PATHS</code> — lista path da escludere (es. <code>/health</code>, <code>/api/docs/</code>)</p>
+<p><strong>API di consultazione</strong> (opzionale, fase 2):
+- <code>GET /api/v1/core/request-log/</code> — solo ADMIN, con filtri user/data/path/status</p>
+<hr />
+<h2 id="area-3-token-blacklist-e-revoca">AREA 3: Token Blacklist e Revoca<a class="headerlink" href="#area-3-token-blacklist-e-revoca" title="Permanent link">&para;</a></h2>
+<h3 id="obiettivo_2">Obiettivo<a class="headerlink" href="#obiettivo_2" title="Permanent link">&para;</a></h3>
+<p>Permettere la revoca immediata di token compromessi o alla disabilitazione utente.</p>
+<h3 id="3a-db">3A — DB<a class="headerlink" href="#3a-db" title="Permanent link">&para;</a></h3>
+<p><strong>Prerequisiti</strong>: nessuno (parallelo a 1A e 2A)</p>
+<p>Usare il modulo built-in di SimpleJWT: <code>rest_framework_simplejwt.token_blacklist</code></p>
+<p>Questo crea automaticamente 2 tabelle Django-managed:
+- <code>token_blacklist_outstandingtoken</code> — token emessi
+- <code>token_blacklist_blacklistedtoken</code> — token revocati</p>
+<p><strong>Azione</strong>: aggiungere <code>'rest_framework_simplejwt.token_blacklist'</code> a <code>INSTALLED_APPS</code> e fare <code>manage.py migrate</code></p>
+<h3 id="3b-backend">3B — Backend<a class="headerlink" href="#3b-backend" title="Permanent link">&para;</a></h3>
+<p><strong>Prerequisiti</strong>: 3A (migrate)</p>
+<p><strong>Modifica</strong> <code>zeroerp_backend/settings.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">SIMPLE_JWT</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;ACCESS_TOKEN_LIFETIME&quot;</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>
+    <span class="s2">&quot;REFRESH_TOKEN_LIFETIME&quot;</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="s2">&quot;ROTATE_REFRESH_TOKENS&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>       <span class="c1"># nuovo refresh ad ogni refresh</span>
+    <span class="s2">&quot;BLACKLIST_AFTER_ROTATION&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>     <span class="c1"># vecchio refresh in blacklist</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Integrazione con disabilitazione utente</strong>:
+- Quando <code>ruolo_sistema</code> -&gt; <code>DISABILITATO</code>, invalidare tutti i token outstanding dell'utente
+- Il middleware <code>JwtAuditMiddleware</code> gia' blocca le request (403), ma i token restano tecnicamente validi
+- Con blacklist: il token viene proprio rifiutato a livello di autenticazione</p>
+<p><strong>Cleanup</strong>: <code>manage.py flushexpiredtokens</code> — command schedulato per pulire token scaduti</p>
+<hr />
+<h2 id="riepilogo-dipendenze-e-ordine">Riepilogo dipendenze e ordine<a class="headerlink" href="#riepilogo-dipendenze-e-ordine" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>FASE 1 (parallela DB):
+  DB:  1A (sessioni_utente) + 2A (request_log) + 3A (token_blacklist)
+       &lt;- tutte indipendenti, eseguibili in parallelo
+
+FASE 2 (Backend, dopo DB):
+  BE:  1B session_audit_service + auth_views override    &lt;- richiede 1A
+  BE:  2B request_log_middleware                          &lt;- richiede 2A
+  BE:  3B settings blacklist + rotation                   &lt;- richiede 3A
+
+FASE 3 (Test + Smoke):
+  Test unitari per ogni componente
+  Aggiornamento smoke-test-core.sh
+
+FASE 4 (Documentazione):
+  Aggiornamento documenti esistenti (vedi sezione dedicata)
+</code></pre></div>
+<h3 id="tabella-riassuntiva">Tabella riassuntiva<a class="headerlink" href="#tabella-riassuntiva" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Area</th>
+<th>Tipo</th>
+<th>Descrizione</th>
+<th>Prerequisiti</th>
+<th>Stato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1A</td>
+<td>Sessioni</td>
+<td>DB</td>
+<td>Tabella <code>dbops.sessioni_utente</code></td>
+<td>—</td>
+<td>DONE (changeset + doc)</td>
+</tr>
+<tr>
+<td>1B</td>
+<td>Sessioni</td>
+<td>Backend</td>
+<td>Repository + service + auth views override</td>
+<td>1A</td>
+<td>DONE (7 test)</td>
+</tr>
+<tr>
+<td>2A</td>
+<td>Request log</td>
+<td>DB</td>
+<td>Tabella <code>dbops.request_log</code></td>
+<td>—</td>
+<td>DONE (changeset + doc)</td>
+</tr>
+<tr>
+<td>2B</td>
+<td>Request log</td>
+<td>Backend</td>
+<td>Middleware <code>RequestLogMiddleware</code></td>
+<td>2A</td>
+<td>DONE (8 test)</td>
+</tr>
+<tr>
+<td>3A</td>
+<td>Token blacklist</td>
+<td>DB</td>
+<td><code>INSTALLED_APPS</code> + migrate</td>
+<td>—</td>
+<td>DONE (settings)</td>
+</tr>
+<tr>
+<td>3B</td>
+<td>Token blacklist</td>
+<td>Backend</td>
+<td>Settings rotation + integrazione disabilitazione</td>
+<td>3A</td>
+<td>DONE (settings)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="file-da-creare-modificare">File da creare / modificare<a class="headerlink" href="#file-da-creare-modificare" title="Permanent link">&para;</a></h2>
+<h3 id="nuovi-file">Nuovi file<a class="headerlink" href="#nuovi-file" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Area</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>db/changelog/migrations_v2/00_schema/dbops/20260305-01-create-sessioni-utente-mctit.yaml</code></td>
+<td>1A</td>
+</tr>
+<tr>
+<td><code>db/changelog/migrations_v2/00_schema/dbops/20260305-02-create-request-log-mctit.yaml</code></td>
+<td>2A</td>
+</tr>
+<tr>
+<td><code>backend/apps/core/db/session_audit_repository.py</code></td>
+<td>1B</td>
+</tr>
+<tr>
+<td><code>backend/apps/core/services/session_audit_service.py</code></td>
+<td>1B</td>
+</tr>
+<tr>
+<td><code>backend/apps/core/api/auth_views.py</code></td>
+<td>1B</td>
+</tr>
+<tr>
+<td><code>backend/apps/core/middleware/request_log_middleware.py</code></td>
+<td>2B</td>
+</tr>
+</tbody>
+</table>
+<h3 id="file-da-modificare">File da modificare<a class="headerlink" href="#file-da-modificare" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Area</th>
+<th>Modifica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/zeroerp_backend/settings.py</code></td>
+<td>2B, 3A, 3B</td>
+<td>INSTALLED_APPS, SIMPLE_JWT, MIDDLEWARE</td>
+</tr>
+<tr>
+<td><code>backend/zeroerp_backend/urls.py</code></td>
+<td>1B</td>
+<td>Sostituire view JWT con audit views</td>
+</tr>
+<tr>
+<td><code>backend/scripts/smoke-test-core.sh</code></td>
+<td>Test</td>
+<td>Aggiungere test sessioni e request log</td>
+</tr>
+</tbody>
+</table>
+<h3 id="file-di-riferimento-pattern-esistenti-da-riusare">File di riferimento (pattern esistenti da riusare)<a class="headerlink" href="#file-di-riferimento-pattern-esistenti-da-riusare" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Pattern</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/core/db/permissions_audit_repository.py</code></td>
+<td>Repository con raw SQL</td>
+</tr>
+<tr>
+<td><code>apps/core/services/idempotency_store.py</code></td>
+<td>INSERT con request_id</td>
+</tr>
+<tr>
+<td><code>apps/core/middleware/jwt_audit_middleware.py</code></td>
+<td>Middleware Django</td>
+</tr>
+<tr>
+<td><code>apps/core/services/request_context.py</code></td>
+<td>ContextVar per request_id/idempotency_key</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="aggiornamenti-a-documenti-e-configurazioni-esistenti">Aggiornamenti a documenti e configurazioni esistenti<a class="headerlink" href="#aggiornamenti-a-documenti-e-configurazioni-esistenti" title="Permanent link">&para;</a></h2>
+<p>Dopo l'implementazione, i seguenti documenti e file devono essere aggiornati per mantenere coerenza con il modello concentrico.</p>
+<h3 id="documenti-da-aggiornare">Documenti da aggiornare<a class="headerlink" href="#documenti-da-aggiornare" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Documento</th>
+<th>Cosa aggiornare</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/it/mappa-concentrica.md</code></td>
+<td>Aggiungere le 3 nuove capacita' nella tabella Anello 0 e nella sezione "Cosa fornisce agli anelli esterni"</td>
+</tr>
+<tr>
+<td><code>.codex/PROJECT_CONTEXT.md</code></td>
+<td>Aggiornare sezione "Struttura App Django" con i nuovi file <code>core</code>. Aggiornare sezione "Completato" quando implementato. Aggiungere <code>dbops.sessioni_utente</code> e <code>dbops.request_log</code> nella descrizione schema <code>dbops</code></td>
+</tr>
+<tr>
+<td><code>.codex/AGENTS.md</code></td>
+<td>Aggiungere riferimento ai nuovi middleware nella lista middleware. Documentare il pattern auth_views override come esempio per future estensioni JWT</td>
+</tr>
+<tr>
+<td><code>docs/it/dev/work-in-progress/brief-db-audit-jwt-user.md</code></td>
+<td>Aggiornare: il brief copre solo il GUC audit, ora va esteso o collegato a questo piano per sessioni e request log</td>
+</tr>
+<tr>
+<td><code>docs/it/dev/work-in-progress/permessi-e-autorizzazioni.md</code></td>
+<td>Collegare la sezione token blacklist/revoca come evoluzione del sistema permessi</td>
+</tr>
+<tr>
+<td><code>docs/it/dev/work-in-progress/proposta-8.2-audit-trail-permessi.md</code></td>
+<td>Verificare sovrapposizioni con Area 1 (sessioni) e consolidare</td>
+</tr>
+</tbody>
+</table>
+<h3 id="configurazioni-runtime-da-aggiornare">Configurazioni runtime da aggiornare<a class="headerlink" href="#configurazioni-runtime-da-aggiornare" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File/Config</th>
+<th>Cosa aggiornare</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>db/changelog/migrations_v2/90_end/ci_apply/</code></td>
+<td>Il GRANT <code>ci_apply</code> deve gia' coprire <code>dbops</code> — verificare che le nuove tabelle ricevano i grant automaticamente. Se il changeset usa <code>GRANT ... ON ALL TABLES IN SCHEMA dbops</code>, non serve modifica</td>
+</tr>
+<tr>
+<td><code>maintenance</code> / pgAgent</td>
+<td>Aggiungere job schedulato per: (1) pulizia <code>dbops.sessioni_utente</code> oltre retention, (2) pulizia <code>dbops.request_log</code> oltre retention, (3) <code>manage.py flushexpiredtokens</code> per blacklist</td>
+</tr>
+<tr>
+<td><code>backend/zeroerp_backend/settings.py</code></td>
+<td>Variabili ambiente nuove: <code>DJANGO_REQUEST_LOG_ENABLED</code>, <code>DJANGO_REQUEST_LOG_EXCLUDE_PATHS</code> — documentare in <code>.env.example</code> o equivalente</td>
+</tr>
+</tbody>
+</table>
+<h3 id="smoke-test-da-aggiornare">Smoke test da aggiornare<a class="headerlink" href="#smoke-test-da-aggiornare" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Cosa aggiungere</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/scripts/smoke-test-core.sh</code></td>
+<td>Test 18: login -&gt; verifica riga in <code>sessioni_utente</code>. Test 19: refresh -&gt; verifica riga REFRESH. Test 20: chiamata API -&gt; verifica riga in <code>request_log</code>. Test 21: blacklist token -&gt; verifica 401</td>
+</tr>
+<tr>
+<td><code>backend/scripts/smoke-test-pratiche.sh</code></td>
+<td>Nessuna modifica (beneficia automaticamente del request log)</td>
+</tr>
+<tr>
+<td><code>backend/scripts/smoke-test-vendite.sh</code></td>
+<td>Nessuna modifica (beneficia automaticamente del request log)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="test-unitari-creati-done">Test unitari creati (DONE)<a class="headerlink" href="#test-unitari-creati-done" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Contenuto</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/apps/core/tests/services/test_session_audit_service.py</code></td>
+<td>Mock DB, verifica chiamate repository per login/refresh, IP, UA, errori silent</td>
+<td>7</td>
+</tr>
+<tr>
+<td><code>backend/apps/core/tests/api/test_auth_views.py</code></td>
+<td>Mock service, verifica che le view audit chiamino <code>record_login</code>/<code>record_refresh</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>backend/apps/core/tests/middleware/test_request_log_middleware.py</code></td>
+<td>Mock DB, verifica INSERT, esclusione path, disabilitazione, errori silent</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<h3 id="documentazione-backend-da-creare">Documentazione backend da creare<a class="headerlink" href="#documentazione-backend-da-creare" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Contenuto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/it/backend/core/manual/session-audit.md</code></td>
+<td>Scopo, contesto, input/output, regole, dipendenze DB — template standard</td>
+</tr>
+<tr>
+<td><code>docs/it/backend/core/manual/request-log.md</code></td>
+<td>Scopo, contesto, configurazione, esclusioni, retention</td>
+</tr>
+<tr>
+<td><code>docs/it/dbzero/dbops/manual/sessioni-utente.md</code></td>
+<td>Documentazione manuale tabella</td>
+</tr>
+<tr>
+<td><code>docs/it/dbzero/dbops/manual/request-log.md</code></td>
+<td>Documentazione manuale tabella</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="verifica">Verifica<a class="headerlink" href="#verifica" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Smoke test sessioni</strong>: login -&gt; verifica riga in <code>dbops.sessioni_utente</code> -&gt; refresh -&gt; verifica riga REFRESH</li>
+<li><strong>Smoke test request log</strong>: chiamata API -&gt; verifica riga in <code>dbops.request_log</code> con user/path/status/durata</li>
+<li><strong>Smoke test blacklist</strong>: login -&gt; blacklist token -&gt; verifica 401 su richiesta successiva</li>
+<li><strong>Test unitari</strong>: mock DB per ogni service/middleware — CI-compatibili (no DB reale)</li>
+<li><strong>Test suite completa</strong>: <code>./manage-test.sh -v 2</code> — tutti i test devono passare</li>
+<li><strong>Coerenza concentrica</strong>: verificare che nessun file in anelli 1/2/3 importi direttamente da session_audit o request_log (le dipendenze devono andare solo dall'interno verso l'esterno)</li>
+<li><strong>Documenti aggiornati</strong>: tutti i file nella sezione "Aggiornamenti" devono riflettere le nuove capacita'</li>
+</ol>
+<hr />
+<h2 id="analisi-post-implementazione-incongruenze-guida-vs-codice">Analisi post-implementazione — Incongruenze guida vs codice<a class="headerlink" href="#analisi-post-implementazione-incongruenze-guida-vs-codice" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Data analisi:</strong> 2026-03-07
+<strong>Documenti confrontati:</strong> questa specifica WIP, <code>docs/it/guide/audit-e-tracciabilita.md</code>,
+<code>docs/it/dev/work-in-progress/brief-db-audit-jwt-user.md</code>,
+<code>docs/it/dev/work-in-progress/proposta-8.2-audit-trail-permessi.md</code>,
+codice backend implementato.</p>
+</blockquote>
+<h3 id="riepilogo-incongruenze-trovate">Riepilogo incongruenze trovate<a class="headerlink" href="#riepilogo-incongruenze-trovate" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Sezione guida</th>
+<th>Tipo</th>
+<th>Gravità</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>5.2 passo 3</td>
+<td>Doc fuorviante</td>
+<td>Media</td>
+<td>Spiegazione confusa su <code>tx_id</code> nel <code>request_log</code> — il <code>tx_id</code> presente è quello della propria INSERT (trigger <code>trgfn_tx_id_managed</code>), non quello della transazione operativa. La correlazione diretta non esiste ancora; il problema reale è la mancata propagazione di <code>request_id</code> come GUC nelle tabelle operative</td>
+</tr>
+<tr>
+<td>2</td>
+<td>5.2 passo 4</td>
+<td>Errore SQL</td>
+<td>Alta</td>
+<td>La query usa <code>user_insert</code> per filtrare <code>sessioni_utente</code>, ma <code>user_insert</code> contiene il ruolo DB (<code>zeroerp_app</code>), non lo username JWT. La colonna corretta è <code>auth_user_id</code> (con join su <code>auth_user</code>)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>6</td>
+<td>Doc incompleta</td>
+<td>Bassa</td>
+<td>Manca il nome esplicito <code>JwtAuditMiddleware</code> nella tabella copertura automatica — la guida dice solo "GUC middleware"</td>
+</tr>
+<tr>
+<td>4</td>
+<td>6 + codice</td>
+<td>Campo non popolato</td>
+<td>Bassa</td>
+<td>La colonna <code>idempotency_key</code> in <code>request_log</code> è definita nella migrazione DB ma il middleware non la popola mai e la guida non la menziona</td>
+</tr>
+<tr>
+<td>5</td>
+<td>7</td>
+<td><strong>Risolto</strong></td>
+<td>~~Critica~~</td>
+<td>~~BUG CRITICO~~ Pattern corretto (INSERT NULL + batch <code>fn_apply_cleanup_at</code>). Override TTL aggiunti in <code>automation_rules_tbl</code>: id=13 sessioni_utente 180gg, id=14 request_log 90gg. Guida sez. 7 da allineare (dichiarava 365gg sessioni)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>7</td>
+<td>Doc disallineata</td>
+<td>Media</td>
+<td>La guida descrive un job pgAgent dedicato con <code>DELETE ... WHERE cleanup_at &lt; NOW()</code>. L'implementazione reale usa il framework generico <code>fn_run_automations_cleanup</code> (job <code>automations_cleanup_weekly</code>)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>8</td>
+<td>Doc non aggiornata</td>
+<td>Media</td>
+<td>La guida lista "Audit trail permessi" come idea futura generica, ma esiste già la specifica completa <code>proposta-8.2-audit-trail-permessi.md</code> con implementazione via storicizzazione su 7 tabelle permessi</td>
+</tr>
+<tr>
+<td>8</td>
+<td>5 + 8</td>
+<td>Incoerenza interna</td>
+<td>Media</td>
+<td>In sez. 5 la formulazione "Se il sistema ha loggato il tx_id nel request log (fase futura)" confonde, perché il tx_id c'è già (è quello dell'INSERT del log stesso). In sez. 8 la formulazione è corretta: "il request_id verrà propagato come GUC". Le due sezioni non sono coerenti tra loro</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dettaglio-per-punto">Dettaglio per punto<a class="headerlink" href="#dettaglio-per-punto" title="Permanent link">&para;</a></h3>
+<h4 id="punto-1-sez-52-passo-3-correlazione-tx_id-fuorviante">Punto 1 — Sez. 5.2 passo 3: correlazione <code>tx_id</code> fuorviante<a class="headerlink" href="#punto-1-sez-52-passo-3-correlazione-tx_id-fuorviante" title="Permanent link">&para;</a></h4>
+<p><strong>Stato attuale:</strong> Il <code>tx_id</code> nella tabella <code>request_log</code> è quello generato dal trigger <code>trgfn_tx_id_managed</code> al momento dell'INSERT del record di log stesso. Non ha alcuna relazione con il <code>tx_id</code> delle tabelle operative modificate dalla request.</p>
+<p><strong>Cosa serve:</strong> Propagare <code>request_id</code> come GUC PostgreSQL (<code>SET LOCAL app.request_id = ...</code>), così che le tabelle operative possano registrarlo. Questo renderebbe la correlazione diretta: dato un <code>request_id</code> nel <code>request_log</code>, si troverebbe lo stesso <code>request_id</code> nei record operativi modificati da quella request.</p>
+<p><strong>Correzione guida:</strong> Riscrivere il passo 3 per chiarire che oggi la correlazione è solo temporale (finestra ±5s su <code>data_update</code>/<code>data_insert</code> + username) e che la correlazione diretta via <code>request_id</code> come GUC è l'evoluzione pianificata.</p>
+<h4 id="punto-2-sez-52-passo-4-query-sql-errata">Punto 2 — Sez. 5.2 passo 4: query SQL errata<a class="headerlink" href="#punto-2-sez-52-passo-4-query-sql-errata" title="Permanent link">&para;</a></h4>
+<p><strong>Codice errato nella guida:</strong>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">sessioni_utente</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">user_insert</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">user_update</span><span class="w">    </span><span class="c1">-- SBAGLIATO: user_insert = &#39;zeroerp_app&#39;</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">data_insert</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="p">:</span><span class="n">data_update</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">data_insert</span><span class="w"> </span><span class="k">DESC</span>
+<span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</code></pre></div></p>
+<p><strong>Correzione:</strong> La tabella <code>sessioni_utente</code> è insert-only e non ha le colonne <code>data_update</code>/<code>user_update</code> — il trigger <code>trgfn_audit_data_user_generic</code> non è applicabile perché su INSERT scrive anche su <code>data_update</code>/<code>user_update</code> che qui non esistono. Di conseguenza <code>user_insert</code> mantiene il DEFAULT <code>CURRENT_USER</code> (ruolo DB, es. <code>zeroerp_app</code>), non l'utente JWT. L'utente reale è nella colonna dedicata <code>auth_user_id</code>. Per filtrare per utente serve usare <code>auth_user_id</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">sessioni_utente</span><span class="w"> </span><span class="n">su</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">auth_user</span><span class="w"> </span><span class="n">au</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">au</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">su</span><span class="p">.</span><span class="n">auth_user_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">au</span><span class="p">.</span><span class="n">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">user_update</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">su</span><span class="p">.</span><span class="n">data_insert</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="p">:</span><span class="n">data_update</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">su</span><span class="p">.</span><span class="n">data_insert</span><span class="w"> </span><span class="k">DESC</span>
+<span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</code></pre></div>
+<h4 id="punto-3-sez-6-nome-middleware-mancante">Punto 3 — Sez. 6: nome middleware mancante<a class="headerlink" href="#punto-3-sez-6-nome-middleware-mancante" title="Permanent link">&para;</a></h4>
+<p>La tabella di copertura automatica dice "GUC middleware" senza specificare che si tratta di <code>JwtAuditMiddleware</code> (<code>apps/core/middleware/jwt_audit_middleware.py</code>). Il nome esplicito aiuta la navigazione.</p>
+<h4 id="punto-4-idempotency_key-non-popolata">Punto 4 — <code>idempotency_key</code> non popolata<a class="headerlink" href="#punto-4-idempotency_key-non-popolata" title="Permanent link">&para;</a></h4>
+<p><strong>Risolto (7 marzo 2026).</strong></p>
+<p>La colonna <code>idempotency_key</code> è ora popolata dal middleware <code>request_log_middleware.py</code>:</p>
+<ul>
+<li>Aggiunto import <code>get_idempotency_key</code> da <code>request_context</code></li>
+<li>Il valore viene letto dalla ContextVar (popolata da <code>RequestContextMiddleware</code> dall'header <code>Idempotency-Key</code> / <code>X-Idempotency-Key</code>) e scritto nell'INSERT</li>
+<li>La guida <code>audit-e-tracciabilita.md</code> sez. 4.2 aggiornata con la riga <code>Idempotenza</code></li>
+</ul>
+<h4 id="punto-5-cleanup_at-non-e-un-bug-ma-la-retention-dichiarata-non-corrisponde">Punto 5 — <code>cleanup_at</code>: non è un bug, ma la retention dichiarata non corrisponde<a class="headerlink" href="#punto-5-cleanup_at-non-e-un-bug-ma-la-retention-dichiarata-non-corrisponde" title="Permanent link">&para;</a></h4>
+<p><strong>~~BUG CRITICO~~ Riclassificato a "Doc disallineata" (Media).</strong></p>
+<p>Il <code>cleanup_at</code> viene lasciato NULL all'INSERT da tutti i repository del progetto — è il pattern standard. La valorizzazione avviene in batch tramite il framework di automazione:</p>
+<ol>
+<li><code>dbops.fn_apply_cleanup_at()</code> (regola <code>CLEANUP_AT</code>, id=11 in <code>automation_rules_tbl</code>) scansiona tutte le tabelle con colonna <code>cleanup_at</code> e per ogni riga con <code>cleanup_at IS NULL</code> calcola: <code>base_timestamp + TTL_DAYS days</code></li>
+<li><code>dbops.fn_purge_cleanup_expired()</code> (regola <code>CLEANUP_PURGE</code>, id=12) elimina in batch le righe con <code>cleanup_at &lt;= now()</code></li>
+<li>Orchestrate da <code>fn_run_automations_cleanup()</code>, eseguita dal job pgAgent <code>automations_cleanup_weekly</code> (domenica 23:00 UTC)</li>
+</ol>
+<p>Lo stesso pattern è usato da <code>error_log</code>, <code>audit_log</code> e <code>idempotency_keys</code>.</p>
+<p><strong>Risolto:</strong> Aggiunte righe di override in <code>automation_rules_tbl</code> (id=13 e id=14, priorità 190 &lt; default 200):</p>
+<ul>
+<li><code>sessioni_utente</code>: TTL <strong>180 giorni</strong> (id=13)</li>
+<li><code>request_log</code>: TTL <strong>90 giorni</strong> (id=14)</li>
+</ul>
+<p>Le regole specifiche hanno priorità 190, eseguite prima della regola generica <code>*all</code> (priorità 200). Poiché <code>apply_on_update=false</code>, la regola generica trova <code>cleanup_at</code> già valorizzato e non sovrascrive.</p>
+<p><strong>Guida da allineare:</strong> La sez. 7 dichiarava 365 giorni per sessioni — il valore reale è ora 180 giorni.</p>
+<h4 id="punto-6-job-pgagent-dedicato-vs-generico">Punto 6 — Job pgAgent: dedicato vs generico<a class="headerlink" href="#punto-6-job-pgagent-dedicato-vs-generico" title="Permanent link">&para;</a></h4>
+<p><strong>Guida (sez. 7):</strong> descrive un job specifico con SQL esplicito <code>DELETE FROM dbops.sessioni_utente WHERE cleanup_at &lt; NOW()</code>.</p>
+<p><strong>Implementazione reale:</strong> Il cleanup è gestito dal job generico <code>automations_cleanup_weekly</code> che invoca <code>maintenance.proc_automations_cleanup_job()</code> → <code>dbops.fn_run_automations_cleanup()</code>. Questo framework gestisce tutte le tabelle con colonna <code>cleanup_at</code> in modo centralizzato.</p>
+<p><strong>Correzione guida:</strong> Allineare la descrizione al meccanismo reale (framework generico), mantenendo la tabella retention come riferimento.</p>
+<h4 id="punto-7-audit-trail-permessi-stato-reale">Punto 7 — Audit trail permessi: stato reale<a class="headerlink" href="#punto-7-audit-trail-permessi-stato-reale" title="Permanent link">&para;</a></h4>
+<p><strong>Guida (sez. 8):</strong> <em>"Audit trail permessi: log delle modifiche ai profili reparto e override individuali, per tracciare chi ha concesso o revocato accessi e quando."</em></p>
+<p><strong>Realtà:</strong> Esiste la specifica completa <code>proposta-8.2-audit-trail-permessi.md</code> che definisce:
+- 7 tabelle target (6 config + <code>risorse_umane_auth_user</code>)
+- Approccio: riutilizzo framework storicizzazione generica (<code>storicizza = true</code> + <code>tx_id</code>)
+- Migrazioni Liquibase specificate
+- Query di consultazione di esempio</p>
+<p><strong>Stato implementazione:</strong> Migrazioni applicate e operative. Le 7 tabelle hanno <code>storicizza = true</code>, <code>tx_id</code> e trigger <code>trgfn_tx_id_managed</code> attivi (verificato sulla doc auto-generata 2026-03-07). L'audit trail permessi è quindi <strong>completato a livello DB</strong> — manca solo l'allineamento della guida (sez. 8) che lo elenca ancora come "evoluzione futura".</p>
+<h4 id="punto-8-incoerenza-tra-sez-5-e-sez-8">Punto 8 — Incoerenza tra sez. 5 e sez. 8<a class="headerlink" href="#punto-8-incoerenza-tra-sez-5-e-sez-8" title="Permanent link">&para;</a></h4>
+<p><strong>Sez. 5.2 passo 3:</strong> <em>"Se il sistema ha loggato il tx_id nel request log (fase futura), la correlazione è diretta."</em> — Fuorviante: il <code>tx_id</code> nel request_log c'è già, ma non serve a correlare con le tabelle operative.</p>
+<p><strong>Sez. 8:</strong> <em>"il request_id verrà propagato come GUC PostgreSQL e scritto nelle tabelle operative"</em> — Formulazione corretta.</p>
+<p><strong>Correzione:</strong> Allineare sez. 5 alla formulazione di sez. 8: il problema non è "loggare tx_id nel request_log" ma "propagare request_id nelle tabelle operative via GUC".</p>
+<h3 id="azioni-necessarie">Azioni necessarie<a class="headerlink" href="#azioni-necessarie" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Azione</th>
+<th>Tipo</th>
+<th>Priorità</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>~~Decidere TTL retention~~ <strong>FATTO</strong>: override aggiunti in <code>automation_rules_tbl</code> (id=13: sessioni 180gg, id=14: request_log 90gg). Resta da allineare guida sez. 7 (dichiarava 365gg sessioni)</td>
+<td>~~Config~~ Doc fix</td>
+<td>~~Alta~~ Bassa</td>
+</tr>
+<tr>
+<td>B</td>
+<td>Correggere sez. 5.2 della guida (query SQL + spiegazione correlazione)</td>
+<td>Doc fix</td>
+<td>Alta</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Aggiornare sez. 7 della guida (cleanup generico, nota su cleanup_at)</td>
+<td>Doc fix</td>
+<td>Media</td>
+</tr>
+<tr>
+<td>D</td>
+<td>Aggiornare sez. 8 della guida (stato audit trail permessi)</td>
+<td>Doc fix</td>
+<td>Media</td>
+</tr>
+<tr>
+<td>E</td>
+<td>~~Aggiornare sez. 6 della guida (nome middleware, nota idempotency_key)~~ <strong>FATTO</strong>: sez. 4.2 aggiornata con riga Idempotenza</td>
+<td>~~Doc fix~~ Completato</td>
+<td>~~Bassa~~</td>
+</tr>
+<tr>
+<td>F</td>
+<td>~~Decidere se popolare <code>idempotency_key</code> nel middleware~~ <strong>FATTO</strong>: implementato in <code>request_log_middleware.py</code> (7 marzo 2026)</td>
+<td>~~Decisione~~ Completato</td>
+<td>~~Bassa~~</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>© 2025-2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      
+        <script src="../../../../assets/javascripts/mermaid.min.js"></script>
+      
+        <script src="../../../../assets/javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

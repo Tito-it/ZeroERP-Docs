@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.26">
+      <meta name="generator" content="zensical-0.0.27">
     
     
       
@@ -705,7 +705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../LICENSE/" class="md-nav__link">
+      <a href="../../../../LICENSE-GPL3/" class="md-nav__link">
         
   
   
@@ -4083,7 +4083,7 @@
   <a href="#struttura-padre" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧱 Struttura (padre)
+        Struttura (padre)
       
     </span>
   </a>
@@ -4094,7 +4094,7 @@
   <a href="#partizioni-e-regole" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧩 Partizioni e regole
+        Partizioni e regole
       
     </span>
   </a>
@@ -4105,7 +4105,7 @@
   <a href="#esempi-duso" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧪 Esempi d’uso
+        Esempi d’uso
       
     </span>
   </a>
@@ -4116,7 +4116,7 @@
   <a href="#ruolo-nel-sistema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        👓 Ruolo nel sistema
+        Ruolo nel sistema
       
     </span>
   </a>
@@ -4159,7 +4159,7 @@
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <p><code>acquisti.note</code> gestisce <strong>note testuali</strong> ancorabili sia alla <strong>testata</strong> del documento sia alla <strong>riga</strong>, con controllo di posizionamento e ordinamento di rendering. È una tabella <strong>partizionata per <code>target_tipo</code></strong> per garantire prestazioni e manutenzione più semplici, con <strong>FK forti</strong> verso le rispettive testate/righe nelle singole partizioni.</p>
 <hr />
-<h3 id="struttura-padre">🧱 Struttura (padre)<a class="headerlink" href="#struttura-padre" title="Permanent link">&para;</a></h3>
+<h3 id="struttura-padre">Struttura (padre)<a class="headerlink" href="#struttura-padre" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Partizionamento</strong>: <code>PARTITION BY LIST (target_tipo)</code>.</li>
 <li><strong>PK composita</strong>: <code>(target_tipo, id)</code> → necessaria per le partizioni (l’<code>id</code> non è univoco globalmente).</li>
@@ -4177,7 +4177,7 @@
 <li><code>ix_acquisti_note_by_riga(… WHERE target_riga_id IS NOT NULL)</code></li>
 </ul>
 <hr />
-<h3 id="partizioni-e-regole">🧩 Partizioni e regole<a class="headerlink" href="#partizioni-e-regole" title="Permanent link">&para;</a></h3>
+<h3 id="partizioni-e-regole">Partizioni e regole<a class="headerlink" href="#partizioni-e-regole" title="Permanent link">&para;</a></h3>
 <p>Ogni partizione applica <strong>FK</strong> coerenti con il dominio e un <strong>CHECK combinato</strong> che allinea <code>anchor_tipo</code>/<code>posizione</code>/<code>target_riga_id</code>:</p>
 <ol>
 <li>
@@ -4200,25 +4200,23 @@
 <li>Indice dedicato <code>ix_ordini_note_render</code>.</li>
 </ol>
 <blockquote>
-<p>💡 <strong>Perché partizionare?</strong></p>
-<ul>
-<li>query/cleanup <strong>target-specifiche</strong> (es. rebuild di tutte le note fatture) sono più veloci;</li>
-<li>si possono impostare policy di <strong>retention</strong> e <strong>permessi</strong> differenti per dominio;</li>
-<li>manutenzione più semplice (vacuum, reindex, backup parziali).</li>
-</ul>
+<p><strong>Perché partizionare?</strong></p>
+<p>query/cleanup <strong>target-specifiche</strong> (es. rebuild di tutte le note fatture) sono più veloci;
+si possono impostare policy di <strong>retention</strong> e <strong>permessi</strong> differenti per dominio;
+manutenzione più semplice (vacuum, reindex, backup parziali).</p>
 </blockquote>
 <hr />
-<h3 id="esempi-duso">🧪 Esempi d’uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
+<h3 id="esempi-duso">Esempi d’uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Nota di piede FATTURA</strong> (documento): <code>anchor_tipo='DOCUMENTO'</code>, <code>posizione='FOOTER'</code>, <code>target_riga_id=NULL</code>, <code>seq=10</code>.</li>
 <li><strong>Nota “prima della riga” ORDINE</strong>: <code>anchor_tipo='RIGA'</code>, <code>posizione='BEFORE'</code>, <code>target_riga_id=&lt;id_riga&gt;</code>, <code>seq=5</code>.</li>
 <li><strong>Condizioni generali</strong> su <strong>HEADER PREVENTIVO</strong> in <code>testo_md</code>.</li>
 </ul>
 <hr />
-<h3 id="ruolo-nel-sistema">👓 Ruolo nel sistema<a class="headerlink" href="#ruolo-nel-sistema" title="Permanent link">&para;</a></h3>
+<h3 id="ruolo-nel-sistema">Ruolo nel sistema<a class="headerlink" href="#ruolo-nel-sistema" title="Permanent link">&para;</a></h3>
 <p><code>acquisti.note</code> fornisce un <strong>layer di annotazioni</strong> uniforme e riusabile per tutto il dominio acquisti. Il partizionamento per <code>target_tipo</code> consente crescita ordinata, performance prevedibili e governance per dominio, mantenendo al contempo un’unica API di scrittura/lettura.</p>
 <hr />
-<p><strong>© 2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+<p><strong>© 2025-2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
 
 

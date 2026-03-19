@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.26">
+      <meta name="generator" content="zensical-0.0.27">
     
     
       
@@ -705,7 +705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../LICENSE/" class="md-nav__link">
+      <a href="../../../../LICENSE-GPL3/" class="md-nav__link">
         
   
   
@@ -4083,7 +4083,7 @@
   <a href="#descrizione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧩 Descrizione
+        Descrizione
       
     </span>
   </a>
@@ -4094,7 +4094,7 @@
   <a href="#flusso-di-esecuzione-alto-livello" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🔄 Flusso di esecuzione (alto livello)
+        Flusso di esecuzione (alto livello)
       
     </span>
   </a>
@@ -4105,7 +4105,7 @@
   <a href="#idempotenza-sicurezza" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧪 Idempotenza &amp; sicurezza
+        Idempotenza &amp; sicurezza
       
     </span>
   </a>
@@ -4116,7 +4116,7 @@
   <a href="#esempio-ddl-versione-corretta" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📝 Esempio DDL (versione corretta)
+        Esempio DDL (versione corretta)
       
     </span>
   </a>
@@ -4160,7 +4160,7 @@
   <a href="#osservabilita-diagnostica" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧰 Osservabilità &amp; diagnostica
+        Osservabilità &amp; diagnostica
       
     </span>
   </a>
@@ -4171,7 +4171,7 @@
   <a href="#dipendenze" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🔗 Dipendenze
+        Dipendenze
       
     </span>
   </a>
@@ -4182,7 +4182,7 @@
   <a href="#checklist-di-produzione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ✅ Checklist di produzione
+        Checklist di produzione
       
     </span>
   </a>
@@ -4218,22 +4218,18 @@
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
 <p>Approfondimento funzioni:</p>
-<ul>
-<li><a href="../../funzioni/proc_apply_storicizza_defaults/"><code>maintenance.proc_apply_storicizza_defaults</code></a></li>
-<li><a href="../../funzioni/fn_run_and_log/"><code>maintenance.fn_run_and_log</code></a></li>
-</ul>
+<p><a href="../../funzioni/proc_apply_storicizza_defaults/"><code>maintenance.proc_apply_storicizza_defaults</code></a>
+<a href="../../funzioni/fn_run_and_log/"><code>maintenance.fn_run_and_log</code></a></p>
 <p>Approfondimento guide:</p>
-<ul>
-<li><a href="../../../../guide/storicizzazione-tabelle/">Storicizzazione Tabelle</a></li>
-<li><a href="../../../../guide/tx_id_implementation_guide/">Transaction ID</a></li>
-</ul>
+<p><a href="../../../../guide/storicizzazione-tabelle/">Storicizzazione Tabelle</a>
+<a href="../../../../guide/tx_id_implementation_guide/">Transaction ID</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <p>(latest review 07-01-26)
 * <strong>Eseguire in modo schedulato</strong> l’applicazione delle <strong>impostazioni di storicizzazione di default</strong> sull’intero database, incapsulando la chiamata a <code>maintenance.proc_apply_storicizza_defaults()</code> in un wrapper <strong>robusto</strong> con <strong>lock anti-overlap</strong> e <strong>logging strutturato</strong>.</p>
 <hr />
-<h3 id="descrizione">🧩 Descrizione<a class="headerlink" href="#descrizione" title="Permanent link">&para;</a></h3>
+<h3 id="descrizione">Descrizione<a class="headerlink" href="#descrizione" title="Permanent link">&para;</a></h3>
 <p>La procedura:</p>
 <ol>
 <li>Invoca <code>maintenance.fn_run_and_log(...)</code> per tracciare <strong>inizio/fine</strong>, esito e <strong>messaggi</strong> dell’esecuzione.</li>
@@ -4244,7 +4240,7 @@
 <p>In caso di errore, <code>fn_run_and_log</code> registra l’evento (con eventuale <code>tx_id</code> di sessione) e restituisce lo stato d’esito; la gestione delle eccezioni non interrompe lo scheduler, ma consente la diagnosi post‑mortem.</p>
 </blockquote>
 <hr />
-<h3 id="flusso-di-esecuzione-alto-livello">🔄 Flusso di esecuzione (alto livello)<a class="headerlink" href="#flusso-di-esecuzione-alto-livello" title="Permanent link">&para;</a></h3>
+<h3 id="flusso-di-esecuzione-alto-livello">Flusso di esecuzione (alto livello)<a class="headerlink" href="#flusso-di-esecuzione-alto-livello" title="Permanent link">&para;</a></h3>
 <ol>
 <li><strong>Acquire lock</strong> tramite <code>p_lock_key</code>.</li>
 <li><strong>Log start</strong> (<code>p_jobname</code>, <code>p_stepname</code>).</li>
@@ -4253,13 +4249,13 @@
 <li><strong>Release lock</strong>.</li>
 </ol>
 <hr />
-<h3 id="idempotenza-sicurezza">🧪 Idempotenza &amp; sicurezza<a class="headerlink" href="#idempotenza-sicurezza" title="Permanent link">&para;</a></h3>
+<h3 id="idempotenza-sicurezza">Idempotenza &amp; sicurezza<a class="headerlink" href="#idempotenza-sicurezza" title="Permanent link">&para;</a></h3>
 <ul>
 <li>La logica è <strong>idempotente</strong>: più invocazioni non dovrebbero creare effetti duplicati se la procedura applicata rispetta le policy (per es. <code>CREATE ... IF NOT EXISTS</code>, controlli di pre‑esistenza ecc.).</li>
 <li>Il <strong>lock</strong> previene esecuzioni parallele indesiderate.</li>
 </ul>
 <hr />
-<h3 id="esempio-ddl-versione-corretta">📝 Esempio DDL (versione corretta)<a class="headerlink" href="#esempio-ddl-versione-corretta" title="Permanent link">&para;</a></h3>
+<h3 id="esempio-ddl-versione-corretta">Esempio DDL (versione corretta)<a class="headerlink" href="#esempio-ddl-versione-corretta" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">PROCEDURE</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">proc_apply_storicizza_defaults_job</span><span class="p">()</span>
 <span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">procedure</span><span class="err">$</span>
@@ -4289,7 +4285,7 @@
 <p>Suggerimento: mantieni i job <strong>fuori dalla finestra di backup</strong> per evitare lock prolungati.</p>
 </blockquote>
 <hr />
-<h3 id="osservabilita-diagnostica">🧰 Osservabilità &amp; diagnostica<a class="headerlink" href="#osservabilita-diagnostica" title="Permanent link">&para;</a></h3>
+<h3 id="osservabilita-diagnostica">Osservabilità &amp; diagnostica<a class="headerlink" href="#osservabilita-diagnostica" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
 <p>Controlla la tabella/log usata da <code>fn_run_and_log</code> (es. <code>maintenance.job_log</code> o equivalente) per:</p>
@@ -4303,14 +4299,14 @@
 <li>In caso di KO, cerca voci correlate in <code>maintenance.error_log</code> (se integrato con <code>script.fn_log_error_only</code>/<code>fn_log_and_raise_error</code>).</li>
 </ul>
 <hr />
-<h3 id="dipendenze">🔗 Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h3>
+<h3 id="dipendenze">Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>maintenance.proc_apply_storicizza_defaults</code> — applica le policy/trigger di storicizzazione di default.</li>
 <li><code>maintenance.fn_run_and_log</code> — esecuzione protetta con logging e advisory lock.</li>
 <li>(Opzionale) <code>script.fn_log_error_only</code> / <code>script.fn_log_and_raise_error</code> — logging centralizzato.</li>
 </ul>
 <hr />
-<h3 id="checklist-di-produzione">✅ Checklist di produzione<a class="headerlink" href="#checklist-di-produzione" title="Permanent link">&para;</a></h3>
+<h3 id="checklist-di-produzione">Checklist di produzione<a class="headerlink" href="#checklist-di-produzione" title="Permanent link">&para;</a></h3>
 <ul>
 <li>[ ] La procedura è <strong>deployata</strong> e testata in <code>dev</code>/<code>stage</code>.</li>
 <li>[ ] Esiste almeno <strong>un job</strong> (pgAgent/cron) attivo.</li>
@@ -4319,7 +4315,7 @@
 </ul>
 <hr />
 <blockquote>
-<p>🧠 <strong>In breve</strong>: questa procedura offre un punto di ingresso unico, schedulabile e sicuro per applicare le impostazioni di storicizzazione, con tracciamento e prevenzione di run concorrenti. Mantiene pulita l’orchestrazione e delega il lavoro vero alla logica di <code>maintenance.proc_apply_storicizza_defaults()</code>.</p>
+<p><strong>In breve</strong>: questa procedura offre un punto di ingresso unico, schedulabile e sicuro per applicare le impostazioni di storicizzazione, con tracciamento e prevenzione di run concorrenti. Mantiene pulita l’orchestrazione e delega il lavoro vero alla logica di <code>maintenance.proc_apply_storicizza_defaults()</code>.</p>
 </blockquote>
 
 

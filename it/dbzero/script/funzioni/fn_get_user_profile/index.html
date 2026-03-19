@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.26">
+      <meta name="generator" content="zensical-0.0.27">
     
     
       
@@ -705,7 +705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../LICENSE/" class="md-nav__link">
+      <a href="../../../../LICENSE-GPL3/" class="md-nav__link">
         
   
   
@@ -4146,6 +4146,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#dettaglio-blocco-permessi_area" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dettaglio blocco permessi_area
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4213,23 +4224,17 @@
 <blockquote>
 <p>Vedi anche</p>
 <p>Funzione base:</p>
-<ul>
-<li><a href=".././fn_get_soggetto_dati_by_ruolo/">script.fn_get_soggetto_dati_by_ruolo</a></li>
-</ul>
+<p><a href=".././fn_get_soggetto_dati_by_ruolo/">script.fn_get_soggetto_dati_by_ruolo</a></p>
 <p>Approfondimento tabelle:</p>
-<ul>
-<li><a href="../../../anagrafiche/tabelle/risorse_umane_auth_user/">anagrafiche.risorse_umane_auth_user</a></li>
-<li><a href="../../../anagrafiche/tabelle/risorse_umane/">anagrafiche.risorse_umane</a></li>
-<li><a href="../../../anagrafiche/tabelle/soggetti/">anagrafiche.soggetti</a></li>
-<li><a href="../../../anagrafiche/tabelle/emittenti_fiscali/">anagrafiche.emittenti_fiscali</a></li>
-<li><a href="../../../config/tabelle/user_emittenti_fiscali/">config.user_emittenti_fiscali</a></li>
-<li><a href="../../../config/tabelle/qualifiche/">config.qualifiche</a></li>
-<li><a href="../../../config/tabelle/unita_organizzative/">config.unita_organizzative</a></li>
-</ul>
+<p><a href="../../../anagrafiche/tabelle/risorse_umane_auth_user/">anagrafiche.risorse_umane_auth_user</a>
+<a href="../../../anagrafiche/tabelle/risorse_umane/">anagrafiche.risorse_umane</a>
+<a href="../../../anagrafiche/tabelle/soggetti/">anagrafiche.soggetti</a>
+<a href="../../../anagrafiche/tabelle/emittenti_fiscali/">anagrafiche.emittenti_fiscali</a>
+<a href="../../../config/tabelle/user_emittenti_fiscali/">config.user_emittenti_fiscali</a>
+<a href="../../../config/tabelle/qualifiche/">config.qualifiche</a>
+<a href="../../../config/tabelle/unita_organizzative/">config.unita_organizzative</a></p>
 <p>Approfondimento viste modello:</p>
-<ul>
-<li><a href="../../../anagrafiche/views/vw_risorse_umane_dettaglio/">anagrafiche.vw_risorse_umane_dettaglio</a></li>
-</ul>
+<p><a href="../../../anagrafiche/views/vw_risorse_umane_dettaglio/">anagrafiche.vw_risorse_umane_dettaglio</a></p>
 </blockquote>
 <p>La funzione <strong><code>script.fn_get_user_profile(p_auth_user_id INTEGER)</code></strong> restituisce un <strong>JSONB</strong> con il profilo completo dell'utente loggato: dati auth_user, ruolo sistema, risorse umane (con qualifica e unita' organizzativa risolte), soggetto anagrafico (con dati societari se presenti), e emittente fiscale associato.</p>
 <p>E' progettata come <strong>unico punto di accesso</strong> per l'endpoint <code>GET /api/v1/core/me/</code> del frontend, aggregando in una singola chiamata DB tutti i dati necessari per il profilo utente.</p>
@@ -4240,14 +4245,15 @@
 <p><strong>Profilo utente completo in una chiamata</strong>: evita al backend di orchestrare query multiple per comporre il profilo.</p>
 </li>
 <li>
-<p><strong>5 blocchi JSONB</strong> strutturati:</p>
+<p><strong>6 blocchi JSONB</strong> strutturati:</p>
 </li>
 <li><code>utente</code> — dati da <code>auth_user</code></li>
 <li><code>ruolo_sistema</code> — enum dalla tabella ponte</li>
 <li><code>risorse_umane</code> — dettaglio risorsa umana con qualifica e UO risolti</li>
 <li><code>soggetto</code> — dati anagrafici completi (delegati a <code>fn_get_soggetto_dati_by_ruolo</code>)</li>
+<li><code>emittente</code> — dati emittente fiscale + soggetto della ditta (<code>null</code> se non associato)</li>
 <li>
-<p><code>emittente</code> — dati emittente fiscale + soggetto della ditta (<code>null</code> se non associato)</p>
+<p><code>permessi_area</code> — mappa <code>{schema_db: livello_accesso}</code> per tutte le aree attive (delegata a <code>fn_get_user_permissions_map</code>)</p>
 </li>
 <li>
 <p><strong>Riuso di fn_get_soggetto_dati_by_ruolo</strong>: i blocchi <code>soggetto</code> e <code>emittente</code> sono generati dalla stessa funzione, garantendo output uniforme con tutti gli ID e le descrizioni risolte.</p>
@@ -4276,7 +4282,59 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Guard</strong>: se <code>NULL</code> o <code>&lt;= 0</code>, lancia <code>invalid_parameter_value</code>. Se l'utente non esiste o non ha record ponte <code>risorse_umane_auth_user</code>, lancia <code>no_data_found</code>.</p>
+<p><strong>Guard di validazione</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Condizione</th>
+<th>Codice errore</th>
+<th>Messaggio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>p_auth_user_id</code> NULL o &lt;= 0</td>
+<td><code>E_ADMIN_VALIDAZIONE</code></td>
+<td>p_auth_user_id obbligatorio e &gt; 0</td>
+</tr>
+<tr>
+<td>auth_user non trovato</td>
+<td><code>E_ADMIN_VALIDAZIONE</code></td>
+<td>auth_user con id=X non trovato</td>
+</tr>
+<tr>
+<td>Nessun record <code>risorse_umane_auth_user</code></td>
+<td><code>E_ADMIN_VALIDAZIONE</code></td>
+<td>Nessun record risorse_umane_auth_user</td>
+</tr>
+<tr>
+<td><code>ruolo_sistema = DISABILITATO</code></td>
+<td><code>E_UTENTE_DISABILITATO</code></td>
+<td>Utente disabilitato: ruolo_sistema=DISABILITATO</td>
+</tr>
+<tr>
+<td>Nessun record <code>risorse_umane</code></td>
+<td><code>E_ADMIN_VALIDAZIONE</code></td>
+<td>Nessun record risorse_umane</td>
+</tr>
+<tr>
+<td><code>risorse_umane.attivo = false</code></td>
+<td><code>E_UTENTE_DISABILITATO</code></td>
+<td>Utente disabilitato: risorsa umana non attiva</td>
+</tr>
+<tr>
+<td><code>CURRENT_DATE &lt; valido_dal</code></td>
+<td><code>E_UTENTE_NON_ATTIVO</code></td>
+<td>Utente non ancora attivo</td>
+</tr>
+<tr>
+<td><code>CURRENT_DATE &gt; valido_al</code></td>
+<td><code>E_UTENTE_SCADUTO</code></td>
+<td>Utente scaduto</td>
+</tr>
+</tbody>
+</table>
+<p>Tutti i guard usano <code>script.fn_log_and_raise_error</code> (errori loggati in <code>dbops.error_log</code>).</p>
 <hr />
 <h3 id="valore-di-ritorno">Valore di Ritorno<a class="headerlink" href="#valore-di-ritorno" title="Permanent link">&para;</a></h3>
 <p>La funzione restituisce un <strong>JSONB</strong> con la seguente struttura:</p>
@@ -4306,7 +4364,13 @@
 <span class="w">    </span><span class="nt">&quot;attivo&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">&quot;soggetto&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;...output di fn_get_soggetto_dati_by_ruolo...&quot;</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;emittente&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;...campi emittente + output di fn_get_soggetto_dati_by_ruolo...&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">&quot;emittente&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;...campi emittente + output di fn_get_soggetto_dati_by_ruolo...&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;permessi_area&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;anagrafiche&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TUTTO&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;vendite&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LETTURA&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;acquisti&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BLOCCATO&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;config&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TUTTO&quot;</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <h4 id="dettaglio-blocco-utente">Dettaglio blocco <code>utente</code><a class="headerlink" href="#dettaglio-blocco-utente" title="Permanent link">&para;</a></h4>
@@ -4481,6 +4545,32 @@
 </table>
 <p><strong>Campi soggetto emittente:</strong> tutti i campi di <code>fn_get_soggetto_dati_by_ruolo(emittenti_fiscali.soggetto_ruolo_id)</code>, mergiati nello stesso oggetto JSON.</p>
 <p>Se nessun emittente e' associato, <code>emittente</code> e' <code>null</code>.</p>
+<h4 id="dettaglio-blocco-permessi_area">Dettaglio blocco <code>permessi_area</code><a class="headerlink" href="#dettaglio-blocco-permessi_area" title="Permanent link">&para;</a></h4>
+<p>Mappa JSONB con una chiave per ogni area funzionale attiva (<code>config.aree_funzionali.schema_db</code>).
+Generata da <code>fn_get_user_permissions_map(p_auth_user_id)</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Chiave</th>
+<th>Tipo</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;schema_db&gt;</code></td>
+<td><code>TEXT</code></td>
+<td>Livello accesso: <code>TUTTO</code>, <code>SCRITTURA</code>, <code>LETTURA</code>, <code>BLOCCATO</code></td>
+</tr>
+</tbody>
+</table>
+<p>Catena di risoluzione per area (delegata a <code>fn_resolve_livello_area</code>):</p>
+<ol>
+<li>ruolo_sistema → ADMIN = TUTTO, DISABILITATO = BLOCCATO</li>
+<li>Override utente area (<code>config.user_override_aree</code>) se presente e valido</li>
+<li>Profilo reparto (<code>config.profili_reparto_aree</code>) ereditato dalla UO</li>
+<li>Default → BLOCCATO</li>
+</ol>
 <hr />
 <h3 id="flusso-logico-interno">Flusso Logico Interno<a class="headerlink" href="#flusso-logico-interno" title="Permanent link">&para;</a></h3>
 <ol>
@@ -4506,7 +4596,10 @@
 <p>Se non trovato: <code>emittente = null</code>.</p>
 </li>
 <li>
-<p><strong>Composizione finale</strong>: <code>jsonb_build_object</code> con le 5 chiavi.</p>
+<p><strong>Mappa permessi area</strong>: chiamata a <code>fn_get_user_permissions_map(p_auth_user_id)</code> che risolve il livello per ogni area funzionale attiva.</p>
+</li>
+<li>
+<p><strong>Composizione finale</strong>: <code>jsonb_build_object</code> con le 6 chiavi.</p>
 </li>
 </ol>
 <hr />
@@ -4533,12 +4626,12 @@
 <li><strong>Volatilita'</strong>: <code>STABLE</code> — non modifica dati.</li>
 <li><strong>Linguaggio</strong>: PL/pgSQL</li>
 <li><strong>Output</strong>: JSONB (flessibile, estendibile senza modifiche alla signature).</li>
-<li><strong>Dipendenza</strong>: <code>script.fn_get_soggetto_dati_by_ruolo</code> (deve esistere).</li>
+<li><strong>Dipendenze</strong>: <code>script.fn_get_soggetto_dati_by_ruolo</code>, <code>script.fn_get_user_permissions_map</code> (devono esistere).</li>
 <li><strong>Errori</strong>: <code>invalid_parameter_value</code> per input invalido, <code>no_data_found</code> per utente/risorsa umana inesistente.</li>
 </ul>
 <hr />
 <hr />
-<p><strong>© 2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+<p><strong>© 2025-2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
 
 

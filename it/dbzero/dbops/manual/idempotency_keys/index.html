@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.26">
+      <meta name="generator" content="zensical-0.0.27">
     
     
       
@@ -705,7 +705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../LICENSE/" class="md-nav__link">
+      <a href="../../../../LICENSE-GPL3/" class="md-nav__link">
         
   
   
@@ -4083,7 +4083,7 @@
   <a href="#significato-dei-campi-chiave" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🔍 Significato dei Campi Chiave
+        Significato dei Campi Chiave
       
     </span>
   </a>
@@ -4094,7 +4094,7 @@
   <a href="#regole-principali" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ✅ Regole Principali
+        Regole Principali
       
     </span>
   </a>
@@ -4105,7 +4105,7 @@
   <a href="#flusso-operativo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🔄 Flusso Operativo
+        Flusso Operativo
       
     </span>
   </a>
@@ -4152,10 +4152,8 @@
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
 <p>Approfondimento tabelle:</p>
-<ul>
-<li><a href="../../tabelle/audit_log/">dbops.audit_log</a></li>
-<li><a href="../../tabelle/error_log/">dbops.error_log</a></li>
-</ul>
+<p><a href="../../tabelle/audit_log/">dbops.audit_log</a>
+<a href="../../tabelle/error_log/">dbops.error_log</a></p>
 </blockquote>
 <p>La tabella <strong><code>dbops.idempotency_keys</code></strong> è una <strong>tabella tecnica</strong> che associa l’<strong>Idempotency-Key</strong> inviata dal client alla <strong>transazione DB (<code>tx_id</code>)</strong> e alla <strong>risposta serializzata</strong>, garantendo <strong>idempotenza forte</strong> lato write.</p>
 <hr />
@@ -4165,7 +4163,7 @@
 * Restituire <strong>la stessa risposta</strong> quando arriva la stessa <code>idempotency_key</code>.
 * Collegare operazioni applicative alla <strong>tracciabilità transazionale</strong> tramite <code>tx_id</code>.</p>
 <hr />
-<h3 id="significato-dei-campi-chiave">🔍 Significato dei Campi Chiave<a class="headerlink" href="#significato-dei-campi-chiave" title="Permanent link">&para;</a></h3>
+<h3 id="significato-dei-campi-chiave">Significato dei Campi Chiave<a class="headerlink" href="#significato-dei-campi-chiave" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>idempotency_key</code></strong>: chiave univoca inviata dal client (PK).</li>
 <li><strong><code>request_id</code></strong>: correlation id applicativo (se disponibile).</li>
@@ -4175,14 +4173,14 @@
 <li><strong><code>cleanup_at</code></strong>: timestamp opzionale per la pulizia programmata (non scadenza funzionale).</li>
 </ul>
 <hr />
-<h3 id="regole-principali">✅ Regole Principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
+<h3 id="regole-principali">Regole Principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Univocità</strong>: una <code>idempotency_key</code> identifica una sola operazione.</li>
 <li><strong>Stato</strong>: <code>status</code> ammesso solo tra <code>in_progress|completed|failed</code>.</li>
 <li><strong>Coerenza</strong>: quando <code>status = 'completed'</code>, <code>tx_id</code> deve essere valorizzato.</li>
 </ul>
 <hr />
-<h3 id="flusso-operativo">🔄 Flusso Operativo<a class="headerlink" href="#flusso-operativo" title="Permanent link">&para;</a></h3>
+<h3 id="flusso-operativo">Flusso Operativo<a class="headerlink" href="#flusso-operativo" title="Permanent link">&para;</a></h3>
 <ol>
 <li><strong>Nuova richiesta</strong> → inserisci record <code>in_progress</code>.</li>
 <li><strong>Esecuzione completata</strong> → aggiorni <code>completed</code> + <code>tx_id</code> + <code>response_payload</code>.</li>

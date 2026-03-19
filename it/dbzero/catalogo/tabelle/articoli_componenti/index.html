@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.26">
+      <meta name="generator" content="zensical-0.0.27">
     
     
       
@@ -705,7 +705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../LICENSE/" class="md-nav__link">
+      <a href="../../../../LICENSE-GPL3/" class="md-nav__link">
         
   
   
@@ -4083,7 +4083,7 @@
   <a href="#relazioni" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🔗 Relazioni
+        Relazioni
       
     </span>
   </a>
@@ -4094,7 +4094,7 @@
   <a href="#struttura-logica-campi-chiave" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧱 Struttura logica (campi chiave)
+        Struttura logica (campi chiave)
       
     </span>
   </a>
@@ -4116,7 +4116,7 @@
   <a href="#indicizzazione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🔍 Indicizzazione
+        Indicizzazione
       
     </span>
   </a>
@@ -4127,7 +4127,7 @@
   <a href="#query-tipiche" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🔎 Query tipiche
+        Query tipiche
       
     </span>
   </a>
@@ -4138,7 +4138,7 @@
   <a href="#best-practice" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧭 Best practice
+        Best practice
       
     </span>
   </a>
@@ -4149,7 +4149,7 @@
   <a href="#esempio-realistico-distinta-base" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧩 Esempio realistico (distinta base)
+        Esempio realistico (distinta base)
       
     </span>
   </a>
@@ -4160,7 +4160,7 @@
   <a href="#esempio-realistico-utility-gas" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🧩 Esempio realistico (utility gas)
+        Esempio realistico (utility gas)
       
     </span>
   </a>
@@ -4251,7 +4251,7 @@
 <li><strong>attivazione/disattivazione logica</strong> (<code>attivo</code>) e <strong>storicizzazione</strong>.</li>
 </ul>
 <hr />
-<h3 id="relazioni">🔗 Relazioni<a class="headerlink" href="#relazioni" title="Permanent link">&para;</a></h3>
+<h3 id="relazioni">Relazioni<a class="headerlink" href="#relazioni" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -4282,7 +4282,7 @@
 <p><strong>Nota:</strong> <code>chk_articoli_componenti_no_selfref</code> impedisce <strong>self‑reference</strong> (padre=figlio).</p>
 </blockquote>
 <hr />
-<h3 id="struttura-logica-campi-chiave">🧱 Struttura logica (campi chiave)<a class="headerlink" href="#struttura-logica-campi-chiave" title="Permanent link">&para;</a></h3>
+<h3 id="struttura-logica-campi-chiave">Struttura logica (campi chiave)<a class="headerlink" href="#struttura-logica-campi-chiave" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Identità</strong>: <code>id UUID</code> (PK)</li>
 <li><strong>Legame</strong>: <code>prodotto_id UUID</code> (FK), <code>componente_id UUID</code> (FK)</li>
@@ -4308,24 +4308,22 @@
 <blockquote>
 <p><strong>Nota tecnica (trigger manuali)</strong></p>
 <p>Questi vincoli sono <strong>applicati tramite trigger dedicati</strong> su <code>articoli_componenti</code>:</p>
-<ul>
-<li>REQUIRE su <code>prodotto_id</code> (padre attivo)</li>
-<li>REQUIRE su <code>componente_id</code> (figlio attivo)</li>
-<li>GUARD su <code>is_composito</code></li>
-</ul>
+<p>REQUIRE su <code>prodotto_id</code> (padre attivo)
+REQUIRE su <code>componente_id</code> (figlio attivo)
+GUARD su <code>is_composito</code></p>
 <p>Non rientrano nella generazione automatica <code>automations</code> perché la tabella
 usa <strong>due FK verso la stessa entità</strong> (<code>catalogo.articoli</code>) con ruoli diversi
 (prodotto vs componente), e la logica richiede controlli <strong>distinti e specifici</strong>.</p>
 </blockquote>
 <hr />
-<h3 id="indicizzazione">🔍 Indicizzazione<a class="headerlink" href="#indicizzazione" title="Permanent link">&para;</a></h3>
+<h3 id="indicizzazione">Indicizzazione<a class="headerlink" href="#indicizzazione" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>ix_articoli_componenti_prodotto_from_to (prodotto_id, valido_dal, valido_al)</code> → espansione distinta per prodotto e per data.</li>
 <li><code>ix_articoli_componenti_componente_from_to (componente_id, valido_dal, valido_al)</code> → “dove è usato” il componente.</li>
 <li><strong>Exclusion</strong> GiST per prevenire <strong>overlap</strong> temporali (vedi sopra) + indice <code>ix_articoli_componenti_no_overlap_gist</code>.</li>
 </ul>
 <hr />
-<h3 id="query-tipiche">🔎 Query tipiche<a class="headerlink" href="#query-tipiche" title="Permanent link">&para;</a></h3>
+<h3 id="query-tipiche">Query tipiche<a class="headerlink" href="#query-tipiche" title="Permanent link">&para;</a></h3>
 <p><strong>1) Distinta valida per una data</strong></p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">ac</span><span class="p">.</span><span class="o">*</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli_componenti</span><span class="w"> </span><span class="n">ac</span>
@@ -4357,7 +4355,7 @@ usa <strong>due FK verso la stessa entità</strong> (<code>catalogo.articoli</co
 <span class="w">     </span><span class="n">daterange</span><span class="p">(</span><span class="n">ac2</span><span class="p">.</span><span class="n">valido_dal</span><span class="p">,</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">ac2</span><span class="p">.</span><span class="n">valido_al</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;infinity&#39;</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;[]&#39;</span><span class="p">);</span>
 </code></pre></div>
 <hr />
-<h3 id="best-practice">🧭 Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
+<h3 id="best-practice">Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Versioning esplicito</strong>: apri una <strong>nuova riga</strong> con nuovo <code>valido_dal</code> per variare <code>coeff_qta</code> o altri attributi; <strong>non</strong> aggiornare in‑place se vuoi tracciare la storia.</li>
 <li><strong>Controlli applicativi</strong>: impedisci componenti su articoli che <strong>non sono</strong> <code>is_composito=true</code> (vincolo applicativo opzionale).</li>
@@ -4366,7 +4364,7 @@ usa <strong>due FK verso la stessa entità</strong> (<code>catalogo.articoli</co
 <li><strong>Storicizza</strong> le modifiche e usa <code>attivo=false</code> per dismissioni logiche.</li>
 </ul>
 <hr />
-<h3 id="esempio-realistico-distinta-base">🧩 Esempio realistico (distinta base)<a class="headerlink" href="#esempio-realistico-distinta-base" title="Permanent link">&para;</a></h3>
+<h3 id="esempio-realistico-distinta-base">Esempio realistico (distinta base)<a class="headerlink" href="#esempio-realistico-distinta-base" title="Permanent link">&para;</a></h3>
 <p>Esempio: prodotto <strong>SEDIA</strong> con componenti <strong>piedi</strong>, <strong>schienale</strong>, <strong>sedile</strong>, <strong>viti</strong>.</p>
 <p>In <code>catalogo.articoli</code> esistono:</p>
 <ul>
@@ -4387,7 +4385,7 @@ usa <strong>due FK verso la stessa entità</strong> (<code>catalogo.articoli</co
 <li><code>prodotto_id = SEDIA</code>, <code>componente_id = VITE_M6</code>, <code>coeff_qta = 8</code></li>
 </ul>
 <hr />
-<h3 id="esempio-realistico-utility-gas">🧩 Esempio realistico (utility gas)<a class="headerlink" href="#esempio-realistico-utility-gas" title="Permanent link">&para;</a></h3>
+<h3 id="esempio-realistico-utility-gas">Esempio realistico (utility gas)<a class="headerlink" href="#esempio-realistico-utility-gas" title="Permanent link">&para;</a></h3>
 <p>Esempio: prodotto <strong>GAS_FACILE</strong> composto da <strong>MATERIA_PRIMA</strong>, <strong>QVD</strong> e <strong>SPREAD</strong>.</p>
 <p>In <code>catalogo.articoli</code> esistono:</p>
 <ul>
@@ -4419,10 +4417,10 @@ usa <strong>due FK verso la stessa entità</strong> (<code>catalogo.articoli</co
 erDiagram
     articoli ||--o{ articoli_componenti : ha_componenti
     articoli ||--o{ articoli_componenti : e_componente_di</code></pre><a class="headerlink" href="#init-er-layoutdirection-tb-erdiagram-articoli-o-articoli_componenti-ha_componenti-articoli-o-articoli_componenti-e_componente_di" title="Permanent link">&para;</a></h2>
-<p><strong>© 2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+<p><strong>© 2025-2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 <hr />
 <hr />
-<p><strong>© 2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+<p><strong>© 2025-2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
 
 
 
