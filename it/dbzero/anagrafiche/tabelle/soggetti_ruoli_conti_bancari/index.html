@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4124,10 +4124,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ruolo-nella-strategia-overridefallback" class="md-nav__link">
+  <a href="#cascata-di-selezione-3-livelli-fallback-uso" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ruolo nella strategia override/fallback
+        Cascata di selezione (3 livelli + fallback uso)
       
     </span>
   </a>
@@ -4200,9 +4200,10 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-01-26)
+<p>(latest review 25-03-26)
 <code>anagrafiche.soggetti_ruoli_conti_bancari</code> gestisce l’<strong>associazione tra un Ruolo</strong> di un soggetto (CLIENTE, FORNITORE, GESTORE, …) e uno o più <strong>conti bancari (IBAN)</strong>, distinguendo l’<strong>uso</strong> del conto: <code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code>, <code>GENERICO</code>.</p>
-<p>Questa tabella abilita l’<strong>override a livello ruolo</strong>: se esiste un legame idoneo qui, ha <strong>priorità</strong> su quello di soggetto; in caso contrario, la selezione <strong>ricade</strong> sul <strong>predefinito</strong> di <code>anagrafiche.soggetti_conti_bancari</code> grazie a VIEW/FUNCTION di fallback.</p>
+<p>Supporta la <strong>differenziazione per istanza di servizio</strong> tramite <code>istanza_utility_id</code> (opzionale, <code>bigint</code>, FK → <code>anagrafiche.istanze_utilities</code>): due istanze GAS dello stesso soggetto possono avere conti INCASSO diversi.</p>
+<p>La cascata di selezione è a <strong>3 livelli</strong> (istanza → ruolo generico → soggetto), implementata dalla vista <code>vw_conti_bancari_per_ruolo</code> (flat) e dalla funzione <code>fn_get_conto_bancario_predefinito</code> (cascata 7 livelli con fallback uso GENERICO).</p>
 <hr />
 <h3 id="relazioni">Relazioni<a class="headerlink" href="#relazioni" title="Permanent link">&para;</a></h3>
 <table>
@@ -4244,8 +4245,9 @@
 <ul>
 <li><code>soggetto_ruolo_id</code> (<strong>FK</strong> obbligatoria)</li>
 <li><code>conto_bancario_id</code> (<strong>FK</strong> obbligatoria)</li>
+<li><code>istanza_utility_id</code> (<strong>FK</strong> opzionale, <code>bigint</code> → <code>anagrafiche.istanze_utilities</code>) — se valorizzato, il legame è specifico per quell’istanza di servizio; se NULL, è generico del ruolo</li>
 <li><code>uso VARCHAR(16)</code> → <code>INCASSO | PAGAMENTO | RIMBORSO | GENERICO</code> (default <code>GENERICO</code>)</li>
-<li><code>predefinito BOOLEAN</code> → predefinito per l’uso <strong>in questo ruolo</strong></li>
+<li><code>predefinito BOOLEAN</code> → predefinito per l’uso <strong>in questo ruolo/istanza</strong></li>
 <li><code>valido_dal DATE</code>, <code>valido_al DATE</code> → finestra di validità del legame</li>
 <li><code>intestazione_dichiarata VARCHAR(140)</code> → opzionale (se diversa da intestatario del conto)</li>
 <li>Flag operativi: <code>verificato BOOLEAN</code>, <code>bloccato BOOLEAN</code></li>
@@ -4255,8 +4257,12 @@
 <hr />
 <h3 id="vincoli-regole">🚦 Vincoli &amp; Regole<a class="headerlink" href="#vincoli-regole" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Unicità combinazione</strong>: <code>UNIQUE (soggetto_ruolo_id, conto_bancario_id, uso)</code> → evita duplicati dello stesso uso sullo stesso conto/ruolo.</li>
-<li><strong>Predefinito per uso/ruolo</strong>: <strong>unique parziale</strong> <code>UNIQUE (soggetto_ruolo_id, uso) WHERE predefinito=true</code> → <strong>un solo predefinito</strong> per <code>(ruolo, uso)</code>.</li>
+<li><strong>Unicità combinazione</strong> (4 partial unique index per gestire NULL su <code>istanza_utility_id</code>):</li>
+<li><code>uq_src_bancari_ruolo_istanza_conto_uso (soggetto_ruolo_id, istanza_utility_id, conto_bancario_id, uso) WHERE istanza_utility_id IS NOT NULL</code></li>
+<li><code>uq_src_bancari_ruolo_conto_uso_no_istanza (soggetto_ruolo_id, conto_bancario_id, uso) WHERE istanza_utility_id IS NULL</code></li>
+<li><strong>Predefinito per uso/ruolo/istanza</strong> (2 partial unique index):</li>
+<li><code>uq_src_bancari_predefinito_istanza (soggetto_ruolo_id, istanza_utility_id, uso) WHERE predefinito=true AND istanza_utility_id IS NOT NULL</code></li>
+<li><code>uq_src_bancari_predefinito_no_istanza (soggetto_ruolo_id, uso) WHERE predefinito=true AND istanza_utility_id IS NULL</code></li>
 <li><strong>Validità temporale</strong>: <code>CHECK (valido_al IS NULL OR valido_dal IS NULL OR valido_al &gt;= valido_dal)</code>.</li>
 <li><strong>Valori ammessi <code>uso</code></strong>: <code>CHECK (uso IN ('INCASSO','PAGAMENTO','RIMBORSO','GENERICO'))</code>.</li>
 <li><strong>Guard‑rail conto attivo</strong>: trigger impedisce associazioni a <code>conti_bancari.attivo=false</code>.</li>
@@ -4285,19 +4291,26 @@
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">srcb</span><span class="p">.</span><span class="n">uso</span><span class="p">,</span><span class="w"> </span><span class="n">srcb</span><span class="p">.</span><span class="n">predefinito</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span><span class="w"> </span><span class="n">srcb</span><span class="p">.</span><span class="n">data_update</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
 </code></pre></div>
 <hr />
-<h3 id="ruolo-nella-strategia-overridefallback">Ruolo nella strategia <strong>override/fallback</strong><a class="headerlink" href="#ruolo-nella-strategia-overridefallback" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Se esiste un legame idoneo su <code>soggetti_ruoli_conti_bancari</code>, viene <strong>preferito</strong> (override).</li>
-<li>In assenza, la <strong>VIEW</strong> <code>vw_conti_bancari_per_ruolo</code> recupera il <strong>predefinito di soggetto</strong> (fallback).</li>
-<li>La <strong>FUNCTION</strong> <code>fn_get_conto_bancario_predefinito</code> incapsula la logica (1 riga max; fallback a <code>GENERICO</code>).</li>
-</ul>
+<h3 id="cascata-di-selezione-3-livelli-fallback-uso">Cascata di selezione (3 livelli + fallback uso)<a class="headerlink" href="#cascata-di-selezione-3-livelli-fallback-uso" title="Permanent link">&para;</a></h3>
+<p>La funzione <code>fn_get_conto_bancario_predefinito(ruolo, uso, istanza_utility_id)</code> implementa una cascata a <strong>7 livelli</strong>:</p>
+<ol>
+<li>Ruolo + istanza specifica + uso richiesto</li>
+<li>Ruolo + istanza NULL (generico) + uso richiesto</li>
+<li>Soggetto + uso richiesto</li>
+<li>Ruolo + istanza specifica + uso GENERICO</li>
+<li>Ruolo + istanza NULL + uso GENERICO</li>
+<li>Soggetto + uso GENERICO</li>
+<li>NULL (nessun conto trovato)</li>
+</ol>
+<p>La vista <code>vw_conti_bancari_per_ruolo</code> e <strong>flat</strong> (espone tutte le candidate senza DISTINCT ON). La selezione singola e nella funzione.</p>
 <hr />
 <h3 id="best-practice">Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Definisci <strong>un solo predefinito per uso</strong> per ciascun ruolo (vincolo unico parziale).</li>
+<li>Definisci <strong>un solo predefinito per uso</strong> per ciascuna combinazione ruolo/istanza (vincolo unico parziale).</li>
 <li>Usa <code>valido_dal/valido_al</code> per cambi programmati; <strong>non cancellare</strong>, storicizza.</li>
 <li>Per <strong>ruoli sensibili</strong> (es. Gestore con CI SEPA), documenta nel <code>meta</code> eventuali vincoli di utilizzo.</li>
 <li>Limita la visibilità degli IBAN via servizi/vista: qui lavora per <strong>ID conto</strong>.</li>
+<li>Per conti generici del ruolo (validi per tutte le istanze), lascia <code>istanza_utility_id = NULL</code>.</li>
 </ul>
 <hr />
 <h3 id="diagramma-er-relazioni-focus-ruolo">Diagramma ER relazioni (focus ruolo)<a class="headerlink" href="#diagramma-er-relazioni-focus-ruolo" title="Permanent link">&para;</a></h3>
@@ -4305,6 +4318,7 @@
 erDiagram
     soggetti_ruoli ||--o{ soggetti_ruoli_conti_bancari : possiede
     conti_bancari ||--o{ soggetti_ruoli_conti_bancari : collega
+    istanze_utilities ||--o{ soggetti_ruoli_conti_bancari : scoped_by
     soggetti_ruoli_conti_bancari ||--o{ sepa_mandati : usa
     soggetti_ruoli ||..o{ vw_conti_bancari_per_ruolo : selezione</code></pre>
 <hr />
@@ -4363,11 +4377,10 @@ erDiagram
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

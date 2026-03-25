@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4168,16 +4168,16 @@
 <a href="../../../anagrafiche/tabelle/contatti/">anagrafiche.contatti</a>
 <a href="../../../config/tabelle/tipi_contatti/">config.tipi_contatti</a>
 <a href="../../../config/tabelle/unita_organizzative/">config.unita_organizzative</a>
-<a href="../../../config/tabelle/utilities/">config.utilities</a></p>
+<a href="../../../anagrafiche/tabelle/istanze_utilities/">anagrafiche.istanze_utilities</a></p>
 <p>Approfondimento funzioni:</p>
 <p><a href="../../../anagrafiche/funzioni/trgfn_contatti_set_default_contatto/">anagrafiche.trgfn_contatti_set_default_contatto</a></p>
 <p><a href=".././fn_log_and_raise_error/">script.fn_log_and_raise_error</a></p>
 </blockquote>
-<p>La funzione <strong><code>script.fn_get_contatti(p_soggetto_id UUID, p_soggetto_ruolo_id BIGINT DEFAULT NULL, p_utility_id INTEGER DEFAULT NULL, p_tipo_contatto_id INTEGER DEFAULT NULL, p_unita_organizzativa_id INTEGER DEFAULT NULL)</code></strong> restituisce <strong>al più un contatto per ciascun <code>tipo_contatto_id</code></strong>, applicando una logica di priorità basata sul <strong>contesto</strong> (soggetto / ruolo / utility) e privilegiando, a parità di priorità, i contatti marcati come <strong><code>is_default = TRUE</code></strong>.</p>
+<p>La funzione <strong><code>script.fn_get_contatti(p_soggetto_id UUID, p_soggetto_ruolo_id BIGINT DEFAULT NULL, p_istanza_utility_id BIGINT DEFAULT NULL, p_tipo_contatto_id INTEGER DEFAULT NULL, p_unita_organizzativa_id INTEGER DEFAULT NULL)</code></strong> restituisce <strong>al più un contatto per ciascun <code>tipo_contatto_id</code></strong>, applicando una logica di priorità basata sul <strong>contesto</strong> (soggetto / ruolo / istanza) e privilegiando, a parità di priorità, i contatti marcati come <strong><code>is_default = TRUE</code></strong>.</p>
 <p>È pensata come <strong>punto di accesso generico</strong> per il recupero dei contatti e come base per funzioni più specializzate (ad esempio <code>script.fn_get_contatto_default</code>).</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 03-12-25)
+<p>(latest review 25-03-26)
 * <strong>Selezione univoca per tipo</strong>
   Per ogni <code>tipo_contatto_id</code> vengono restituiti <strong>al più</strong> un record, che rappresenta il contatto “migliore” in base al contesto richiesto.</p>
 <ul>
@@ -4186,10 +4186,9 @@
   I contatti vengono classificati secondo una gerarchia di priorità:</p>
 </li>
 <li>
-<p><strong>soggetto + ruolo + utility</strong></p>
+<p><strong>soggetto + ruolo + istanza</strong></p>
 </li>
-<li><strong>soggetto + ruolo</strong></li>
-<li><strong>soggetto + utility</strong></li>
+<li><strong>soggetto + ruolo</strong> (generico)</li>
 <li><strong>solo soggetto</strong> (fallback generico sul soggetto)</li>
 </ul>
 <p>In questo modo, se esistono contatti specifici per ruolo/utility, vengono preferiti rispetto a quelli generici del soggetto.</p>
@@ -4235,11 +4234,11 @@
 <td>Se valorizzato, consente di privilegiare/filtrare i contatti legati a uno specifico ruolo del soggetto.</td>
 </tr>
 <tr>
-<td><code>p_utility_id</code></td>
-<td><code>INT</code></td>
+<td><code>p_istanza_utility_id</code></td>
+<td><code>BIGINT</code></td>
 <td><code>NULL</code></td>
 <td>❌ No</td>
-<td>Se valorizzato, consente di privilegiare/filtrare i contatti associati a una determinata utility/servizio.</td>
+<td>Se valorizzato, consente di privilegiare/filtrare i contatti associati a una determinata istanza utility.</td>
 </tr>
 <tr>
 <td><code>p_tipo_contatto_id</code></td>
@@ -4290,9 +4289,9 @@
 <td>Eventuale riferimento al ruolo del soggetto (<code>anagrafiche.soggetti_ruoli.id</code>). Può essere <code>NULL</code> per contatti generici.</td>
 </tr>
 <tr>
-<td><code>utility_id</code></td>
-<td><code>INT</code></td>
-<td>Eventuale riferimento a una utility/servizio (<code>config.utilities.id</code>). Può essere <code>NULL</code>.</td>
+<td><code>istanza_utility_id</code></td>
+<td><code>BIGINT</code></td>
+<td>Eventuale riferimento a una istanza utility (<code>anagrafiche.istanze_utilities.id</code>). Può essere <code>NULL</code>.</td>
 </tr>
 <tr>
 <td><code>nominativo</code></td>
@@ -4332,7 +4331,7 @@
 <tr>
 <td><code>default_context</code></td>
 <td><code>VARCHAR</code></td>
-<td>Contesto in cui il contatto è default (<code>'soggetto'</code>, <code>'ruolo'</code>, <code>'utility'</code>).</td>
+<td>Contesto in cui il contatto è default (<code>'soggetto'</code>, <code>'ruolo'</code>, <code>'istanza'</code>).</td>
 </tr>
 </tbody>
 </table>
@@ -4363,7 +4362,7 @@
 <li>
 <p>rispettano i filtri di contesto:</p>
 <div class="highlight"><pre><span></span><code><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="p">)</span>
-<span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">utility_id</span><span class="w">        </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">utility_id</span><span class="w">        </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_utility_id</span><span class="p">)</span>
+<span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">istanza_utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">istanza_utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_istanza_utility_id</span><span class="p">)</span>
 <span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">p_tipo_contatto_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">tipo_contatto_id</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">p_tipo_contatto_id</span><span class="p">)</span>
 <span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="k">c</span><span class="p">.</span><span class="n">unita_organizzativa_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">unita_organizzativa_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_unita_organizzativa_id</span><span class="p">)</span>
 </code></pre></div>
@@ -4372,10 +4371,9 @@
 <p>viene calcolata una colonna <code>priority</code> secondo lo schema:</p>
 <div class="highlight"><pre><span></span><code><span class="k">CASE</span>
 <span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">utility_id</span><span class="w">        </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_utility_id</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="c1">-- ruolo + utility</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">istanza_utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_istanza_utility_id</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="c1">-- ruolo + istanza</span>
 <span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">2</span><span class="w">  </span><span class="c1">-- solo ruolo</span>
-<span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">utility_id</span><span class="w">        </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">p_utility_id</span><span class="w">        </span><span class="k">THEN</span><span class="w"> </span><span class="mi">3</span><span class="w">  </span><span class="c1">-- solo utility</span>
-<span class="w">  </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">4</span><span class="w">  </span><span class="c1">-- solo soggetto</span>
+<span class="w">  </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">3</span><span class="w">  </span><span class="c1">-- solo soggetto</span>
 <span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">priority</span>
 </code></pre></div>
 </li>
@@ -4414,7 +4412,7 @@
 <span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_contatti</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_soggetto_id</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;123e4567-e89b-12d3-a456-426614174000&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_utility_id</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_istanza_utility_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_tipo_contatto_id</span><span class="w">  </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span>
 <span class="p">);</span>
 
@@ -4423,7 +4421,7 @@
 <span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_contatti</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_soggetto_id</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;123e4567-e89b-12d3-a456-426614174000&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">   </span><span class="c1">-- id in anagrafiche.soggetti_ruoli</span>
-<span class="w">  </span><span class="n">p_utility_id</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_istanza_utility_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_tipo_contatto_id</span><span class="w">  </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span>
 <span class="p">);</span>
 
@@ -4432,7 +4430,7 @@
 <span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_contatti</span><span class="p">(</span>
 <span class="w">  </span><span class="n">p_soggetto_id</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="s1">&#39;123e4567-e89b-12d3-a456-426614174000&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_utility_id</span><span class="w">        </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_istanza_utility_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
 <span class="w">  </span><span class="n">p_tipo_contatto_id</span><span class="w">  </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w">     </span><span class="c1">-- id di config.tipi_contatti</span>
 <span class="p">);</span>
 </code></pre></div>
@@ -4440,7 +4438,7 @@
 <h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Centralizzazione della logica</strong>: la selezione dei contatti segue regole chiare e riutilizzabili, evitando duplicazioni di <code>CASE WHEN</code> e join complesse nelle query applicative.</li>
-<li><strong>Chiarezza del contesto</strong>: la colonna <code>default_context</code> permette di capire rapidamente se un contatto è default per soggetto, ruolo o utility.</li>
+<li><strong>Chiarezza del contesto</strong>: la colonna <code>default_context</code> permette di capire rapidamente se un contatto è default per soggetto, ruolo o istanza.</li>
 <li><strong>Estendibilità</strong>: ulteriori funzioni (es. <code>script.fn_get_contatto_default</code>) possono basarsi su <code>fn_get_contatti</code>, limitandosi a filtrare ulteriormente i risultati.</li>
 <li><strong>Compatibilità evolutiva</strong>: l’uso di una funzione dedicata permette di cambiare la strategia di priorità o di aggiungere nuovi contesti senza impattare direttamente le query applicative.</li>
 </ul>
@@ -4499,11 +4497,10 @@
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

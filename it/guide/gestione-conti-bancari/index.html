@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4836,7 +4836,7 @@
 
 <h1 id="guida-gestione-dei-conti-bancari">Guida – Gestione dei Conti Bancari<a class="headerlink" href="#guida-gestione-dei-conti-bancari" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p>(latest review 04-03-26)</p>
+<p>(latest review 25-03-26)</p>
 <p>Destinatari: sviluppatori database, backend e analisti funzionali</p>
 <p>Questa guida descrive il modello centralizzato per la gestione dei conti bancari (IBAN)
 e la loro associazione a soggetti e ruoli, con override per ruolo e fallback automatico.</p>
@@ -4887,28 +4887,37 @@ e la loro associazione a soggetti e ruoli, con override per ruolo e fallback aut
 <h2 id="il-modello-in-sintesi">Il modello in sintesi<a class="headerlink" href="#il-modello-in-sintesi" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>conti_bancari (registro unico IBAN)
     │
-    ├── soggetti_conti_bancari (livello soggetto — fallback)
+    ├── soggetti_conti_bancari (livello soggetto — fallback finale)
     │       soggetto_id + conto_bancario_id + uso + predefinito
     │       un predefinito per (soggetto, uso)
     │
-    └── soggetti_ruoli_conti_bancari (livello ruolo — override)
-            soggetto_ruolo_id + conto_bancario_id + uso + predefinito
-            un predefinito per (ruolo, uso)
+    └── soggetti_ruoli_conti_bancari (livello ruolo — con istanza opzionale)
+            soggetto_ruolo_id + istanza_utility_id + conto_bancario_id + uso + predefinito
+            un predefinito per (ruolo, istanza, uso)
+            istanza_utility_id nullable: NULL = generico ruolo, valorizzato = specifico istanza
 
-vw_conti_bancari_per_ruolo
-    unisce i due livelli con priorita RUOLO &gt; SOGGETTO
+vw_conti_bancari_per_ruolo (vista flat — espone tutte le righe candidate)
+    unisce ruolo + soggetto, espone istanza_utility_id
     filtra: valido oggi, non bloccato, conto attivo
-    restituisce 1 riga per (soggetto_ruolo_id, uso)
+    la selezione del &quot;vincente&quot; e nella funzione, non nella vista
 
-fn_get_conto_bancario_predefinito(ruolo, uso)
-    interroga la view, con fallback a uso GENERICO
+fn_get_conto_bancario_predefinito(ruolo, uso, istanza_utility_id DEFAULT NULL)
+    cascata 7 livelli:
+    1. ruolo + istanza + uso richiesto
+    2. ruolo + uso richiesto (istanza NULL)
+    3. soggetto + uso richiesto
+    4. ruolo + istanza + uso GENERICO
+    5. ruolo + uso GENERICO (istanza NULL)
+    6. soggetto + uso GENERICO
+    7. NULL
     restituisce 0 o 1 riga
 </code></pre></div>
 <ul>
 <li><strong>Registro</strong> = l'IBAN esiste una sola volta, normalizzato e validato</li>
-<li><strong>Legame soggetto</strong> = il livello base, usato come fallback</li>
-<li><strong>Legame ruolo</strong> = l'override specifico per un ruolo (cliente, fornitore, gestore)</li>
-<li><strong>Predefinito</strong> = un solo conto predefinito per ogni combinazione (soggetto/ruolo, uso)</li>
+<li><strong>Legame soggetto</strong> = il livello base, usato come fallback finale</li>
+<li><strong>Legame ruolo</strong> = l'override specifico per un ruolo, con <code>istanza_utility_id</code> opzionale per differenziare per istanza di servizio</li>
+<li><strong>Predefinito</strong> = un solo conto predefinito per ogni combinazione (ruolo, istanza, uso)</li>
+<li><strong>Regola predefinito/bloccato</strong> = non e possibile bloccare un conto predefinito; il service backend impedisce la combinazione</li>
 </ul>
 <hr />
 <h2 id="componenti-del-modello">Componenti del modello<a class="headerlink" href="#componenti-del-modello" title="Permanent link">&para;</a></h2>
@@ -5232,8 +5241,11 @@ fn_get_conto_bancario_predefinito(ruolo, uso)
 </table>
 <p><strong>Vincoli:</strong></p>
 <ul>
-<li><code>UNIQUE (soggetto_ruolo_id, conto_bancario_id, uso)</code> — un legame per combinazione</li>
-<li><code>UNIQUE PARTIAL (soggetto_ruolo_id, uso) WHERE predefinito=true</code> — un solo predefinito per uso</li>
+<li>4 partial unique index per gestire NULL su <code>istanza_utility_id</code>:</li>
+<li><code>uq_src_bancari_ruolo_istanza_conto_uso</code> — un legame per (ruolo, istanza, conto, uso) con istanza</li>
+<li><code>uq_src_bancari_ruolo_conto_uso_no_istanza</code> — un legame per (ruolo, conto, uso) senza istanza</li>
+<li><code>uq_src_bancari_predefinito_istanza</code> — un predefinito per (ruolo, istanza, uso) con istanza</li>
+<li><code>uq_src_bancari_predefinito_no_istanza</code> — un predefinito per (ruolo, uso) senza istanza</li>
 <li><code>CHECK chk_soggetti_ruoli_conti_bancari_uso</code> — valori ammessi</li>
 <li><code>CHECK chk_soggetti_ruoli_conti_bancari_validita</code> — coerenza date</li>
 </ul>
@@ -5266,7 +5278,7 @@ fn_get_conto_bancario_predefinito(ruolo, uso)
 <h3 id="4-recupero-del-conto-view-e-funzione">4. Recupero del conto: view e funzione<a class="headerlink" href="#4-recupero-del-conto-view-e-funzione" title="Permanent link">&para;</a></h3>
 <p>Il sistema offre due artefatti per recuperare il conto bancario corretto, entrambi con la stessa logica: priorita al legame ruolo, fallback al legame soggetto, solo conti validi oggi, non bloccati e attivi.</p>
 <h4 id="anagrafichevw_conti_bancari_per_ruolo"><code>anagrafiche.vw_conti_bancari_per_ruolo</code><a class="headerlink" href="#anagrafichevw_conti_bancari_per_ruolo" title="Permanent link">&para;</a></h4>
-<p>La view unisce le candidate di entrambi i livelli e restituisce <strong>una sola riga per ogni combinazione <code>(soggetto_ruolo_id, uso)</code></strong>. L'ordinamento interno privilegia il legame ruolo (<code>fonte='RUOLO'</code>) rispetto al soggetto (<code>fonte='SOGGETTO'</code>), poi il flag predefinito, poi la recenza.</p>
+<p>La view e <strong>flat</strong>: unisce le candidate di entrambi i livelli e restituisce <strong>tutte le righe candidate</strong>, ordinate per priorita (ruolo+istanza &gt; ruolo generico &gt; soggetto, poi predefinito, poi recenza). La <strong>selezione singola</strong> con cascata istanza e uso e delegata alla funzione <code>fn_get_conto_bancario_predefinito</code>.</p>
 <p>La view espone:</p>
 <table>
 <thead>
@@ -5329,7 +5341,7 @@ fn_get_conto_bancario_predefinito(ruolo, uso)
 <p>Documentazione dettagliata: <a href="../../dbzero/anagrafiche/views/vw_conti_bancari_per_ruolo/">anagrafiche.vw_conti_bancari_per_ruolo</a></p>
 </blockquote>
 <h4 id="scriptfn_get_conto_bancario_predefinito"><code>script.fn_get_conto_bancario_predefinito</code><a class="headerlink" href="#scriptfn_get_conto_bancario_predefinito" title="Permanent link">&para;</a></h4>
-<p>La funzione e il punto d'ingresso consigliato quando serve <strong>un singolo conto</strong> per un'operazione specifica. Interroga la view per il ruolo e l'uso indicati. Se non trova risultati e l'uso non e gia <code>GENERICO</code>, ritenta con <code>uso='GENERICO'</code> come fallback.</p>
+<p>La funzione e il punto d'ingresso consigliato quando serve <strong>un singolo conto</strong> per un'operazione specifica. Interroga la view con cascata a <strong>7 livelli</strong> combinando istanza e uso.</p>
 <p>Da un punto di vista tecnico:</p>
 <table>
 <thead>
@@ -5350,15 +5362,22 @@ fn_get_conto_bancario_predefinito(ruolo, uso)
 <td>VARCHAR</td>
 <td>Uso richiesto, normalizzato a UPPER(TRIM())</td>
 </tr>
+<tr>
+<td><code>p_istanza_utility_id</code></td>
+<td>BIGINT</td>
+<td>ID istanza (<code>anagrafiche.istanze_utilities.id</code>). Opzionale — se NULL parte dal livello ruolo generico</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Restituisce:</strong> un record di tipo <code>anagrafiche.vw_conti_bancari_per_ruolo</code> o NULL.</p>
-<p><strong>Catena di fallback completa:</strong></p>
+<p><strong>Catena di fallback completa (7 livelli):</strong></p>
 <ol>
-<li>Legame ruolo per l'uso richiesto</li>
-<li>Legame soggetto per l'uso richiesto</li>
-<li>Legame ruolo per uso <code>GENERICO</code></li>
-<li>Legame soggetto per uso <code>GENERICO</code></li>
+<li>Ruolo + istanza specifica + uso richiesto</li>
+<li>Ruolo + istanza NULL + uso richiesto</li>
+<li>Soggetto + uso richiesto</li>
+<li>Ruolo + istanza specifica + uso GENERICO</li>
+<li>Ruolo + istanza NULL + uso GENERICO</li>
+<li>Soggetto + uso GENERICO</li>
 <li>NULL (nessun conto disponibile)</li>
 </ol>
 <blockquote>
@@ -5610,11 +5629,10 @@ fn_get_conto_bancario_predefinito(ruolo, uso)
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

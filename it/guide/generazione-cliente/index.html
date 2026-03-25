@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -2767,6 +2767,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#creazione-manuale-vs-creazione-da-pratica" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creazione manuale vs creazione da pratica
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4728,6 +4739,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#creazione-manuale-vs-creazione-da-pratica" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creazione manuale vs creazione da pratica
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5153,6 +5175,42 @@ Perche l'istanza nasce prima del contratto. In fase precontrattuale il soggetto 
 <li>crea il cliente con stato ATTIVO</li>
 </ul>
 <p>Tutto avviene in una transazione atomica: se un passo fallisce, nessuna modifica viene salvata.</p>
+<h3 id="creazione-manuale-vs-creazione-da-pratica">Creazione manuale vs creazione da pratica<a class="headerlink" href="#creazione-manuale-vs-creazione-da-pratica" title="Permanent link">&para;</a></h3>
+<p>Il sistema supporta due modalita di creazione del cliente, governate dal flag <code>config.utilities.richiede_pdp</code>:</p>
+<table>
+<thead>
+<tr>
+<th><code>richiede_pdp</code></th>
+<th>Modalita</th>
+<th>Istanza</th>
+<th>Indirizzo</th>
+<th>Esempio utility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>false</code></td>
+<td>Manuale (da interfaccia)</td>
+<td>Sempre fittizia</td>
+<td>Facoltativo</td>
+<td>Manifatturiero, servizi</td>
+</tr>
+<tr>
+<td><code>true</code></td>
+<td>Solo via pratiche</td>
+<td>Reale (con PDP)</td>
+<td>Obbligatorio</td>
+<td>GAS, Energia, Idrico</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Creazione manuale</strong> (<code>richiede_pdp = false</code>):</p>
+<p>L'operatore crea il cliente direttamente dall'interfaccia. Il <code>ClienteService</code> genera in trasparenza l'istanza fittizia, il billing account e il record cliente in una transazione atomica. L'operatore puo facoltativamente collegare un indirizzo del soggetto all'istanza, ma non e obbligatorio. L'istanza resta fittizia in entrambi i casi perche non rappresenta un punto di erogazione fisico.</p>
+<p><strong>Creazione da pratica</strong> (<code>richiede_pdp = true</code>):</p>
+<p>Per utility con ciclo tecnico complesso (contatore, allaccio, verifica fisica), la creazione del cliente passa obbligatoriamente dal motore pratiche. L'istanza e reale, collegata a un indirizzo e a un PDP, e il flusso include step di verifica e approvazione.</p>
+<blockquote>
+<p><strong>Nota architetturale</strong>: il flag <code>richiede_pdp</code> e il discriminante unico per le due modalita. Se in futuro servira un'utility senza PDP che richiede comunque il workflow pratiche, bastera aggiungere un boolean <code>solo_pratica</code> su <code>config.utilities</code> — vedi <a href="../../dev/work-in-progress/sviluppo-gestione-clienti/">WIP sviluppo-gestione-clienti</a>.</p>
+</blockquote>
 <hr />
 <h2 id="flusso-operativo-step-by-step">Flusso operativo step-by-step<a class="headerlink" href="#flusso-operativo-step-by-step" title="Permanent link">&para;</a></h2>
 <h3 id="1-creazione-dellistanza">1. Creazione dell'istanza<a class="headerlink" href="#1-creazione-dellistanza" title="Permanent link">&para;</a></h3>
@@ -5503,11 +5561,10 @@ erDiagram
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

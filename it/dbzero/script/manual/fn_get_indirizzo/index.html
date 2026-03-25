@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4124,10 +4124,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#esempio-di-catena-di-fallback" class="md-nav__link">
+  <a href="#esempio-di-cascata-con-istanza" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Esempio di catena di fallback
+        Esempio di cascata con istanza
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-di-catena-fallback-tipo-senza-utility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Esempio di catena fallback tipo (senza utility)
       
     </span>
   </a>
@@ -4197,63 +4208,52 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p><em>(latest review 01-12-25)</em>
-La funzione <strong><code>script.fn_get_indirizzo</code></strong> restituisce <strong>uno o più indirizzi tecnici</strong> associati a un determinato <strong><code>soggetto_ruolo</code></strong>, filtrando per <strong>tipo di indirizzo</strong> identificato dal <strong>codice interno</strong> (<code>config.tipi_indirizzi.codice_interno</code>).</p>
+<p><em>(latest review 25-03-26)</em>
+La funzione <strong><code>script.fn_get_indirizzo</code></strong> restituisce <strong>uno o più indirizzi tecnici</strong> associati a un determinato <strong><code>soggetto_ruolo</code></strong>, filtrando per <strong>tipo di indirizzo</strong> identificato dal <strong>codice interno</strong> (<code>config.tipi_indirizzi.codice_interno</code>) e opzionalmente per <strong>istanza utility</strong> (<code>anagrafiche.istanze_utilities.id</code>).</p>
 <p>La funzione:</p>
 <ul>
 <li><strong>non implementa</strong> la logica di composizione dell’indirizzo,</li>
 <li><strong>delega integralmente</strong> il recupero e la normalizzazione dei dati a <code>script.fn_get_indirizzi_by_ruolo</code>,</li>
-<li>aggiunge una logica di <strong>fallback multi-livello</strong> basata sulla matrice di configurazione
+<li>aggiunge una logica di <strong>fallback a 3 livelli</strong> (istanza → generico → soggetto) con catena tipo basata sulla matrice di configurazione
   <a href="../../../config/tabelle/tipi_ruolo_tipi_indirizzo/"><code>config.tipi_ruolo_tipi_indirizzo</code></a>.</li>
 <li>se il layer ruolo non risolve alcun indirizzo, applica fallback sul layer soggetto
   tramite <code>script.fn_get_indirizzo_by_soggetto</code>.</li>
 </ul>
 <p>In pratica:</p>
 <blockquote>
-<p>“Dammi l’indirizzo per questo tipo dal layer ruolo; se non esiste, segui la catena fallback del ruolo e, in ultima istanza, usa il layer soggetto.”</p>
+<p>“Dammi l’indirizzo per questo tipo: prima cerca nel layer ruolo per la istanza specifica, poi nel layer ruolo generico, poi nel layer soggetto — applicando la catena fallback tipo a ogni livello.”</p>
 </blockquote>
 <p>📌 <strong>Nota di ambito</strong>
-La funzione opera con policy:
-* <strong>master</strong> su <code>soggetto_ruolo</code> (matrice <strong>ruolo ↔ tipo indirizzo</strong>),
-* <strong>fallback finale</strong> su indirizzi diretti del soggetto (matrice <code>config.tipi_soggetto_dettaglio_tipi_indirizzo</code>).</p>
+La funzione opera con policy a <strong>3 livelli</strong>:</p>
+<ul>
+<li><strong>Livello 1</strong>: ruolo + istanza specifica (se <code>p_istanza_utility_id</code> valorizzato)</li>
+<li><strong>Livello 2</strong>: ruolo generico (istanza NULL)</li>
+<li><strong>Livello 3</strong>: fallback finale su indirizzi diretti del soggetto (matrice <code>config.tipi_soggetto_dettaglio_tipi_indirizzo</code>)</li>
+</ul>
 <hr />
 <h3 id="firma-reale">Firma (reale)<a class="headerlink" href="#firma-reale" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span>
-<span class="w">  </span><span class="n">p_soggetto_ruolo_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span>
-<span class="w">  </span><span class="n">p_tipo_codice</span><span class="w">       </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span>
+<span class="w">  </span><span class="n">p_soggetto_ruolo_id</span><span class="w">  </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_tipo_codice</span><span class="w">        </span><span class="n">config</span><span class="p">.</span><span class="n">tipi_indirizzi</span><span class="p">.</span><span class="n">codice_interno</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
+<span class="w">  </span><span class="n">p_istanza_utility_id</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">istanze_utilities</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span>
 <span class="p">)</span>
 <span class="k">RETURNS</span><span class="w"> </span><span class="k">TABLE</span><span class="p">(</span>
-<span class="w">  </span><span class="n">tipo_indirizzo</span><span class="w">          </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span>
+<span class="w">  </span><span class="n">tipo_indirizzo</span><span class="w">         </span><span class="n">config</span><span class="p">.</span><span class="n">tipi_indirizzi</span><span class="p">.</span><span class="n">codice_interno</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
 <span class="w">  </span><span class="n">indirizzo_completo</span><span class="w">     </span><span class="nb">text</span><span class="p">,</span>
 <span class="w">  </span><span class="n">geoloc</span><span class="w">                 </span><span class="n">geometry</span><span class="p">,</span>
-<span class="w">  </span><span class="n">indirizzo_id</span><span class="w">           </span><span class="nb">bigint</span><span class="p">,</span>
-<span class="w">  </span><span class="n">soggetto_ruolo_id</span><span class="w">      </span><span class="nb">bigint</span><span class="p">,</span>
-<span class="w">  </span><span class="n">tipo_indirizzo_id</span><span class="w">      </span><span class="nb">integer</span><span class="p">,</span>
-<span class="w">  </span><span class="n">indirizzo_dettaglio_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span>
-<span class="w">  </span><span class="n">indirizzo_libero</span><span class="w">       </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">indirizzo_id</span><span class="w">           </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">indirizzi</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
+<span class="w">  </span><span class="n">soggetto_ruolo_id</span><span class="w">      </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">indirizzi</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
+<span class="w">  </span><span class="n">istanza_utility_id</span><span class="w">     </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">indirizzi</span><span class="p">.</span><span class="n">istanza_utility_id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
+<span class="w">  </span><span class="n">tipo_indirizzo_id</span><span class="w">      </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">indirizzi</span><span class="p">.</span><span class="n">tipo_indirizzo_id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
+<span class="w">  </span><span class="n">indirizzo_dettaglio_id</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">indirizzi</span><span class="p">.</span><span class="n">indirizzo_dettaglio_id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
+<span class="w">  </span><span class="n">indirizzo_libero</span><span class="w">       </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">indirizzi</span><span class="p">.</span><span class="n">indirizzo_libero</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
 <span class="w">  </span><span class="n">is_normalizzato</span><span class="w">        </span><span class="nb">boolean</span><span class="p">,</span>
-<span class="w">  </span><span class="n">stato_id</span><span class="w">               </span><span class="nb">integer</span><span class="p">,</span>
-<span class="w">  </span><span class="n">stato_descrizione</span><span class="w">      </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span>
-<span class="w">  </span><span class="n">stato_iso2</span><span class="w">             </span><span class="nb">character</span><span class="p">,</span>
-<span class="w">  </span><span class="n">regione_id</span><span class="w">             </span><span class="nb">integer</span><span class="p">,</span>
-<span class="w">  </span><span class="n">regione_descrizione</span><span class="w">    </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span>
-<span class="w">  </span><span class="n">provincia_id</span><span class="w">           </span><span class="nb">integer</span><span class="p">,</span>
-<span class="w">  </span><span class="n">provincia_sigla</span><span class="w">        </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span>
-<span class="w">  </span><span class="n">provincia_descrizione</span><span class="w">  </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span>
-<span class="w">  </span><span class="n">comune_id</span><span class="w">              </span><span class="nb">integer</span><span class="p">,</span>
-<span class="w">  </span><span class="n">comune_descrizione</span><span class="w">     </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span>
-<span class="w">  </span><span class="n">codice_postale_id</span><span class="w">      </span><span class="nb">integer</span><span class="p">,</span>
-<span class="w">  </span><span class="n">cap_codice</span><span class="w">             </span><span class="nb">character</span><span class="p">,</span>
-<span class="w">  </span><span class="n">locality</span><span class="w">               </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span>
-<span class="w">  </span><span class="n">administrative_area</span><span class="w">    </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span>
-<span class="w">  </span><span class="n">sublocality</span><span class="w">            </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span><span class="p">,</span>
-<span class="w">  </span><span class="n">postal_box</span><span class="w">             </span><span class="nb">character</span><span class="w"> </span><span class="nb">varying</span>
+<span class="w">  </span><span class="p">...</span><span class="n">campi</span><span class="w"> </span><span class="n">geografici</span><span class="w"> </span><span class="p">(</span><span class="n">stato</span><span class="p">,</span><span class="w"> </span><span class="n">regione</span><span class="p">,</span><span class="w"> </span><span class="n">provincia</span><span class="p">,</span><span class="w"> </span><span class="n">comune</span><span class="p">,</span><span class="w"> </span><span class="n">CAP</span><span class="p">,</span><span class="w"> </span><span class="n">locality</span><span class="p">,</span><span class="w"> </span><span class="n">administrative_area</span><span class="p">,</span><span class="w"> </span><span class="n">sublocality</span><span class="p">,</span><span class="w"> </span><span class="n">postal_box</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">STABLE</span>
-<span class="n">PARALLEL</span><span class="w"> </span><span class="n">UNSAFE</span><span class="p">;</span>
+<span class="k">STABLE</span><span class="w"> </span><span class="k">ROWS</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
 </code></pre></div>
-<p>📌 Il result-set restituito è <strong>identico</strong> a quello prodotto da <code>script.fn_get_indirizzi_by_ruolo</code>, con la sola differenza che i record sono <strong>filtrati</strong> per tipo indirizzo e fallback.</p>
+<p>📌 Il result-set include ora <code>istanza_utility_id</code>. La struttura è identica a <code>script.fn_get_indirizzi_by_ruolo</code>, con i record filtrati per tipo indirizzo e cascata fallback.</p>
 <hr />
 <h3 id="parametri-di-input">Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -4261,6 +4261,7 @@ La funzione opera con policy:
 <tr>
 <th>Nome</th>
 <th>Tipo</th>
+<th style="text-align: center;">Obbligatorio</th>
 <th>Descrizione</th>
 </tr>
 </thead>
@@ -4268,12 +4269,20 @@ La funzione opera con policy:
 <tr>
 <td><code>p_soggetto_ruolo_id</code></td>
 <td><code>bigint</code></td>
+<td style="text-align: center;">si</td>
 <td>ID della relazione in <code>anagrafiche.soggetti_ruoli</code>.</td>
 </tr>
 <tr>
 <td><code>p_tipo_codice</code></td>
 <td><code>varchar</code></td>
+<td style="text-align: center;">si</td>
 <td>Codice interno del tipo indirizzo (<code>config.tipi_indirizzi.codice_interno</code>, es. <code>RES</code>, <code>FATT</code>, <code>SEDEOP</code>).</td>
+</tr>
+<tr>
+<td><code>p_istanza_utility_id</code></td>
+<td><code>bigint</code></td>
+<td style="text-align: center;">no</td>
+<td>ID della istanza utility (<code>anagrafiche.istanze_utilities.id</code>). Se NULL, salta il livello 1 e parte dal livello 2 (ruolo generico).</td>
 </tr>
 </tbody>
 </table>
@@ -4328,56 +4337,46 @@ La funzione opera con policy:
 <p>📌 Tutti gli altri campi geografici (stato, regione, provincia, comune, CAP) sono già <strong>risolti e coerenti</strong>, in quanto prodotti dalla funzione base.</p>
 <hr />
 <h3 id="logica-di-funzionamento-concettuale">Logica di funzionamento (concettuale)<a class="headerlink" href="#logica-di-funzionamento-concettuale" title="Permanent link">&para;</a></h3>
-<p>La funzione implementa una <strong>ricerca iterativa con fallback configurabile</strong>:</p>
+<p>La funzione implementa una <strong>ricerca a 3 livelli</strong>, ciascuno con catena fallback tipo:</p>
+<p><strong>FASE 1 — Ruolo + istanza specifica</strong> (solo se <code>p_istanza_utility_id</code> è valorizzato):</p>
 <ol>
-<li>Determina il <strong>tipo ruolo</strong> associato al <code>soggetto_ruolo</code>.</li>
-<li>Prova a recuperare indirizzi del tipo richiesto (<code>p_tipo_codice</code>) nel layer ruolo.</li>
-<li>Se vengono trovati uno o più record, <strong>li restituisce e termina</strong>.</li>
-<li>
-<p>In assenza di risultati nel layer ruolo:</p>
-</li>
-<li>
-<p>consulta <code>config.tipi_ruolo_tipi_indirizzo</code> per individuare un <code>fallback_tipo_indirizzo_id</code>,</p>
-</li>
-<li>traduce l’ID in <code>codice_interno</code>,</li>
-<li>ripete il tentativo.</li>
-<li>
-<p>La catena ruolo termina quando:</p>
-</li>
-<li>
-<p>viene trovato almeno un indirizzo,</p>
-</li>
+<li>Cerca indirizzi con <code>istanza_utility_id = p_istanza_utility_id</code> per il tipo richiesto.</li>
+<li>Se non trovati, segue la catena fallback tipo sulla matrice <code>config.tipi_ruolo_tipi_indirizzo</code>.</li>
+<li>Se trovati, restituisce e termina.</li>
+</ol>
+<p><strong>FASE 2 — Ruolo generico</strong> (istanza NULL):</p>
+<ol>
+<li>Cerca indirizzi con <code>istanza_utility_id IS NULL</code> per il tipo richiesto.</li>
+<li>Se non trovati, segue la catena fallback tipo.</li>
+<li>Se trovati, restituisce e termina.</li>
+</ol>
+<p><strong>FASE 3 — Fallback soggetto</strong>:</p>
+<ol>
+<li>Delega a <code>script.fn_get_indirizzo_by_soggetto(...)</code> con la propria catena fallback tipo.</li>
+</ol>
+<p>La catena tipo a ogni livello termina quando:</p>
+<ul>
+<li>viene trovato almeno un indirizzo,</li>
 <li>il fallback è <code>NULL</code>,</li>
 <li>viene rilevato un <strong>loop</strong> nella catena (protezione A → B → A).</li>
-<li>Se il layer ruolo non produce risultati, applica fallback su <code>script.fn_get_indirizzo_by_soggetto(...)</code>.</li>
-</ol>
+</ul>
 <p>📌 <strong>Comportamento intenzionale</strong>: la funzione <strong>non solleva errori</strong> se nessun indirizzo è disponibile; restituisce semplicemente zero righe.</p>
 <hr />
-<h3 id="esempio-di-catena-di-fallback">Esempio di catena di fallback<a class="headerlink" href="#esempio-di-catena-di-fallback" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>tipo_indirizzo</th>
-<th>fallback_tipo_indirizzo</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SEDEOP</td>
-<td>SEDELEG</td>
-</tr>
-<tr>
-<td>FORNITURA</td>
-<td>SEDEOP</td>
-</tr>
-</tbody>
-</table>
-<p>Effetto pratico:</p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="n">p_soggetto_ruolo_id</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;FORNITURA&#39;</span><span class="p">);</span>
+<h3 id="esempio-di-cascata-con-istanza">Esempio di cascata con istanza<a class="headerlink" href="#esempio-di-cascata-con-istanza" title="Permanent link">&para;</a></h3>
+<p>Soggetto Titini, ruolo CLIENTE (id=64), istanza GAS (id=1):</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Con istanza: cerca prima GAS, poi generico, poi soggetto</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;FATT&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 </code></pre></div>
 <p>Ordine dei tentativi:</p>
-<p><code>FORNITURA → SEDEOP → SEDELEG</code></p>
+<ol>
+<li><code>FATT</code> con <code>istanza_utility_id = 1</code> (GAS)</li>
+<li><code>FATT</code> con <code>istanza_utility_id IS NULL</code> (generico)</li>
+<li><code>FATT</code> dal layer soggetto (con propria catena fallback tipo)</li>
+</ol>
+<h3 id="esempio-di-catena-fallback-tipo-senza-utility">Esempio di catena fallback tipo (senza utility)<a class="headerlink" href="#esempio-di-catena-fallback-tipo-senza-utility" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_indirizzo</span><span class="p">(</span><span class="mi">63</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;FORNITURA&#39;</span><span class="p">);</span>
+</code></pre></div>
+<p>Ordine: <code>FORNITURA → SEDEOP → SEDELEG</code> (catena da matrice <code>tipi_ruolo_tipi_indirizzo</code>)</p>
 <hr />
 <h3 id="proprieta-tecniche">Proprietà tecniche<a class="headerlink" href="#proprieta-tecniche" title="Permanent link">&para;</a></h3>
 <table>
@@ -4476,11 +4475,10 @@ La funzione opera con policy:
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

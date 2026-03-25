@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4198,6 +4198,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pattern-ricerca-universale-lista-filtrata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern: Ricerca universale → lista filtrata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#regola-critica-paginazione-deterministica-backend" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4707,6 +4718,89 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#azioni-processo-livello-2-pattern-action-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Azioni processo — Livello 2 (pattern "action gate")
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Azioni processo — Livello 2 (pattern &quot;action gate&quot;)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#principio_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#piramide-permessi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Piramide permessi
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#come-funziona" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Come funziona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#come-aggiungere-unazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Come aggiungere un'azione
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#composable-per-casi-avanzati" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composable per casi avanzati
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regole_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regole
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#regole-per-il-developer" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4869,10 +4963,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#modalita-sola-lettura" class="md-nav__link">
+  <a href="#modalita-sola-lettura-e-azioni-processo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Modalita sola lettura
+        Modalita sola lettura e azioni processo
       
     </span>
   </a>
@@ -5186,6 +5280,35 @@ Se un pattern viene migliorato, il miglioramento si applica a tutte le schermate
 <div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">DataTable</span> <span class="na">v-bind</span><span class="o">=</span><span class="s">&quot;paginatorProps&quot;</span> <span class="na">lazy</span> <span class="err">@</span><span class="na">page</span><span class="o">=</span><span class="s">&quot;onPage&quot;</span> <span class="err">@</span><span class="na">sort</span><span class="o">=</span><span class="s">&quot;onSort&quot;</span> <span class="err">...</span><span class="p">&gt;</span>
 </code></pre></div>
 <p>Nessun componente lista deve implementare onPage/onSort/debounce manualmente.</p>
+<h3 id="pattern-ricerca-universale-lista-filtrata">Pattern: Ricerca universale → lista filtrata<a class="headerlink" href="#pattern-ricerca-universale-lista-filtrata" title="Permanent link">&para;</a></h3>
+<p>Quando l'utente seleziona un risultato dalla ricerca universale (SearchDrawer), il sistema:</p>
+<ol>
+<li><strong>Imposta il contesto</strong> globale (<code>contextStore.setContext</code> con <code>searchTerm</code>)</li>
+<li><strong>Naviga</strong> alla rotta lista corrispondente</li>
+<li><strong><code>useSearchTable</code></strong> legge automaticamente il termine da <code>route.query.search</code> o <code>contextStore.searchTerm</code></li>
+</ol>
+<p><strong>Nessuna configurazione necessaria nelle singole SearchTable</strong> — <code>useSearchTable</code> centralizza
+la risoluzione del termine di ricerca iniziale. Le SearchTable si usano esattamente come prima:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">searchText</span><span class="p">,</span><span class="w"> </span><span class="nx">onPage</span><span class="p">,</span><span class="w"> </span><span class="nx">onSort</span><span class="p">,</span><span class="w"> </span><span class="nx">paginatorProps</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useSearchTable</span><span class="p">(</span><span class="nx">store</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">defaultSortField</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;ragione_sociale_completa&#39;</span>
+<span class="p">})</span>
+</code></pre></div>
+<p><strong>Nella View</strong> serve solo il watcher per auto-apertura drawer da contesto:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">useContextStore</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;../../stores/context&#39;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useContextStore</span><span class="p">()</span>
+
+<span class="nx">watch</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">route</span><span class="p">.</span><span class="nx">fullPath</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">route</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;anagrafiche-clienti&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">entitaId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">nextTick</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">drawer</span><span class="p">.</span><span class="nx">editRow</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">entitaId</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;id&#39;</span><span class="p">))</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">immediate</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+<p><strong>Per aggiungere una nuova lista:</strong></p>
+<ul>
+<li>Aggiungere la rotta nella mappa <code>TIPO_RUOLO_ROUTES</code> in <code>SearchDrawer.vue</code></li>
+<li>Implementare il watcher <code>ctx → drawer.editRow</code> nella View se supporta auto-apertura</li>
+<li>Nient'altro: <code>useSearchTable</code> fa il resto</li>
+</ul>
 <h3 id="regola-critica-paginazione-deterministica-backend">⚠️ REGOLA CRITICA: Paginazione deterministica (backend)<a class="headerlink" href="#regola-critica-paginazione-deterministica-backend" title="Permanent link">&para;</a></h3>
 <p><strong>Ogni query SQL paginata (LIMIT/OFFSET) DEVE avere <code>id</code> come tiebreaker nell'ORDER BY.</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- ❌ SBAGLIATO — ordine non deterministico, pagine duplicate a offset alti</span>
@@ -5962,6 +6085,46 @@ Importato prima di <code>main.css</code> in <code>main.js</code>.</p>
 </tbody>
 </table>
 <hr />
+<h2 id="azioni-processo-livello-2-pattern-action-gate">Azioni processo — Livello 2 (pattern "action gate")<a class="headerlink" href="#azioni-processo-livello-2-pattern-action-gate" title="Permanent link">&para;</a></h2>
+<h3 id="principio_2">Principio<a class="headerlink" href="#principio_2" title="Permanent link">&para;</a></h3>
+<p>Le azioni di processo controllano <strong>singole operazioni</strong> (es. "crea soggetto", "genera fatture") dentro un'area a cui l'operatore ha gia' accesso. Sono il livello di granularita' sotto TUTTO/LETTURA/BLOCCATO.</p>
+<h3 id="piramide-permessi">Piramide permessi<a class="headerlink" href="#piramide-permessi" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Livello 1: Area (TUTTO / LETTURA / BLOCCATO)  → sidebar + route guard + .app-readonly
+Livello 2: Azione processo (abilitata / negata) → prop action su NewButton / DrawerFooter
+</code></pre></div>
+<h3 id="come-funziona">Come funziona<a class="headerlink" href="#come-funziona" title="Permanent link">&para;</a></h3>
+<p>L'endpoint <code>/me/</code> ritorna <code>azioni_abilitate: { codename: boolean }</code> per tutte le azioni attive. Lo store <code>auth.js</code> espone <code>isActionAllowed(codename)</code>.</p>
+<p>I componenti <code>NewButton</code> e <code>DrawerFooter</code> accettano una prop opzionale <code>action</code>:
+- Se <strong>assente</strong> (default): il componente funziona come prima (solo check readonly)
+- Se <strong>presente</strong>: il componente si nasconde se l'azione non e' abilitata</p>
+<div class="highlight"><pre><span></span><code><span class="cm">&lt;!-- Pulsante &quot;Nuovo&quot; visibile solo se l&#39;azione e&#39; abilitata --&gt;</span>
+<span class="p">&lt;</span><span class="nt">NewButton</span> <span class="na">action</span><span class="o">=</span><span class="s">&quot;crea_soggetto&quot;</span> <span class="p">:</span><span class="na">tooltip</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">t</span><span class="p">(</span><span class="s1">&#39;...&#39;</span><span class="p">)</span><span class="s">&quot;</span> <span class="p">@</span><span class="na">click</span><span class="o">=</span><span class="s">&quot;</span><span class="p">...</span><span class="s">&quot;</span> <span class="p">/&gt;</span>
+
+<span class="cm">&lt;!-- Footer Salva visibile solo se l&#39;azione e&#39; abilitata --&gt;</span>
+<span class="p">&lt;</span><span class="nt">DrawerFooter</span> <span class="na">action</span><span class="o">=</span><span class="s">&quot;modifica_soggetto&quot;</span> <span class="p">@</span><span class="na">save</span><span class="o">=</span><span class="s">&quot;</span><span class="p">...</span><span class="s">&quot;</span> <span class="p">@</span><span class="na">cancel</span><span class="o">=</span><span class="s">&quot;</span><span class="p">...</span><span class="s">&quot;</span> <span class="p">/&gt;</span>
+</code></pre></div>
+<h3 id="come-aggiungere-unazione">Come aggiungere un'azione<a class="headerlink" href="#come-aggiungere-unazione" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>DB</strong>: inserire riga in <code>config.azioni_processo</code> (seed CSV)</li>
+<li><strong>Backend</strong>: aggiungere <code>post_permission = "codename"</code> sulla view API</li>
+<li><strong>Frontend</strong>: aggiungere prop <code>action="codename"</code> su <code>NewButton</code> o <code>DrawerFooter</code></li>
+<li><strong>Configurazione</strong>: da Amm. Software → Profili reparto, abilitare per reparto</li>
+</ol>
+<h3 id="composable-per-casi-avanzati">Composable per casi avanzati<a class="headerlink" href="#composable-per-casi-avanzati" title="Permanent link">&para;</a></h3>
+<p>Per logica condizionale oltre ai componenti standard:</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">useActionPermission</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@/core/composables/useActionPermission&#39;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">isAllowed</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useActionPermission</span><span class="p">(</span><span class="s1">&#39;genera_fatture_lotti&#39;</span><span class="p">)</span>
+<span class="c1">// &lt;Button v-if=&quot;isAllowed&quot; ... /&gt;</span>
+</code></pre></div>
+<h3 id="regole_1">Regole<a class="headerlink" href="#regole_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Mai hardcodare codename nei componenti — usare costanti se ripetuti</li>
+<li>Il backend blocca sempre con 403 anche se il frontend non nasconde il bottone (defense-in-depth)</li>
+<li>ADMIN ha tutte le azioni abilitate — il check frontend lo gestisce automaticamente</li>
+<li>La prop <code>action</code> e' cumulativa con readonly: se readonly=true, il componente e' nascosto a prescindere</li>
+</ul>
+<hr />
 <h2 id="regole-per-il-developer">Regole per il developer<a class="headerlink" href="#regole-per-il-developer" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Ogni componente e' autonomo — logica nei composables di <code>core/</code></li>
@@ -5979,6 +6142,8 @@ Importato prima di <code>main.css</code> in <code>main.js</code>.</p>
 <li>Stato drawer da <code>useDrawerState</code> — mai <code>ref(false)</code> + <code>ref('create')</code> separati</li>
 <li>CSS layout da <code>main.css</code> — mai <code>&lt;style scoped&gt;</code> per layout form/pagina</li>
 <li>Sola lettura da classe <code>.app-readonly</code> sul container — mai componenti duplicati</li>
+<li>Azioni processo via prop <code>action</code> su <code>NewButton</code>/<code>DrawerFooter</code> — mai <code>v-if</code> manuali per permessi</li>
+<li><code>ConfirmDialog</code> solo globale in <code>App.vue</code> — mai dentro Drawer (interferenza overlay)</li>
 </ol>
 <hr />
 <h2 id="catalogo-componenti-e-composable-riutilizzabili">Catalogo componenti e composable riutilizzabili<a class="headerlink" href="#catalogo-componenti-e-composable-riutilizzabili" title="Permanent link">&para;</a></h2>
@@ -6149,6 +6314,12 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
 <td>SoggettoDrawer</td>
 </tr>
 <tr>
+<td><code>ContoBancarioForm</code></td>
+<td>Form conto bancario: IBAN autocomplete, filiale, uso, date, flags</td>
+<td><code>form</code>, <code>usiDisponibili</code></td>
+<td>ContiBancariDrawer</td>
+</tr>
+<tr>
 <td><code>AuthUserForm</code></td>
 <td>Form credenziali operatore</td>
 <td><code>form</code>, <code>isEdit</code></td>
@@ -6205,6 +6376,11 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
 <tr>
 <td><code>ContattiSoggettoDrawer</code></td>
 <td>Gestione contatti soggetto: lista, CRUD, validazione email/PEC</td>
+<td>SoggettoDrawer</td>
+</tr>
+<tr>
+<td><code>ContiBancariDrawer</code></td>
+<td>Gestione conti bancari soggetto: lista, CRUD, autocomplete IBAN/filiale</td>
 <td>SoggettoDrawer</td>
 </tr>
 </tbody>
@@ -6377,6 +6553,11 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
 <td>ContattiSoggettoDrawer</td>
 </tr>
 <tr>
+<td><code>useContoBancarioForm</code></td>
+<td>Stato form conto bancario: IBAN autocomplete, filiale, uso, payload create/update</td>
+<td>ContiBancariDrawer</td>
+</tr>
+<tr>
 <td><code>useDatiSocietariForm</code></td>
 <td>Stato form dati societari con policy forma giuridica</td>
 <td>SoggettoDrawer</td>
@@ -6420,7 +6601,7 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
 </tr>
 </tbody>
 </table>
-<h4 id="modalita-sola-lettura">Modalita sola lettura<a class="headerlink" href="#modalita-sola-lettura" title="Permanent link">&para;</a></h4>
+<h4 id="modalita-sola-lettura-e-azioni-processo">Modalita sola lettura e azioni processo<a class="headerlink" href="#modalita-sola-lettura-e-azioni-processo" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -6440,8 +6621,14 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
 <td>Consumer: inject isReadonly dal provider padre</td>
 <td>NewButton, DrawerFooter, tutti i Drawer</td>
 </tr>
+<tr>
+<td><code>useActionPermission</code></td>
+<td>Verifica se un'azione processo e' abilitata (computed reattivo)</td>
+<td>Componenti dominio con logica condizionale avanzata</td>
+</tr>
 </tbody>
 </table>
+<p><strong>Nota</strong>: per i casi standard, usare la prop <code>action</code> su <code>NewButton</code>/<code>DrawerFooter</code> invece del composable diretto.</p>
 <h4 id="ricerca-universale">Ricerca universale<a class="headerlink" href="#ricerca-universale" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -6641,7 +6828,7 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
 </tbody>
 </table>
 <hr />
-<p><em>ZeroERP Frontend Standards — rev. 8 (18 marzo 2026)</em>
+<p><em>ZeroERP Frontend Standards — rev. 9 (25 marzo 2026)</em>
 <em>Sviluppo Concentrico — anello esterno, radici nell'infrastruttura</em></p>
 <hr />
 <p><strong>© 2025-2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
@@ -6696,11 +6883,10 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4248,9 +4248,11 @@ L'obiettivo e<code>ridurre la complessita</code> superflua mantenendo rigore su 
 <hr />
 <h2 id="stato-progetto">Stato progetto<a class="headerlink" href="#stato-progetto" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p><strong>Sviluppo attivo — frontend in costruzione.</strong></p>
-<p>DB e API backend operativi. Frontend Vue in sviluppo: layout applicativo,
-gestione operatori, gestione geografica (indirizzi, comuni, province, regioni, stati).
+<p><strong>Sviluppo attivo — frontend operativo su aree core.</strong></p>
+<p>DB e API backend operativi. Frontend Vue operativo su: layout applicativo,
+gestione soggetti (PF/PG/ENTE), gestione geografica (7 tab CRUD), pannello configurazione (67 tabelle),
+amministrazione software (operatori, profili reparto, permessi, audit log),
+sistema permessi a 2 livelli (area + azioni processo).
 Non ancora rilasciato per produzione.</p>
 </blockquote>
 <hr />
@@ -4304,7 +4306,7 @@ Non ancora rilasciato per produzione.</p>
 </ul>
 <hr />
 <h2 id="architettura">Architettura<a class="headerlink" href="#architettura" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>Frontend (futuro)
+<div class="highlight"><pre><span></span><code>Frontend Vue 3 (presentazione, zero logica business)
     |
 API REST Django (orchestrazione, permessi, endpoint)
     |
@@ -4379,17 +4381,22 @@ PostgreSQL (nucleo dominio: regole, workflow, audit)
 <p>Il modello e` pensato per supportare processi non lineari e gestione multi-reparto.</p>
 <hr />
 <h2 id="stato-dello-sviluppo">Stato dello Sviluppo<a class="headerlink" href="#stato-dello-sviluppo" title="Permanent link">&para;</a></h2>
-<p>Fotografia sintetica (15 marzo 2026):</p>
+<p>Fotografia sintetica (20 marzo 2026):</p>
 <ul>
 <li>Database core: operativo (13 schemi, 200+ tabelle, trigger, funzioni, viste)</li>
-<li>API backend: operativo (621 test, 21+ endpoint anagrafiche, 19 pratiche, vendite, core)</li>
+<li>API backend: operativo (689+ test, 57+ endpoint documentati)</li>
 <li>Motore pratiche: operativo (workflow, giornale, sospensioni, macchina a stati)</li>
-<li>Frontend Vue: in sviluppo attivo</li>
-<li>Layout applicativo (sidebar, tabs, breadcrumb, ricerca universale)</li>
-<li>Gestione operatori e profili reparto (Amm. Software — parziale, test UI pendenti)</li>
-<li>Gestione geografica completa (indirizzi, toponomastica, comuni, province, regioni, stati)</li>
-<li>Building block riutilizzabili (SoggettoForm, AuthUserForm, composable centralizzati)</li>
-<li>Documentazione: in aggiornamento continuo</li>
+<li>Sistema permessi: operativo a 2 livelli</li>
+<li>Livello 1: area funzionale (TUTTO/LETTURA/BLOCCATO) — sidebar, route guard, CSS protect</li>
+<li>Livello 2: azioni processo (abilitata/negata) — prop <code>action</code> su componenti, backend 403</li>
+<li>Frontend Vue: operativo su aree core</li>
+<li>Layout applicativo (sidebar morfica, content tabs, breadcrumb, ricerca universale, shortcut tastiera)</li>
+<li>Amm. Software completa: operatori, profili reparto, permessi riepilogo, audit log (solo ADMIN)</li>
+<li>Gestione soggetti: PF/PG/ENTE end-to-end, ruoli, contatti, indirizzi, CF validator IT</li>
+<li>Gestione geografica: 7 tab CRUD (indirizzi, toponomastica, comuni, CAP, province, regioni, stati)</li>
+<li>Pannello configurazione: 67 tabelle CRUD generiche con drawer dinamico metadata-driven</li>
+<li>Building block riutilizzabili: 20+ composable, 15+ componenti core, CSS utility classes</li>
+<li>Documentazione: 57+ endpoint documentati, frontend-standards, mappa concentrica aggiornata</li>
 </ul>
 <p><a href=".././mappa-concentrica/">Mappa</a></p>
 <hr />
@@ -4416,9 +4423,14 @@ Per setup ambiente di sviluppo, seguire:</p>
 <ol>
 <li>~~Consolidamento nucleo DB e motore pratiche~~ — fatto</li>
 <li>~~Espansione API dominio (anagrafiche, vendite, pratiche)~~ — fatto</li>
-<li>Frontend operativo per uso interno — in corso</li>
-<li>Test UI reali su aree completate (Amm. Software, Gestione Geografica)</li>
-<li>Gestione Soggetti (anagrafica completa: soggetto + contatto + indirizzo)</li>
+<li>~~Frontend layout applicativo + building block~~ — fatto</li>
+<li>~~Gestione Soggetti (PF/PG/ENTE end-to-end)~~ — fatto, in test UI</li>
+<li>~~Gestione Geografica (7 tab CRUD)~~ — fatto</li>
+<li>~~Amm. Software (operatori, profili, permessi, audit)~~ — fatto, in test UI</li>
+<li>~~Sistema permessi 2 livelli (area + azioni processo)~~ — fatto</li>
+<li>Test UI reali su aree completate — in corso</li>
+<li>Seed azioni processo per nuovi domini + integrazione componenti</li>
+<li>ClienteService Django (orchestrator creazione/subentro/disdetta)</li>
 <li>Evoluzione integrazioni e moduli verticali</li>
 </ol>
 <hr />
@@ -4498,11 +4510,10 @@ Per setup ambiente di sviluppo, seguire:</p>
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../assets/javascripts/mermaid.min.js"></script>
       

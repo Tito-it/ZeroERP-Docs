@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -2938,6 +2938,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#istanze-fittizie-nella-creazione-manuale-del-cliente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Istanze fittizie nella creazione manuale del cliente
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4850,6 +4861,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#istanze-fittizie-nella-creazione-manuale-del-cliente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Istanze fittizie nella creazione manuale del cliente
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4969,6 +4991,42 @@
 <p>Regola: se l'istanza e legata a un PDP, non puo essere fittizia.</p>
 <h3 id="utility">Utility<a class="headerlink" href="#utility" title="Permanent link">&para;</a></h3>
 <p>Ogni istanza appartiene a una sola utility (GAS, ENERGIA, ecc.). Serve per filtri, validazioni e per identificare i PDP compatibili.</p>
+<p><strong>Nota importante:</strong> la tabella <code>istanze_utilities</code> <strong>non ha</strong> una colonna <code>utility_id</code> diretta. La utility dell'istanza e un dato implicito, registrato nelle tabelle satellite:</p>
+<table>
+<thead>
+<tr>
+<th>Tabella</th>
+<th>Vincolo</th>
+<th>Quando esiste</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>istanze_dati_precontrattuali</code></td>
+<td><code>UNIQUE(istanza_utility_id, utility_id)</code></td>
+<td>Fase precontrattuale (creazione da pratica)</td>
+</tr>
+<tr>
+<td><code>billing_account</code></td>
+<td><code>UNIQUE(istanza_utility_id, utility_id)</code></td>
+<td>Dopo creazione BA</td>
+</tr>
+<tr>
+<td><code>clienti</code></td>
+<td><code>UNIQUE(istanza_utility_id)</code> + <code>utility_id</code></td>
+<td>Dopo creazione cliente</td>
+</tr>
+</tbody>
+</table>
+<p>Tutti e tre i vincoli UNIQUE garantiscono che <strong>una istanza corrisponde a una sola utility</strong>.</p>
+<p><strong>Ordine cronologico di disponibilita:</strong></p>
+<ol>
+<li><strong>Pratica aperta</strong> — <code>istanze_dati_precontrattuali</code> e il primo punto dove il legame istanza → utility viene registrato. Nella creazione da pratica (utility con <code>richiede_pdp = true</code>: GAS, IDRICO, ENERGIA) questo record <strong>deve</strong> essere creato subito insieme all'istanza, perche BA e cliente non esistono ancora</li>
+<li><strong>BA creato</strong> — <code>billing_account.utility_id</code> disponibile</li>
+<li><strong>Cliente creato</strong> — <code>clienti.utility_id</code> disponibile (sincronizzato dal BA via trigger <code>trgfn_clienti_sync_utility_from_ba</code>)</li>
+</ol>
+<p>Nella creazione immediata (utility con <code>richiede_pdp = false</code>) non c'e fase precontrattuale: BA e cliente vengono creati atomicamente dal <code>ClienteService</code>, e la utility e immediatamente disponibile da <code>billing_account</code> e <code>clienti</code>.</p>
+<p><strong>Perche e importante:</strong> il sistema usa <code>istanza_utility_id</code> come differenziatore su indirizzi, conti bancari e contatti a livello ruolo (cascata istanza → generico ruolo → soggetto). In qualsiasi fase del ciclo di vita dell'istanza, la utility deve essere reperibile per la UI e per le funzioni di risoluzione. Se <code>istanze_dati_precontrattuali</code> non viene popolato nella fase precontrattuale, la utility resta ignota fino alla creazione del BA.</p>
 <h3 id="pdp-opzionale">PDP (opzionale)<a class="headerlink" href="#pdp-opzionale" title="Permanent link">&para;</a></h3>
 <p>L'istanza puo essere collegata a un punto di prelievo gia esistente:</p>
 <ul>
@@ -5090,6 +5148,19 @@
 <li>Confondere il vincolo "un cliente per PDP" con "un cliente per indirizzo"</li>
 </ul>
 <hr />
+<h2 id="istanze-fittizie-nella-creazione-manuale-del-cliente">Istanze fittizie nella creazione manuale del cliente<a class="headerlink" href="#istanze-fittizie-nella-creazione-manuale-del-cliente" title="Permanent link">&para;</a></h2>
+<p>Per le utility con <code>config.utilities.richiede_pdp = false</code> (manifatturiero, servizi generici, ecc.), la creazione del cliente avviene <strong>manualmente</strong> dall'interfaccia, senza passare dal motore pratiche.</p>
+<p>In questo caso l'istanza viene generata automaticamente come <strong>contenitore tecnico trasparente</strong>:</p>
+<ul>
+<li><code>fittizia = TRUE</code> — l'istanza non rappresenta un punto di erogazione fisico</li>
+<li><code>indirizzo_dettaglio_id</code> — facoltativo, a discrezione dell'operatore. Se fornito, viene salvato come dato informativo</li>
+<li><code>pdp_id = NULL</code> — nessun punto di prelievo associato</li>
+<li><code>utility_id</code> — la utility scelta dall'operatore (solo quelle con <code>richiede_pdp = false</code>)</li>
+</ul>
+<p>L'operatore non interagisce direttamente con l'istanza: il <code>ClienteService</code> la crea dietro le quinte come parte della transazione atomica di creazione cliente (istanza + billing account + cliente).</p>
+<p>Per le utility con <code>richiede_pdp = true</code> (GAS, Energia, Idrico), la creazione del cliente passa obbligatoriamente dal motore pratiche e l'istanza e sempre reale, con indirizzo e PDP obbligatori.</p>
+<p>Per i dettagli completi: <a href=".././generazione-cliente/#creazione-manuale-vs-creazione-da-pratica">Guida Generazione Cliente — Creazione manuale vs creazione da pratica</a>.</p>
+<hr />
 <p>Le funzionalita descritte in questa guida sono basate sul modello strutturale introdotto nel 2025, che definisce formalmente l'identita dell'istanza, il vincolo 1 istanza = 1 cliente, e la gestione della catena di subentri tramite <code>parent_istanza_id</code>.</p>
 <p>Per i dettagli completi e i vincoli formali: <a href="../../dbzero/anagrafiche/tabelle/istanze_utilities/">anagrafiche.istanze_utilities</a></p>
 <hr />
@@ -5145,11 +5216,10 @@
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

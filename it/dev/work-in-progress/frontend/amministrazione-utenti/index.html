@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4803,7 +4803,7 @@ Guida di riferimento permessi: <code>docs/it/guide/architettura-permessi-e-autor
 </ul>
 <h3 id="backend_1">Backend<a class="headerlink" href="#backend_1" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[x] 2.2 — <code>GET /api/v1/amm-software/utenti/</code></li>
+<li>[x] 2.2 — <code>GET /api/v1/amm-software/operatori/</code></li>
 <li>Paginazione standard DRF (page/page_size)</li>
 <li>Filtri query string: <code>ruolo_sistema</code>, <code>unita_organizzativa_id</code>, <code>is_active</code>, <code>search</code></li>
 <li>Permission: <code>IsAdminZeroERP</code></li>
@@ -4811,7 +4811,7 @@ Guida di riferimento permessi: <code>docs/it/guide/architettura-permessi-e-autor
 <p><strong>Prerequisiti</strong>: DB 2.1, BE 1.2</p>
 </li>
 <li>
-<p>[x] 2.3 — <code>GET /api/v1/amm-software/utenti/{auth_user_id}/</code></p>
+<p>[x] 2.3 — <code>GET /api/v1/amm-software/operatori/{auth_user_id}/</code></p>
 </li>
 <li>Dettaglio completo: dati auth_user + risorsa_umana + override permessi correnti</li>
 <li>Include lista <code>user_override_aree</code>, <code>user_override_azioni</code>, <code>user_emittenti_fiscali</code></li>
@@ -4820,7 +4820,7 @@ Guida di riferimento permessi: <code>docs/it/guide/architettura-permessi-e-autor
 <p><strong>Prerequisiti</strong>: 2.2</p>
 </li>
 <li>
-<p>[x] 2.4 — <code>PATCH /api/v1/amm-software/utenti/{auth_user_id}/</code></p>
+<p>[x] 2.4 — <code>PATCH /api/v1/amm-software/operatori/{auth_user_id}/</code></p>
 </li>
 <li>Campi modificabili: <code>email</code>, <code>first_name</code>, <code>last_name</code>, <code>ruolo_sistema</code>,
     <code>unita_organizzativa_id</code>, <code>attivo</code> (risorsa_umana), <code>valido_al</code></li>
@@ -4831,7 +4831,7 @@ Guida di riferimento permessi: <code>docs/it/guide/architettura-permessi-e-autor
 <p><strong>Prerequisiti</strong>: 2.3</p>
 </li>
 <li>
-<p>[x] 2.5 — <code>POST /api/v1/amm-software/utenti/{auth_user_id}/disabilita/</code></p>
+<p>[x] 2.5 — <code>POST /api/v1/amm-software/operatori/{auth_user_id}/disabilita/</code></p>
 </li>
 <li>Shortcut: imposta <code>ruolo_sistema = DISABILITATO</code> + <code>risorse_umane.attivo = false</code></li>
 <li>Chiama <code>fn_sync_auth_user_is_active</code> (sync <code>auth_user.is_active = false</code>)</li>
@@ -4894,7 +4894,7 @@ Guida di riferimento permessi: <code>docs/it/guide/architettura-permessi-e-autor
 </ul>
 <h3 id="backend_2">Backend<a class="headerlink" href="#backend_2" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[x] 3.2 — <code>POST /api/v1/amm-software/utenti/</code></li>
+<li>[x] 3.2 — <code>POST /api/v1/amm-software/operatori/</code></li>
 <li>Serializer con validazione: username univoco, email valida, password strength</li>
 <li>Chiama <code>fn_crea_operatore</code> via <code>cursor.execute()</code> in transaction</li>
 <li>Password: ricevuta in chiaro dal frontend, hashata con <code>make_password()</code> prima di
@@ -4935,7 +4935,7 @@ Guida di riferimento permessi: <code>docs/it/guide/architettura-permessi-e-autor
 ma non permette modifica. Queste API colmano il gap.</p>
 <h3 id="backend_3">Backend<a class="headerlink" href="#backend_3" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[x] 4.1 — <code>GET/PUT /api/v1/amm-software/utenti/{id}/override-aree/</code></li>
+<li>[x] 4.1 — <code>GET/PUT /api/v1/amm-software/operatori/{id}/override-aree/</code></li>
 <li>GET: lista override aree attivi per l'utente (include <code>valido_dal</code>, <code>valido_al</code>)</li>
 <li>PUT: sostituisce la lista completa degli override aree (replace semantics)</li>
 <li>Ogni item: <code>area_id</code>, <code>livello</code> (TUTTO/LETTURA/BLOCCATO), <code>valido_dal</code>, <code>valido_al</code></li>
@@ -4944,7 +4944,7 @@ ma non permette modifica. Queste API colmano il gap.</p>
 <p><strong>Prerequisiti</strong>: BE 1.2</p>
 </li>
 <li>
-<p>[x] 4.2 — <code>GET/PUT /api/v1/amm-software/utenti/{id}/override-azioni/</code></p>
+<p>[x] 4.2 — <code>GET/PUT /api/v1/amm-software/operatori/{id}/override-azioni/</code></p>
 </li>
 <li>Come 4.1 ma per <code>config.user_override_azioni</code></li>
 <li>Ogni item: <code>azione_id</code>, <code>abilitata</code> (boolean), <code>valido_dal</code>, <code>valido_al</code></li>
@@ -4952,7 +4952,7 @@ ma non permette modifica. Queste API colmano il gap.</p>
 <p><strong>Prerequisiti</strong>: BE 1.2</p>
 </li>
 <li>
-<p>[x] 4.3 — <code>GET/PUT /api/v1/amm-software/utenti/{id}/emittenti-scope/</code></p>
+<p>[x] 4.3 — <code>GET/PUT /api/v1/amm-software/operatori/{id}/emittenti-scope/</code></p>
 </li>
 <li>GET: lista emittenti autorizzati per l'utente</li>
 <li>PUT: sostituisce la lista (lista vuota = nessuna restrizione per ADMIN/OPERATIVO senza whitelist)</li>
@@ -5018,7 +5018,7 @@ con <code>ruolo_sistema = ADMIN</code>. Il frontend legge il ruolo dal JWT o da 
 <div class="highlight"><pre><span></span><code>src/
   views/
     amministrazione/
-      UtentiListView.vue          ← pagina lista operatori
+      OperatoriListView.vue          ← pagina lista operatori
       RepartiProfiloView.vue      ← pagina configurazione profili reparto
   components/
     amministrazione/
@@ -5051,7 +5051,7 @@ con <code>ruolo_sistema = ADMIN</code>. Il frontend legge il ruolo dal JWT o da 
 </ul>
 <h3 id="62-lista-utenti">6.2 Lista Utenti<a class="headerlink" href="#62-lista-utenti" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[x] 6.3 — <code>UtentiListView.vue</code> — pagina principale</li>
+<li>[x] 6.3 — <code>OperatoriListView.vue</code> — pagina principale</li>
 <li>DataTable PrimeVue con colonne: nome/cognome, username, reparto, ruolo_sistema, stato (badge)</li>
 <li>Filtri toolbar: search (text), reparto (dropdown), ruolo_sistema (dropdown), attivo (toggle)</li>
 <li>Pulsante "+ Nuovo operatore" → apre <code>UtenteDrawer.vue</code> in modalità creazione</li>
@@ -5105,7 +5105,7 @@ con <code>ruolo_sistema = ADMIN</code>. Il frontend legge il ruolo dal JWT o da 
 <h2 id="7-navigazione-sidebar-e-routing">7. Navigazione sidebar e routing<a class="headerlink" href="#7-navigazione-sidebar-e-routing" title="Permanent link">&para;</a></h2>
 <h3 id="backend_5">Backend<a class="headerlink" href="#backend_5" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[x] 7.1 — Route Vue: <code>/amm-software/operatori</code> → <code>UtentiListView</code></li>
+<li>[x] 7.1 — Route Vue: <code>/amm-software/operatori</code> → <code>OperatoriListView</code></li>
 <li>[x] 7.2 — Route Vue: <code>/amm-software/profili-reparto</code> → <code>RepartiProfiloView</code></li>
 <li>[x] 7.3 — Voce sidebar "Amm. Software" con icona <code>pi pi-lock</code></li>
 <li>4 sotto-voci: Operatori, Profili Reparto, Permessi (placeholder), Audit Log (placeholder)</li>
@@ -5161,7 +5161,7 @@ con <code>ruolo_sistema = ADMIN</code>. Il frontend legge il ruolo dal JWT o da 
 <td>2.2</td>
 <td>Utenti</td>
 <td>BE</td>
-<td><code>GET /amm-software/utenti/</code></td>
+<td><code>GET /amm-software/operatori/</code></td>
 <td>2.1, 1.2</td>
 <td>DONE</td>
 </tr>
@@ -5169,7 +5169,7 @@ con <code>ruolo_sistema = ADMIN</code>. Il frontend legge il ruolo dal JWT o da 
 <td>2.3</td>
 <td>Utenti</td>
 <td>BE</td>
-<td><code>GET /amm-software/utenti/{id}/</code></td>
+<td><code>GET /amm-software/operatori/{id}/</code></td>
 <td>2.2</td>
 <td>DONE</td>
 </tr>
@@ -5177,7 +5177,7 @@ con <code>ruolo_sistema = ADMIN</code>. Il frontend legge il ruolo dal JWT o da 
 <td>2.4</td>
 <td>Utenti</td>
 <td>BE</td>
-<td><code>PATCH /amm-software/utenti/{id}/</code></td>
+<td><code>PATCH /amm-software/operatori/{id}/</code></td>
 <td>2.3</td>
 <td>DONE</td>
 </tr>
@@ -5209,7 +5209,7 @@ con <code>ruolo_sistema = ADMIN</code>. Il frontend legge il ruolo dal JWT o da 
 <td>3.2</td>
 <td>Creazione</td>
 <td>BE</td>
-<td><code>POST /amm-software/utenti/</code></td>
+<td><code>POST /amm-software/operatori/</code></td>
 <td>3.1, 1.2</td>
 <td>DONE</td>
 </tr>
@@ -5313,7 +5313,7 @@ con <code>ruolo_sistema = ADMIN</code>. Il frontend legge il ruolo dal JWT o da 
 <td>6.3</td>
 <td>Frontend</td>
 <td>FE</td>
-<td><code>UtentiListView.vue</code></td>
+<td><code>OperatoriListView.vue</code></td>
 <td>2.2, 6.2</td>
 <td>DONE</td>
 </tr>
@@ -5385,7 +5385,7 @@ con <code>ruolo_sistema = ADMIN</code>. Il frontend legge il ruolo dal JWT o da 
 <td><strong>8.4</strong></td>
 <td>Resolver</td>
 <td>BE</td>
-<td>Evoluzione <code>POST /amm-software/utenti/</code> (due flussi)</td>
+<td>Evoluzione <code>POST /amm-software/operatori/</code> (due flussi)</td>
 <td>8.2, 8.3</td>
 <td>TODO</td>
 </tr>
@@ -5669,7 +5669,7 @@ Flusso B: p_soggetto_id = X    → verifica esistenza soggetto, natura ammessa,
 + <code>apps/anagrafiche/api/views_soggetti.py</code> (nuova view).</p>
 <hr />
 <h3 id="84-backend-evoluzione-post-creazione-operatore">8.4 — Backend: Evoluzione POST creazione operatore<a class="headerlink" href="#84-backend-evoluzione-post-creazione-operatore" title="Permanent link">&para;</a></h3>
-<p><code>POST /api/v1/amm-software/utenti/</code> accetta due payload:</p>
+<p><code>POST /api/v1/amm-software/operatori/</code> accetta due payload:</p>
 <p><strong>Flusso A — soggetto nuovo</strong> (come oggi):</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;cognome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rossi&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;nome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Mario&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;codice_fiscale&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
@@ -5881,11 +5881,10 @@ Fase 3 — Frontend (richiede fase 1 + fase 2)
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

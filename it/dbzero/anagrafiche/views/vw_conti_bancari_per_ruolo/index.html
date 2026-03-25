@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4171,33 +4171,42 @@
 <p>Approfondimento funzioni:</p>
 <p><a href="../../../script/funzioni/fn_get_conto_bancario_predefinito/">script.fn_get_conto_bancario_predefinito</a></p>
 </blockquote>
-<p>La vista <strong><code>anagrafiche.vw_conti_bancari_per_ruolo</code></strong> espone, per ogni <strong>ruolo di soggetto</strong> (<code>soggetto_ruolo_id</code>) e per ciascun <strong>uso del conto</strong> (<code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code>, <code>GENERICO</code>), <strong>al massimo un conto bancario selezionato</strong> secondo una logica di <strong>priorità RUOLO → SOGGETTO</strong>, tenendo conto di validità, blocchi e stato di attivazione del conto.</p>
-<p>È l’artefatto centrale per tutte le logiche applicative che devono recuperare “il conto corrente da usare ora” per un determinato ruolo.</p>
+<p>La vista <strong><code>anagrafiche.vw_conti_bancari_per_ruolo</code></strong> espone <strong>tutte le candidate</strong> dei conti bancari per ogni <strong>ruolo di soggetto</strong>, organizzate per <strong>uso</strong> e <strong>utility</strong>, con indicazione della <strong>fonte</strong> (RUOLO o SOGGETTO).</p>
+<p>A differenza della versione precedente (che restituiva una sola riga per coppia ruolo/uso tramite <code>DISTINCT ON</code>), la vista ora e <strong>flat</strong>: espone tutte le righe candidate con ordinamento di priorita. La <strong>selezione singola</strong> con cascata utility e delegata alla funzione <code>script.fn_get_conto_bancario_predefinito</code>.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 28-11-25)
-* <strong>Selezione unificata del conto per ruolo</strong>
-  Fornisce una vista già pre-filtrata e normalizzata con <strong>una sola riga per coppia <code>(soggetto_ruolo_id, uso)</code></strong>, scegliendo il miglior candidato tra:</p>
+<p>(latest review 25-03-26)</p>
 <ul>
-<li>legami a livello <strong>ruolo</strong> (<code>soggetti_ruoli_conti_bancari</code>), e</li>
 <li>
-<p>legami a livello <strong>soggetto</strong> (<code>soggetti_conti_bancari</code>).</p>
+<p><strong>Vista flat di tutte le candidate per ruolo</strong>
+  Espone tutte le righe candidate da entrambi i livelli di legame, con <code>istanza_utility_id</code>:</p>
 </li>
 <li>
-<p><strong>Priorità di dominio: RUOLO → SOGGETTO</strong>
-  Quando esistono sia legami di ruolo che di soggetto per lo stesso <code>uso</code>, vengono preferiti <strong>sempre i legami di RUOLO</strong>. Solo in assenza di questi si passa ai legami di SOGGETTO.</p>
+<p>legami a livello <strong>ruolo</strong> (<code>soggetti_ruoli_conti_bancari</code>) — con <code>istanza_utility_id</code> nullable</p>
 </li>
 <li>
-<p><strong>Filtro su validità e stato</strong>
+<p>legami a livello <strong>soggetto</strong> (<code>soggetti_conti_bancari</code>) — <code>istanza_utility_id</code> sempre NULL</p>
+</li>
+<li>
+<p><strong>Ordinamento di priorita (non selezione)</strong>
+  Le righe sono ordinate per priorita: ruolo+istanza &gt; ruolo generico &gt; soggetto, poi predefinito, poi recenza. La vista <strong>non</strong> applica <code>DISTINCT ON</code>: restituisce tutte le candidate.</p>
+</li>
+<li>
+<p><strong>Filtro su validita e stato</strong>
   Espone soltanto conti:</p>
 </li>
 <li>
 <p><strong>attivi</strong> (<code>conti_bancari.attivo = TRUE</code>),</p>
 </li>
-<li><strong>non bloccati</strong> a livello di legame (<code>blocccato = FALSE</code>),</li>
-<li>con <strong>validità compatibile con la data odierna</strong> (<code>valido_dal/valido_al</code>).</li>
+<li><strong>non bloccati</strong> a livello di legame (<code>bloccato = FALSE</code>),</li>
+<li>
+<p>con <strong>validita compatibile con la data odierna</strong> (<code>valido_dal/valido_al</code>).</p>
+</li>
+<li>
+<p><strong>Selezione singola delegata alla funzione</strong>
+  La scelta del "miglior conto" con cascata istanza e uso e responsabilita di <code>fn_get_conto_bancario_predefinito</code>.</p>
+</li>
 </ul>
-<p>Questa vista è pensata per essere utilizzata direttamente oppure incapsulata in funzioni helper (es. <code>fn_get_conto_bancario_predefinito</code>).</p>
 <hr />
 <h3 id="struttura-logica-della-vista">Struttura logica della vista<a class="headerlink" href="#struttura-logica-della-vista" title="Permanent link">&para;</a></h3>
 <p>La vista è costruita in più passi mediante CTE:</p>
@@ -4250,37 +4259,27 @@
 <p><code>fonte</code> (<code>'RUOLO'</code> o <code>'SOGGETTO'</code>)</p>
 </li>
 <li>
-<p><strong>Selezione finale con <code>DISTINCT ON</code></strong></p>
+<p><strong>Ordinamento finale</strong> (senza <code>DISTINCT ON</code>):</p>
 </li>
 </ul>
-<p>La select finale applica:</p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">(</span><span class="n">soggetto_ruolo_id</span><span class="p">,</span><span class="w"> </span><span class="n">uso</span><span class="p">)</span>
-<span class="w">       </span><span class="n">soggetto_ruolo_id</span><span class="p">,</span>
-<span class="w">       </span><span class="n">uso</span><span class="p">,</span>
-<span class="w">       </span><span class="n">conto_bancario_id</span><span class="p">,</span>
-<span class="w">       </span><span class="n">soggetto_ruolo_conto_id</span><span class="p">,</span>
-<span class="w">       </span><span class="n">soggetto_conto_id</span><span class="p">,</span>
-<span class="w">       </span><span class="n">fonte</span><span class="p">,</span>
-<span class="w">       </span><span class="n">predefinito</span><span class="p">,</span>
-<span class="w">       </span><span class="n">valido_dal</span><span class="p">,</span>
-<span class="w">       </span><span class="n">valido_al</span><span class="p">,</span>
-<span class="w">       </span><span class="n">data_update</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">candidates</span>
-<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">soggetto_ruolo_id</span><span class="p">,</span><span class="w"> </span><span class="n">uso</span><span class="p">,</span>
-<span class="w">         </span><span class="n">priority</span><span class="p">,</span>
-<span class="w">         </span><span class="n">predefinito</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span>
-<span class="w">         </span><span class="n">data_update</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span>
-<span class="w">         </span><span class="n">soggetto_ruolo_conto_id</span><span class="p">,</span>
-<span class="w">         </span><span class="n">soggetto_conto_id</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">soggetto_ruolo_id</span><span class="p">,</span><span class="w"> </span><span class="n">uso</span><span class="p">,</span>
+<span class="w">  </span><span class="k">CASE</span>
+<span class="w">    </span><span class="k">WHEN</span><span class="w"> </span><span class="n">fonte</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">‘</span><span class="n">RUOLO</span><span class="err">’</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">istanza_utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">WHEN</span><span class="w"> </span><span class="n">fonte</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">‘</span><span class="n">RUOLO</span><span class="err">’</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">istanza_utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w">     </span><span class="k">THEN</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">    </span><span class="k">WHEN</span><span class="w"> </span><span class="n">fonte</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">‘</span><span class="n">SOGGETTO</span><span class="err">’</span><span class="w">                         </span><span class="k">THEN</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">  </span><span class="k">END</span><span class="p">,</span>
+<span class="w">  </span><span class="n">predefinito</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span>
+<span class="w">  </span><span class="n">data_update</span><span class="w"> </span><span class="k">DESC</span>
 </code></pre></div>
-<p>Ordine di priorità:</p>
+<p>Ordine di priorita:</p>
 <ol>
-<li><code>priority</code> → <strong>RUOLO prima di SOGGETTO</strong>.</li>
-<li><code>predefinito DESC</code> → tra i candidati compatibili, viene privilegiato il legame marcato come <strong>predefinito</strong>.</li>
-<li><code>data_update DESC</code> → in caso di più legami equivalenti, vince <strong>quello aggiornato più di recente</strong>.</li>
-<li>ID del legame (<code>soggetto_ruolo_conto_id</code>, <code>soggetto_conto_id</code>) per stabilizzare l’ordinamento.</li>
+<li><strong>Ruolo + istanza specifica</strong> (massima priorita)</li>
+<li><strong>Ruolo generico</strong> (istanza NULL)</li>
+<li><strong>Soggetto</strong> (fallback)</li>
+<li><code>predefinito DESC</code> → legame marcato predefinito</li>
+<li><code>data_update DESC</code> → piu recente</li>
 </ol>
-<p>Il <code>DISTINCT ON (soggetto_ruolo_id, uso)</code> garantisce <strong>una sola riga</strong> per ogni combinazione <code>(ruolo, uso)</code>.</p>
+<p>La vista restituisce <strong>tutte le righe</strong> ordinate. La selezione "1 riga" e delegata a <code>fn_get_conto_bancario_predefinito</code>.</p>
 <hr />
 <h3 id="colonne-esposte">Colonne esposte<a class="headerlink" href="#colonne-esposte" title="Permanent link">&para;</a></h3>
 <table>
@@ -4316,6 +4315,11 @@
 <td><code>soggetto_conto_id</code></td>
 <td><code>bigint</code></td>
 <td>ID del legame soggetto↔conto (<code>soggetti_conti_bancari</code>), se la fonte è <code>SOGGETTO</code>.</td>
+</tr>
+<tr>
+<td><code>istanza_utility_id</code></td>
+<td><code>bigint</code></td>
+<td>ID della istanza utility (<code>anagrafiche.istanze_utilities.id</code>). NULL per legami generici o fonte SOGGETTO.</td>
 </tr>
 <tr>
 <td><code>fonte</code></td>
@@ -4470,11 +4474,10 @@
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4948,7 +4948,7 @@
 
 <h1 id="guida-gestione-dei-contatti">Guida – Gestione dei Contatti<a class="headerlink" href="#guida-gestione-dei-contatti" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p>(latest review 04-03-26)</p>
+<p>(latest review 25-03-26)</p>
 <p>Destinatari: sviluppatori database, backend, integratori e analisti funzionali</p>
 <p>Questa guida si affianca alla guida gestione indirizzi come riferimento completo per la modellazione e l'utilizzo dei contatti nel sistema.</p>
 <p>Vedi anche</p>
@@ -4965,9 +4965,9 @@
 <ul>
 <li><strong>Soggetto</strong>: il contatto generico della persona o azienda</li>
 <li><strong>Ruolo</strong>: il contatto specifico per un ruolo del soggetto (es. il referente del cliente)</li>
-<li><strong>Utility</strong>: il contatto per un servizio specifico (es. il referente per la fornitura gas)</li>
+<li><strong>Istanza</strong>: il contatto per una specifica istanza di servizio (es. il referente per il contratto GAS di Corridonia)</li>
 </ul>
-<p>Questa gerarchia permette al sistema di risolvere automaticamente il contatto piu appropriato: se un processo cerca il referente del cliente per un servizio e non lo trova, ricade sul referente del cliente, e poi su quello generico del soggetto.</p>
+<p>Questa gerarchia permette al sistema di risolvere automaticamente il contatto piu appropriato: se un processo cerca il referente del cliente per un'istanza e non lo trova, ricade sul referente del cliente, e poi su quello generico del soggetto.</p>
 <p><strong>Cosa troverai in questa guida:</strong></p>
 <ul>
 <li>Come funziona il modello dei contatti e la logica dei contesti</li>
@@ -4988,7 +4988,7 @@
 <li><a href="../../dbzero/config/tabelle/tipi_contatti/">config.tipi_contatti</a> — categorie di contatto (opzionale)</li>
 <li><a href="../../dbzero/config/tabelle/unita_organizzative/">config.unita_organizzative</a> — reparti/uffici (opzionale, gerarchico)</li>
 <li><a href="../../dbzero/config/tabelle/titoli_cortesia/">config.titoli_cortesia</a> — titoli di cortesia (Sig., Dott., ecc.)</li>
-<li><a href="../../dbzero/config/tabelle/utilities/">config.utilities</a> — servizi/utility</li>
+<li><a href="../../dbzero/anagrafiche/tabelle/istanze_utilities/">anagrafiche.istanze_utilities</a> — istanze di servizio</li>
 </ul>
 <hr />
 <h2 id="il-modello-in-sintesi">Il modello in sintesi<a class="headerlink" href="#il-modello-in-sintesi" title="Permanent link">&para;</a></h2>
@@ -5002,14 +5002,14 @@
     │       └── contatti (contesto: ruolo)
     │               contatti specifici per il ruolo
     │
-    └── utilities (quale servizio)
+    └── istanze_utilities (quale istanza di servizio)
             │
-            └── contatti (contesto: utility)
-                    contatti specifici per il servizio
+            └── contatti (contesto: istanza)
+                    contatti specifici per l&#39;istanza di servizio
 </code></pre></div>
 <ul>
 <li><strong>Contatto</strong> = un punto di comunicazione con un nome, email, telefono, cellulare, PEC</li>
-<li><strong>Contesto</strong> = il livello a cui il contatto e associato (soggetto, ruolo o utility)</li>
+<li><strong>Contesto</strong> = il livello a cui il contatto e associato (soggetto, ruolo o istanza)</li>
 <li><strong>Default</strong> = un solo contatto predefinito per ogni contesto, gestito automaticamente</li>
 </ul>
 <hr />
@@ -5026,13 +5026,16 @@
 <ul>
 <li><strong>Un soggetto</strong> (<code>soggetto_id</code> — obbligatorio): l'identita anagrafica</li>
 <li><strong>Un ruolo</strong> (<code>soggetto_ruolo_id</code> — opzionale): il ruolo specifico del soggetto</li>
-<li><strong>Una utility</strong> (<code>utility_id</code> — opzionale): il servizio specifico</li>
+<li><strong>Un'istanza</strong> (<code>istanza_utility_id</code> — opzionale, <code>bigint</code>, FK verso <code>anagrafiche.istanze_utilities</code>): la specifica istanza di servizio</li>
 </ul>
 <p>La combinazione di questi tre campi determina il <strong>contesto</strong> del contatto.</p>
 <p>Da un punto di vista tecnico:</p>
 <ul>
 <li><code>id</code> (BIGINT) e la chiave primaria</li>
-<li>Il vincolo UNIQUE <code>uq_contatti_multilevel</code> su <code>(soggetto_id, soggetto_ruolo_id, utility_id, tipo_contatto_id)</code> impedisce contatti duplicati per la stessa combinazione</li>
+<li>3 partial unique index per i 3 livelli di contesto:</li>
+<li><code>uq_contatti_soggetto_tipo</code> — soggetto puro (ruolo NULL, istanza NULL)</li>
+<li><code>uq_contatti_ruolo_tipo_no_istanza</code> — ruolo generico (istanza NULL)</li>
+<li><code>uq_contatti_ruolo_istanza_tipo</code> — ruolo + istanza</li>
 <li>La FK su <code>soggetto_id</code> e ON DELETE CASCADE: cancellando il soggetto si cancellano tutti i suoi contatti</li>
 <li>La FK su <code>soggetto_ruolo_id</code> e ON DELETE CASCADE: cancellando il ruolo si cancellano i contatti associati</li>
 </ul>
@@ -5051,17 +5054,17 @@
 <tr>
 <td><code>soggetto</code></td>
 <td>Contatto generale del soggetto</td>
-<td><code>soggetto_ruolo_id</code> e <code>utility_id</code> entrambi NULL</td>
+<td><code>soggetto_ruolo_id</code> e <code>istanza_utility_id</code> entrambi NULL</td>
 </tr>
 <tr>
 <td><code>ruolo</code></td>
 <td>Contatto specifico di un ruolo</td>
-<td><code>soggetto_ruolo_id</code> valorizzato</td>
+<td><code>soggetto_ruolo_id</code> valorizzato, <code>istanza_utility_id</code> NULL</td>
 </tr>
 <tr>
-<td><code>utility</code></td>
-<td>Contatto per un servizio specifico</td>
-<td><code>utility_id</code> valorizzato</td>
+<td><code>istanza</code></td>
+<td>Contatto per un'istanza di servizio</td>
+<td><code>soggetto_ruolo_id</code> e <code>istanza_utility_id</code> valorizzati</td>
 </tr>
 </tbody>
 </table>
@@ -5098,21 +5101,21 @@
 <p>In ogni contesto puo esistere <strong>un solo contatto default</strong>. Il sistema gestisce questa regola automaticamente tramite il trigger <code>trgfn_contatti_set_default_contatto</code>, attivo su INSERT e UPDATE.</p>
 <p>Il trigger:</p>
 <ol>
-<li><strong>Determina il contesto</strong> in base ai campi valorizzati (utility → ruolo → soggetto)</li>
+<li><strong>Determina il contesto</strong> in base ai campi valorizzati (istanza → ruolo → soggetto)</li>
 <li><strong>Se il contatto e marcato default</strong> (<code>is_default = TRUE</code>): rimuove il flag dagli altri contatti dello stesso soggetto con lo stesso contesto</li>
 <li><strong>Se nessun default esiste nel contesto</strong>: promuove automaticamente il contatto corrente a default</li>
 <li><strong>Sincronizza il soggetto</strong>: se il contesto e <code>soggetto</code>, aggiorna <code>anagrafiche.soggetti.default_contatto_id</code></li>
 </ol>
 <p>In pratica: il primo contatto inserito per un soggetto diventa automaticamente il default. Se un secondo contatto viene marcato come default, il primo perde il flag. Non serve gestire questa logica manualmente.</p>
-<p>I contesti sono <strong>indipendenti</strong>: un soggetto puo avere un default a livello soggetto, un default diverso per il ruolo CLIENTE, e un altro per una utility. Non interferiscono tra loro.</p>
+<p>I contesti sono <strong>indipendenti</strong>: un soggetto puo avere un default a livello soggetto, un default diverso per il ruolo CLIENTE, e un altro per un'istanza di servizio. Non interferiscono tra loro.</p>
 <p>Da un punto di vista tecnico, la logica del trigger:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- 1. Azzeramento contesto</span>
 <span class="k">NEW</span><span class="mf">.</span><span class="n">default_context</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
 
 <span class="c1">-- 2. Determinazione contesto</span>
 <span class="n">ctx</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">CASE</span>
-<span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">utility_id</span><span class="w">        </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;utility&#39;</span>
-<span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;ruolo&#39;</span>
+<span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">istanza_utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;istanza&#39;</span>
+<span class="w">  </span><span class="k">WHEN</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">soggetto_ruolo_id</span><span class="w">  </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="s1">&#39;ruolo&#39;</span>
 <span class="w">  </span><span class="k">ELSE</span><span class="w"> </span><span class="s1">&#39;soggetto&#39;</span>
 <span class="k">END</span><span class="p">;</span>
 
@@ -5167,9 +5170,8 @@
 <h3 id="scriptfn_get_contatti"><code>script.fn_get_contatti</code><a class="headerlink" href="#scriptfn_get_contatti" title="Permanent link">&para;</a></h3>
 <p>Restituisce il contatto <strong>piu rilevante per ogni tipo contatto</strong> (<code>tipo_contatto_id</code>), applicando una prioritizzazione a cascata:</p>
 <ol>
-<li>soggetto + ruolo + utility (massima specificita)</li>
-<li>soggetto + ruolo</li>
-<li>soggetto + utility</li>
+<li>soggetto + ruolo + istanza (massima specificita)</li>
+<li>soggetto + ruolo (generico)</li>
 <li>soggetto (fallback)</li>
 </ol>
 <p>A parita di priorita, preferisce il contatto marcato <code>is_default = TRUE</code>.</p>
@@ -5196,10 +5198,10 @@
 <td>Filtra per ruolo</td>
 </tr>
 <tr>
-<td><code>p_utility_id</code></td>
-<td>INTEGER</td>
+<td><code>p_istanza_utility_id</code></td>
+<td>BIGINT</td>
 <td style="text-align: center;">no</td>
-<td>Filtra per utility</td>
+<td>Filtra per istanza di servizio</td>
 </tr>
 <tr>
 <td><code>p_tipo_contatto_id</code></td>
@@ -5222,16 +5224,16 @@
 <hr />
 <h2 id="regole-di-dominio">Regole di dominio<a class="headerlink" href="#regole-di-dominio" title="Permanent link">&para;</a></h2>
 <h3 id="r1-un-contatto-per-combinazione">R1 — Un contatto per combinazione<a class="headerlink" href="#r1-un-contatto-per-combinazione" title="Permanent link">&para;</a></h3>
-<p>Il vincolo UNIQUE <code>uq_contatti_multilevel</code> su <code>(soggetto_id, soggetto_ruolo_id, utility_id, tipo_contatto_id)</code> garantisce che non possano esistere due contatti identici per la stessa combinazione di soggetto, ruolo, utility e tipo.</p>
+<p>I 3 partial unique index (<code>uq_contatti_soggetto_tipo</code>, <code>uq_contatti_ruolo_tipo_no_istanza</code>, <code>uq_contatti_ruolo_istanza_tipo</code>) garantiscono che non possano esistere due contatti identici per la stessa combinazione di soggetto, ruolo, istanza e tipo nei rispettivi livelli di contesto.</p>
 <h3 id="r2-un-solo-default-per-contesto">R2 — Un solo default per contesto<a class="headerlink" href="#r2-un-solo-default-per-contesto" title="Permanent link">&para;</a></h3>
-<p>Il trigger <code>trgfn_contatti_set_default_contatto</code> garantisce che in ogni contesto (soggetto, ruolo, utility) esista al piu un contatto con <code>is_default = TRUE</code>. Il primo contatto inserito in un contesto diventa default automaticamente.</p>
+<p>Il trigger <code>trgfn_contatti_set_default_contatto</code> garantisce che in ogni contesto (soggetto, ruolo, istanza) esista al piu un contatto con <code>is_default = TRUE</code>. Il primo contatto inserito in un contesto diventa default automaticamente.</p>
 <h3 id="r3-integrita-soggetto-contatti">R3 — Integrita soggetto-contatti<a class="headerlink" href="#r3-integrita-soggetto-contatti" title="Permanent link">&para;</a></h3>
 <p>Il constraint trigger DEFERRED <code>trgfn_soggetti_guard_soggetto_contatti</code> verifica al COMMIT che ogni soggetto abbia almeno un contatto valido nel contesto <code>soggetto</code> (con default o con almeno un canale attivo). Errore: <code>E_SOGGETTO_NO_CONTATTI</code>.</p>
 <p><strong>Perimetro:</strong> la verifica scatta su INSERT/UPDATE del soggetto. La cancellazione diretta dell'ultimo contatto non e intercettata a livello DB — va gestita a livello applicativo.</p>
 <h3 id="r4-soggetto-e-unita-organizzativa-attivi">R4 — Soggetto e unita organizzativa attivi<a class="headerlink" href="#r4-soggetto-e-unita-organizzativa-attivi" title="Permanent link">&para;</a></h3>
 <p>I trigger <code>trgfn_child_requires_active_parent</code> verificano che il soggetto referenziato e l'unita organizzativa (se indicata) siano attivi al momento dell'inserimento o aggiornamento.</p>
 <h3 id="r5-fallback-nella-risoluzione">R5 — Fallback nella risoluzione<a class="headerlink" href="#r5-fallback-nella-risoluzione" title="Permanent link">&para;</a></h3>
-<p>La funzione <code>fn_get_contatti</code> applica una catena di fallback automatica: utility → ruolo → soggetto. Il contatto del soggetto ha sempre priorita bassa come fallback, mai come override di un contatto piu specifico.</p>
+<p>La funzione <code>fn_get_contatti</code> applica una catena di fallback automatica a 3 livelli: istanza → ruolo → soggetto. Il contatto del soggetto ha sempre priorita bassa come fallback, mai come override di un contatto piu specifico.</p>
 <hr />
 <h2 id="esempi-pratici">Esempi pratici<a class="headerlink" href="#esempi-pratici" title="Permanent link">&para;</a></h2>
 <h3 id="caso-1-contatto-globale-del-soggetto">Caso 1 — Contatto globale del soggetto<a class="headerlink" href="#caso-1-contatto-globale-del-soggetto" title="Permanent link">&para;</a></h3>
@@ -5326,20 +5328,20 @@
         bigint id PK
         uuid soggetto_id FK
         bigint soggetto_ruolo_id FK
-        integer utility_id FK
+        bigint istanza_utility_id FK
         varchar nominativo
         boolean is_default
         varchar default_context
     }
 
-    utilities {
-        integer id PK
+    istanze_utilities {
+        bigint id PK
     }
 
     soggetti ||--o{ contatti : "ha contatti"
     soggetti ||--o{ soggetti_ruoli : "ha ruoli"
     soggetti_ruoli ||--o{ contatti : "scoped by"
-    utilities ||--o{ contatti : "per utility"
+    istanze_utilities ||--o{ contatti : "per istanza"
     soggetti }o--o| contatti : "default_contatto"</code></pre>
 <h3 id="classificazione-configurazione">Classificazione (configurazione)<a class="headerlink" href="#classificazione-configurazione" title="Permanent link">&para;</a></h3>
 <p>Le tabelle config che classificano il contatto per categoria, reparto e appellativo.</p>
@@ -5436,11 +5438,10 @@
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

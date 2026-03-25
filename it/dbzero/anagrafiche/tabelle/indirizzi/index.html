@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -4091,6 +4091,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#vincoli-unique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vincoli UNIQUE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4159,19 +4170,30 @@
 </blockquote>
 <hr />
 <p>La tabella <strong><code>anagrafiche.indirizzi</code></strong> gestisce l’associazione tra un soggetto/ruolo e un indirizzo, integrando sia <strong>indirizzi normalizzati</strong> (collegati a <code>indirizzi_dettaglio</code>), sia <strong>indirizzi liberi</strong>, utili per contesti internazionali o non strutturati.</p>
-<p>Supporta:
-- Identificazione del tipo di indirizzo (es. legale, sede operativa, corrispondenza)
-- Riferimenti geografici completi
-- Storicizzazione delle modifiche
-- Geolocalizzazione
-- Vincoli di integrità per garantire coerenza tra i dati</p>
+<p>Supporta:</p>
+<ul>
+<li>Identificazione del tipo di indirizzo (es. legale, sede operativa, corrispondenza)</li>
+<li><strong>Differenziazione per istanza di servizio</strong> tramite <code>istanza_utility_id</code> (opzionale)</li>
+<li>Riferimenti geografici completi</li>
+<li>Storicizzazione delle modifiche</li>
+<li>Geolocalizzazione</li>
+<li>Vincoli di integrità per garantire coerenza tra i dati</li>
+</ul>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-01-26)
-* <strong>Associazione soggetto/ruolo → indirizzo</strong><br />
-  Ogni soggetto può avere più indirizzi distinti in base al ruolo (es. cliente, fornitore) e al tipo di indirizzo (es. sede legale, spedizione, residenza).</p>
+<p>(latest review 25-03-26)
+* <strong>Associazione soggetto/ruolo/istanza → indirizzo</strong>
+  Ogni soggetto può avere più indirizzi distinti in base al ruolo (es. cliente, fornitore), al tipo di indirizzo (es. sede legale, spedizione, residenza) e all'istanza di servizio (es. GAS Corridonia vs GAS Civitanova).</p>
 <ul>
-<li><strong>Supporto per due modalità</strong>  </li>
+<li><strong>Cascata a 3 livelli</strong></li>
+<li><strong>Livello 1 — Istanza</strong>: <code>istanza_utility_id</code> valorizzato → indirizzo specifico per il servizio</li>
+<li><strong>Livello 2 — Ruolo generico</strong>: <code>istanza_utility_id</code> NULL → indirizzo generico del ruolo</li>
+<li>
+<p><strong>Livello 3 — Soggetto</strong>: indirizzo da <code>indirizzi_soggetti</code> (fallback readonly)</p>
+</li>
+<li>
+<p><strong>Supporto per due modalità</strong>  </p>
+</li>
 <li><strong>Normalizzata</strong>: tramite <code>indirizzo_dettaglio_id</code>, si collega a una via e civico specifici (con geolocalizzazione puntuale e struttura gerarchica).</li>
 <li><strong>Libera</strong>: tramite <code>indirizzo_libero</code>, con campi ausiliari (<code>comune_id</code>, <code>stato_id</code>, <code>locality</code>, <code>postal_box</code>, ecc.), utile per indirizzi internazionali o non standardizzati.</li>
 </ul>
@@ -4198,29 +4220,42 @@ L’inserimento di indirizzi <strong>liberi</strong> deve essere considerato <st
 <hr />
 <h3 id="collegamenti-con-altre-tabelle">Collegamenti con Altre Tabelle<a class="headerlink" href="#collegamenti-con-altre-tabelle" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong><code>anagrafiche.soggetti_ruoli</code></strong>  </li>
-<li>Ogni indirizzo è riferito a una specifica combinazione soggetto/ruolo.  </li>
+<li><strong><code>anagrafiche.soggetti_ruoli</code></strong></li>
+<li>Ogni indirizzo è riferito a una specifica combinazione soggetto/ruolo.</li>
 <li>
-<p>Vincolo <code>RESTRICT</code> in caso di eliminazione (non si può eliminare un ruolo associato a indirizzi).  </p>
+<p>Vincolo <code>RESTRICT</code> in caso di eliminazione (non si può eliminare un ruolo associato a indirizzi).</p>
 </li>
 <li>
-<p><strong><code>config.tipi_indirizzi</code></strong>  </p>
+<p><strong><code>anagrafiche.istanze_utilities</code></strong> (opzionale)</p>
 </li>
-<li>Definisce la tipologia dell’indirizzo (es. domicilio fiscale, sede legale, corrispondenza).  </li>
+<li>Se <code>istanza_utility_id</code> è valorizzato, l’indirizzo è specifico per quell’istanza di servizio.</li>
 <li>
-<p>Obbligatoria per ogni record.  </p>
-</li>
-<li>
-<p><strong><code>anagrafiche.indirizzi_dettaglio</code></strong>  </p>
-</li>
-<li>Se presente, indica che l’indirizzo è in modalità normalizzata.  </li>
-<li>
-<p>In caso contrario, devono essere valorizzati i campi dell’indirizzo libero.  </p>
+<p>Se NULL, l’indirizzo è generico del ruolo (fallback per tutte le istanze).</p>
 </li>
 <li>
-<p><strong><code>config.comuni</code>, <code>config.codici_postali</code>, <code>config.stati</code></strong>  </p>
+<p><strong><code>config.tipi_indirizzi</code></strong></p>
 </li>
-<li>Utilizzati solo per la modalità libera per fornire contesto geografico anche a indirizzi non normalizzati.  </li>
+<li>Definisce la tipologia dell’indirizzo (es. domicilio fiscale, sede legale, corrispondenza).</li>
+<li>
+<p>Obbligatoria per ogni record.</p>
+</li>
+<li>
+<p><strong><code>anagrafiche.indirizzi_dettaglio</code></strong></p>
+</li>
+<li>Se presente, indica che l’indirizzo è in modalità normalizzata.</li>
+<li>
+<p>In caso contrario, devono essere valorizzati i campi dell’indirizzo libero.</p>
+</li>
+<li>
+<p><strong><code>config.comuni</code>, <code>config.codici_postali</code>, <code>config.stati</code></strong></p>
+</li>
+<li>Utilizzati solo per la modalità libera per fornire contesto geografico anche a indirizzi non normalizzati.</li>
+</ul>
+<h3 id="vincoli-unique">Vincoli UNIQUE<a class="headerlink" href="#vincoli-unique" title="Permanent link">&para;</a></h3>
+<p>Due partial unique index per gestire la cascata istanza/ruolo generico:</p>
+<ul>
+<li><code>uq_indirizzi_ruolo_tipo_no_istanza (soggetto_ruolo_id, tipo_indirizzo_id) WHERE istanza_utility_id IS NULL</code> — un solo indirizzo generico per tipo per ruolo</li>
+<li><code>uq_indirizzi_ruolo_istanza_tipo (soggetto_ruolo_id, istanza_utility_id, tipo_indirizzo_id) WHERE istanza_utility_id IS NOT NULL</code> — un solo indirizzo per tipo per istanza</li>
 </ul>
 <hr />
 <h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
@@ -4254,13 +4289,14 @@ L’inserimento di indirizzi <strong>liberi</strong> deve essere considerato <st
 <h3 id="diagramma-er-relazioni">Diagramma ER relazioni<a class="headerlink" href="#diagramma-er-relazioni" title="Permanent link">&para;</a></h3>
 <pre class="mermaid"><code>%%{init: {'er': {'layoutDirection': 'TB'}}}%%
 erDiagram
-    soggetti_ruoli   ||--o{ indirizzi : has
-    tipi_indirizzi   ||--o{ indirizzi : typed_as
+    soggetti_ruoli      ||--o{ indirizzi : has
+    istanze_utilities   ||--o{ indirizzi : scoped_by
+    tipi_indirizzi      ||--o{ indirizzi : typed_as
     indirizzi_dettaglio ||--o{ indirizzi : normalized_by
-    comuni           ||--o{ indirizzi : uses
-    codici_postali   ||--o{ indirizzi : uses
-    stati            ||--o{ indirizzi : uses
-    indirizzi               ||--o{ storico_indirizzi : history
+    comuni              ||--o{ indirizzi : uses
+    codici_postali      ||--o{ indirizzi : uses
+    stati               ||--o{ indirizzi : uses
+    indirizzi           ||--o{ storico_indirizzi : history
 </code></pre>
 <hr />
 <p><strong>© 2025-2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
@@ -4317,11 +4353,10 @@ erDiagram
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

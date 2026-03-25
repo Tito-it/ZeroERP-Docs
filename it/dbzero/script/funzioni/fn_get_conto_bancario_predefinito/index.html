@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.27">
+      <meta name="generator" content="zensical-0.0.29">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.50057488.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
       
       
 
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#documentazione-funzione-scriptfn_get_conto_bancario_predefinitosoggetto_ruolo_id-uso" class="md-skip">
+        <a href="#documentazione-funzione-scriptfn_get_conto_bancario_predefinitosoggetto_ruolo_id-uso-istanza_utility_id" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -4057,15 +4057,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#documentazione-funzione-scriptfn_get_conto_bancario_predefinitosoggetto_ruolo_id-uso" class="md-nav__link">
+  <a href="#documentazione-funzione-scriptfn_get_conto_bancario_predefinitosoggetto_ruolo_id-uso-istanza_utility_id" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📘 Documentazione Funzione – script.fn_get_conto_bancario_predefinito(soggetto_ruolo_id, uso)
+        📘 Documentazione Funzione – script.fn_get_conto_bancario_predefinito(soggetto_ruolo_id, uso, istanza_utility_id)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="📘 Documentazione Funzione – script.fn_get_conto_bancario_predefinito(soggetto_ruolo_id, uso)">
+    <nav class="md-nav" aria-label="📘 Documentazione Funzione – script.fn_get_conto_bancario_predefinito(soggetto_ruolo_id, uso, istanza_utility_id)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -4170,7 +4170,7 @@
 
   <h1 id="__skip">Fn get conto bancario predefinito</h1>
 
-<h2 id="documentazione-funzione-scriptfn_get_conto_bancario_predefinitosoggetto_ruolo_id-uso">📘 Documentazione Funzione – <code>script.fn_get_conto_bancario_predefinito(soggetto_ruolo_id, uso)</code><a class="headerlink" href="#documentazione-funzione-scriptfn_get_conto_bancario_predefinitosoggetto_ruolo_id-uso" title="Permanent link">&para;</a></h2>
+<h2 id="documentazione-funzione-scriptfn_get_conto_bancario_predefinitosoggetto_ruolo_id-uso-istanza_utility_id">📘 Documentazione Funzione – <code>script.fn_get_conto_bancario_predefinito(soggetto_ruolo_id, uso, istanza_utility_id)</code><a class="headerlink" href="#documentazione-funzione-scriptfn_get_conto_bancario_predefinitosoggetto_ruolo_id-uso-istanza_utility_id" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong>  </p>
 <p>Approfondimento Tabelle / Vista:  </p>
@@ -4182,14 +4182,16 @@
 <p><a href="../../../anagrafiche/funzioni/vw_conti_bancari_per_ruolo/">anagrafiche.vw_conti_bancari_per_ruolo</a> <br />
 <a href=".././fn_get_messaggio/">script.fn_get_messaggio</a>   </p>
 </blockquote>
-<p>La funzione <strong><code>script.fn_get_conto_bancario_predefinito(soggetto_ruolo_id, uso)</code></strong> restituisce, per un determinato <strong>ruolo di soggetto</strong> e un dato <strong>uso del conto</strong> (<code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code>, <code>GENERICO</code>), <strong>al massimo un conto bancario selezionato</strong>, applicando la logica di priorità e fallback già implementata nella vista <strong><code>anagrafiche.vw_conti_bancari_per_ruolo</code></strong>.</p>
-<p>Se non esiste alcun conto compatibile per l’uso richiesto, la funzione tenta un <strong>fallback automatico</strong> su <code>uso = 'GENERICO'</code>. Se nemmeno in questo caso trova un candidato, restituisce <code>NULL</code> (nessun conto disponibile).</p>
+<p>La funzione <strong><code>script.fn_get_conto_bancario_predefinito(soggetto_ruolo_id, uso, istanza_utility_id)</code></strong> restituisce, per un determinato <strong>ruolo di soggetto</strong>, un dato <strong>uso del conto</strong> (<code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code>, <code>GENERICO</code>) e opzionalmente una <strong>istanza utility</strong>, <strong>al massimo un conto bancario selezionato</strong>, applicando una cascata a <strong>7 livelli</strong> sulla vista flat <strong><code>anagrafiche.vw_conti_bancari_per_ruolo</code></strong>.</p>
+<p>La cascata combina due dimensioni: <strong>istanza</strong> (specifica → generico → soggetto) e <strong>uso</strong> (richiesto → GENERICO). Se nessun conto è trovato, restituisce <code>NULL</code>.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 01-12-25)
-* <strong>Incapsulare la logica di selezione del conto</strong>
-  Fornisce un punto di accesso unico per ottenere “il conto da usare ora” dato un <code>soggetto_ruolo_id</code> e un <code>uso</code>, senza dover ripetere join e ordinamenti sulle tabelle sorgenti.</p>
+<p>(latest review 25-03-26)</p>
 <ul>
+<li>
+<p><strong>Incapsulare la logica di selezione del conto</strong>
+  Fornisce un punto di accesso unico per ottenere “il conto da usare ora” dato un <code>soggetto_ruolo_id</code> e un <code>uso</code>, senza dover ripetere join e ordinamenti sulle tabelle sorgenti.</p>
+</li>
 <li>
 <p><strong>Uso semplificato da parte delle query applicative</strong>
   Evita che i moduli di fatturazione, pagamenti, SEPA, ecc. debbano conoscere i dettagli della vista <code>vw_conti_bancari_per_ruolo</code>.</p>
@@ -4212,16 +4214,22 @@
 </thead>
 <tbody>
 <tr>
-<td><code>soggetto_ruolo_id</code></td>
+<td><code>p_soggetto_ruolo_id</code></td>
 <td><code>BIGINT</code></td>
 <td>Sì</td>
 <td>Identificativo del ruolo (<code>anagrafiche.soggetti_ruoli.id</code>) per cui selezionare il conto.</td>
 </tr>
 <tr>
-<td><code>uso</code></td>
+<td><code>p_uso</code></td>
 <td><code>VARCHAR</code></td>
 <td>Sì</td>
 <td>Uso richiesto del conto: <code>INCASSO</code>, <code>PAGAMENTO</code>, <code>RIMBORSO</code> o <code>GENERICO</code>.</td>
+</tr>
+<tr>
+<td><code>p_istanza_utility_id</code></td>
+<td><code>BIGINT</code></td>
+<td>No</td>
+<td>ID della istanza utility (<code>anagrafiche.istanze_utilities.id</code>). Se valorizzato, il livello ruolo+istanza ha priorità. Se NULL, parte dal livello ruolo generico.</td>
 </tr>
 </tbody>
 </table>
@@ -4293,57 +4301,22 @@
 <p>Se non viene trovato alcun conto idoneo né per l’uso richiesto né per <code>GENERICO</code>, la funzione restituisce <strong><code>NULL</code></strong>.</p>
 <hr />
 <h3 id="logica-interna-alto-livello">易 Logica interna (alto livello)<a class="headerlink" href="#logica-interna-alto-livello" title="Permanent link">&para;</a></h3>
-<p>La funzione è implementata in PL/pgSQL con logica simile alla seguente:</p>
+<p>La funzione interroga la vista flat <code>vw_conti_bancari_per_ruolo</code> con filtri progressivi:</p>
+<p><strong>FASE A — uso richiesto:</strong></p>
 <ol>
-<li><strong>Ricerca diretta per l’uso richiesto</strong></li>
+<li>Ruolo + istanza specifica + uso richiesto (solo se <code>p_istanza_utility_id</code> valorizzato)</li>
+<li>Ruolo + istanza NULL + uso richiesto</li>
+<li>Soggetto + uso richiesto</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_res</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="mf">.</span><span class="n">vw_conti_bancari_per_ruolo</span><span class="w"> </span><span class="n">v</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">v</span><span class="mf">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">v</span><span class="mf">.</span><span class="n">uso</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="n">p_uso</span>
-<span class="w"> </span><span class="k">LIMIT</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
-
-<span class="k">IF</span><span class="w"> </span><span class="n">v_res</span><span class="mf">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_res</span><span class="p">;</span>
-<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-</code></pre></div>
-<ul>
-<li>Se esiste almeno un candidato per <code>(soggetto_ruolo_id, uso)</code>, viene restituito direttamente.</li>
-<li>
-<p>Grazie alla vista, questa riga è già il <strong>miglior candidato</strong> (priorità RUOLO→SOGGETTO, predefinito, recenza).</p>
-</li>
-<li>
-<p><strong>Fallback su uso <code>GENERICO</code></strong></p>
-</li>
-</ul>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">p_uso</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="s1">&#39;GENERICO&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_res</span>
-<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="mf">.</span><span class="n">vw_conti_bancari_per_ruolo</span><span class="w"> </span><span class="n">v</span>
-<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">v</span><span class="mf">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_soggetto_ruolo_id</span>
-<span class="w">       </span><span class="k">AND</span><span class="w"> </span><span class="n">v</span><span class="mf">.</span><span class="n">uso</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;GENERICO&#39;</span>
-<span class="w">     </span><span class="k">LIMIT</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_res</span><span class="mf">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">        </span><span class="k">RETURN</span><span class="w"> </span><span class="n">v_res</span><span class="p">;</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-</code></pre></div>
-<ul>
-<li>Viene eseguito solo se l’uso richiesto <strong>non è già <code>GENERICO</code></strong>.</li>
-<li>
-<p>Se esiste un conto <code>GENERICO</code> per il ruolo indicato, viene restituito come soluzione di ripiego.</p>
-</li>
-<li>
-<p><strong>Nessun conto trovato</strong></p>
-</li>
-</ul>
-<div class="highlight"><pre><span></span><code><span class="k">RETURN</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
-</code></pre></div>
-<ul>
-<li>Viene notificata l’assenza di un conto idoneo lasciando al chiamante la gestione dell’errore di dominio (es. bloccare l’operazione o chiedere all’utente di configurare un conto).</li>
-</ul>
+<p><strong>FASE B — fallback a uso GENERICO</strong> (solo se uso diverso da GENERICO):</p>
+<ol>
+<li>Ruolo + istanza specifica + GENERICO (solo se <code>p_istanza_utility_id</code> valorizzato)</li>
+<li>Ruolo + istanza NULL + GENERICO</li>
+<li>Soggetto + GENERICO</li>
+</ol>
+<p><strong>Nessun conto trovato</strong> → <code>RETURN NULL</code></p>
+<p>A ogni livello: <code>ORDER BY predefinito DESC, data_update DESC LIMIT 1</code>.</p>
+<p>Il chiamante riceve il <strong>miglior conto disponibile</strong> secondo le regole di validita, blocco, priorita istanza e predefinito. In caso di assenza, e responsabilita del chiamante gestire l’errore di dominio.</p>
 <hr />
 <h3 id="comportamento-funzionale">Comportamento funzionale<a class="headerlink" href="#comportamento-funzionale" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4459,11 +4432,10 @@
     
       
       
-      
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.5fd3284f.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
