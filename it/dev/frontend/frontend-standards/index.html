@@ -4176,6 +4176,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#scorciatoie-da-tastiera-keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scorciatoie da tastiera (Keyboard Shortcuts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#classi-css-standard" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5236,6 +5247,71 @@ Se un pattern viene migliorato, il miglioramento si applica a tutte le schermate
 <li><strong>Ricerca</strong> con debounce 400ms (gestito da <code>useSearchTable</code>)</li>
 <li><strong>DataTable</strong> sempre con: <code>lazy</code>, <code>removable-sort</code>, <code>striped-rows</code>, <code>scrollable</code>, <code>scrollHeight="flex"</code></li>
 </ul>
+<h3 id="scorciatoie-da-tastiera-keyboard-shortcuts">Scorciatoie da tastiera (Keyboard Shortcuts)<a class="headerlink" href="#scorciatoie-da-tastiera-keyboard-shortcuts" title="Permanent link">&para;</a></h3>
+<p>Scorciatoie globali per operatori ERP power user. Due meccanismi:</p>
+<p><strong>1. <code>useKeyboardShortcuts(shortcuts)</code> — composable generico</strong></p>
+<p>Per shortcut che NON devono attivarsi dentro input/textarea/select (evita conflitti con la digitazione).</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">useKeyboardShortcuts</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;../composables/useKeyboardShortcuts&#39;</span>
+<span class="nx">useKeyboardShortcuts</span><span class="p">([</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;F5&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">ctrl</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nx">action</span><span class="o">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">reload</span><span class="p">()</span><span class="w"> </span><span class="p">},</span>
+<span class="p">])</span>
+</code></pre></div>
+<p>Usato da: <code>useSearchTable</code> (F5 ricarica lista).</p>
+<p><strong>2. Listener diretto <code>window.addEventListener('keydown')</code> — per shortcut che devono funzionare SEMPRE</strong></p>
+<p>Per shortcut come Ctrl+S che devono attivarsi anche dentro un campo input.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">onKeydown</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="nx">e</span><span class="p">.</span><span class="nx">ctrlKey</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">metaKey</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">()</span>
+<span class="w">    </span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;save&#39;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="nx">onMounted</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;keydown&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">onKeydown</span><span class="p">))</span>
+<span class="nx">onUnmounted</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">removeEventListener</span><span class="p">(</span><span class="s1">&#39;keydown&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">onKeydown</span><span class="p">))</span>
+</code></pre></div>
+<p>Usato da: <code>DrawerFooter</code> (Ctrl+S salva).</p>
+<p><strong>Shortcut attive:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Contesto</th>
+<th>Azione</th>
+<th>Componente</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>F5</code></td>
+<td>Lista (DataTable)</td>
+<td>Ricarica lista senza reload browser</td>
+<td><code>useSearchTable</code></td>
+</tr>
+<tr>
+<td><code>Ctrl+S</code></td>
+<td>Drawer (qualsiasi)</td>
+<td>Salva — rispetta disabled/loading/readonly</td>
+<td><code>DrawerFooter</code></td>
+</tr>
+<tr>
+<td><code>Esc</code></td>
+<td>Drawer PrimeVue</td>
+<td>Chiude drawer (nativo PrimeVue <code>dismissable</code>)</td>
+<td>Drawer</td>
+</tr>
+<tr>
+<td><code>Ctrl+K</code></td>
+<td>Globale</td>
+<td>Apre ricerca universale</td>
+<td><code>AppTopbar</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regole:</strong>
+- <code>useKeyboardShortcuts</code> per shortcut che NON devono interferire con la digitazione
+- Listener diretto per shortcut che devono funzionare SEMPRE (Ctrl+S, Ctrl+K)
+- Sempre <code>e.preventDefault()</code> per evitare l'azione default del browser
+- Sempre cleanup in <code>onUnmounted</code></p>
+<hr />
 <h3 id="classi-css-standard">Classi CSS standard<a class="headerlink" href="#classi-css-standard" title="Permanent link">&para;</a></h3>
 <table>
 <thead>

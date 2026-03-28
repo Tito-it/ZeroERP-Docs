@@ -4334,13 +4334,14 @@
 <h1 id="api-indirizzi-ruolo-anagrafiche">API Indirizzi Ruolo (Anagrafiche)<a class="headerlink" href="#api-indirizzi-ruolo-anagrafiche" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Endpoint REST per la gestione degli indirizzi a livello ruolo con supporto
-utility. Implementa la cascata a 3 livelli: utility specifica, ruolo generico,
+istanza. Implementa la cascata a 3 livelli: istanza specifica, ruolo generico,
 soggetto (fallback readonly).</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <p>Gli indirizzi a livello ruolo risiedono nella tabella <code>anagrafiche.indirizzi</code>
 (distinta da <code>anagrafiche.indirizzi_soggetti</code> che contiene quelli a livello soggetto).
-La colonna <code>utility_id</code> (nullable) consente indirizzi specifici per utility
-(es. fatturazione GAS diversa da fatturazione IDRICO).</p>
+La colonna <code>istanza_utility_id</code> (nullable, bigint FK → <code>anagrafiche.istanze_utilities</code>)
+consente indirizzi specifici per istanza di servizio
+(es. fatturazione GAS Corridonia diversa da fatturazione GAS Civitanova).</p>
 <p>L'autenticazione avviene tramite token JWT. Le risposte seguono l'envelope
 standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione</code>tipo_indirizzo_id` sono gestiti dal DB (trigger guard + partial unique index).</p>
 <h2 id="base-url">Base URL<a class="headerlink" href="#base-url" title="Permanent link">&para;</a></h2>
@@ -4379,20 +4380,20 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 </thead>
 <tbody>
 <tr>
-<td><code>utility_id</code></td>
+<td><code>istanza_utility_id</code></td>
 <td>int</td>
 <td>No</td>
-<td>Se presente, attiva il livello 1 (utility specifica)</td>
+<td>Se presente, attiva il livello 1 (istanza specifica)</td>
 </tr>
 </tbody>
 </table>
 <h3 id="cascata-di-risoluzione">Cascata di risoluzione<a class="headerlink" href="#cascata-di-risoluzione" title="Permanent link">&para;</a></h3>
 <p>| Priorita<code>| Livello | Condizione |</code>fonte<code>| Editabile |
 |---|---|---|---|---|
-| 1 | Utility |</code>utility_id = X<code>|</code>utility<code>| Si</code> |
-| 2 | Ruolo generico | <code>utility_id IS NULL</code>, tipo non coperto da L1 | <code>ruolo</code> | Si<code>|
+| 1 | Istanza |</code>istanza_utility_id = X<code>|</code>istanza<code>| Si</code> |
+| 2 | Ruolo generico | <code>istanza_utility_id IS NULL</code>, tipo non coperto da L1 | <code>ruolo</code> | Si<code>|
 | 3 | Soggetto | Tipo non coperto da L1+L2 |</code>soggetto` | No (readonly) |</p>
-<p>Senza <code>utility_id</code>, la cascata parte dal livello 2 (retrocompatibile).</p>
+<p>Senza <code>istanza_utility_id</code>, la cascata parte dal livello 2.</p>
 <h3 id="risposta-200">Risposta (200)<a class="headerlink" href="#risposta-200" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -4400,8 +4401,7 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 <span class="w">      </span><span class="p">{</span>
 <span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;soggetto_ruolo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">64</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;utility_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GAS&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;istanza_utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;tipo_indirizzo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;tipo_indirizzo_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FAT&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;tipo_indirizzo_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Fatturazione&quot;</span><span class="p">,</span>
@@ -4418,7 +4418,7 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 <span class="w">        </span><span class="nt">&quot;stato_iso2&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;codice_postale_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;cap_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;20100&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;fonte&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;utility&quot;</span>
+<span class="w">        </span><span class="nt">&quot;fonte&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;istanza&quot;</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">],</span>
 <span class="w">    </span><span class="nt">&quot;indirizzi_soggetto&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -4431,7 +4431,7 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 </code></pre></div>
 <h3 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Vista <code>anagrafiche.vw_indirizzi_resolved_ruolo</code> (con <code>utility_id</code>, <code>utility_codice</code>)</li>
+<li>Vista <code>anagrafiche.vw_indirizzi_resolved_ruolo</code> (con <code>istanza_utility_id</code>)</li>
 <li>Vista <code>anagrafiche.vw_indirizzi_resolved_soggetto</code> (fallback)</li>
 </ul>
 <hr />
@@ -4474,10 +4474,10 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 <td>Tipo indirizzo (validato dal trigger guard vs matrice ammessi)</td>
 </tr>
 <tr>
-<td><code>utility_id</code></td>
+<td><code>istanza_utility_id</code></td>
 <td>int</td>
 <td>No</td>
-<td>Se presente, indirizzo specifico per utility</td>
+<td>Se presente, indirizzo specifico per istanza</td>
 </tr>
 <tr>
 <td><code>indirizzo_dettaglio_id</code></td>
@@ -4518,7 +4518,7 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 <span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;soggetto_ruolo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">64</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;tipo_indirizzo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;istanza_utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;indirizzo_dettaglio_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;indirizzo_libero&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;stato_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
@@ -4531,8 +4531,8 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 <ul>
 <li>Il trigger <code>trgfn_indirizzi_guard_tipo_ruolo_tipi_indirizzo</code> valida il
   <code>tipo_indirizzo_id</code> contro la matrice <code>config.tipi_ruolo_tipi_indirizzo</code></li>
-<li>Vincolo UNIQUE parziale: un solo indirizzo per <code>(soggetto_ruolo_id, utility_id, tipo_indirizzo_id)</code></li>
-<li><code>utility_id = NULL</code> crea un indirizzo generico del ruolo</li>
+<li>Vincolo UNIQUE parziale: un solo indirizzo per <code>(soggetto_ruolo_id, istanza_utility_id, tipo_indirizzo_id)</code></li>
+<li><code>istanza_utility_id = NULL</code> crea un indirizzo generico del ruolo</li>
 </ul>
 <hr />
 <h2 id="3-aggiorna-indirizzo-ruolo">3. Aggiorna indirizzo ruolo<a class="headerlink" href="#3-aggiorna-indirizzo-ruolo" title="Permanent link">&para;</a></h2>
@@ -4570,9 +4570,9 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 <td>Cambia tipo</td>
 </tr>
 <tr>
-<td><code>utility_id</code></td>
+<td><code>istanza_utility_id</code></td>
 <td>int/null</td>
-<td>Assegna/cambia/rimuovi utility</td>
+<td>Assegna/cambia/rimuovi istanza</td>
 </tr>
 <tr>
 <td><code>indirizzo_dettaglio_id</code></td>
@@ -4635,7 +4635,7 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 <h3 id="regole_2">Regole<a class="headerlink" href="#regole_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Ownership check: <code>soggetto_ruolo_id</code> deve corrispondere</li>
-<li>Solo indirizzi livello ruolo sono eliminabili (fonte <code>utility</code> o <code>ruolo</code>)</li>
+<li>Solo indirizzi livello ruolo sono eliminabili (fonte <code>istanza</code> o <code>ruolo</code>)</li>
 <li>Indirizzi soggetto (fonte <code>soggetto</code>) non sono raggiungibili da questo endpoint</li>
 </ul>
 <hr />
@@ -4666,7 +4666,7 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 <td><code>anagrafiche.vw_indirizzi_resolved_ruolo</code></td>
 <td>anagrafiche</td>
 <td>vista</td>
-<td>Lista resolved con utility</td>
+<td>Lista resolved con istanza</td>
 </tr>
 <tr>
 <td><code>anagrafiche.vw_indirizzi_resolved_soggetto</code></td>
@@ -4675,10 +4675,10 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 <td>Fallback soggetto</td>
 </tr>
 <tr>
-<td><code>config.utilities</code></td>
-<td>config</td>
+<td><code>anagrafiche.istanze_utilities</code></td>
+<td>anagrafiche</td>
 <td>tabella</td>
-<td>Lookup utility_codice</td>
+<td>FK istanza_utility_id</td>
 </tr>
 <tr>
 <td><code>config.tipi_ruolo_tipi_indirizzo</code></td>
@@ -4690,9 +4690,9 @@ standard <code>{"data": ...}</code>. I vincoli di unicita<code>e la validazione<
 </table>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Changeset DB: <code>20260324-02-add-utility-id-indirizzi-mctit.yaml</code> (schema)</li>
-<li>Changeset DB: <code>20260324-04-recreate-indirizzi-chain-utility-mctit.yaml</code> (viste + funzioni)</li>
-<li>Retrocompatibilita<code>: senza</code>utility_id<code>, il comportamento e</code> identico al modello precedente</li>
+<li>Changeset DB: <code>20260325-02-replace-utility-with-istanza-indirizzi-mctit.yaml</code> (schema)</li>
+<li>Changeset DB: <code>20260325-04-recreate-indirizzi-chain-istanza-mctit.yaml</code> (viste + funzioni)</li>
+<li>Le viste non espongono piu<code></code>utility_codice` — il frontend lo ha dal payload cliente</li>
 </ul>
 
 

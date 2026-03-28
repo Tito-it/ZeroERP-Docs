@@ -4234,12 +4234,12 @@
 <h1 id="api-contatti-ruolo-anagrafiche">API Contatti Ruolo (Anagrafiche)<a class="headerlink" href="#api-contatti-ruolo-anagrafiche" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Endpoint REST per la gestione dei contatti a livello ruolo con supporto
-utility. Implementa la cascata a 3 livelli: utility specifica, ruolo generico,
+istanza. Implementa la cascata a 3 livelli: istanza specifica, ruolo generico,
 soggetto (fallback readonly).</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <p>I contatti risiedono in un'unica tabella <code>anagrafiche.contatti</code> con contesto
 determinato dai campi nullable: <code>soggetto_id</code> (sempre presente),
-<code>soggetto_ruolo_id</code> (se livello ruolo), <code>utility_id</code> (se specifico utility).</p>
+<code>soggetto_ruolo_id</code> (se livello ruolo), <code>istanza_utility_id</code> (se specifico istanza).</p>
 <p>L'autenticazione avviene tramite token JWT. Le risposte seguono l'envelope
 standard <code>{"data": ...}</code>.</p>
 <h2 id="base-url">Base URL<a class="headerlink" href="#base-url" title="Permanent link">&para;</a></h2>
@@ -4278,18 +4278,18 @@ standard <code>{"data": ...}</code>.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>utility_id</code></td>
+<td><code>istanza_utility_id</code></td>
 <td>int</td>
 <td>No</td>
-<td>Se presente, attiva il livello 1 (utility specifica)</td>
+<td>Se presente, attiva il livello 1 (istanza specifica)</td>
 </tr>
 </tbody>
 </table>
 <h3 id="cascata-di-risoluzione">Cascata di risoluzione<a class="headerlink" href="#cascata-di-risoluzione" title="Permanent link">&para;</a></h3>
 <p>| Priorita<code>| Livello | Condizione |</code>fonte<code>| Editabile |
 |---|---|---|---|---|
-| 1 | Utility |</code>utility_id = X<code>|</code>utility<code>| Si</code> |
-| 2 | Ruolo generico | <code>utility_id IS NULL</code>, tipo non coperto da L1 | <code>ruolo</code> | Si<code>|
+| 1 | Istanza |</code>istanza_utility_id = X<code>|</code>istanza<code>| Si</code> |
+| 2 | Ruolo generico | <code>istanza_utility_id IS NULL</code>, tipo non coperto da L1 | <code>ruolo</code> | Si<code>|
 | 3 | Soggetto |</code>soggetto_ruolo_id IS NULL<code>, tipo non coperto da L1+L2 |</code>soggetto` | No |</p>
 <h3 id="risposta-200">Risposta (200)<a class="headerlink" href="#risposta-200" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
@@ -4306,9 +4306,8 @@ standard <code>{"data": ...}</code>.</p>
 <span class="w">        </span><span class="nt">&quot;tipo_contatto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;tipo_contatto_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Referente commerciale&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;unita_organizzativa_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;utility_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GAS&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;fonte&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;utility&quot;</span>
+<span class="w">        </span><span class="nt">&quot;istanza_utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;fonte&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;istanza&quot;</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">],</span>
 <span class="w">    </span><span class="nt">&quot;contatti_soggetto&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -4393,10 +4392,10 @@ standard <code>{"data": ...}</code>.</p>
 <td>Unita` organizzativa</td>
 </tr>
 <tr>
-<td><code>utility_id</code></td>
+<td><code>istanza_utility_id</code></td>
 <td>int</td>
 <td>No</td>
-<td>Se presente, contatto specifico per utility</td>
+<td>Se presente, contatto specifico per istanza</td>
 </tr>
 <tr>
 <td><code>note</code></td>
@@ -4467,23 +4466,25 @@ standard <code>{"data": ...}</code>.</p>
 <td>Tabella unica contatti multi-livello</td>
 </tr>
 <tr>
+<td><code>anagrafiche.istanze_utilities</code></td>
+<td>anagrafiche</td>
+<td>tabella</td>
+<td>FK istanza_utility_id</td>
+</tr>
+<tr>
 <td><code>config.tipi_contatti</code></td>
 <td>config</td>
 <td>tabella</td>
 <td>Lookup tipo contatto</td>
 </tr>
-<tr>
-<td><code>config.utilities</code></td>
-<td>config</td>
-<td>tabella</td>
-<td>Lookup utility_codice</td>
-</tr>
 </tbody>
 </table>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>utility_id</code> e<code>stato aggiunto con vincolo UNIQUE multi-livello</code>uq_contatti_multilevel`</li>
-<li><code>tipo_contatto_id</code> e` NOT NULL (migrazione precedente)</li>
+<li>Changeset DB: <code>20260325-01-replace-utility-with-istanza-contatti-mctit.yaml</code> (schema)</li>
+<li>Changeset DB: <code>20260325-06-recreate-contatti-chain-istanza-mctit.yaml</code> (funzioni)</li>
+<li>3 partial unique index sostituiscono il vecchio <code>uq_contatti_multilevel</code></li>
+<li>Il JOIN a <code>config.utilities</code> e<code>stato rimosso —</code>utility_codice<code>non e</code> piu` esposto</li>
 <li>Il pattern cascata e` condiviso con indirizzi ruolo e conti bancari ruolo</li>
 </ul>
 
