@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.29">
+      <meta name="generator" content="zensical-0.0.30">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.3b031116.min.css">
       
       
 
@@ -4041,6 +4041,12 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                    <div class="md-sidebar-button__wrapper">
+                      <label class="md-sidebar-button" for="__toc"></label>
+                    </div>
+                  
                   <div class="md-sidebar__inner">
                     
 
@@ -4213,7 +4219,11 @@
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Esporre via HTTP l'elenco paginato delle pratiche con filtri e la creazione di nuove pratiche.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Endpoint di lettura e scrittura su <code>pratiche.pratiche</code>. La GET interroga il repository con JOIN su <code>config.stati_pratiche</code> per filtro stato. La POST delega a <code>pratiche_service.crea_pratica</code> che risolve lo stato iniziale BOZZA e inserisce la pratica in transazione atomica.</p>
+<p>Endpoint di lettura e scrittura su <code>pratiche.pratiche</code>. La GET interroga il repository con JOIN
+su 6 tabelle (tipi_prestazione, stati, priorita', soggetti, risorse_umane, unita_organizzative)
+per restituire dati pronti per la UI con display fields. La POST delega a
+<code>pratiche_service.crea_pratica</code> che valida il contesto anagrafico, risolve lo stato iniziale
+BOZZA e inserisce la pratica in transazione atomica.</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <h3 id="get-lista-pratiche">GET — Lista pratiche<a class="headerlink" href="#get-lista-pratiche" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4225,7 +4235,7 @@
 <li><code>stato</code> (string, opzionale) — codice_interno stato pratica (es. <code>BOZZA</code>, <code>APERTA</code>)</li>
 <li><code>tipo_prestazione_id</code> (int, opzionale) — filtro tipo prestazione</li>
 <li><code>soggetto_id</code> (string UUID, opzionale) — filtro UUID soggetto</li>
-<li><code>solo_interna</code> (bool, opzionale) — filtro flag solo_interna</li>
+<li><code>search</code> (string, opzionale) — ricerca ILIKE su codice, descrizione, ragione_sociale soggetto</li>
 <li><code>limit</code> (int, opzionale) — righe per pagina, default <code>50</code>, max <code>200</code></li>
 <li><code>offset</code> (int, opzionale) — offset paginazione, default <code>0</code></li>
 </ul>
@@ -4239,10 +4249,11 @@
 <li><code>tipo_prestazione_id</code> (int, <strong>obbligatorio</strong>) — ID tipo prestazione (&gt; 0)</li>
 <li><code>priorita_id</code> (int, <strong>obbligatorio</strong>) — ID priorita' (&gt; 0)</li>
 <li><code>soggetto_id</code> (UUID, opzionale) — UUID soggetto</li>
+<li><code>soggetto_ruolo_id</code> (int, opzionale) — FK a soggetti_ruoli (richiede soggetto_id)</li>
+<li><code>istanza_utility_id</code> (int, opzionale) — FK a istanze_utilities (richiede soggetto_ruolo_id)</li>
 <li><code>risorsa_umana_id</code> (int, opzionale) — risorsa umana assegnata</li>
 <li><code>unita_organizzativa_id</code> (int, opzionale) — unita' organizzativa</li>
 <li><code>canale_origine_id</code> (int, opzionale) — canale di origine</li>
-<li><code>solo_interna</code> (bool, opzionale, default <code>false</code>) — pratica solo interna</li>
 <li><code>descrizione</code> (string, opzionale) — descrizione libera</li>
 <li><code>data_scadenza</code> (date, opzionale) — scadenza</li>
 <li><code>meta</code> (dict, opzionale) — metadati JSON</li>
@@ -4257,16 +4268,32 @@
 <span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;emittente_fiscale_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;tipo_prestazione_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;soggetto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;soggetto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;aaa-bbb-ccc&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;soggetto_ruolo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;istanza_utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;stato_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;priorita_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;P-001&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Test pratica&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;solo_interna&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;data_scadenza&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;risorsa_umana_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;unita_organizzativa_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;pratica_padre_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;flusso_origine_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;canale_origine_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PRA-0000001&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Manutenzione caldaia&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;data_apertura&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;data_scadenza&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-04-30&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
-<span class="w">        </span><span class="nt">&quot;data_insert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-03-04T10:00:00+00:00&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;user_insert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;zeroerp&quot;</span>
+<span class="w">        </span><span class="nt">&quot;data_insert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-03-28T10:00:00+00:00&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;user_insert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;operatore1&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;tipo_prestazione_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MANUTENZIONE&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;tipo_prestazione_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Manutenzione ordinaria&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;stato_codice_interno&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BOZZA&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;stato_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Bozza&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;priorita_codice_interno&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;NORMALE&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;priorita_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Normale&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;soggetto_display&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Rossi Mario&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;risorsa_umana_display&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;unita_organizzativa_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
@@ -4281,7 +4308,7 @@
 <span class="p">}</span>
 </code></pre></div>
 <ul>
-<li><code>400</code>: validazione fallita (<code>E_PRATICA_VALIDATION</code>), JSON non valido</li>
+<li><code>400</code>: validazione fallita (<code>E_PRATICA_VALIDATION</code>), JSON non valido, contesto anagrafico incoerente</li>
 <li><code>401</code>: JWT mancante o non valido</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
@@ -4289,20 +4316,32 @@
 <li><code>emittente_fiscale_id</code> obbligatorio su GET; se assente → 400.</li>
 <li>Su POST, <code>emittente_fiscale_id</code>, <code>tipo_prestazione_id</code> e <code>priorita_id</code> devono essere &gt; 0.</li>
 <li>Lo stato iniziale della pratica e' <code>BOZZA</code>, risolto automaticamente da <code>config.stati_pratiche</code>.</li>
+<li>Il codice pratica <code>PRA-NNNNNNN</code> e' generato dal trigger DB via <code>config.sistema_codici</code>.</li>
+<li>Validazione contesto anagrafico (service + trigger DB guard):</li>
+<li><code>istanza_utility_id</code> richiede <code>soggetto_ruolo_id</code></li>
+<li><code>soggetto_ruolo_id</code> richiede <code>soggetto_id</code></li>
+<li>Il ruolo deve appartenere al soggetto</li>
+<li>L'istanza deve appartenere al soggetto</li>
 <li><code>is_search_endpoint = True</code> sulla view GET: attiva throttling <code>SearchBurstRateThrottle</code>.</li>
-<li>Ordinamento GET: <code>data_insert DESC, id DESC</code>.</li>
+<li>Ordinamento GET: <code>data_insert DESC, id</code>.</li>
 <li>Paginazione offset: <code>COUNT(*)</code> + dati con <code>LIMIT/OFFSET</code>.</li>
-<li>Endpoint v1 richiede JWT.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>pratiche.pratiche</code> (tabella principale)</li>
-<li><code>config.stati_pratiche</code> (JOIN per filtro stato, lookup stato iniziale)</li>
+<li><code>pratiche.tipi_prestazione</code> (JOIN display)</li>
+<li><code>config.stati_pratiche</code> (JOIN display + filtro)</li>
+<li><code>config.priorita_pratiche</code> (JOIN display)</li>
+<li><code>anagrafiche.soggetti</code> (LEFT JOIN display)</li>
+<li><code>anagrafiche.risorse_umane</code> → <code>anagrafiche.soggetti_ruoli</code> → <code>anagrafiche.soggetti</code> (LEFT JOIN catena per nome risorsa)</li>
+<li><code>config.unita_organizzative</code> (LEFT JOIN display)</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Query raw nel repository (<code>PraticheRepository.list_pratiche</code>, <code>PraticheRepository.create_pratica</code>).</li>
-<li>Il codice pratica <code>P-XXX</code> viene generato dal DB (trigger/default).</li>
+<li>v2 (28 marzo 2026): aggiunti <code>soggetto_ruolo_id</code>, <code>istanza_utility_id</code>, display fields via JOIN, parametro <code>search</code>.</li>
+<li>v2.1 (29 marzo 2026): aggiunto <code>data_apertura</code> (DATE, valorizzato da trigger alla transizione BOZZA → APERTA).</li>
+<li>Rimosso <code>solo_interna</code> (campo eliminato dal DB).</li>
+<li>I display fields eliminano la necessita' di lookup client-side per le colonne lista.</li>
 </ul>
 
 
@@ -4358,7 +4397,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.66be65ca.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

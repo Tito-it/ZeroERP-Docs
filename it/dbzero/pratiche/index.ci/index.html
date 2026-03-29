@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.29">
+      <meta name="generator" content="zensical-0.0.30">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.3b031116.min.css">
       
       
 
@@ -4041,6 +4041,12 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                    <div class="md-sidebar-button__wrapper">
+                      <label class="md-sidebar-button" for="__toc"></label>
+                    </div>
+                  
                   <div class="md-sidebar__inner">
                     
 
@@ -4115,6 +4121,7 @@
 <li><a href="../manual/allegati_flussi/">allegati_flussi</a> — La tabella <code>pratiche.allegati_flussi</code> gestisce i <strong>file allegati</strong> a un flusso specifico. Struttura identica a <code>allegati_pratiche</code> ma collegata al singolo step di workflow anziche' alla pratica.</li>
 <li><a href="../manual/allegati_pratiche/">allegati_pratiche</a> — La tabella <code>pratiche.allegati_pratiche</code> gestisce i <strong>file allegati</strong> a una pratica. Gli allegati sono <strong>immutabili</strong>: non vengono modificati ma versionati tramite <code>allegato_padre_id</code>.</li>
 <li><a href="../manual/calcoli_tempo/">calcoli_tempo</a> — Tabella di calcolo persistente: misura il tempo impiegato per transitare dal completamento di <code>flusso_da</code> al completamento di <code>flusso_a</code>. Alimentata automaticamente dal trigger <code>trgfn_flussi_calcolo_tempo_completamento</code> a due fasi (avvio + chiusura).</li>
+<li><a href="../manual/competenze_flussi/">competenze_flussi</a> — Matrice delle competenze: definisce per ogni tipo di flusso (template) e reparto (unita' organizzativa), quali operatori (risorse umane) sono abilitati a eseguire quel tipo di flusso.</li>
 <li><a href="../manual/flussi/">flussi</a> — La tabella <code>pratiche.flussi</code> contiene le <strong>istanze operative dei flussi</strong> di una pratica. Ogni flusso e' uno step del workflow, creato da un template (opzionale) o manualmente, con stato, esito e assegnazione propri.</li>
 <li><a href="../manual/formule_tempo/">formule_tempo</a> — Soglie temporali e tempo massimo di esecuzione, configurabili per tipo prestazione con coppia di template flusso <strong>da/a</strong>. Misura il tempo impiegato per passare dal completamento di flusso_da al completamento di flusso_a.</li>
 <li><a href="../manual/giornale/">giornale</a> — La tabella <code>pratiche.giornale</code> e' il <strong>giornale di bordo (audit trail)</strong> del modulo pratiche. Registra ogni evento significativo nel ciclo di vita di pratiche e flussi in modo append-only e immutabile.</li>
@@ -4133,8 +4140,10 @@
 <ul>
 <li><a href="../manual/fn_calcola_tempo_netto_da_a/">fn_calcola_tempo_netto_da_a</a> — Funzione <strong>check</strong> (pura, STABLE): calcola i giorni netti trascorsi tra il completamento di <code>flusso_da</code> e il completamento di <code>flusso_a</code>, sottraendo i periodi di sospensione della pratica.</li>
 <li><a href="../manual/fn_check_prerequisiti_flusso/">fn_check_prerequisiti_flusso</a> — La funzione <strong><code>pratiche.fn_check_prerequisiti_flusso</code></strong> e' una <strong>pure check</strong> (<code>fn_check_*</code>): verifica se tutti i prerequisiti di un template flusso sono soddisfatti per una data pratica.</li>
+<li><a href="../manual/fn_coda_lavoro_operatore/">fn_coda_lavoro_operatore</a> — Restituisce la coda di lavoro di un operatore in tre livelli di priorita', mutuamente esclusivi. Ogni flusso appare in un solo livello (quello piu' alto applicabile).</li>
 <li><a href="../manual/fn_genera_pratica_da_flusso/">fn_genera_pratica_da_flusso</a> — La funzione <strong><code>pratiche.fn_genera_pratica_da_flusso</code></strong> e' il motore della <strong>generazione cross-pratica</strong>: crea una nuova pratica a partire da un flusso completato, secondo una regola configurata in <code>pratiche.regole_generazione</code>.</li>
 <li><a href="../manual/fn_guard_prerequisiti_flusso/">fn_guard_prerequisiti_flusso</a> — La funzione <strong><code>pratiche.fn_guard_prerequisiti_flusso</code></strong> e' una <strong>guard fail-fast</strong> (<code>fn_guard_*</code>): verifica i prerequisiti e <strong>solleva eccezione</strong> se non sono tutti soddisfatti.</li>
+<li><a href="../manual/fn_prendi_in_carico_flusso/">fn_prendi_in_carico_flusso</a> — Assegna un flusso DA_ESEGUIRE all'operatore corrente, verificando che abbia competenza attiva. Operazione atomica con lock pessimistico (<code>FOR UPDATE</code>) per evitare race condition.</li>
 <li><a href="../manual/fn_valuta_tempo_esecuzione_da_a/">fn_valuta_tempo_esecuzione_da_a</a> — Funzione <strong>check</strong> (pura, STABLE): confronta il tempo netto trascorso tra due flussi con la formula tempo configurata. Restituisce lo stato temporale corrente.</li>
 <li><a href="../manual/trgfn_allegati_flussi_giornale/">trgfn_allegati_flussi_giornale</a> — Registra l'azione <strong>ALLEGATO_AGGIUNTO</strong> nel giornale a livello flusso. Si attiva <strong>AFTER INSERT</strong> su <code>pratiche.allegati_flussi</code>.</li>
 <li><a href="../manual/trgfn_allegati_pratiche_giornale/">trgfn_allegati_pratiche_giornale</a> — Registra l'azione <strong>ALLEGATO_AGGIUNTO</strong> nel giornale a livello pratica. Si attiva <strong>AFTER INSERT</strong> su <code>pratiche.allegati_pratiche</code>.</li>
@@ -4151,7 +4160,9 @@
 <li><a href="../manual/trgfn_pratiche_giornale_ins/">trgfn_pratiche_giornale_ins</a> — Registra l'azione <strong>PRATICA_CREATA</strong> nel giornale. Si attiva <strong>AFTER INSERT</strong> su <code>pratiche.pratiche</code>.</li>
 <li><a href="../manual/trgfn_pratiche_giornale_priorita/">trgfn_pratiche_giornale_priorita</a> — Registra l'azione <strong>PRIORITA_CAMBIATA</strong> nel giornale. Si attiva <strong>AFTER UPDATE OF priorita_id</strong> su <code>pratiche.pratiche</code>, solo quando il valore cambia realmente.</li>
 <li><a href="../manual/trgfn_pratiche_giornale_stato/">trgfn_pratiche_giornale_stato</a> — Registra l'azione <strong>STATO_CAMBIATO</strong> nel giornale. Si attiva <strong>AFTER UPDATE OF stato_id</strong> su <code>pratiche.pratiche</code>, solo quando il valore cambia realmente (<code>WHEN OLD.stato_id IS DISTINCT FROM NEW.stato_id</code>).</li>
+<li><a href="../manual/trgfn_pratiche_guard_contesto/">trgfn_pratiche_guard_contesto</a> — Guard: valida la coerenza gerarchica del contesto anagrafico sulla pratica. La catena soggetto → ruolo → istanza deve essere coerente:</li>
 <li><a href="../manual/trgfn_pratiche_guard_transizione/">trgfn_pratiche_guard_transizione</a> — Trigger function guard che <strong>blocca transizioni di stato non ammesse</strong> per le pratiche. Consulta la matrice <code>config.transizioni_stati_pratiche</code> (solo righe con <code>attivo = true</code>) e solleva eccezione se la transizione non e' configurata.</li>
+<li><a href="../manual/trgfn_pratiche_set_data_apertura/">trgfn_pratiche_set_data_apertura</a> — Valorizza automaticamente <code>data_apertura</code> alla transizione BOZZA → APERTA. Immutabile: una volta valorizzata, non viene sovrascritta da transizioni successive.</li>
 <li><a href="../manual/trgfn_sospensioni_guard_coerenza_flusso/">trgfn_sospensioni_guard_coerenza_flusso</a> — Guard: verifica che <code>flusso_id</code> appartenga alla stessa <code>pratica_id</code> della sospensione. Se <code>flusso_id IS NULL</code> (sospensione pratica intera), nessun controllo.</li>
 <li><a href="../manual/trgfn_sospensioni_propaga/">trgfn_sospensioni_propaga</a> — Propaga la sospensione a livello pratica ai flussi attivi. AFTER INSERT su <code>pratiche.sospensioni</code>: se <code>flusso_id IS NULL</code>, tutti i flussi con stato DA_ESEGUIRE o IN_CORSO passano a SOSPESO.</li>
 <li><a href="../manual/trgfn_sospensioni_riattiva/">trgfn_sospensioni_riattiva</a> — Ripristina gli stati precedenti alla riattivazione. AFTER UPDATE OF <code>data_fine</code> su <code>pratiche.sospensioni</code>: quando la sospensione viene chiusa (data_fine passa da NULL a valorizzata), ripristina lo stato precedente dei flussi (dal giornale) e riporta la pratica ad APERTA.</li>
@@ -4217,7 +4228,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.66be65ca.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

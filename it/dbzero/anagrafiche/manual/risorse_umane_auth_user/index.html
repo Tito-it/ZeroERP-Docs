@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.29">
+      <meta name="generator" content="zensical-0.0.30">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.3b031116.min.css">
       
       
 
@@ -4041,6 +4041,12 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                    <div class="md-sidebar-button__wrapper">
+                      <label class="md-sidebar-button" for="__toc"></label>
+                    </div>
+                  
                   <div class="md-sidebar__inner">
                     
 
@@ -4095,6 +4101,17 @@
     <span class="md-ellipsis">
       
         Regole
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#campi-di-gestione-autenticazione-avanzata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Campi di gestione autenticazione avanzata
       
     </span>
   </a>
@@ -4163,6 +4180,41 @@ tra una risorsa umana e l'utente software Django.</p>
 <li>Il collegamento e' consentito solo se la risorsa appartiene al soggetto gestore.</li>
 </ul>
 <hr />
+<h3 id="campi-di-gestione-autenticazione-avanzata">Campi di gestione autenticazione avanzata<a class="headerlink" href="#campi-di-gestione-autenticazione-avanzata" title="Permanent link">&para;</a></h3>
+<p>Aggiunti con changeset <code>20260328-19</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Tipo</th>
+<th>Default</th>
+<th>Scopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>deve_cambiare_password</code></td>
+<td>boolean NOT NULL</td>
+<td><code>false</code></td>
+<td>Se <code>true</code>, l'operatore deve cambiare password al prossimo login. Impostato a <code>true</code> alla creazione account o su richiesta admin. Dopo il cambio password viene resettato a <code>false</code>.</td>
+</tr>
+<tr>
+<td><code>invito_inviato_at</code></td>
+<td>timestamptz</td>
+<td>NULL</td>
+<td>Timestamp dell'ultimo invito inviato. <code>NULL</code> = mai invitato. Usato per il flusso di invito primo accesso (Fase 3).</td>
+</tr>
+<tr>
+<td><code>totp_obbligatorio</code></td>
+<td>boolean NOT NULL</td>
+<td><code>false</code></td>
+<td>Se <code>true</code>, l'operatore DEVE configurare il 2FA TOTP per accedere. Se il device non e' configurato, un middleware blocca la navigazione e forza il setup. (Fase 4, changeset -21)</td>
+</tr>
+</tbody>
+</table>
+<p>Il campo <code>deve_cambiare_password</code> viene letto dal login (<code>AuditTokenObtainPairView</code>): se <code>true</code>, il response include <code>password_change_required: true</code> e un middleware blocca la navigazione fino al cambio password.</p>
+<p>Il campo <code>totp_obbligatorio</code> viene letto da <code>fn_get_user_profile</code> e propagato al frontend. Se <code>true</code> e il 2FA non e' configurato, il comportamento e' analogo al cambio password: blocco navigazione fino al completamento del setup.</p>
+<hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
 <li>La presenza del collegamento e' opzionale: non tutte le risorse
@@ -4226,7 +4278,7 @@ tra una risorsa umana e l'utente software Django.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.66be65ca.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.29">
+      <meta name="generator" content="zensical-0.0.30">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.3b031116.min.css">
       
       
 
@@ -4041,6 +4041,12 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                    <div class="md-sidebar-button__wrapper">
+                      <label class="md-sidebar-button" for="__toc"></label>
+                    </div>
+                  
                   <div class="md-sidebar__inner">
                     
 
@@ -4169,6 +4175,17 @@
     <span class="md-ellipsis">
       
         Regole fisse
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtro-data-standard-obbligatorio-su-liste-con-date" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtro data standard (obbligatorio su liste con date)
       
     </span>
   </a>
@@ -4441,13 +4458,85 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tag-stato-attivonon-attivo" class="md-nav__link">
+  <a href="#tag-stato-e-severity-standard-cromatico" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tag stato (attivo/non attivo)
+        Tag stato e severity (standard cromatico)
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Tag stato e severity (standard cromatico)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#severity-standard-primevue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Severity standard PrimeVue
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attivo-non-attivo-tabelle-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attivo / Non attivo (tabelle config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stati-pratica" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stati pratica
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priorita-scala-cromatica-progressiva" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priorita' (scala cromatica progressiva)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stati-flusso-pratica" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stati flusso pratica
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#come-aggiungere-una-nuova-mappa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Come aggiungere una nuova mappa
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -5247,6 +5336,31 @@ Se un pattern viene migliorato, il miglioramento si applica a tutte le schermate
 <li><strong>Ricerca</strong> con debounce 400ms (gestito da <code>useSearchTable</code>)</li>
 <li><strong>DataTable</strong> sempre con: <code>lazy</code>, <code>removable-sort</code>, <code>striped-rows</code>, <code>scrollable</code>, <code>scrollHeight="flex"</code></li>
 </ul>
+<h3 id="filtro-data-standard-obbligatorio-su-liste-con-date">Filtro data standard (obbligatorio su liste con date)<a class="headerlink" href="#filtro-data-standard-obbligatorio-su-liste-con-date" title="Permanent link">&para;</a></h3>
+<p>Ogni SearchTable che mostra dati con data di apertura/creazione deve avere il filtro data:</p>
+<ul>
+<li><strong>Due DatePicker</strong>: "Dal" (<code>data_da</code>) e "Al" (<code>data_a</code>) nella toolbar filtri</li>
+<li><strong>Default <code>data_da</code></strong>: 1 gennaio dell'anno corrente - 1 (es. <code>2025-01-01</code> se oggi e' <code>2026-03-29</code>)</li>
+<li><strong><code>data_a</code></strong>: null (nessun limite superiore di default)</li>
+<li>Il filtro si applica su <code>data_insert</code> (o colonna data apertura dedicata se esiste)</li>
+<li>Backend: <code>WHERE data_insert &gt;= data_da::date AND data_insert &lt; (data_a::date + INTERVAL '1 day')</code></li>
+<li>Il tiebreaker <code>id</code> nell'ORDER BY garantisce paginazione deterministica</li>
+</ul>
+<p><strong>Implementazione nello store:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">defaultDataDa</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">().</span><span class="nx">getFullYear</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="si">}</span><span class="sb">-01-01`</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">filters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ref</span><span class="p">({</span>
+<span class="w">  </span><span class="c1">// ... altri filtri ...</span>
+<span class="w">  </span><span class="nx">data_da</span><span class="o">:</span><span class="w"> </span><span class="nx">defaultDataDa</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">data_a</span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="p">})</span>
+</code></pre></div>
+<p><strong>Implementazione nella SearchTable:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">DatePicker</span> <span class="na">v-model</span><span class="o">=</span><span class="s">&quot;dataDaFilter&quot;</span> <span class="na">:placeholder</span><span class="o">=</span><span class="s">&quot;t(&#39;common.data_da&#39;)&quot;</span>
+  <span class="na">date-format</span><span class="o">=</span><span class="s">&quot;dd/mm/yy&quot;</span> <span class="na">show-icon</span> <span class="na">show-button-bar</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;width: 150px;&quot;</span>
+  <span class="err">@</span><span class="na">date-select</span><span class="o">=</span><span class="s">&quot;onDataDaChange&quot;</span> <span class="err">@</span><span class="na">clear-click</span><span class="o">=</span><span class="s">&quot;onDataDaChange&quot;</span> <span class="p">/&gt;</span>
+</code></pre></div>
+<p>Le chiavi i18n <code>common.data_da</code> ("Dal") e <code>common.data_a</code> ("Al") sono condivise da tutte le liste.</p>
 <h3 id="scorciatoie-da-tastiera-keyboard-shortcuts">Scorciatoie da tastiera (Keyboard Shortcuts)<a class="headerlink" href="#scorciatoie-da-tastiera-keyboard-shortcuts" title="Permanent link">&para;</a></h3>
 <p>Scorciatoie globali per operatori ERP power user. Due meccanismi:</p>
 <p><strong>1. <code>useKeyboardShortcuts(shortcuts)</code> — composable generico</strong></p>
@@ -5796,13 +5910,168 @@ il principio di riuso.</p>
 <li><strong>Responsive</strong>: su tablet (&lt; 1024px) mostra solo l'icona, il testo e' nel tooltip</li>
 </ul>
 <hr />
-<h2 id="tag-stato-attivonon-attivo">Tag stato (attivo/non attivo)<a class="headerlink" href="#tag-stato-attivonon-attivo" title="Permanent link">&para;</a></h2>
-<p>Quando una riga ha un campo <code>attivo</code>, lo stato si mostra con un <code>Tag</code> PrimeVue:</p>
+<h2 id="tag-stato-e-severity-standard-cromatico">Tag stato e severity (standard cromatico)<a class="headerlink" href="#tag-stato-e-severity-standard-cromatico" title="Permanent link">&para;</a></h2>
+<p>Le severity PrimeVue (<code>Tag</code>, <code>Badge</code>) seguono una convenzione fissa in tutta l'app.
+Le mappe sono centralizzate in <code>core/utils/severity.js</code> — un solo punto di modifica.</p>
+<h3 id="severity-standard-primevue">Severity standard PrimeVue<a class="headerlink" href="#severity-standard-primevue" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Colore</th>
+<th>Significato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>success</code></td>
+<td>Verde</td>
+<td>Completato, attivo, OK</td>
+</tr>
+<tr>
+<td><code>info</code></td>
+<td>Azzurro</td>
+<td>In corso, informativo, normale</td>
+</tr>
+<tr>
+<td><code>warn</code></td>
+<td>Arancio</td>
+<td>Attenzione, sospeso, intermedio</td>
+</tr>
+<tr>
+<td><code>danger</code></td>
+<td>Rosso</td>
+<td>Errore, annullato, urgente, bloccato</td>
+</tr>
+<tr>
+<td><code>secondary</code></td>
+<td>Grigio</td>
+<td>Bozza, inattivo, basso</td>
+</tr>
+</tbody>
+</table>
+<h3 id="attivo-non-attivo-tabelle-config">Attivo / Non attivo (tabelle config)<a class="headerlink" href="#attivo-non-attivo-tabelle-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">Tag</span> <span class="na">:value</span><span class="o">=</span><span class="s">&quot;data.attivo ? t(&#39;indirizzi.attivo&#39;) : t(&#39;indirizzi.non_attivo&#39;)&quot;</span>
      <span class="na">:severity</span><span class="o">=</span><span class="s">&quot;data.attivo ? &#39;success&#39; : &#39;warn&#39;&quot;</span> <span class="p">/&gt;</span>
 </code></pre></div>
-<p>Severita' standard: <code>success</code> = verde (attivo), <code>warn</code> = arancione (non attivo).
-Mai usare colori diversi per lo stesso concetto.</p>
+<h3 id="stati-pratica">Stati pratica<a class="headerlink" href="#stati-pratica" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Stato</th>
+<th>Severity</th>
+<th>Colore</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BOZZA</td>
+<td><code>secondary</code></td>
+<td>Grigio</td>
+</tr>
+<tr>
+<td>APERTA</td>
+<td><code>info</code></td>
+<td>Azzurro</td>
+</tr>
+<tr>
+<td>SOSPESA</td>
+<td><code>warn</code></td>
+<td>Arancio</td>
+</tr>
+<tr>
+<td>CHIUSA</td>
+<td><code>success</code></td>
+<td>Verde</td>
+</tr>
+<tr>
+<td>ANNULLATA</td>
+<td><code>danger</code></td>
+<td>Rosso</td>
+</tr>
+</tbody>
+</table>
+<h3 id="priorita-scala-cromatica-progressiva">Priorita' (scala cromatica progressiva)<a class="headerlink" href="#priorita-scala-cromatica-progressiva" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Priorita'</th>
+<th>Severity</th>
+<th>Colore</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BASSA</td>
+<td><code>secondary</code></td>
+<td>Grigio</td>
+</tr>
+<tr>
+<td>NORMALE</td>
+<td><code>info</code></td>
+<td>Azzurro</td>
+</tr>
+<tr>
+<td>ALTA</td>
+<td><code>warn</code></td>
+<td>Arancio</td>
+</tr>
+<tr>
+<td>URGENTE</td>
+<td><code>danger</code></td>
+<td>Rosso</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stati-flusso-pratica">Stati flusso pratica<a class="headerlink" href="#stati-flusso-pratica" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Stato</th>
+<th>Severity</th>
+<th>Colore</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DA_ESEGUIRE</td>
+<td><code>secondary</code></td>
+<td>Grigio</td>
+</tr>
+<tr>
+<td>IN_CORSO</td>
+<td><code>info</code></td>
+<td>Azzurro</td>
+</tr>
+<tr>
+<td>COMPLETATO</td>
+<td><code>success</code></td>
+<td>Verde</td>
+</tr>
+<tr>
+<td>SOSPESO</td>
+<td><code>warn</code></td>
+<td>Arancio</td>
+</tr>
+<tr>
+<td>ANNULLATO</td>
+<td><code>danger</code></td>
+<td>Rosso</td>
+</tr>
+<tr>
+<td>ERRORE</td>
+<td><code>danger</code></td>
+<td>Rosso</td>
+</tr>
+</tbody>
+</table>
+<h3 id="come-aggiungere-una-nuova-mappa">Come aggiungere una nuova mappa<a class="headerlink" href="#come-aggiungere-una-nuova-mappa" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Aggiungere la mappa in <code>core/utils/severity.js</code> con costante <code>NOME_MAP</code> e shortcut <code>nomeSeverity(codice)</code></li>
+<li>Usare <code>resolveSeverity(map, codice)</code> che fa trim automatico e fallback a <code>'secondary'</code></li>
+<li>Nel componente: <code>&lt;Tag :value="data.descrizione" :severity="nomeSeverity(data.codice_interno)" /&gt;</code></li>
+<li>Il <code>codice_interno</code> deve arrivare dal backend via JOIN (no lookup client-side)</li>
+</ol>
 <hr />
 <h2 id="responsive">Responsive<a class="headerlink" href="#responsive" title="Permanent link">&para;</a></h2>
 <table>
@@ -6962,7 +7231,7 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.66be65ca.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

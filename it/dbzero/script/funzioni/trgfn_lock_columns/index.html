@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.29">
+      <meta name="generator" content="zensical-0.0.30">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.6f2fbb28.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.3b031116.min.css">
       
       
 
@@ -4041,6 +4041,12 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                    <div class="md-sidebar-button__wrapper">
+                      <label class="md-sidebar-button" for="__toc"></label>
+                    </div>
+                  
                   <div class="md-sidebar__inner">
                     
 
@@ -4073,6 +4079,17 @@
     <span class="md-ellipsis">
       
         🎯 Scopo Principale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guc-di-override-per-manutenzione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUC di override per manutenzione
       
     </span>
   </a>
@@ -4169,8 +4186,27 @@
 <li><strong>Messaggi parametrizzati</strong> con placeholder e codici definiti in <code>config.messaggi_errore</code></li>
 </ul>
 <hr />
+<h3 id="guc-di-override-per-manutenzione">GUC di override per manutenzione<a class="headerlink" href="#guc-di-override-per-manutenzione" title="Permanent link">&para;</a></h3>
+<p>La funzione supporta un <strong>override via GUC</strong> per consentire la modifica delle colonne
+protette in contesti di manutenzione, senza dover DISABLE/ENABLE TRIGGER:</p>
+<div class="highlight"><pre><span></span><code><span class="k">BEGIN</span><span class="p">;</span>
+<span class="k">SET</span><span class="w"> </span><span class="k">LOCAL</span><span class="w"> </span><span class="n">zeroerp</span><span class="p">.</span><span class="n">allow_lock_columns_override</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;on&#39;</span><span class="p">;</span>
+<span class="k">UPDATE</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">fornitori</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;NUOVO-CODICE&#39;</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span><span class="p">;</span>
+<span class="k">COMMIT</span><span class="p">;</span>
+</code></pre></div>
+<ul>
+<li><strong>GUC</strong>: <code>zeroerp.allow_lock_columns_override</code></li>
+<li><strong>Valore di attivazione</strong>: <code>'on'</code></li>
+<li><strong>Scope consigliato</strong>: <code>SET LOCAL</code> (solo la transazione corrente)</li>
+<li><strong>Default</strong>: assente o qualsiasi valore diverso da <code>'on'</code> → colonne protette</li>
+<li><strong>Pattern</strong>: coerente con <code>trgfn_delete_block_by_guc</code> che usa GUC per l'override delle delete</li>
+</ul>
+<hr />
 <h3 id="comportamento-chiave">🎯  Comportamento Chiave<a class="headerlink" href="#comportamento-chiave" title="Permanent link">&para;</a></h3>
 <ol>
+<li>
+<p><strong>GUC override</strong> — se <code>zeroerp.allow_lock_columns_override = 'on'</code>, ritorna <code>NEW</code> immediatamente senza controlli</p>
+</li>
 <li>
 <p><strong>Validazione degli argomenti</strong></p>
 </li>
@@ -4178,7 +4214,7 @@
 <p>Accetta un numero pari di parametri (<code>colonna</code>, <code>msgcode</code>)</p>
 </li>
 <li>
-<p>Se dispari, invoca <code>fn_log_and_raise_error('database', TG_NAME, 'E_ARGOMENTI_A_COPPIE', {...})</code></p>
+<p>Se dispari, invoca <code>fn_log_and_raise_error(‘database’, TG_NAME, ‘E_ARGOMENTI_A_COPPIE’, {...})</code></p>
 </li>
 <li>
 <p><strong>Ciclo di verifica</strong></p>
@@ -4297,7 +4333,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.c2b142ea.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.66be65ca.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
