@@ -4182,6 +4182,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#empty-state-liste-che-partono-vuote-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Empty state — liste che partono vuote (standard)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#filtro-data-standard-obbligatorio-su-liste-con-date" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5336,6 +5347,104 @@ Se un pattern viene migliorato, il miglioramento si applica a tutte le schermate
 <li><strong>Ricerca</strong> con debounce 400ms (gestito da <code>useSearchTable</code>)</li>
 <li><strong>DataTable</strong> sempre con: <code>lazy</code>, <code>removable-sort</code>, <code>striped-rows</code>, <code>scrollable</code>, <code>scrollHeight="flex"</code></li>
 </ul>
+<h3 id="empty-state-liste-che-partono-vuote-standard">Empty state — liste che partono vuote (standard)<a class="headerlink" href="#empty-state-liste-che-partono-vuote-standard" title="Permanent link">&para;</a></h3>
+<p>Le liste che possono selezionare troppi dati partono <strong>vuote</strong> e mostrano un placeholder
+finche' l'utente non applica una ricerca (min 3 caratteri) o un filtro.</p>
+<p><strong>Componenti coinvolti:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Elemento</th>
+<th>Dove</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SearchHint.vue</code></td>
+<td><code>core/components/</code> — placeholder riutilizzabile (icona search + messaggio)</td>
+</tr>
+<tr>
+<td><code>hasSearched</code></td>
+<td>Nello store Pinia — <code>ref(false)</code>, diventa <code>true</code> dopo il primo fetch</td>
+</tr>
+<tr>
+<td>Guardia in <code>fetchList()</code></td>
+<td>Nello store — blocca la chiamata API se non ci sono filtri attivi</td>
+</tr>
+</tbody>
+</table>
+<p><strong>1. Store — aggiungere <code>hasSearched</code> e guardia in <code>fetchList()</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">hasSearched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ref</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+
+<span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">fetchList</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">filters</span><span class="p">.</span><span class="nx">value</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">searchTerm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">search</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">trim</span><span class="p">()</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">hasFilters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">filtro_1</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">filtro_2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="c1">// adattare ai filtri reali</span>
+
+<span class="w">  </span><span class="c1">// Search con meno di 3 caratteri e nessun filtro attivo → ignora</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">searchTerm</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">searchTerm</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">3</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">hasFilters</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+<span class="w">  </span><span class="c1">// Primo caricamento senza filtri → resta vuoto</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">searchTerm</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">hasFilters</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">hasSearched</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+<span class="w">  </span><span class="c1">// Search svuotata senza filtri → torna a stato vuoto</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">searchTerm</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">hasFilters</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">items</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+<span class="w">    </span><span class="nx">totalRecords</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">    </span><span class="nx">hasSearched</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="nx">loading</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">searchTerm</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">3</span><span class="p">)</span><span class="w"> </span><span class="nx">params</span><span class="p">.</span><span class="nx">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">searchTerm</span>
+<span class="w">    </span><span class="c1">// ... costruzione params ...</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">listEntita</span><span class="p">(</span><span class="nx">params</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">items</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">results</span>
+<span class="w">    </span><span class="nx">totalRecords</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">count</span>
+<span class="w">    </span><span class="nx">hasSearched</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">loading</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Esporre hasSearched nel return</span>
+<span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">items</span><span class="p">,</span><span class="w"> </span><span class="nx">totalRecords</span><span class="p">,</span><span class="w"> </span><span class="nx">loading</span><span class="p">,</span><span class="w"> </span><span class="nx">hasSearched</span><span class="p">,</span><span class="w"> </span><span class="nx">filters</span><span class="p">,</span><span class="w"> </span><span class="nx">fetchList</span><span class="p">,</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><strong>2. SearchTable — placeholder + fetch condizionale:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span> <span class="na">setup</span><span class="p">&gt;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">onMounted</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;vue&#39;</span>
+<span class="k">import</span><span class="w"> </span><span class="nx">SearchHint</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;../../core/components/SearchHint.vue&#39;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">searchText</span><span class="p">,</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useSearchTable</span><span class="p">(</span><span class="nx">store</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">})</span>
+
+<span class="nx">useTabFreshness</span><span class="p">(</span><span class="nx">store</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;entita&#39;</span><span class="p">)</span>
+<span class="c1">// La lista parte vuota — salvo che arrivi con search precaricata da URL/context.</span>
+<span class="nx">onMounted</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">searchText</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">store</span><span class="p">.</span><span class="nx">fetchList</span><span class="p">()</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">})</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">template</span><span class="p">&gt;</span>
+  <span class="cm">&lt;!-- Placeholder: nessuna ricerca effettuata --&gt;</span>
+  <span class="p">&lt;</span><span class="nt">SearchHint</span> <span class="na">v-if</span><span class="o">=</span><span class="s">&quot;</span><span class="o">!</span><span class="nx">store</span><span class="p">.</span><span class="nx">hasSearched</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">store</span><span class="p">.</span><span class="nx">loading</span><span class="s">&quot;</span> <span class="p">/&gt;</span>
+
+  <span class="p">&lt;</span><span class="nt">DataTable</span> <span class="na">v-show</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">store</span><span class="p">.</span><span class="nx">hasSearched</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">store</span><span class="p">.</span><span class="nx">loading</span><span class="s">&quot;</span> <span class="err">...</span><span class="p">&gt;</span>
+    ...
+  <span class="p">&lt;/</span><span class="nt">DataTable</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">template</span><span class="p">&gt;</span>
+</code></pre></div>
+<p><strong>Regole:</strong></p>
+<ul>
+<li><strong>NON usare</strong> <code>onMounted(() =&gt; store.fetchList())</code> incondizionato — caricerebbe tutti i dati</li>
+<li>Il <code>onMounted</code> condizionale (<code>if searchText.value</code>) serve per la <strong>ricerca universale e AI</strong>:
+  quando l'utente arriva da SearchDrawer, AI Assistant o link con <code>?search=...</code>,
+  il termine e' gia' in <code>searchText</code> e la lista deve mostrare i risultati immediatamente</li>
+<li><code>SearchHint</code> accetta prop <code>message</code> opzionale per messaggi personalizzati;
+  default: <code>$t('common.eseguire_ricerca')</code></li>
+<li>La chiave i18n <code>common.eseguire_ricerca</code> e' condivisa da tutte le liste</li>
+</ul>
 <h3 id="filtro-data-standard-obbligatorio-su-liste-con-date">Filtro data standard (obbligatorio su liste con date)<a class="headerlink" href="#filtro-data-standard-obbligatorio-su-liste-con-date" title="Permanent link">&para;</a></h3>
 <p>Ogni SearchTable che mostra dati con data di apertura/creazione deve avere il filtro data:</p>
 <ul>
@@ -5493,10 +5602,15 @@ la risoluzione del termine di ricerca iniziale. Le SearchTable si usano esattame
 <span class="w">  </span><span class="p">}</span>
 <span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">immediate</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
 </code></pre></div>
+<p><strong>Compatibilita' con empty state:</strong> le liste che partono vuote (vedi sezione "Empty state")
+usano <code>onMounted(() =&gt; { if (searchText.value) store.fetchList() })</code> per garantire
+che il termine precaricato da ricerca universale o AI venga eseguito al mount.
+Senza questo <code>onMounted</code> condizionale, la lista resta vuota anche con search precaricata.</p>
 <p><strong>Per aggiungere una nuova lista:</strong></p>
 <ul>
 <li>Aggiungere la rotta nella mappa <code>TIPO_RUOLO_ROUTES</code> in <code>SearchDrawer.vue</code></li>
 <li>Implementare il watcher <code>ctx → drawer.editRow</code> nella View se supporta auto-apertura</li>
+<li>Se la lista usa empty state: aggiungere <code>onMounted</code> condizionale (vedi sezione "Empty state")</li>
 <li>Nient'altro: <code>useSearchTable</code> fa il resto</li>
 </ul>
 <h3 id="regola-critica-paginazione-deterministica-backend">⚠️ REGOLA CRITICA: Paginazione deterministica (backend)<a class="headerlink" href="#regola-critica-paginazione-deterministica-backend" title="Permanent link">&para;</a></h3>
