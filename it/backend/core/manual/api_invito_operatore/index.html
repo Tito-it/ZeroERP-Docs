@@ -2309,6 +2309,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2727,6 +2731,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/integrazione-ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrazione Ai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-mail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione mail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/tx_id_implementation_guide/" class="md-nav__link">
         
   
@@ -2862,10 +2922,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_18" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_20" >
         
           
-          <label class="md-nav__link" for="__nav_7_18" id="__nav_7_18_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_20" id="__nav_7_20_label" tabindex="0">
             
   
   
@@ -2883,8 +2943,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_18_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_18">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_20_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_20">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4165,6 +4225,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#endpoint-pubblico-validazione-token-invito" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Endpoint Pubblico — Validazione Token Invito
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Endpoint Pubblico — Validazione Token Invito">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#endpoint-pubblico-attivazione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4210,7 +4298,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
+  <a href="#output_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Output
@@ -4315,7 +4403,9 @@ manualmente.</p>
    |
 3. Operatore riceve email → clicca link
    |
-4. Frontend apre pagina attivazione
+4. GET /auth/attivazione-validate/{token}/
+   → Se valido: frontend mostra form password
+   → Se invalido/scaduto: messaggio errore
    |
 5. POST /auth/attivazione/ { token, new_password, new_password_confirm }
    → Consuma token
@@ -4368,6 +4458,18 @@ Autenticazione: JWT + ruolo ADMIN</p>
 <p>Invalida il token invito precedente, ne genera uno nuovo e rinvia l'email.
 Utile se l'invito e' scaduto o non e' stato ricevuto.</p>
 <hr />
+<h2 id="endpoint-pubblico-validazione-token-invito">Endpoint Pubblico — Validazione Token Invito<a class="headerlink" href="#endpoint-pubblico-validazione-token-invito" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="err">GET /api/v1/auth/attivazione-validate/{token}/</span>
+</code></pre></div>
+<p><strong>Non autenticato</strong> (<code>AllowAny</code>). Verifica se un token invito e' ancora valido senza consumarlo.
+Usato dal frontend per mostrare il form di attivazione o un messaggio di errore/scadenza.</p>
+<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;valid&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>oppure:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;valid&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Token non valido, scaduto o gia&#39; utilizzato.&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<hr />
 <h2 id="endpoint-pubblico-attivazione">Endpoint Pubblico — Attivazione<a class="headerlink" href="#endpoint-pubblico-attivazione" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="err">POST /api/v1/auth/attivazione/</span>
 </code></pre></div>
@@ -4397,7 +4499,7 @@ e l'operatore puo' riprovare con una password piu' forte.</p>
 <li><code>user.set_password(new_password)</code> + save</li>
 <li>Reset flag <code>deve_cambiare_password = false</code></li>
 </ol>
-<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
+<h3 id="output_1">Output<a class="headerlink" href="#output_1" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Account attivato con successo. Effettua il login con la nuova password.&quot;</span>
@@ -4488,7 +4590,7 @@ e l'operatore puo' riprovare con una password piu' forte.</p>
 </tr>
 <tr>
 <td><code>apps/core/api/attivazione_view.py</code></td>
-<td>1 endpoint pubblico (attivazione)</td>
+<td>2 endpoint pubblici (validate + attivazione)</td>
 </tr>
 <tr>
 <td><code>apps/core/db/auth_repository.py</code></td>

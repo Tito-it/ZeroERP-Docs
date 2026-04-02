@@ -2309,6 +2309,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2727,6 +2731,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/integrazione-ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrazione Ai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-mail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione mail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/tx_id_implementation_guide/" class="md-nav__link">
         
   
@@ -2862,10 +2922,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_18" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_20" >
         
           
-          <label class="md-nav__link" for="__nav_7_18" id="__nav_7_18_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_20" id="__nav_7_20_label" tabindex="0">
             
   
   
@@ -2883,8 +2943,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_18_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_18">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_20_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_20">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4435,6 +4495,12 @@
 <td>Invoca handler Python se configurato</td>
 </tr>
 <tr>
+<td><code>verifica_flusso_pratica(repo, pratica_id, flusso_id)</code></td>
+<td>repo, pratica_id, flusso_id</td>
+<td><code>dict</code></td>
+<td>Verifica esistenza e ownership flusso/pratica</td>
+</tr>
+<tr>
 <td><code>get_giornale(pratica_id, limit, offset)</code></td>
 <td>pratica_id, limit, offset</td>
 <td><code>(list[GiornaleRow], int)</code></td>
@@ -4456,7 +4522,7 @@
 <li><code>dispatch_handler</code>: import inline di <code>handler_registry.get_handler</code> per evitare import circolari; ritorna <code>None</code> se il flusso non ha template, non ha handler_key, o l'handler non e' registrato.</li>
 <li><code>assegna_pratica</code>: noop se nessun campo di assegnazione fornito.</li>
 <li>Le funzioni sospensione verificano unicita' sospensione attiva prima dell'INSERT.</li>
-<li><code>_verifica_flusso_pratica(repo, pratica_id, flusso_id)</code>: helper privato per ownership check flusso/pratica riusato da <code>sospendi_flusso</code> e <code>riattiva_flusso</code>.</li>
+<li><code>verifica_flusso_pratica(repo, pratica_id, flusso_id)</code>: helper <strong>pubblico</strong> per ownership check flusso/pratica. Usato internamente dal service (sospensioni, flussi) e dalle views API (alias <code>_get_flusso_verificato</code>). Unica fonte di verita' per la verifica esistenza + appartenenza flusso.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
@@ -4478,6 +4544,7 @@
 <ul>
 <li>Le funzioni inline <code>_resolve_stato_pratica</code>, <code>_resolve_stato_flusso</code>, <code>_get_handler_key</code> sono state migrate nel <code>PraticheRepository</code> come metodi di istanza.</li>
 <li><code>cambia_stato_flusso</code> e' stata aggiunta per gestire transizioni generiche (SOSPESO, ANNULLATO) senza passare dalla view con logica inline.</li>
+<li>v2.2 (1 aprile 2026): <code>_verifica_flusso_pratica</code> rinominata <code>verifica_flusso_pratica</code> (pubblica). La funzione duplicata in <code>views.py</code> e' stata sostituita con alias al service. Repository allineato ai building block core (<code>row_to_dict</code>/<code>rows_to_list</code>, <code>ErrorManager.require</code> su tutti i fetchone). <code>pratica_select_sql()</code>/<code>pratica_joins_sql()</code> esposti come classmethod pubblici per uso cross-repository.</li>
 </ul>
 
 

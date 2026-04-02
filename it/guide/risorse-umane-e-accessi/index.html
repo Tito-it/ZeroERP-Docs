@@ -2317,6 +2317,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2740,6 +2744,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../integrazione-ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrazione Ai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-mail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione mail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../tx_id_implementation_guide/" class="md-nav__link">
         
   
@@ -2878,10 +2938,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_18" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_20" >
         
           
-          <label class="md-nav__link" for="__nav_7_18" id="__nav_7_18_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7_20" id="__nav_7_20_label" tabindex="">
             
   
   
@@ -2899,8 +2959,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_18_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_18">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_20_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_20">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4380,6 +4440,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#assegnazione-emittente-fiscale-scope-operativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assegnazione emittente fiscale (scope operativo)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4700,6 +4771,7 @@
 <li><a href="../../dbzero/config/tabelle/qualifiche/">config.qualifiche</a> — mansioni e posizioni</li>
 <li><a href="../../dbzero/config/tabelle/unita_organizzative/">config.unita_organizzative</a> — reparti e uffici</li>
 <li><a href="../../dbzero/config/tabelle/ruolo_sistema/">config.ruolo_sistema</a> — classificazione utente (ADMIN, OPERATIVO, DISABILITATO)</li>
+<li><a href="../../dbzero/config/tabelle/user_emittenti_fiscali/">config.user_emittenti_fiscali</a> — scope emittenti fiscali per operatore</li>
 <li><a href="../../dbzero/config/tabelle/token_monouso/">config.token_monouso</a> — token sicuri per inviti e reset password</li>
 <li><a href="../../dbzero/config/tabelle/email_account/">config.email_account</a> — account SMTP per invio email (vedi <a href=".././gestione-mail/">Guida Gestione Mail</a>)</li>
 </ul>
@@ -4903,6 +4975,30 @@ vedi <a href=".././architettura-permessi-e-autorizzazioni/">Architettura Permess
 <li>Riattivare il ponte: UPDATE <code>risorse_umane_auth_user.attivo = true</code> — il trigger sync imposta <code>auth_user.is_active = true</code> e il login viene riabilitato</li>
 </ol>
 <p><strong>Perche questo ordine?</strong> Il framework ATTIVO (<code>trgfn_child_requires_active_parent</code>) impedisce di attivare un figlio se il genitore e inattivo. Bisogna riattivare la risorsa (genitore) prima del ponte (figlio).</p>
+<h3 id="assegnazione-emittente-fiscale-scope-operativo">Assegnazione emittente fiscale (scope operativo)<a class="headerlink" href="#assegnazione-emittente-fiscale-scope-operativo" title="Permanent link">&para;</a></h3>
+<p>Dopo aver creato l'operatore e collegato il suo account Django, e necessario definire <strong>su quali emittenti fiscali</strong> l'operatore puo lavorare. Questo vincolo determina il <strong>perimetro dati</strong> visibile: un operatore assegnato a un emittente vedra solo documenti, fatture, pratiche e movimenti di quell'emittente.</p>
+<p><strong>Tabella coinvolta:</strong> <code>config.user_emittenti_fiscali</code> — legame N:1 tra <code>auth_user</code> e <code>anagrafiche.emittenti_fiscali</code>.</p>
+<p><strong>Come si configura (da interfaccia):</strong></p>
+<ol>
+<li>Andare in <strong>Amm. Software → Operatori</strong></li>
+<li>Aprire l'operatore in modifica (click sulla riga)</li>
+<li>Passare al <strong>tab Permessi</strong></li>
+<li>Nella sezione <strong>Emittenti Scope</strong> selezionare l'emittente fiscale dal dropdown</li>
+<li>Premere <strong>Salva</strong> nella sezione</li>
+</ol>
+<p><strong>Regole:</strong></p>
+<ul>
+<li>Se l'operatore non ha nessun emittente assegnato, il comportamento dipende dal ruolo: un ADMIN vede tutto (bypass scope), un OPERATIVO non vedra dati filtrati per emittente</li>
+<li>L'emittente fiscale e un soggetto con ruolo EMITTENTE nel sistema anagrafico — il dropdown mostra la <strong>ragione sociale</strong> del soggetto associato</li>
+<li>Il vincolo e verificato a runtime da <code>get_scope_user_id(request)</code> negli endpoint API: se l'utente ha emittenti assegnati, le query vengono filtrate automaticamente</li>
+<li>La modifica dell'emittente ha effetto immediato — non richiede invalidazione cache perche il check avviene ad ogni richiesta API</li>
+</ul>
+<p><strong>Quando serve:</strong></p>
+<ul>
+<li><strong>Azienda mono-emittente</strong>: assegnare l'unico emittente a tutti gli operatori (il sistema lo pre-seleziona se ce n'e uno solo)</li>
+<li><strong>Gruppo multi-emittente</strong>: assegnare a ciascun operatore solo gli emittenti su cui opera</li>
+<li><strong>Consulenti esterni</strong>: limitare lo scope al singolo emittente del cliente che seguono</li>
+</ul>
 <hr />
 <h2 id="primo-accesso-e-gestione-credenziali">Primo accesso e gestione credenziali<a class="headerlink" href="#primo-accesso-e-gestione-credenziali" title="Permanent link">&para;</a></h2>
 <p>Questa sezione descrive come un operatore entra nel sistema per la prima volta, come gestisce
@@ -5340,7 +5436,11 @@ Per i flussi operativi: vedi <a href=".././fatturazione/">Guida Fatturazione</a>
 <li>Per la configurazione email (account SMTP, template, personalizzazioni): vedi <a href=".././gestione-mail/">Guida Gestione Mail</a>.</li>
 </ul>
 <hr />
-<p><strong>© 2025-2026 Zero ERP</strong> <strong><em>• powered by Tid •</em></strong></p>
+<div style="text-align: center; margin-top: 2rem;">
+  <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
+  <br>
+  <strong>&copy; 2025-2026 Zero ERP</strong> <em><strong>&bull; powered by Tid &bull;</strong></em>
+</div>
 
 
 

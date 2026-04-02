@@ -2309,6 +2309,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2727,6 +2731,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/integrazione-ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrazione Ai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-mail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione mail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/tx_id_implementation_guide/" class="md-nav__link">
         
   
@@ -2862,10 +2922,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_18" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_20" >
         
           
-          <label class="md-nav__link" for="__nav_7_18" id="__nav_7_18_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_20" id="__nav_7_20_label" tabindex="0">
             
   
   
@@ -2883,8 +2943,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_18_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_18">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_20_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_20">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4236,8 +4296,12 @@ BOZZA e inserisce la pratica in transazione atomica.</p>
 <li><code>tipo_prestazione_id</code> (int, opzionale) — filtro tipo prestazione</li>
 <li><code>soggetto_id</code> (string UUID, opzionale) — filtro UUID soggetto</li>
 <li><code>search</code> (string, opzionale) — ricerca ILIKE su codice, descrizione, ragione_sociale soggetto</li>
+<li><code>data_da</code> (string ISO date, opzionale) — filtro data inserimento da (&gt;=)</li>
+<li><code>data_a</code> (string ISO date, opzionale) — filtro data inserimento a (&lt;= fine giorno)</li>
 <li><code>limit</code> (int, opzionale) — righe per pagina, default <code>50</code>, max <code>200</code></li>
 <li><code>offset</code> (int, opzionale) — offset paginazione, default <code>0</code></li>
+<li><code>order_by</code> (string, opzionale) — colonna ordinamento, default <code>data_insert</code></li>
+<li><code>order_dir</code> (string, opzionale) — direzione (<code>asc</code>/<code>desc</code>), default <code>desc</code></li>
 </ul>
 <h3 id="post-creazione-pratica">POST — Creazione pratica<a class="headerlink" href="#post-creazione-pratica" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4260,9 +4324,13 @@ BOZZA e inserisce la pratica in transazione atomica.</p>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <h3 id="get-200">GET 200:<a class="headerlink" href="#get-200" title="Permanent link">&para;</a></h3>
+<p>Envelope paginata standard (<code>paginated_envelope</code>):</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;page&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;total_pages&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">      </span><span class="p">{</span>
 <span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
@@ -4323,8 +4391,10 @@ BOZZA e inserisce la pratica in transazione atomica.</p>
 <li>Il ruolo deve appartenere al soggetto</li>
 <li>L'istanza deve appartenere al soggetto</li>
 <li><code>is_search_endpoint = True</code> sulla view GET: attiva throttling <code>SearchBurstRateThrottle</code>.</li>
-<li>Ordinamento GET: <code>data_insert DESC, id</code>.</li>
-<li>Paginazione offset: <code>COUNT(*)</code> + dati con <code>LIMIT/OFFSET</code>.</li>
+<li>Ordinamento GET: configurabile via <code>order_by</code>/<code>order_dir</code>, default <code>data_insert DESC</code>, tiebreaker <code>id</code>.</li>
+<li>Whitelist colonne ordinamento: <code>codice</code>, <code>descrizione</code>, <code>data_apertura</code>, <code>data_scadenza</code>, <code>data_insert</code>, <code>tipo_prestazione_descrizione</code>, <code>stato_descrizione</code>, <code>priorita_descrizione</code>, <code>soggetto_display</code>, <code>risorsa_umana_display</code>.</li>
+<li>Paginazione offset: <code>COUNT(*)</code> + dati con <code>LIMIT/OFFSET</code>. Risposta via <code>paginated_envelope</code> (count, page, page_size, total_pages, results).</li>
+<li>Parsing parametri via <code>parse_list_params</code> e <code>qp_int_strict</code> (building block core).</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
@@ -4342,6 +4412,7 @@ BOZZA e inserisce la pratica in transazione atomica.</p>
 <li>v2.1 (29 marzo 2026): aggiunto <code>data_apertura</code> (DATE, valorizzato da trigger alla transizione BOZZA → APERTA).</li>
 <li>Rimosso <code>solo_interna</code> (campo eliminato dal DB).</li>
 <li>I display fields eliminano la necessita' di lookup client-side per le colonne lista.</li>
+<li>v2.2 (1 aprile 2026): risposta GET allineata a <code>paginated_envelope</code> (aggiunto page, page_size, total_pages). Parsing via <code>parse_list_params</code>/<code>qp_int_strict</code>. Aggiunti parametri <code>data_da</code>, <code>data_a</code>, <code>order_by</code>, <code>order_dir</code>.</li>
 </ul>
 
 

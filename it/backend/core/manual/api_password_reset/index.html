@@ -2309,6 +2309,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2727,6 +2731,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/integrazione-ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrazione Ai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-mail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione mail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/tx_id_implementation_guide/" class="md-nav__link">
         
   
@@ -2862,10 +2922,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_18" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_20" >
         
           
-          <label class="md-nav__link" for="__nav_7_18" id="__nav_7_18_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_20" id="__nav_7_20_label" tabindex="0">
             
   
   
@@ -2883,8 +2943,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_18_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_18">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_20_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_20">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4352,10 +4412,10 @@ Tre endpoint pubblici (non autenticati) con rate limiting.</p>
 <h2 id="flusso-completo">Flusso completo<a class="headerlink" href="#flusso-completo" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>1. Operatore clicca &quot;Password dimenticata?&quot; nel frontend
    |
-2. POST /password-reset-request/ { email }
-   → Cerca utente con email attiva
-   → Se trovato: genera token + invia email con link
-   → Risposta SEMPRE 200 (non rivela se email esiste)
+2. POST /password-reset-request/ { username }
+   → Cerca utente attivo per username
+   → Se trovato e ha email: genera token + invia email con link
+   → Risposta SEMPRE 200 (non rivela se utente esiste)
    |
 3. Operatore riceve email con link: {FRONTEND_URL}/reset-password/{token}
    |
@@ -4378,18 +4438,18 @@ Tre endpoint pubblici (non autenticati) con rate limiting.</p>
 </code></pre></div>
 <p><strong>Non autenticato</strong> (<code>AllowAny</code>). Rate limiting: 3 richieste / 15 minuti per IP.</p>
 <h4 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mario@azienda.it&quot;</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mario.rossi&quot;</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 <h4 id="output-sempre-200">Output (sempre 200)<a class="headerlink" href="#output-sempre-200" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Se l&#39;email e&#39; registrata, riceverai un link per reimpostare la password.&quot;</span>
+<span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Se l&#39;utente esiste e ha un&#39;email configurata, ricevera&#39; un link per reimpostare la password.&quot;</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <blockquote>
-<p><strong>Sicurezza</strong>: la risposta e' identica sia che l'email esista o no.
-Non rivela quali email sono registrate nel sistema.</p>
+<p><strong>Sicurezza</strong>: la risposta e' identica sia che l'utente esista o no.
+Non rivela quali username sono registrati nel sistema.</p>
 </blockquote>
 <h4 id="logica-interna-se-utente-trovato">Logica interna (se utente trovato)<a class="headerlink" href="#logica-interna-se-utente-trovato" title="Permanent link">&para;</a></h4>
 <ol>
@@ -4483,7 +4543,7 @@ Applicato su request e confirm (non su validate che e' GET sola lettura).</p>
 per parsing rate custom (<code>"3/15m"</code>).</p>
 <h2 id="sicurezza">Sicurezza<a class="headerlink" href="#sicurezza" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Risposta opaca</strong>: la request ritorna sempre 200 (non rivela email registrate)</li>
+<li><strong>Risposta opaca</strong>: la request ritorna sempre 200 (non rivela username registrati)</li>
 <li><strong>Token SHA-256</strong>: solo l'hash e' in DB, il token in chiaro viaggia solo nell'email</li>
 <li><strong>Scadenza 1 ora</strong>: token reset ha vita breve</li>
 <li><strong>Invalidazione</strong>: alla creazione di un nuovo token, i precedenti vengono invalidati</li>
