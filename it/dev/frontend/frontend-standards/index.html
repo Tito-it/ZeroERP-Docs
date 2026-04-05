@@ -4718,10 +4718,43 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#darklight-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dark/Light mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#maincss-classi-utility-globali" class="md-nav__link">
     <span class="md-ellipsis">
       
         main.css — classi utility globali
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#centralizzazione-stile-pulsanti-maincss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Centralizzazione stile pulsanti (main.css)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#centralizzazione-icone-gestione-riga-constantsjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Centralizzazione icone gestione riga (constants.js)
       
     </span>
   </a>
@@ -6196,8 +6229,44 @@ Testo sempre in italiano, chiaro e specifico — mai "Errore" o "OK".</p>
 </table>
 <p>I componenti usano <strong>solo</strong> <code>--app-*</code>. Mai <code>var(--p-*)</code> direttamente.</p>
 <h3 id="themecss-personalizzazione-visiva"><code>theme.css</code> — personalizzazione visiva<a class="headerlink" href="#themecss-personalizzazione-visiva" title="Permanent link">&para;</a></h3>
-<p>Unico punto di personalizzazione: sidebar, topbar, contenuto, card, drawer, transizioni, tipografia.
+<p>Unico punto di personalizzazione: sidebar, topbar, contenuto, card, drawer, AI widget, transizioni, tipografia.
 Importato prima di <code>main.css</code> in <code>main.js</code>.</p>
+<h3 id="darklight-mode">Dark/Light mode<a class="headerlink" href="#darklight-mode" title="Permanent link">&para;</a></h3>
+<p>Il tema supporta dark e light mode tramite la classe <code>.p-dark</code> su <code>&lt;html&gt;</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Aspetto</th>
+<th>Dettaglio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Selettore</td>
+<td><code>:root</code> = dark (default), <code>:root:not(.p-dark)</code> = light override</td>
+</tr>
+<tr>
+<td>Store</td>
+<td><code>useUiStore().isDark</code> (ref), <code>toggleDarkMode()</code> (toggle + persist)</td>
+</tr>
+<tr>
+<td>Persistenza</td>
+<td><code>localStorage</code> chiave <code>STORAGE_KEYS.DARK_MODE</code></td>
+</tr>
+<tr>
+<td>Pulsante</td>
+<td>Topbar — icona sole (dark) / luna (light), tooltip i18n</td>
+</tr>
+<tr>
+<td>Variabili</td>
+<td>Tutte le <code>--app-*</code> in <code>theme.css</code> hanno override nel blocco <code>:root:not(.p-dark)</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regola</strong>: nessun componente deve usare direttamente <code>--p-surface-700/800/900</code> per sfondi o bordi.
+Usare sempre le variabili <code>--app-*</code> corrispondenti che si adattano automaticamente al modo attivo.
+Per aggiungere un componente theme-aware: definire le variabili in <code>:root</code> (dark) e sovrascriverle
+in <code>:root:not(.p-dark)</code> (light).</p>
 <h3 id="maincss-classi-utility-globali"><code>main.css</code> — classi utility globali<a class="headerlink" href="#maincss-classi-utility-globali" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -6229,7 +6298,11 @@ Importato prima di <code>main.css</code> in <code>main.js</code>.</p>
 </tr>
 <tr>
 <td><code>app-drawer-content</code></td>
-<td>Wrapper contenuto drawer (flex column, gap)</td>
+<td>Wrapper contenuto drawer (gap via <code>--app-drawer-gap</code>)</td>
+</tr>
+<tr>
+<td><code>app-drawer-section</code></td>
+<td>Separatore sezione nei drawer (bordo da theme.css)</td>
 </tr>
 <tr>
 <td><code>app-drawer-footer</code></td>
@@ -6253,6 +6326,78 @@ Importato prima di <code>main.css</code> in <code>main.js</code>.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="centralizzazione-stile-pulsanti-maincss">Centralizzazione stile pulsanti (<code>main.css</code>)<a class="headerlink" href="#centralizzazione-stile-pulsanti-maincss" title="Permanent link">&para;</a></h3>
+<p>Lo stile dei pulsanti azione e' centralizzato in <code>main.css</code> tramite classi <code>app-*-btn</code>.
+Nessun componente deve definire colori o hover per pulsanti riga — usare sempre le classi globali.</p>
+<table>
+<thead>
+<tr>
+<th>Classe</th>
+<th>Colore</th>
+<th>Scopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app-action-btn</code></td>
+<td>Verde (primary)</td>
+<td>Azioni generiche nei form ("Aggiungi", "Gestisci" nei drawer)</td>
+</tr>
+<tr>
+<td><code>app-manage-btn</code></td>
+<td>Blu (info)</td>
+<td>Pulsanti "Gestisci" nelle colonne DataTable (apre sub-drawer)</td>
+</tr>
+<tr>
+<td><code>app-edit-btn</code></td>
+<td>Verde (primary)</td>
+<td>Matita modifica riga (DataTable e card)</td>
+</tr>
+<tr>
+<td><code>app-delete-btn</code></td>
+<td>Rosso</td>
+<td>Cestino elimina riga (DataTable e card)</td>
+</tr>
+<tr>
+<td><code>app-reload-btn</code></td>
+<td>Verde</td>
+<td>Refresh lista nella toolbar</td>
+</tr>
+</tbody>
+</table>
+<p>I pulsanti strutturali (Nuovo, Salva, Annulla) sono centralizzati tramite <strong>componenti Vue</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Scopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NewButton</code></td>
+<td>Pulsante "Nuovo" nelle toolbar lista — responsive, controllo permessi</td>
+</tr>
+<tr>
+<td><code>DrawerFooter</code></td>
+<td>Footer Salva/Annulla nei drawer — Ctrl+S, readonly-aware</td>
+</tr>
+</tbody>
+</table>
+<h3 id="centralizzazione-icone-gestione-riga-constantsjs">Centralizzazione icone gestione riga (<code>constants.js</code>)<a class="headerlink" href="#centralizzazione-icone-gestione-riga-constantsjs" title="Permanent link">&para;</a></h3>
+<p>Le icone dei pulsanti gestione nelle colonne DataTable sono centralizzate nella costante <code>MANAGE_ICONS</code>
+in <code>src/core/constants.js</code>. Ogni lista che ha pulsanti per aprire sub-drawer (contatti, indirizzi,
+conti bancari, UoM, BoM, note, conversioni) deve usare <code>:icon="MANAGE_ICONS.XXX"</code>, mai stringhe
+hardcoded. Tutte le icone gestione riga usano la classe <code>app-manage-btn</code> (blu) — il colore
+e' definito in un unico punto in <code>main.css</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="cm">&lt;!-- Pattern standard --&gt;</span>
+<span class="p">&lt;</span><span class="nt">Button</span> <span class="na">:icon</span><span class="o">=</span><span class="s">&quot;MANAGE_ICONS.CONTATTI&quot;</span> <span class="na">text</span> <span class="na">rounded</span> <span class="na">size</span><span class="o">=</span><span class="s">&quot;small&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;app-manage-btn&quot;</span>
+  <span class="na">v-tooltip</span><span class="err">.</span><span class="na">bottom</span><span class="o">=</span><span class="s">&quot;t(&#39;contatto.gestisci_contatti&#39;)&quot;</span> <span class="err">@</span><span class="na">click</span><span class="err">.</span><span class="na">stop</span><span class="o">=</span><span class="s">&quot;emit(&#39;contatti&#39;, data)&quot;</span> <span class="p">/&gt;</span>
+</code></pre></div>
+<p>Per aggiungere una nuova icona gestione: inserire la chiave in <code>MANAGE_ICONS</code> e usarla nel componente.
+Per cambiare il colore di tutte le icone gestione: modificare <code>.app-manage-btn</code> in <code>main.css</code>.</p>
+<p>Per l'inventario completo di classi CSS, pulsanti e componenti, consultare il
+<a href="../catalogo-building-block-frontend/">Catalogo Building Block Frontend</a>.</p>
 <h3 id="regole-css-per-i-componenti">Regole CSS per i componenti<a class="headerlink" href="#regole-css-per-i-componenti" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Sempre <code>&lt;style scoped&gt;</code> — mai globale (eccetto <code>main.css</code>)</li>
@@ -6260,6 +6405,7 @@ Importato prima di <code>main.css</code> in <code>main.js</code>.</p>
 <li><strong>Nessun CSS scoped per layout form</strong> — usare classi <code>main.css</code></li>
 <li>Se serve un nuovo pattern layout, aggiungerlo a <code>main.css</code> come classe globale</li>
 <li>Mai hardcodare colori — usare variabili <code>--app-*</code></li>
+<li><strong>Pulsanti riga</strong>: usare le classi <code>app-*-btn</code> centralizzate, mai <code>severity</code> inline per edit/delete</li>
 </ul>
 <hr />
 <h2 id="sicurezza">Sicurezza<a class="headerlink" href="#sicurezza" title="Permanent link">&para;</a></h2>

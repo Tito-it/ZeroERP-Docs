@@ -4169,6 +4169,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#preventivi-vendita-appsvendite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preventivi vendita (apps/vendite/)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#mixin-e-tipi-appscore" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4527,6 +4538,41 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><a href="../../../../../backend/apps/core/password_validators.py">password_validators.py</a></td>
 <td>Validator password: maiuscola + minuscola + numero + carattere speciale</td>
 </tr>
+<tr>
+<td><code>ParameterService.get_parameter</code></td>
+<td><a href="../../../../../backend/apps/core/services/parameter_service.py">parameter_service.py</a></td>
+<td>Risolve parametro singolo con override (user → group → emittente → default). Lancia <code>E_PARAMETER_NOT_FOUND</code> se assente</td>
+</tr>
+<tr>
+<td><code>ParameterService.get_parameter_int</code></td>
+<td><a href="../../../../../backend/apps/core/services/parameter_service.py">parameter_service.py</a></td>
+<td>Risolve parametro e converte a intero. Lancia <code>E_PARAMETER_VALIDATION</code> se non numerico</td>
+</tr>
+<tr>
+<td><code>ParameterService.get_defaults</code></td>
+<td><a href="../../../../../backend/apps/core/services/parameter_service.py">parameter_service.py</a></td>
+<td>Risolve N parametri in un colpo. Restituisce <code>{code: valore}</code>, codici assenti esclusi silenziosamente</td>
+</tr>
+<tr>
+<td><code>ParameterService.list_parameters_for_user</code></td>
+<td><a href="../../../../../backend/apps/core/services/parameter_service.py">parameter_service.py</a></td>
+<td>Lista completa parametri con valori a ogni livello di scope e valore risolto finale</td>
+</tr>
+<tr>
+<td><code>ParameterService.upsert_user_override</code></td>
+<td><a href="../../../../../backend/apps/core/services/parameter_service.py">parameter_service.py</a></td>
+<td>Crea/aggiorna override personale utente per un parametro (UPSERT)</td>
+</tr>
+<tr>
+<td><code>ParameterService.delete_user_override</code></td>
+<td><a href="../../../../../backend/apps/core/services/parameter_service.py">parameter_service.py</a></td>
+<td>Rimuove override personale utente con verifica ownership</td>
+</tr>
+<tr>
+<td><code>ParameterService.get_emittente_fiscale_id_for_user</code></td>
+<td><a href="../../../../../backend/apps/core/services/parameter_service.py">parameter_service.py</a></td>
+<td>Risolve emittente_fiscale_id dal bridge HR utente</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -4585,6 +4631,36 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><a href="../../../../../backend/apps/core/db/email_repository.py">email_repository.py</a></td>
 <td>Risoluzione template/account, log email, gestione bozze e allegati</td>
 </tr>
+<tr>
+<td><code>ParameterRepository.get_parameter</code></td>
+<td><a href="../../../../../backend/apps/core/db/parameter_repository.py">parameter_repository.py</a></td>
+<td>Risolve parametro singolo via <code>script.fn_get_parameter_full</code> con override user/group/emittente</td>
+</tr>
+<tr>
+<td><code>ParameterRepository.get_parameters</code></td>
+<td><a href="../../../../../backend/apps/core/db/parameter_repository.py">parameter_repository.py</a></td>
+<td>Risolve N parametri (max 20) in una sessione DB. Restituisce <code>{code: valore}</code></td>
+</tr>
+<tr>
+<td><code>ParameterRepository.list_for_user</code></td>
+<td><a href="../../../../../backend/apps/core/db/parameter_repository.py">parameter_repository.py</a></td>
+<td>Lista parametri con valori per livello via <code>script.fn_list_parameters_for_user</code></td>
+</tr>
+<tr>
+<td><code>ParameterRepository.upsert_user_override</code></td>
+<td><a href="../../../../../backend/apps/core/db/parameter_repository.py">parameter_repository.py</a></td>
+<td>UPSERT override personale utente su <code>config.parameter_overrides</code></td>
+</tr>
+<tr>
+<td><code>ParameterRepository.delete_user_override</code></td>
+<td><a href="../../../../../backend/apps/core/db/parameter_repository.py">parameter_repository.py</a></td>
+<td>DELETE override con check ownership <code>django_user_id</code></td>
+</tr>
+<tr>
+<td><code>ParameterRepository.get_emittente_fiscale_id_for_user</code></td>
+<td><a href="../../../../../backend/apps/core/db/parameter_repository.py">parameter_repository.py</a></td>
+<td>Risolve emittente_fiscale_id da bridge HR (risorse_umane_auth_user)</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -4607,6 +4683,59 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><code>RequestContextMiddleware</code></td>
 <td><a href="../../../../../backend/apps/core/middleware/request_context_middleware.py">request_context_middleware.py</a></td>
 <td>Assegna request_id e idempotency_key, aggiunge header risposta</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="preventivi-vendita-appsvendite">Preventivi vendita (<code>apps/vendite/</code>)<a class="headerlink" href="#preventivi-vendita-appsvendite" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PreventiviRepository</code></td>
+<td><a href="../../../../../backend/apps/vendite/db/preventivi_repository.py">preventivi_repository.py</a></td>
+<td>Accesso DB preventivi: CRUD testata, righe, indirizzi, scope emittente, stato fatturazione, pratiche collegate</td>
+</tr>
+<tr>
+<td><code>PreventiviRepository.resolve_contesto_pratica</code></td>
+<td><a href="../../../../../backend/apps/vendite/db/preventivi_repository.py">preventivi_repository.py</a></td>
+<td>Risolve emittente_fiscale (default), soggetto_id, soggetto_ruolo_id dal BA del preventivo</td>
+</tr>
+<tr>
+<td><code>preventivi_service.*</code></td>
+<td><a href="../../../../../backend/apps/vendite/services/preventivi_service.py">preventivi_service.py</a></td>
+<td>Facade preventivi: list, get, crea, aggiorna, cambia_stato, crea_revisione, righe, indirizzi, push_commessa, genera_pratica (via BB <code>pratiche_service.crea_pratica</code>)</td>
+</tr>
+<tr>
+<td><code>PreventivoListRow</code></td>
+<td><a href="../../../../../backend/apps/vendite/types.py">types.py</a></td>
+<td>TypedDict riga lista preventivi con JOIN stato/cliente</td>
+</tr>
+<tr>
+<td><code>PreventivoDetailRow</code></td>
+<td><a href="../../../../../backend/apps/vendite/types.py">types.py</a></td>
+<td>TypedDict dettaglio preventivo con tutte le decodifiche</td>
+</tr>
+<tr>
+<td><code>PreventivoRigaRow</code></td>
+<td><a href="../../../../../backend/apps/vendite/types.py">types.py</a></td>
+<td>TypedDict riga preventivo con articolo/UoM/IVA</td>
+</tr>
+<tr>
+<td><code>PreventivoStatoFatturazioneRow</code></td>
+<td><a href="../../../../../backend/apps/vendite/types.py">types.py</a></td>
+<td>TypedDict stato fatturazione downstream (commessa/AF/fatturato)</td>
+</tr>
+<tr>
+<td><code>PreventivoPraticaRow</code></td>
+<td><a href="../../../../../backend/apps/vendite/types.py">types.py</a></td>
+<td>TypedDict pratica collegata via pratiche_sorgenti</td>
 </tr>
 </tbody>
 </table>

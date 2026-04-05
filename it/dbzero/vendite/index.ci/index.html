@@ -4146,6 +4146,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#views-manuale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 Views (manuale)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4237,10 +4248,12 @@
 <li><a href="../manual/fn_applica_fondi_fattura/">fn_applica_fondi_fattura</a> — La funzione <strong><code>vendite.fn_applica_fondi_fattura()</code></strong> applica i fondi fattura in stato <code>DISPONIBILE</code> ad una <strong>fattura figlia</strong>, creando le righe in <code>vendite.fatture_fondi_fattura</code> e aggiornando la <code>source</code> a stato <code>ASSEGNATO</code>.</li>
 <li><a href="../manual/fn_assign_numero_fattura/">fn_assign_numero_fattura</a> — (latest review 09-02-2026) La funzione <strong><code>vendite.fn_assign_numero_fattura()</code></strong> assegna il progressivo in base al registro e aggiorna <code>anno</code>, <code>serie</code> e <code>numero</code> sulla testata fattura.</li>
 <li><a href="../manual/fn_build_fattura_key/">fn_build_fattura_key</a> — (latest review 29-01-2026)   La funzione <strong><code>vendite.fn_build_fattura_key()</code></strong> costruisce la <strong>chiave logica</strong> di aggregazione documento a partire da una riga di <code>attivita_fatturabili</code>.</li>
+<li><a href="../manual/fn_cambia_stato_preventivo/">fn_cambia_stato_preventivo</a> — (latest review 03-04-2026) <code>vendite.fn_cambia_stato_preventivo(p_preventivo_id, p_nuovo_stato, p_user)</code> esegue la <strong>transizione di stato</strong> di un preventivo vendita, validando la transizione tramite la matrice configurabile <code>config.transizioni_stati_preventivi</code>.</li>
 <li><a href="../manual/fn_cancel_lotto_task_run/">fn_cancel_lotto_task_run</a> — Chiude un task run impostando <code>task_stato = ANNULLATO</code>.</li>
 <li><a href="../manual/fn_cleanup_fatture_by_ids/">fn_cleanup_fatture_by_ids</a> — (latest review 10-02-2026)   La funzione <strong><code>vendite.fn_cleanup_fatture_by_ids()</code></strong> centralizza il cleanup di fatture e righe correlate, ripristinando le righe di <code>attivita_fatturabili</code>.</li>
 <li><a href="../manual/fn_close_giornaliero_lotto/">fn_close_giornaliero_lotto</a> — (latest review 03-02-2026) La funzione <strong><code>vendite.fn_close_giornaliero_lotto()</code></strong> chiude operativamente un lotto di tipo <strong>GIORNALIERO</strong> e allinea lo stato documentale delle fatture collegate al valore passato (tipicamente stato <code>INVIATA</code>).</li>
 <li><a href="../manual/fn_complete_lotto_task_run/">fn_complete_lotto_task_run</a> — Chiude un task run impostando <code>task_stato = COMPLETATO</code> e <code>ended_at</code>.</li>
+<li><a href="../manual/fn_crea_revisione_preventivo/">fn_crea_revisione_preventivo</a> — (latest review 03-04-2026) <code>vendite.fn_crea_revisione_preventivo(p_preventivo_id, p_user)</code> crea una <strong>nuova revisione</strong> di un preventivo vendita: copia testata, righe attive e indirizzi, disattivando la revisione corrente.</li>
 <li><a href="../manual/fn_create_fatturazione_lotto/">fn_create_fatturazione_lotto</a> — (latest review 27-01-2026) La funzione <strong><code>vendite.fn_create_fatturazione_lotto()</code></strong> crea un lotto di fatturazione con parametri coerenti (competenza, utility, tipo documento, BA) e inizializza lo stato documento a <strong>DRAFT</strong>.</li>
 <li><a href="../manual/fn_emit_attivita_fatturabili_da_commessa/">fn_emit_attivita_fatturabili_da_commessa</a> — (latest review 24-02-2026) Esegue il pull da <code>commesse_attivita</code> verso <code>attivita_fatturabili</code> (step 0 pipeline attività fatturabili).</li>
 <li><a href="../manual/fn_fail_lotto_task_run/">fn_fail_lotto_task_run</a> — Chiude un task run in errore impostando <code>task_stato = ERRORE</code>, codice e messaggio.</li>
@@ -4291,6 +4304,7 @@
 <li><a href="../manual/fn_ricalcola_riepiloghi_iva_lotto/">fn_ricalcola_riepiloghi_iva_lotto</a> — (latest review 10-02-2026)   La funzione <strong><code>vendite.fn_ricalcola_riepiloghi_iva_lotto()</code></strong> ricalcola i riepiloghi IVA per tutte le fatture collegate a un lotto, usando un’elaborazione a batch e delegando il ricalcolo alla funzione per singola fattura.   Al termine di ciascun ricalcolo aggiorna anche i <strong>totali testata</strong>.</li>
 <li><a href="../manual/fn_ricalcola_riepilogo_iva_fattura/">fn_ricalcola_riepilogo_iva_fattura</a> — (latest review 10-02-2026)   La funzione <strong><code>vendite.fn_ricalcola_riepilogo_iva_fattura()</code></strong> ricalcola i riepiloghi IVA per una singola fattura, eliminando i valori esistenti e rigenerandoli dalle righe (<code>fatture_righe</code>).</li>
 <li><a href="../manual/fn_ricalcola_totali_fattura/">fn_ricalcola_totali_fattura</a> — La funzione <strong><code>vendite.fn_ricalcola_totali_fattura()</code></strong> ricalcola i totali sulla testata fattura a partire dai <strong>riepiloghi IVA</strong> e dai <strong>fondi fattura</strong>, applicando le regole di arrotondamento definite per <strong>emittente/utility</strong>.</li>
+<li><a href="../manual/fn_ricalcola_totali_preventivo/">fn_ricalcola_totali_preventivo</a> — (latest review 03-04-2026) <code>vendite.fn_ricalcola_totali_preventivo(p_preventivo_id)</code> ricalcola i <strong>totali della testata</strong> (imponibile, IVA, totale documento) a partire dalle righe attive. Invocata sia direttamente dal backend sia automaticamente dal trigger AFTER STATEMENT su <code>preventivi_righe</code>.</li>
 <li><a href="../manual/fn_select_attivita_fatturabili/">fn_select_attivita_fatturabili</a> — (latest review 27-01-2026) La funzione <strong><code>vendite.fn_select_attivita_fatturabili()</code></strong> seleziona le righe <strong>eleggibili</strong> per la fatturazione e, se richiesto, le <strong>locka</strong> in modo atomico.</li>
 <li><a href="../manual/fn_set_arrotondamento_scope/">fn_set_arrotondamento_scope</a> — (latest review 10-02-2026)   La funzione <strong><code>vendite.fn_set_arrotondamento_scope()</code></strong> imposta (upsert) il <strong>saldo tecnico</strong> degli arrotondamenti per l'ambito di fatturazione.</li>
 <li><a href="../manual/fn_set_documento_canale_stato/">fn_set_documento_canale_stato</a> — (latest review 24-02-2026) Gestisce in modo uniforme la transizione stato dei canali fatturabili per documento sorgente.</li>
@@ -4334,6 +4348,14 @@
 <li><a href="../manual/trgfn_ordini_normalize/">trgfn_ordini_normalize</a> — La trigger function <code>vendite.trgfn_ordini_normalize()</code> completa i campi temporali minimi dell’ordine quando il <code>numero</code> e` presente in insert.</li>
 <li><a href="../manual/trgfn_preventivi_gen_codice/">trgfn_preventivi_gen_codice</a> — La trigger function <code>vendite.trgfn_preventivi_gen_codice()</code> genera automaticamente <code>numero</code> preventivo quando il campo non viene valorizzato.</li>
 <li><a href="../manual/trgfn_preventivi_normalize/">trgfn_preventivi_normalize</a> — La trigger function <code>vendite.trgfn_preventivi_normalize()</code> completa i dati minimi di data documento in insert quando il numero preventivo e<code>gia</code> presente.</li>
+<li><a href="../manual/trgfn_preventivi_righe_ricalcola_totali/">trgfn_preventivi_righe_ricalcola_totali</a> — (latest review 03-04-2026) <code>vendite.trgfn_preventivi_righe_ricalcola_totali()</code> e' la trigger function <strong>STATEMENT-level</strong> che mantiene i totali testata preventivo sempre coerenti con le righe. Invoca <code>vendite.fn_ricalcola_totali_preventivo()</code> <strong>una sola volta per ogni preventivo_id coinvolto</strong>, anche in caso di operazioni bulk (es. copia righe in revisione).</li>
+</ul>
+<h2 id="views-manuale">🔍 Views (manuale)<a class="headerlink" href="#views-manuale" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../manual/vw_preventivi_list/">vw_preventivi_list</a> — (latest review 03-04-2026) <code>vendite.vw_preventivi_list</code> e' la vista denormalizzata principale per la <strong>lista preventivi vendita</strong>. Espone tutti i dati necessari al frontend (tabella lista) e al backend (filtro permessi per scope emittente).</li>
+<li><a href="../manual/vw_preventivi_pratiche/">vw_preventivi_pratiche</a> — (latest review 03-04-2026) <code>vendite.vw_preventivi_pratiche</code> espone le <strong>pratiche collegate a ciascun preventivo vendita</strong> tramite la tabella ponte <code>pratiche.pratiche_sorgenti</code> con <code>sorgente_tipo = 'PREVENTIVO'</code>.</li>
+<li><a href="../manual/vw_preventivi_righe_dettaglio/">vw_preventivi_righe_dettaglio</a> — (latest review 03-04-2026) <code>vendite.vw_preventivi_righe_dettaglio</code> arricchisce le righe preventivo con i dati denormalizzati di articolo, unita' di misura operativa e aliquota IVA. Include <strong>importi calcolati</strong> per evitare duplicazione della logica di calcolo nel backend/frontend.</li>
+<li><a href="../manual/vw_preventivi_stato_fatturazione/">vw_preventivi_stato_fatturazione</a> — (latest review 03-04-2026) Due viste complementari per il <strong>monitoraggio della pipeline fatturazione</strong> dei preventivi:</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

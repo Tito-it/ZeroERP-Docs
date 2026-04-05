@@ -4314,11 +4314,16 @@ L'obiettivo e<code>ridurre la complessita</code> superflua mantenendo rigore su 
 <hr />
 <h2 id="stato-progetto">Stato progetto<a class="headerlink" href="#stato-progetto" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p><strong>Sviluppo attivo — frontend operativo su aree core.</strong></p>
-<p>DB e API backend operativi. Frontend Vue operativo su: layout applicativo,
+<p><strong>Sviluppo attivo — backend e frontend operativi su domini core e catalogo/vendite.</strong></p>
+<p>DB e API backend operativi su 13 schemi. Frontend Vue operativo su: layout applicativo,
 gestione soggetti (PF/PG/ENTE), gestione geografica (7 tab CRUD), pannello configurazione (67 tabelle),
 amministrazione software (operatori, profili reparto, permessi, audit log),
-sistema permessi a 2 livelli (area + azioni processo).
+gestione clienti/fornitori (drawer end-to-end con sotto-drawer),
+gestione pratiche (dashboard, flussi, note, allegati, giornale),
+catalogo articoli (CRUD, UoM, BoM, note), unita' di misura,
+listini vendita (versioni, righe prezzo, associazioni, test resolver),
+integrazione AI (9 tool, widget conversazionale),
+autenticazione completa (email, token, reset pw, invito operatore).
 Non ancora rilasciato per produzione.</p>
 </blockquote>
 <hr />
@@ -4447,22 +4452,32 @@ PostgreSQL (nucleo dominio: regole, workflow, audit)
 <p>Il modello e` pensato per supportare processi non lineari e gestione multi-reparto.</p>
 <hr />
 <h2 id="stato-dello-sviluppo">Stato dello Sviluppo<a class="headerlink" href="#stato-dello-sviluppo" title="Permanent link">&para;</a></h2>
-<p>Fotografia sintetica (20 marzo 2026):</p>
+<p>Fotografia sintetica (3 aprile 2026):</p>
 <ul>
 <li>Database core: operativo (13 schemi, 200+ tabelle, trigger, funzioni, viste)</li>
-<li>API backend: operativo (689+ test, 57+ endpoint documentati)</li>
-<li>Motore pratiche: operativo (workflow, giornale, sospensioni, macchina a stati)</li>
+<li>API backend: operativo (890+ test, 80+ endpoint)</li>
+<li>Motore pratiche: operativo (workflow, giornale, sospensioni, macchina a stati, note, allegati)</li>
 <li>Sistema permessi: operativo a 2 livelli</li>
 <li>Livello 1: area funzionale (TUTTO/LETTURA/BLOCCATO) — sidebar, route guard, CSS protect</li>
 <li>Livello 2: azioni processo (abilitata/negata) — prop <code>action</code> su componenti, backend 403</li>
-<li>Frontend Vue: operativo su aree core</li>
-<li>Layout applicativo (sidebar morfica, content tabs, breadcrumb, ricerca universale, shortcut tastiera)</li>
-<li>Amm. Software completa: operatori, profili reparto, permessi riepilogo, audit log (solo ADMIN)</li>
+<li>Autenticazione: completa (JWT, email BB, token monouso, reset pw, invito, cambio pw obbligatorio)</li>
+<li>Catalogo e Listini: operativi</li>
+<li>Articoli CRUD con UoM operative, distinta base, note (19 endpoint, 49 test)</li>
+<li>Unita' di misura CRUD (backend + frontend)</li>
+<li>Listini vendita: versioni, righe prezzo, associazioni, test resolver (18 endpoint, 29 test)</li>
+<li>Integrazione AI v1: operativa (9 tool, widget flottante, 61 test)</li>
+<li>Frontend Vue: operativo su domini core, anagrafiche, catalogo, vendite, pratiche</li>
+<li>Layout applicativo (sidebar morfica, content tabs, split view, breadcrumb, ricerca universale)</li>
+<li>Amm. Software completa: operatori, profili reparto, permessi riepilogo, audit log, email</li>
 <li>Gestione soggetti: PF/PG/ENTE end-to-end, ruoli, contatti, indirizzi, CF validator IT</li>
-<li>Gestione geografica: 7 tab CRUD (indirizzi, toponomastica, comuni, CAP, province, regioni, stati)</li>
-<li>Pannello configurazione: 67 tabelle CRUD generiche con drawer dinamico metadata-driven</li>
-<li>Building block riutilizzabili: 20+ composable, 15+ componenti core, CSS utility classes</li>
-<li>Documentazione: 57+ endpoint documentati, frontend-standards, mappa concentrica aggiornata</li>
+<li>Gestione geografica: 7 tab CRUD</li>
+<li>Gestione clienti/fornitori: drawer con sotto-drawer contatti/indirizzi/conti</li>
+<li>Gestione pratiche v2: dashboard, flussi, note, allegati, giornale</li>
+<li>Catalogo articoli: lista, drawer con 3 tab (UoM, BoM, note), ArticoloLookup BB</li>
+<li>Listini: lista, drawer con versioni/associazioni, sub-drawer righe, test resolver</li>
+<li>Pannello configurazione: 67 tabelle CRUD generiche</li>
+<li>Building block riutilizzabili: 25+ composable, 20+ componenti core, LookupSelect generico, CSS utility classes</li>
+<li>Documentazione: frontend-standards, catalogo-building-block (frontend + backend), mappa concentrica</li>
 </ul>
 <p><a href=".././mappa-concentrica/">Mappa</a></p>
 <hr />
@@ -4492,12 +4507,16 @@ Per setup ambiente di sviluppo, seguire:</p>
 <li>~~Frontend layout applicativo + building block~~ — fatto</li>
 <li>~~Gestione Soggetti (PF/PG/ENTE end-to-end)~~ — fatto, in test UI</li>
 <li>~~Gestione Geografica (7 tab CRUD)~~ — fatto</li>
-<li>~~Amm. Software (operatori, profili, permessi, audit)~~ — fatto, in test UI</li>
+<li>~~Amm. Software (operatori, profili, permessi, audit)~~ — fatto</li>
 <li>~~Sistema permessi 2 livelli (area + azioni processo)~~ — fatto</li>
-<li>Test UI reali su aree completate — in corso</li>
-<li>Seed azioni processo per nuovi domini + integrazione componenti</li>
-<li>ClienteService Django (orchestrator creazione/subentro/disdetta)</li>
-<li>Evoluzione integrazioni e moduli verticali</li>
+<li>~~Gestione Clienti/Fornitori (CRUD, drawer, sotto-drawer)~~ — fatto, v2 pianificata</li>
+<li>~~Gestione Pratiche v2 (dashboard, flussi, note, allegati, giornale)~~ — fatto, in test UI</li>
+<li>~~Autenticazione completa (email, token, reset pw, invito)~~ — fatto, 2FA pianificato</li>
+<li>~~Integrazione AI v1 (9 tool, widget conversazionale)~~ — fatto, v2 in corso</li>
+<li>~~Catalogo articoli + UoM + listini vendita~~ — fatto, in test UI</li>
+<li>Test UI reali su articoli, listini, pratiche, clienti, fornitori — in corso</li>
+<li>Permessi v2 (livello oggetto) — pianificato</li>
+<li>Integrazione vendite/pratiche e moduli verticali</li>
 </ol>
 <hr />
 <h2 id="documentazione">Documentazione<a class="headerlink" href="#documentazione" title="Permanent link">&para;</a></h2>
