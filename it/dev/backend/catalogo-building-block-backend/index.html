@@ -2313,6 +2313,8 @@
       
         
       
+        
+      
     
     
     
@@ -2675,6 +2677,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../guide/gestione-listini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione listini
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -2922,10 +2952,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_20" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
         
           
-          <label class="md-nav__link" for="__nav_7_20" id="__nav_7_20_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
             
   
   
@@ -2943,8 +2973,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_20_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_20">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_21">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4147,6 +4177,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#anagrafiche-billing-account-appsanagrafiche" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anagrafiche — Billing Account (apps/anagrafiche/)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#database-helpers-appscoredb" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4575,6 +4616,43 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="anagrafiche-billing-account-appsanagrafiche">Anagrafiche — Billing Account (<code>apps/anagrafiche/</code>)<a class="headerlink" href="#anagrafiche-billing-account-appsanagrafiche" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BillingAccountRepository.search_lookup</code></td>
+<td><a href="../../../../../backend/apps/anagrafiche/db/billing_account_repository.py">billing_account_repository.py</a></td>
+<td>Ricerca ricca BA (codice, ragione sociale, id fiscale, PDP) con JOIN a <code>istanze_utilities/pdp</code>, <code>vw_soggetti_ruoli_dettaglio</code>, <code>config.utilities</code>. Filtri: <code>utility_id</code>, validita' temporale (<code>valid_at</code>), scope emittente via <code>emittenti_fiscali_billing_account</code>. Ordinamento alfabetico. Restituisce <code>(rows, total_count)</code></td>
+</tr>
+<tr>
+<td><code>BillingAccountRepository.get_lookup_by_id</code></td>
+<td><a href="../../../../../backend/apps/anagrafiche/db/billing_account_repository.py">billing_account_repository.py</a></td>
+<td>Restore singolo BA arricchito per ricostruire <code>_obj</code> dell'AutoComplete in modalita' edit senza round-trip</td>
+</tr>
+<tr>
+<td><code>BillingAccountService.search_lookup</code></td>
+<td><a href="../../../../../backend/apps/anagrafiche/services/billing_account_service.py">billing_account_service.py</a></td>
+<td>Facade lookup BA: valida <code>q &gt;= 2 char</code>, cap <code>limit</code> a 50 (default 20), delega a repository. Restituisce <code>{results, total_count, limit}</code> per gestione UI "affina la ricerca"</td>
+</tr>
+<tr>
+<td><code>BillingAccountService.get_lookup_by_id</code></td>
+<td><a href="../../../../../backend/apps/anagrafiche/services/billing_account_service.py">billing_account_service.py</a></td>
+<td>Facade restore BA per edit. Solleva <code>E_ANAG_NOT_FOUND</code> se inesistente</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Endpoint</strong>:
+- <code>GET /api/v1/anagrafiche/billing-account/lookup/?q=&lt;min2&gt;&amp;utility_id=&amp;solo_validi=&amp;valid_at=&amp;limit=</code> — autocomplete
+- <code>GET /api/v1/anagrafiche/billing-account/&lt;id&gt;/lookup/</code> — restore per edit</p>
+<p><strong>Scope emittente</strong>: applicato automaticamente dalla view via <code>PermissionResolver.get_emittenti_ids</code>. Un operatore vede solo i BA mappati al suo emittente fiscale + quelli caduti sull'emittente di default.</p>
 <hr />
 <h2 id="database-helpers-appscoredb">Database Helpers (<code>apps/core/db/</code>)<a class="headerlink" href="#database-helpers-appscoredb" title="Permanent link">&para;</a></h2>
 <table>
