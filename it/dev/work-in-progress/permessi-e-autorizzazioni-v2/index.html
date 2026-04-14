@@ -4212,6 +4212,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#stato-infrastruttura-verificato-2026-04-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stato infrastruttura verificato (2026-04-10)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#1-backend-integrazione-livello-oggetto-nelle-api" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4345,6 +4356,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#5-lavoro-db-branch-devdb-tid-completato-2026-04-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Lavoro DB (branch dev/db-tid) ✅ Completato 2026-04-10
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Lavoro DB (branch dev&#x2f;db-tid) ✅ Completato 2026-04-10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-seed-configarea_model_overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Seed config.area_model_overrides
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-funzione-scriptfn_get_user_object_permissions_map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Funzione script.fn_get_user_object_permissions_map
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-aggiornare-scriptfn_get_user_profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Aggiornare script.fn_get_user_profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-test-pgtap-suggeriti" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Test pgTAP suggeriti
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-riepilogo-migration-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Riepilogo migration DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dipendenze" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4377,7 +4460,8 @@
 <blockquote>
 <p>Documento di pianificazione per l'estensione del sistema permessi.
 Data creazione: 2026-04-02
-Stato: <strong>PIANIFICATO — non ancora in sviluppo</strong>
+Ultimo aggiornamento: 2026-04-10
+Stato: <strong>FASI 1-5 COMPLETATE (sessione 2026-04-10)</strong> — Fase 6 (attivazione incrementale) da fare per dominio
 Prerequisito: v1 completata (in work-done/permessi-e-autorizzazioni.md)
 Guida architetturale: <code>docs/it/guide/architettura-permessi-e-autorizzazioni.md</code></p>
 </blockquote>
@@ -4449,37 +4533,89 @@ con esigenze di accesso differenziate. Ad esempio:</p>
 <p>Permettere all'admin di configurare permessi <strong>per singola entita'</strong> dentro un dominio.
 L'operatore potrebbe avere accesso TUTTO su "vendite" ma LETTURA su "fatture" e BLOCCATO su "riconciliazioni pagamenti".</p>
 <hr />
+<h2 id="stato-infrastruttura-verificato-2026-04-10">Stato infrastruttura verificato (2026-04-10)<a class="headerlink" href="#stato-infrastruttura-verificato-2026-04-10" title="Permanent link">&para;</a></h2>
+<p>Analisi sessione 2026-04-10 ha verificato lo stato reale:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Componente</th>
+<th>Stato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DB</td>
+<td><code>config.user_override_oggetti</code></td>
+<td>Esiste, 0 righe</td>
+</tr>
+<tr>
+<td>DB</td>
+<td><code>config.area_model_overrides</code></td>
+<td>Esiste, 0 righe (nessun seed)</td>
+</tr>
+<tr>
+<td>DB</td>
+<td><code>script.fn_resolve_livello_oggetto</code></td>
+<td>Esiste, firma <code>(int, varchar, varchar, varchar) → livello_accesso</code></td>
+</tr>
+<tr>
+<td>Backend</td>
+<td><code>PermissionResolver.get_livello_oggetto()</code></td>
+<td><strong>Esiste</strong> (riga 81-101 permissions_resolver.py)</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td><code>ZeroERPPermission</code> righe 192-196</td>
+<td><strong>Gia' chiama</strong> <code>get_livello_oggetto</code> ma solo se la view ha un queryset ORM (<code>_get_model_meta</code>)</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td><code>_get_model_meta</code></td>
+<td>Legge solo da <code>view.queryset.model._meta</code> — tutte le 139 DomainAPIView usano raw SQL senza queryset</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusione:</strong> il backend ha la logica ma non si attiva mai perche' nessuna view ha queryset. Serve l'attributo <code>model_permission</code> come fallback per le view raw SQL.</p>
+<hr />
 <h2 id="1-backend-integrazione-livello-oggetto-nelle-api">1. Backend — Integrazione livello oggetto nelle API<a class="headerlink" href="#1-backend-integrazione-livello-oggetto-nelle-api" title="Permanent link">&para;</a></h2>
 <h3 id="11-estendere-zeroerppermission">1.1 Estendere <code>ZeroERPPermission</code><a class="headerlink" href="#11-estendere-zeroerppermission" title="Permanent link">&para;</a></h3>
-<p>Attualmente <code>ZeroERPPermission.has_permission()</code> risolve solo il livello area:</p>
-<div class="highlight"><pre><span></span><code><span class="n">livello</span> <span class="o">=</span> <span class="n">resolver</span><span class="o">.</span><span class="n">get_livello_area</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">area_schema_db</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>
-</code></pre></div>
-<p>Deve supportare anche il livello oggetto quando la view lo dichiara:</p>
+<p><code>ZeroERPPermission.has_permission()</code> (righe 191-200 di <code>permissions.py</code>) gia' chiama
+<code>get_livello_oggetto</code> quando <code>_get_model_meta</code> ritorna <code>(app_label, model_name)</code>.
+Ma <code>_get_model_meta</code> legge dal queryset ORM che non esiste nelle DomainAPIView.</p>
+<p>Fix minimale: leggere anche da attributo <code>model_permission</code> dichiarato sulla view:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ApiFatturaDetail</span><span class="p">(</span><span class="n">DomainAPIView</span><span class="p">):</span>
     <span class="n">area_funzionale</span> <span class="o">=</span> <span class="s2">&quot;vendite&quot;</span>
     <span class="n">model_permission</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;vendite&quot;</span><span class="p">,</span> <span class="s2">&quot;fattura&quot;</span><span class="p">)</span>  <span class="c1"># (app_label, model_name) — opzionale</span>
 </code></pre></div>
-<p>Se <code>model_permission</code> e' presente, il resolver chiama <code>fn_resolve_livello_oggetto</code>
-che fa il fallback automatico al livello area se non c'e' override.</p>
+<p>Modifica in <code>_get_model_meta</code> o nel caller diretto (righe 191-196):
+<div class="highlight"><pre><span></span><code><span class="n">app_label</span><span class="p">,</span> <span class="n">model_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_model_meta</span><span class="p">(</span><span class="n">view</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">app_label</span><span class="p">:</span>
+    <span class="n">mp</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">view</span><span class="p">,</span> <span class="s2">&quot;model_permission&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mp</span><span class="p">:</span>
+        <span class="n">app_label</span><span class="p">,</span> <span class="n">model_name</span> <span class="o">=</span> <span class="n">mp</span>
+</code></pre></div></p>
+<p>Se <code>model_permission</code> e' dichiarato, la catena <code>fn_resolve_livello_oggetto</code> scatta
+e fa fallback automatico al livello area se non c'e' override → zero regressioni.</p>
 <ul>
-<li>[ ] 1.1 — Aggiungere attributo <code>model_permission</code> a <code>DomainAPIView</code> (opzionale, tuple)</li>
-<li>[ ] 1.2 — Estendere <code>ZeroERPPermission.has_permission()</code> per usare <code>fn_resolve_livello_oggetto</code> quando <code>model_permission</code> e' dichiarato</li>
-<li>[ ] 1.3 — Aggiornare <code>PermissionResolver</code> con metodo <code>get_livello_oggetto()</code> che chiama la funzione SQL</li>
+<li>[x] 1.1 — Estendere <code>ZeroERPPermission.has_permission()</code> per leggere <code>model_permission</code> ✅ (2026-04-10)</li>
+<li>[x] ~~1.2 — Estendere <code>ZeroERPPermission</code> per usare <code>fn_resolve_livello_oggetto</code>~~ (gia' fatto)</li>
+<li>[x] ~~1.3 — Aggiornare <code>PermissionResolver</code> con <code>get_livello_oggetto()</code>~~ (gia' fatto)</li>
 </ul>
 <h3 id="12-api-admin-per-override-oggetti">1.2 API admin per override oggetti<a class="headerlink" href="#12-api-admin-per-override-oggetti" title="Permanent link">&para;</a></h3>
 <p>Attualmente l'admin gestisce override aree e azioni. Servono endpoint per gli override oggetti:</p>
 <ul>
-<li>[ ] 1.4 — <code>GET /api/v1/amm-software/operatori/{id}/override-oggetti/</code> — lista override oggetto dell'operatore</li>
-<li>[ ] 1.5 — <code>PUT /api/v1/amm-software/operatori/{id}/override-oggetti/</code> — sostituisce override oggetti</li>
-<li>[ ] 1.6 — Repository: <code>get_override_oggetti()</code>, <code>put_override_oggetti()</code></li>
-<li>[ ] 1.7 — Lookup: <code>GET /api/v1/amm-software/lookup/model-overrides/</code> — lista model registrati con area</li>
+<li>[x] 1.4 — <code>GET /api/v1/amm-software/operatori/{id}/override-oggetti/</code> ✅ (2026-04-10)</li>
+<li>[x] 1.5 — <code>PUT /api/v1/amm-software/operatori/{id}/override-oggetti/</code> ✅ (2026-04-10, con validazione catalogo)</li>
+<li>[x] 1.6 — Repository: <code>get_override_oggetti()</code>, <code>put_override_oggetti()</code>, <code>list_model_overrides()</code> ✅</li>
+<li>[x] 1.7 — Lookup: <code>GET /api/v1/amm-software/lookup/model-overrides/</code> ✅</li>
 </ul>
 <h3 id="13-popolare-configarea_model_overrides">1.3 Popolare <code>config.area_model_overrides</code><a class="headerlink" href="#13-popolare-configarea_model_overrides" title="Permanent link">&para;</a></h3>
 <p>La tabella di mapping model → area deve contenere le entita' configurabili.
 Ogni riga dice "il model <code>fattura</code> dell'app <code>vendite</code> appartiene all'area <code>vendite</code>".</p>
 <ul>
-<li>[ ] 1.8 — Seed dati: inserire i model principali per ogni dominio</li>
-<li>[ ] 1.9 — API admin per gestire la tabella (CRUD) — o seed-only se non serve editing UI</li>
+<li>[x] 1.8 — Seed dati: 11 model inseriti (5 anagrafiche, 3 vendite, 1 pratiche, 2 catalogo) ✅ (DB Tid 2026-04-10)</li>
+<li>[ ] 1.9 — API admin per gestire la tabella (CRUD) — seed-only per ora, editing UI differito</li>
 </ul>
 <hr />
 <h2 id="2-frontend-gestione-override-oggetti">2. Frontend — Gestione override oggetti<a class="headerlink" href="#2-frontend-gestione-override-oggetti" title="Permanent link">&para;</a></h2>
@@ -4487,11 +4623,8 @@ Ogni riga dice "il model <code>fattura</code> dell'app <code>vendite</code> appa
 <p>Aggiungere una <strong>terza sezione</strong> nel tab Permessi del drawer operatore
 (dopo "Override Aree" e "Override Azioni"):</p>
 <ul>
-<li>[ ] 2.1 — Sezione "Override Oggetti" con DataTable:</li>
-<li>Colonne: Area, Model, Livello (Select TUTTO/LETTURA/BLOCCATO), Valido dal, Valido al</li>
-<li>Pulsante Aggiungi → Select model (dal lookup) + livello</li>
-<li>Pulsante Salva sezione</li>
-<li>[ ] 2.2 — Aggiornare <code>OperatorePermessiTab.vue</code> con la nuova sezione</li>
+<li>[x] 2.1 — Sezione "Override Oggetti" con DataTable (Model + Livello + Elimina, Aggiungi/Salva) ✅ (2026-04-10)</li>
+<li>[x] 2.2 — Aggiornato <code>OperatorePermessiTab.vue</code> con terza sezione ✅</li>
 </ul>
 <h3 id="22-matrice-permessi-riepilogativa">2.2 Matrice permessi riepilogativa<a class="headerlink" href="#22-matrice-permessi-riepilogativa" title="Permanent link">&para;</a></h3>
 <p>Estendere la pagina Permessi (<code>PermessiRiepilogoView</code>) per mostrare
@@ -4502,8 +4635,8 @@ anche il livello oggetto quando configurato:</p>
 <h3 id="23-enforcement-frontend">2.3 Enforcement frontend<a class="headerlink" href="#23-enforcement-frontend" title="Permanent link">&para;</a></h3>
 <p>Le view che corrispondono a un model con override devono rispettare il livello:</p>
 <ul>
-<li>[ ] 2.4 — Estendere <code>useReadonlyMode</code> per accettare <code>(schemaDb, modelName)</code> opzionale</li>
-<li>[ ] 2.5 — Se il profilo utente include override oggetto, <code>visibleDomains</code> potrebbe nascondere sotto-voci</li>
+<li>[x] 2.4 — Esteso <code>useReadonlyMode(schemaDb, modelName)</code> con param opzionale ✅ (2026-04-10)</li>
+<li>[ ] 2.5 — Se il profilo utente include override oggetto, <code>visibleDomains</code> potrebbe nascondere sotto-voci (differito)</li>
 </ul>
 <hr />
 <h2 id="3-diagnostica">3. Diagnostica<a class="headerlink" href="#3-diagnostica" title="Permanent link">&para;</a></h2>
@@ -4514,11 +4647,11 @@ anche il livello oggetto quando configurato:</p>
 <hr />
 <h2 id="4-test">4. Test<a class="headerlink" href="#4-test" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[ ] 4.1 — Test Django: <code>fn_resolve_livello_oggetto</code> con override presente → usa override</li>
-<li>[ ] 4.2 — Test Django: <code>fn_resolve_livello_oggetto</code> senza override → fallback a livello area</li>
-<li>[ ] 4.3 — Test Django: <code>ZeroERPPermission</code> con <code>model_permission</code> dichiarato</li>
-<li>[ ] 4.4 — Test Django: API CRUD override oggetti</li>
-<li>[ ] 4.5 — Test pgTAP: <code>fn_resolve_livello_oggetto</code> (gia' testabile, funzione SQL esiste)</li>
+<li>[x] 4.1 — Test Django: <code>fn_resolve_livello_oggetto</code> con override presente → usa override ✅ (<code>test_model_permission_uses_livello_oggetto</code>)</li>
+<li>[x] 4.2 — Test Django: <code>fn_resolve_livello_oggetto</code> senza override → fallback a livello area ✅ (<code>test_model_permission_fallback_area</code>)</li>
+<li>[x] 4.3 — Test Django: <code>ZeroERPPermission</code> con <code>model_permission</code> dichiarato ✅ (<code>test_no_model_permission_uses_area</code>)</li>
+<li>[ ] 4.4 — Test Django: API CRUD override oggetti (da aggiungere)</li>
+<li>[ ] 4.5 — Test pgTAP: <code>fn_resolve_livello_oggetto</code> (da aggiungere)</li>
 </ul>
 <hr />
 <h2 id="quando-attivare">Quando attivare<a class="headerlink" href="#quando-attivare" title="Permanent link">&para;</a></h2>
@@ -4563,11 +4696,136 @@ anche il livello oggetto quando configurato:</p>
 quando il business lo richiede, e il sistema fa fallback trasparente al livello area
 per le view che non lo dichiarano.</p>
 <hr />
+<h2 id="5-lavoro-db-branch-devdb-tid-completato-2026-04-10">5. Lavoro DB (branch <code>dev/db-tid</code>) ✅ Completato 2026-04-10<a class="headerlink" href="#5-lavoro-db-branch-devdb-tid-completato-2026-04-10" title="Permanent link">&para;</a></h2>
+<p>Le tabelle e la funzione <code>fn_resolve_livello_oggetto</code> esistevano gia'.
+Tid ha applicato: seed dati + nuova funzione SQL + aggiornamento profilo utente.</p>
+<h3 id="51-seed-configarea_model_overrides">5.1 Seed <code>config.area_model_overrides</code><a class="headerlink" href="#51-seed-configarea_model_overrides" title="Permanent link">&para;</a></h3>
+<p>Popolare il catalogo dei model configurabili. Ogni riga registra un model
+Django con la sua area di appartenenza. L'admin usera' questa lista come
+dropdown quando configura override oggetto per un operatore.</p>
+<p><strong>Struttura tabella (gia' esistente):</strong></p>
+<div class="highlight"><pre><span></span><code>config.area_model_overrides
+  id           integer PK
+  app_label    varchar NOT NULL   -- es. &#39;anagrafiche&#39;
+  model_name   varchar NOT NULL   -- es. &#39;conto_bancario&#39;
+  area_id      integer NOT NULL   -- FK config.aree_funzionali
+  data_insert, user_insert, data_update, user_update (audit)
+</code></pre></div>
+<p><strong>Dati da inserire (migration <code>80_data</code>):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">area_model_overrides</span><span class="w"> </span><span class="p">(</span><span class="n">app_label</span><span class="p">,</span><span class="w"> </span><span class="n">model_name</span><span class="p">,</span><span class="w"> </span><span class="n">area_id</span><span class="p">)</span>
+<span class="k">VALUES</span>
+<span class="w">  </span><span class="c1">-- anagrafiche (area_id = 1)</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;soggetto&#39;</span><span class="p">,</span><span class="w">         </span><span class="mi">1</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;cliente&#39;</span><span class="p">,</span><span class="w">          </span><span class="mi">1</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;fornitore&#39;</span><span class="p">,</span><span class="w">        </span><span class="mi">1</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;billing_account&#39;</span><span class="p">,</span><span class="w">  </span><span class="mi">1</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;conto_bancario&#39;</span><span class="p">,</span><span class="w">   </span><span class="mi">1</span><span class="p">),</span>
+<span class="w">  </span><span class="c1">-- vendite (area_id = 2)</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;fattura&#39;</span><span class="p">,</span><span class="w">              </span><span class="mi">2</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;preventivo&#39;</span><span class="p">,</span><span class="w">           </span><span class="mi">2</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;listino&#39;</span><span class="p">,</span><span class="w">             </span><span class="mi">2</span><span class="p">),</span>
+<span class="w">  </span><span class="c1">-- pratiche (area_id = 12)</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;pratiche&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pratica&#39;</span><span class="p">,</span><span class="w">            </span><span class="mi">12</span><span class="p">),</span>
+<span class="w">  </span><span class="c1">-- catalogo (area_id = 4)</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;catalogo&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;articolo&#39;</span><span class="p">,</span><span class="w">           </span><span class="mi">4</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">&#39;catalogo&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unita_misura&#39;</span><span class="p">,</span><span class="w">       </span><span class="mi">4</span><span class="p">)</span>
+<span class="k">ON</span><span class="w"> </span><span class="n">CONFLICT</span><span class="w"> </span><span class="k">DO</span><span class="w"> </span><span class="k">NOTHING</span><span class="p">;</span>
+</code></pre></div>
+<blockquote>
+<p>Nota: <code>app_label</code> + <code>model_name</code> corrispondono ai valori che le view backend
+dichiarano in <code>model_permission = ("app_label", "model_name")</code>. Non sono nomi
+tabella DB ma identificatori logici Django.</p>
+</blockquote>
+<h3 id="52-funzione-scriptfn_get_user_object_permissions_map">5.2 Funzione <code>script.fn_get_user_object_permissions_map</code><a class="headerlink" href="#52-funzione-scriptfn_get_user_object_permissions_map" title="Permanent link">&para;</a></h3>
+<p>Nuova funzione che ritorna la mappa degli override oggetto attivi per un utente.
+Viene chiamata da <code>fn_get_user_profile</code> per arricchire il profilo con <code>permessi_oggetto</code>.</p>
+<p><strong>Firma:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_object_permissions_map</span><span class="p">(</span>
+<span class="w">  </span><span class="n">p_auth_user_id</span><span class="w"> </span><span class="nb">integer</span>
+<span class="p">)</span>
+<span class="k">RETURNS</span><span class="w"> </span><span class="n">jsonb</span>
+<span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span><span class="w"> </span><span class="k">STABLE</span>
+</code></pre></div>
+<p><strong>Semantica:</strong></p>
+<ul>
+<li>Legge da <code>config.user_override_oggetti</code> filtrando per <code>auth_user_id</code></li>
+<li>Filtra override attivi: <code>valido_dal &lt;= CURRENT_DATE</code> (o NULL) e <code>valido_al &gt;= CURRENT_DATE</code> (o NULL)</li>
+<li>Ritorna JSONB con chiave <code>"app_label.model_name"</code> e valore il livello:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;anagrafiche.conto_bancario&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BLOCCATO&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;vendite.fattura&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LETTURA&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li>Se nessun override → ritorna <code>'{}'::jsonb</code></li>
+<li>Pattern identico a <code>fn_get_user_permissions_map</code> (mappa area) e <code>fn_get_user_actions_map</code> (mappa azioni)</li>
+</ul>
+<p><strong>Logica:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span>
+<span class="w">  </span><span class="n">jsonb_object_agg</span><span class="p">(</span>
+<span class="w">    </span><span class="n">uo</span><span class="p">.</span><span class="n">app_label</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">uo</span><span class="p">.</span><span class="n">model_name</span><span class="p">,</span>
+<span class="w">    </span><span class="n">uo</span><span class="p">.</span><span class="n">livello</span><span class="p">::</span><span class="nb">text</span>
+<span class="w">  </span><span class="p">),</span>
+<span class="w">  </span><span class="s1">&#39;{}&#39;</span><span class="p">::</span><span class="n">jsonb</span>
+<span class="p">)</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">user_override_oggetti</span><span class="w"> </span><span class="n">uo</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">uo</span><span class="p">.</span><span class="n">auth_user_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_auth_user_id</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">uo</span><span class="p">.</span><span class="n">valido_dal</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">uo</span><span class="p">.</span><span class="n">valido_dal</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="k">CURRENT_DATE</span><span class="p">)</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">uo</span><span class="p">.</span><span class="n">valido_al</span><span class="w">  </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">uo</span><span class="p">.</span><span class="n">valido_al</span><span class="w">  </span><span class="o">&gt;=</span><span class="w"> </span><span class="k">CURRENT_DATE</span><span class="p">);</span>
+</code></pre></div>
+<h3 id="53-aggiornare-scriptfn_get_user_profile">5.3 Aggiornare <code>script.fn_get_user_profile</code><a class="headerlink" href="#53-aggiornare-scriptfn_get_user_profile" title="Permanent link">&para;</a></h3>
+<p>Aggiungere la chiave <code>permessi_oggetto</code> al JSONB ritornato dal profilo utente:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Nella sezione dove si costruisce il risultato JSONB, aggiungere:</span>
+<span class="s1">&#39;permessi_oggetto&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_object_permissions_map</span><span class="p">(</span><span class="n">p_auth_user_id</span><span class="p">),</span>
+</code></pre></div>
+<p>Posizione: subito dopo la riga <code>'azioni_abilitate', script.fn_get_user_actions_map(...)</code>.</p>
+<h3 id="54-test-pgtap-suggeriti">5.4 Test pgTAP suggeriti<a class="headerlink" href="#54-test-pgtap-suggeriti" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>-- fn_get_user_object_permissions_map: nessun override → &#39;{}&#39;
+-- fn_get_user_object_permissions_map: con override attivo → chiave presente
+-- fn_get_user_object_permissions_map: override scaduto (valido_al &lt; today) → escluso
+-- fn_get_user_object_permissions_map: override futuro (valido_dal &gt; today) → escluso
+-- fn_get_user_profile: profilo include chiave permessi_oggetto
+</code></pre></div>
+<h3 id="55-riepilogo-migration-db">5.5 Riepilogo migration DB<a class="headerlink" href="#55-riepilogo-migration-db" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Tipo</th>
+<th>Percorso</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Seed</td>
+<td><code>80_data/config/</code></td>
+<td>Popola <code>area_model_overrides</code> con 11 model</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Code</td>
+<td><code>20_code/script/</code></td>
+<td>Crea <code>fn_get_user_object_permissions_map</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Code</td>
+<td><code>20_code/script/</code></td>
+<td>Aggiorna <code>fn_get_user_profile</code> con <code>permessi_oggetto</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
 <h2 id="dipendenze">Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Nessuna modifica DB necessaria (tabelle e funzioni gia' pronte dalla v1)</li>
+<li>~~Nessuna modifica DB necessaria~~ → 3 migration (seed + 2 funzioni) ✅ applicate 2026-04-10</li>
 <li>Nessuna nuova dipendenza Python</li>
-<li>Seed <code>config.area_model_overrides</code> per i model dei domini attivi</li>
+<li>Fasi 1-5 completate 2026-04-10 (sessione singola)</li>
+<li>Fase 6 (attivazione <code>model_permission</code> nelle view dominio) — incrementale, da fare per dominio</li>
+<li>Code review completata: fix HIGH (BA lookup sr_ids) + MEDIUM (validazione catalogo model) applicati</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

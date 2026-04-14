@@ -4384,7 +4384,7 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Guard</strong>: <code>p_soggetto_id</code> e <code>p_tipo_ruolo_id</code> validati tramite <code>script.fn_log_and_raise_error</code> con codice <code>E_PARAMETRO_INVALIDO</code>. Se il <code>tipo_ruolo_id</code> non esiste in <code>config.tipi_ruoli</code>, viene lanciato <code>E_GENERICO</code>.</p>
+<p><strong>Guard</strong>: <code>p_soggetto_id</code> e <code>p_tipo_ruolo_id</code> validati tramite <code>script.fn_log_and_raise_error</code> con codice <code>E_PARAMETRO_INVALIDO</code>. Se il <code>tipo_ruolo_id</code> non esiste in <code>config.tipi_ruoli</code>, viene lanciato <code>E_TIPO_RUOLO_NON_TROVATO</code> (fix 2026-04-10, era <code>E_GENERICO</code>).</p>
 <hr />
 <h3 id="valore-di-ritorno">Valore di Ritorno<a class="headerlink" href="#valore-di-ritorno" title="Permanent link">&para;</a></h3>
 <p>La funzione restituisce un singolo valore <strong>JSONB</strong> con struttura fissa:</p>
@@ -4598,13 +4598,22 @@
 WHERE sr.soggetto_id = p_soggetto_id
   AND sr.tipo_ruolo_id = p_tipo_ruolo_id
   AND (p_utility_id IS NULL OR cl.utility_id = p_utility_id)
-  AND (p_emittente_ids IS NULL OR EXISTS (
-    SELECT 1 FROM emittenti_fiscali_billing_account efba
-    WHERE efba.billing_account_id = cl.billing_account_id
-      AND efba.emittente_soggetto_ruolo_id = ANY(p_emittente_ids)
-  ))
+  AND (p_emittente_ids IS NULL
+       OR script.fn_check_ba_visible_for_emittenti(
+            cl.billing_account_id, p_emittente_ids
+          )
+  )
 </code></pre></div>
 <p>Il filtro scope emittente si applica solo nel ramo CL. Per FO e ELSE il parametro <code>p_emittente_ids</code> viene ignorato. Semantica: <code>NULL</code> = nessuna restrizione, array = filtra, <code>'{}'</code> = zero risultati.</p>
+<blockquote>
+<p><strong>Logica a 3 livelli (fix 2026-04-10)</strong>: il filtro scope emittente e' delegato a <a href=".././fn_check_ba_visible_for_emittenti/"><code>script.fn_check_ba_visible_for_emittenti</code></a> che opera con precedenza:</p>
+<ol>
+<li><strong>Mapping specifico</strong>: il BA del cliente ha una riga in <code>emittenti_fiscali_billing_account</code> collegata a uno degli emittenti autorizzati → il cliente e' visibile.</li>
+<li><strong>Fallback default</strong>: un emittente autorizzato ha <code>is_default = true</code> (gestore globale) <strong>E</strong> il BA del cliente non ha alcun mapping specifico su nessun emittente → il cliente e' visibile (il gestore globale "copre" i BA non ancora mappati).</li>
+<li>Se ne' il mapping specifico ne' il fallback default matchano, il cliente e' escluso.</li>
+</ol>
+<p>Allineamento a <code>clienti_repository.list_clienti</code> lato Python. Stessa funzione usata anche da <code>fn_search_soggetti_universale</code>.</p>
+</blockquote>
 <hr />
 <h3 id="esempi-di-utilizzo">Esempi di Utilizzo<a class="headerlink" href="#esempi-di-utilizzo" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- 1) Dettaglio cliente per row expansion (tutte le utility)</span>

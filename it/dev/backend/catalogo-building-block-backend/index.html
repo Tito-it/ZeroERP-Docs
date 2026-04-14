@@ -4302,7 +4302,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>DomainAPIView</code></td>
 <td><a href="../../../../../backend/apps/core/api/base_views.py">base_views.py</a></td>
-<td>Base view per endpoint dominio con JWT + ZeroERPPermission</td>
+<td>Base view per endpoint dominio con JWT + ZeroERPPermission. Supporta <code>model_permission = ("app_label", "model_name")</code> per attivare livello oggetto (v2 permessi).</td>
 </tr>
 <tr>
 <td><code>AdminAPIView</code></td>
@@ -4538,6 +4538,11 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td>Livello accesso per area (TUTTO, LETTURA, BLOCCATO)</td>
 </tr>
 <tr>
+<td><code>PermissionResolver.get_livello_oggetto</code></td>
+<td><a href="../../../../../backend/apps/core/services/permissions_resolver.py">permissions_resolver.py</a></td>
+<td>Livello accesso per singolo model (override oggetto con fallback area). Usato da <code>ZeroERPPermission</code> quando la view dichiara <code>model_permission</code> o ha queryset ORM.</td>
+</tr>
+<tr>
 <td><code>PermissionResolver.check_azione</code></td>
 <td><a href="../../../../../backend/apps/core/services/permissions_resolver.py">permissions_resolver.py</a></td>
 <td>Verifica se azione processo è consentita</td>
@@ -4545,7 +4550,12 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>PermissionResolver.get_emittenti_ids</code></td>
 <td><a href="../../../../../backend/apps/core/services/permissions_resolver.py">permissions_resolver.py</a></td>
-<td>Lista ID emittenti fiscali autorizzati per l'utente (whitelist legacy: <code>None</code> = vede tutto)</td>
+<td>Lista PK <code>emittenti_fiscali.id</code> autorizzati per l'utente (<code>None</code> = vede tutto). <strong>Usare solo per lookup diretti su emittenti_fiscali.</strong></td>
+</tr>
+<tr>
+<td><code>PermissionResolver.get_emittenti_sr_ids</code></td>
+<td><a href="../../../../../backend/apps/core/services/permissions_resolver.py">permissions_resolver.py</a></td>
+<td>Lista <code>soggetto_ruolo_id</code> degli emittenti autorizzati via <code>fn_get_emittenti_scope_sr_ids</code> (<code>None</code> = vede tutto). <strong>Usare per query che filtrano su <code>emittente_soggetto_ruolo_id</code></strong> (search universale, lista clienti, efba).</td>
 </tr>
 <tr>
 <td><code>PermissionResolver.get_emittente_for_user</code></td>
@@ -4642,6 +4652,16 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><a href="../../../../../backend/apps/core/services/parameter_service.py">parameter_service.py</a></td>
 <td>Risolve emittente_fiscale_id dal bridge HR utente</td>
 </tr>
+<tr>
+<td><code>PayloadValidator</code></td>
+<td><a href="../../../../../backend/apps/core/services/payload_helpers.py">payload_helpers.py</a></td>
+<td>Validator parametrizzato per <code>validation_code</code> di dominio. Metodi: <code>validate_allowed_keys</code>, <code>guard_positive_int</code>, <code>require_string</code>, <code>require_positive_int</code>, <code>optional_positive_int</code>, <code>optional_smallint</code>, <code>optional_bool</code>, <code>optional_meta</code>. Rigore tipi (bool != int, int != float, stringhe numeriche ammesse solo per id), nessun default implicito. Usato dai service CRUD admin (categorie_clienti, utilities_tipi_ruolo, tipi_ruolo_tipi_indirizzo)</td>
+</tr>
+<tr>
+<td><code>map_integrity_error</code></td>
+<td><a href="../../../../../backend/apps/core/services/payload_helpers.py">payload_helpers.py</a></td>
+<td>Traduce <code>IntegrityError</code> in <code>ServiceError</code> via mappe <code>unique_constraints</code>/<code>fk_constraints</code> (frammento nome vincolo DB -&gt; <code>(error_code, message)</code>). Match case-insensitive. Fallback configurabile con <code>fallback_code</code>/<code>fallback_message</code></td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -4696,8 +4716,8 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 - <code>GET /api/v1/anagrafiche/billing-account/lookup/?q=&lt;min2&gt;&amp;utility_id=&amp;solo_validi=&amp;valid_at=&amp;limit=</code> — autocomplete
 - <code>GET /api/v1/anagrafiche/billing-account/&lt;id&gt;/lookup/</code> — restore per edit
 - <code>GET /api/v1/anagrafiche/billing-account/&lt;id&gt;/utilities/?ruolo=CL</code> — utility BA-driven (refactor operatore-emittenti)</p>
-<p><strong>Scope emittente lookup</strong>: applicato automaticamente dalla view via <code>PermissionResolver.get_emittenti_ids</code>. Un operatore vede solo i BA mappati al suo emittente fiscale + quelli caduti sull'emittente di default.</p>
-<p><strong>Scope emittente per <code>list_utilities_for_ba</code></strong>: usa il pattern 1-a-1 del refactor operatore-emittenti (<code>PermissionResolver.get_emittente_for_user</code> → PK reale, vedi sotto). Semantica diversa da <code>get_emittenti_ids</code>: il primo ritorna l'unico EF assegnato all'utente (o <code>None</code> per admin globale), il secondo ritorna la lista filtrata legacy.</p>
+<p><strong>Scope emittente lookup</strong>: applicato automaticamente dalla view via <code>PermissionResolver.get_emittenti_sr_ids</code> (ritorna <code>soggetto_ruolo_id</code>). Un operatore vede solo i BA mappati al suo emittente fiscale + quelli del gestore globale (<code>is_default=true</code> in <code>emittenti_fiscali_billing_account</code>).</p>
+<p><strong>Scope emittente per <code>list_utilities_for_ba</code></strong>: usa il pattern 1-a-1 del refactor operatore-emittenti (<code>PermissionResolver.get_emittente_for_user</code> → PK reale, vedi sotto). Semantica diversa da <code>get_emittenti_sr_ids</code>: il primo ritorna l'unico EF assegnato all'utente (o <code>None</code> per admin globale), il secondo ritorna la lista <code>soggetto_ruolo_id</code> filtrata per scope.</p>
 <hr />
 <h2 id="anagrafiche-clienti-appsanagrafiche">Anagrafiche — Clienti (<code>apps/anagrafiche/</code>)<a class="headerlink" href="#anagrafiche-clienti-appsanagrafiche" title="Permanent link">&para;</a></h2>
 <table>
@@ -4766,6 +4786,11 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><code>LookupRepository.list_utilities_per_billing_account</code></td>
 <td><a href="../../../../../backend/apps/core/db/lookup_repository.py">lookup_repository.py</a></td>
 <td><strong>Refactor operatore-emittenti</strong>: utility "guidate da emittente" per un BA. Wrapper su <code>anagrafiche.fn_lookup_utilities_per_ba(ba_id, ruolo_codice_soggetto)</code>. Politica ibrida: utility ammesse per ruolo soggetto BA ∩ utility ammesse per ruolo EF dell'emittente associato, decorate con <code>is_personalizzata_per_ef</code> + parametri override (soglie, arrotondamento) quando esistono per la coppia (emittente, utility). Le utility ammesse-non-personalizzate restano visibili con default sistema</td>
+</tr>
+<tr>
+<td><code>LookupRepository.list_conti_contabili</code></td>
+<td><a href="../../../../../backend/apps/core/db/lookup_repository.py">lookup_repository.py</a></td>
+<td>Lookup dedicato conti contabili con filtro <code>tipo</code> (A=Acquisto, V=Vendita). Espone <code>tipo_conto</code> che il lookup generico non ritornerebbe. Whitelist del parametro per sicurezza. Usato da <code>LookupContiContabiliView</code> (endpoint <code>GET /api/v1/core/lookup/conti-contabili/?tipo=A</code> o <code>?tipo=V</code>).</td>
 </tr>
 <tr>
 <td><code>SessionAuditRepository</code></td>

@@ -4181,6 +4181,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#campi-chiave-semantica" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Campi chiave (semantica)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#regole-principali" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4196,6 +4207,17 @@
     <span class="md-ellipsis">
       
         Utilizzo previsto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nota-storica" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nota storica
       
     </span>
   </a>
@@ -4234,28 +4256,81 @@
 <p>• <a href=".././listini_versioni/">vendite.listini_versioni</a><br />
 • <a href=".././listini_associazioni/">vendite.listini_associazioni</a><br />
 • <a href=".././listini_righe/">vendite.listini_righe</a><br />
-</p>
+• <a href="../../../config/manual/listini_tipologie/">config.listini_tipologie</a><br />
+• <a href="../../../config/manual/listini_tipologie_utilities/">config.listini_tipologie_utilities</a>  </p>
+<p><strong>Approfondimento funzioni:</strong></p>
+<p>• <a href="../../manual/trgfn_listini_guard_tipologia_utility/">trgfn_listini_guard_tipologia_utility</a><br />
+• <a href="../../manual/trgfn_listini_righe_guard_stato/">trgfn_listini_righe_guard_stato</a><br />
+• <a href="../../funzioni/fn_resolve_prezzo_listino/">fn_resolve_prezzo_listino</a>  </p>
 </blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <p>La tabella <code>vendite.listini</code> rappresenta la testata anagrafica dei listini prezzo
 del dominio vendite.</p>
-<p>Contiene i dati stabili del listino (codice, descrizione, dominio), mentre validita<code>temporale e prezzi sono demandati rispettivamente a</code>listini_versioni<code>e</code>listini_righe`.</p>
+<p>Contiene i dati stabili del listino (codice, descrizione, utility, tipologia), mentre
+validita<code>temporale e prezzi sono demandati rispettivamente a</code>listini_versioni<code>e</code>listini_righe`.</p>
+<hr />
+<h3 id="campi-chiave-semantica">Campi chiave (semantica)<a class="headerlink" href="#campi-chiave-semantica" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>codice</code></td>
+<td>Identificativo univoco del listino (<code>uq_listini_codice</code>)</td>
+</tr>
+<tr>
+<td><code>descrizione</code></td>
+<td>Descrizione leggibile</td>
+</tr>
+<tr>
+<td><code>utility_id</code></td>
+<td>FK a <code>config.utilities</code>. NOT NULL. Ogni listino appartiene a una utility. Listini commerciali generici usano utility "Base" (id=5)</td>
+</tr>
+<tr>
+<td><code>tipologia_id</code></td>
+<td>FK a <code>config.listini_tipologie</code>. NOT NULL. Classifica la natura delle voci (consumo, quota fissa, imposta, onere, prodotto, servizio)</td>
+</tr>
+<tr>
+<td><code>emittente_soggetto_ruolo_id</code></td>
+<td>FK a <code>anagrafiche.soggetti_ruoli</code>. NOT NULL (dal 14-04-2026, pricing v5). Emittente fiscale del listino: un listino vale per un solo emittente. Non e' input del resolver (viene derivato dalla sessione operatore), ma dimensione interna della tupla univoca (utility, tipologia, emittente)</td>
+</tr>
+<tr>
+<td><code>attivo</code></td>
+<td>Abilita il listino per associazione e risoluzione prezzi</td>
+</tr>
+<tr>
+<td><code>validita</code></td>
+<td><code>daterange</code> NOT NULL calcolato dal trigger <code>script.trgfn_set_validita()</code> da <code>valido_dal</code>/<code>valido_al</code>. Query: <code>validita @&gt; data</code></td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>codice</code> univoco (<code>uq_listini_codice</code>).</li>
-<li><code>dominio</code> ammesso solo tra:</li>
-<li><code>UTILITY</code></li>
-<li><code>COMMERCIO</code></li>
-<li><code>attivo=true</code> abilita il listino per associazione e risoluzione prezzi.</li>
+<li>La coppia <code>(utility_id, tipologia_id)</code> deve essere ammessa dalla matrice
+  <code>config.listini_tipologie_utilities</code> con <code>attivo = true</code>. Il trigger guard
+  <code>trgfn_listini_guard_tipologia_utility</code> lo verifica su INSERT e UPDATE.</li>
+<li><code>attivo = true</code> abilita il listino per associazione e risoluzione prezzi.</li>
+<li>La disattivazione e<code>bloccata se esistono versioni o associazioni attive
+  (trigger</code>trgfn_prevent_deactivate_if_children`).</li>
 </ul>
 <hr />
 <h3 id="utilizzo-previsto">Utilizzo previsto<a class="headerlink" href="#utilizzo-previsto" title="Permanent link">&para;</a></h3>
 <ul>
-<li>contenitore principale per listini multi-dominio;</li>
-<li>separazione tra identita` listino e versionamento temporale;</li>
-<li>base per mapping contesto (<code>listini_associazioni</code>) e pricing resolver.</li>
+<li>Contenitore principale per listini multi-utility;</li>
+<li>Classificazione per tipologia (flag semantici booleani sulla tabella tipologia);</li>
+<li>Separazione tra identita` listino e versionamento temporale;</li>
+<li>Base per mapping contesto (<code>listini_associazioni</code>) e pricing resolver.</li>
 </ul>
+<hr />
+<h3 id="nota-storica">Nota storica<a class="headerlink" href="#nota-storica" title="Permanent link">&para;</a></h3>
+<p>Il campo <code>dominio VARCHAR</code> (valori <code>UTILITY</code>/<code>COMMERCIO</code>) e<code>stato rimosso il 12 aprile 2026
+e sostituito dalla coppia</code>utility_id<code>+</code>tipologia_id<code>che offre classificazione piu</code>
+granulare e referenze FK anziche` stringhe.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

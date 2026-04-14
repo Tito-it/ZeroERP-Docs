@@ -4354,17 +4354,17 @@ L'obiettivo e<code>ridurre la complessita</code> superflua mantenendo rigore su 
 <p><strong>Sviluppo attivo — backend e frontend operativi su domini core, catalogo, vendite, anagrafiche, pratiche.</strong></p>
 <p>DB e API backend operativi su 13 schemi. Frontend Vue operativo su: layout applicativo,
 gestione soggetti (PF/PG/ENTE), gestione geografica (7 tab CRUD), pannello configurazione (67 tabelle),
-amministrazione software (operatori, profili reparto, permessi, audit log,
-drawer dedicato gestione permessi raggiungibile dalla riga lista),
+amministrazione software (operatori, profili reparto, permessi, audit log),
 gestione clienti/fornitori (drawer end-to-end con sotto-drawer),
 gestione pratiche v2 (dashboard, flussi, note, allegati, giornale),
 catalogo articoli (CRUD, UoM, BoM, note) <strong>completato</strong>,
-listini vendita (versioni, righe prezzo, associazioni, test resolver) — backend+frontend da verificare su UI reale,
-impostazioni parametri di sistema con override personali ed emittente (drawer admin con selettore scope),
-integrazione AI (11 tool: pratiche, soggetti, clienti, articoli, operatori — widget conversazionale),
+listini vendita v3 <strong>completato</strong> (pricing completo, rettifica controllata, alert scadenze,
+variazione % massa, riallineamento/variazione prezzo commessa),
+migrazione <code>daterange</code> nativo PostgreSQL <strong>completata</strong> (18 tabelle, trigger generico, ottimizzazione backend),
+impostazioni parametri di sistema con override personali ed emittente,
+integrazione AI (11 tool: pratiche, soggetti, clienti, articoli, operatori),
 autenticazione completa (email, token, reset pw, invito operatore).
-Rettifiche prezzi (DB-L4) estratte in WIP dedicato.
-Non ancora rilasciato per produzione.</p>
+1231 test backend. Non ancora rilasciato per produzione.</p>
 </blockquote>
 <hr />
 <h2 id="indice">Indice<a class="headerlink" href="#indice" title="Permanent link">&para;</a></h2>
@@ -4492,10 +4492,10 @@ PostgreSQL (nucleo dominio: regole, workflow, audit)
 <p>Il modello e` pensato per supportare processi non lineari e gestione multi-reparto.</p>
 <hr />
 <h2 id="stato-dello-sviluppo">Stato dello Sviluppo<a class="headerlink" href="#stato-dello-sviluppo" title="Permanent link">&para;</a></h2>
-<p>Fotografia sintetica (7 aprile 2026):</p>
+<p>Fotografia sintetica (12 aprile 2026):</p>
 <ul>
-<li>Database core: operativo (13 schemi, 200+ tabelle, trigger, funzioni, viste)</li>
-<li>API backend: operativo (890+ test, 80+ endpoint)</li>
+<li>Database core: operativo (13 schemi, 200+ tabelle, trigger, funzioni, viste, <strong>daterange nativo</strong>)</li>
+<li>API backend: operativo (1231 test, 90+ endpoint)</li>
 <li>Motore pratiche: operativo (workflow, giornale, sospensioni, macchina a stati, note, allegati)</li>
 <li>Sistema permessi: operativo a 2 livelli</li>
 <li>Livello 1: area funzionale (TUTTO/LETTURA/BLOCCATO) — sidebar, route guard, CSS protect</li>
@@ -4509,9 +4509,16 @@ PostgreSQL (nucleo dominio: regole, workflow, audit)
 <li>Articoli CRUD con UoM operative, distinta base, note (19 endpoint, 49 test)</li>
 <li>Unita' di misura CRUD (backend + frontend)</li>
 <li>Documentazione consolidata in <a href=".././dev/work-done/gestione-articoli/">work-done/gestione-articoli.md</a></li>
-<li>Listini vendita: backend + frontend implementati, <strong>da testare su UI reale</strong></li>
-<li>Versioni, righe prezzo, associazioni, test resolver (18 endpoint, 29 test)</li>
-<li>Roadmap consolidata in <a href=".././dev/work-in-progress/sviluppo-listini/">work-in-progress/sviluppo-listini.md</a></li>
+<li>Listini vendita v3: <strong>completato</strong> (Sprint B-v3 chiuso)</li>
+<li>Versioni, righe prezzo, associazioni, test resolver, clone, auto-close (25 endpoint, 42 test listini)</li>
+<li>Variazione % massa su BOZZA con dry_run, alert scadenze con widget, rettifica controllata con lock FOR UPDATE</li>
+<li>Pricing commesse: riallineamento prezzo, variazione eccezionale, sblocco (3 endpoint, 9 test commesse)</li>
+<li>Trigger DB defense-in-depth <code>trgfn_listini_righe_guard_stato</code></li>
+<li>Documentazione: <a href=".././dev/work-in-progress/sviluppo-listini-v3/">sviluppo-listini-v3.md</a>, API: <a href=".././backend/vendite/manual/api_listini/">api_listini.md</a>, <a href=".././backend/vendite/manual/api_commesse_pricing/">api_commesse_pricing.md</a></li>
+<li>Migrazione <code>daterange</code> nativo PostgreSQL: <strong>completata</strong></li>
+<li>18 tabelle migrate (Fase 0-3), infrastruttura <code>script.trgfn_set_validita()</code>, linee guida SQL §7b</li>
+<li>Backend ottimizzato: <code>validita @&gt;</code> al posto dei doppi confronti <code>valido_dal</code>/<code>valido_al</code></li>
+<li>Analisi: <a href=".././dev/work-in-progress/migrazione-daterange/">migrazione-daterange.md</a></li>
 <li>Rettifiche prezzi (DB-L4): estratte in <a href=".././dev/work-in-progress/sviluppo-rettifiche/">work-in-progress/sviluppo-rettifiche.md</a>, <strong>da implementare</strong></li>
 <li>Integrazione AI v1: operativa, <strong>11 tool</strong> registrati</li>
 <li>Pratiche (cerca, dettaglio, flussi)</li>
@@ -4532,7 +4539,7 @@ PostgreSQL (nucleo dominio: regole, workflow, audit)
 <li>Gestione clienti/fornitori: drawer con sotto-drawer contatti/indirizzi/conti</li>
 <li>Gestione pratiche v2: dashboard, flussi, note, allegati, giornale</li>
 <li>Catalogo articoli: lista, drawer con 3 tab (UoM, BoM, note), <code>ArticoloLookup</code> BB cross-dominio</li>
-<li>Listini: lista, drawer con versioni/associazioni, sub-drawer righe, test resolver</li>
+<li>Listini v3: lista, drawer con versioni/associazioni, sub-drawer righe, test resolver, dialog variazione %, widget alert scadenze, dialog programma chiusura</li>
 <li>Impostazioni parametri: lista multi-scope con drawer override (<code>PARAMETER_SCOPE</code> come unica fonte di verita')</li>
 <li>Pannello configurazione: 67 tabelle CRUD generiche</li>
 <li>Logo brand: nuovo PNG ottimizzato 256x256 (frontend) + favicon PNG/ICO + master 512x512 in <code>docs/assets/images/</code></li>
@@ -4574,9 +4581,10 @@ Per setup ambiente di sviluppo, seguire:</p>
 <li>~~Autenticazione completa (email, token, reset pw, invito)~~ — fatto, 2FA pianificato</li>
 <li>~~Integrazione AI v1 (11 tool, widget conversazionale, glossario IT)~~ — fatto, v2 in corso</li>
 <li>~~Catalogo articoli + UoM + BoM + note~~ — <strong>completato</strong> (work-done)</li>
-<li>~~Listini vendita (backend + frontend)~~ — fatto, in test UI</li>
+<li>~~Listini vendita v3 (pricing completo, rettifica, alert, variazione massa)~~ — <strong>completato</strong></li>
+<li>~~Migrazione <code>daterange</code> nativo PostgreSQL (18 tabelle, backend ottimizzato)~~ — <strong>completato</strong></li>
 <li>~~Parametri di sistema multi-scope (drawer admin con scope user/emittente)~~ — fatto</li>
-<li>Test UI reali su listini, pratiche, clienti, fornitori, parametri — in corso</li>
+<li>Test UI reali su pratiche, clienti, fornitori, parametri — in corso</li>
 <li><strong>Rettifiche prezzi DB-L4</strong> (motore delta, canali manuale/automatico, audit) — pianificato in WIP dedicato</li>
 <li>Permessi v2 (livello oggetto) — pianificato</li>
 <li>Integrazione vendite/pratiche e moduli verticali</li>

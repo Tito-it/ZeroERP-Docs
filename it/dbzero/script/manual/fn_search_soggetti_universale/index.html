@@ -4576,9 +4576,17 @@ paged (CTE 3)
 <div class="highlight"><pre><span></span><code>soggetti_ruoli.id
   → clienti.soggetto_ruolo_id
   → clienti.billing_account_id
-  → emittenti_fiscali_billing_account.billing_account_id
-  → emittenti_fiscali_billing_account.emittente_soggetto_ruolo_id = ANY(p_emittente_ids)
+  → script.fn_check_ba_visible_for_emittenti(ba_id, p_emittente_ids)
 </code></pre></div>
+<blockquote>
+<p><strong>Logica a 3 livelli (fix 2026-04-10)</strong>: il filtro scope emittente e' delegato a <a href="../../funzioni/fn_check_ba_visible_for_emittenti/"><code>script.fn_check_ba_visible_for_emittenti</code></a> che opera con precedenza:</p>
+<ol>
+<li><strong>Mapping specifico</strong>: il BA ha una riga in <code>emittenti_fiscali_billing_account</code> collegata a uno degli emittenti autorizzati → visibile.</li>
+<li><strong>Fallback default</strong>: un emittente autorizzato ha <code>is_default = true</code> (gestore globale) <strong>E</strong> il BA non ha alcun mapping specifico → visibile.</li>
+<li>Altrimenti non visibile.</li>
+</ol>
+<p>Stessa funzione usata anche da <code>fn_get_search_detail</code>. Allineamento a <code>clienti_repository.list_clienti</code> lato Python.</p>
+</blockquote>
 <p>Per ruoli non-CL (FO, EF, VT, ...) il parametro viene ignorato.</p>
 <hr />
 <h3 id="ordinamento-dinamico">Ordinamento Dinamico<a class="headerlink" href="#ordinamento-dinamico" title="Permanent link">&para;</a></h3>

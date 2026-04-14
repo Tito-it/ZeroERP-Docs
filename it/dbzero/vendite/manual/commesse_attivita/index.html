@@ -4202,6 +4202,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#snapshot-pricing-v5-14-04-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Snapshot pricing (v5, 14-04-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4268,6 +4279,62 @@ segmentazione idempotente (<code>segment_key</code>) e stato approvazione/emissi
 <li>supporto idempotenza e replay controllato;</li>
 <li>separazione netta owner business (commessa) vs layer esecutivo (AF).</li>
 </ul>
+<hr />
+<h3 id="snapshot-pricing-v5-14-04-2026">Snapshot pricing (v5, 14-04-2026)<a class="headerlink" href="#snapshot-pricing-v5-14-04-2026" title="Permanent link">&para;</a></h3>
+<p>All'esecuzione del resolver prezzi v5, l'attivita' in commessa riceve uno snapshot strutturato delle dimensioni di calcolo. Colonne nullable, valorizzate insieme a <code>prezzo_snapshot</code>/<code>prezzo_bloccato</code> esistenti:</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prezzo_base_snapshot</code></td>
+<td>numeric(22,10)</td>
+<td>Prezzo base risolto dal listino prima della variazione applicata</td>
+</tr>
+<tr>
+<td><code>origine_prezzo</code></td>
+<td>varchar(32)</td>
+<td><code>PROMO</code> | <code>CONTRATTO_OVERRIDE</code> | <code>CONTRATTO_LISTINO</code> | <code>CATEGORIA</code> | <code>MANUALE</code></td>
+</tr>
+<tr>
+<td><code>tipo_variazione_applicata</code></td>
+<td>varchar(16)</td>
+<td><code>PERCENTUALE</code> | <code>VALORE_FISSO</code> | <code>PREZZO_FISSO</code> | <code>NESSUNA</code></td>
+</tr>
+<tr>
+<td><code>valore_variazione_applicata</code></td>
+<td>numeric(10,4)</td>
+<td>Valore della variazione effettivamente applicata</td>
+</tr>
+<tr>
+<td><code>promo_id</code></td>
+<td>bigint</td>
+<td>FK a <code>vendite.promo_articoli</code>; valorizzato se <code>origine_prezzo = 'PROMO'</code></td>
+</tr>
+<tr>
+<td><code>contratto_id</code></td>
+<td>bigint</td>
+<td>FK a <code>vendite.contratti</code>; valorizzato se <code>origine_prezzo CONTRATTO_*</code></td>
+</tr>
+<tr>
+<td><code>categoria_cliente_id_snapshot</code></td>
+<td>smallint</td>
+<td>FK a <code>anagrafiche.categorie_clienti</code>; congela la categoria al momento del calcolo</td>
+</tr>
+<tr>
+<td><code>classe_utenza_id_snapshot</code></td>
+<td>integer</td>
+<td>FK a <code>config.classi_utenze</code>; congela la classe utenza al momento del calcolo</td>
+</tr>
+</tbody>
+</table>
+<p>Due CHECK presidiano il dominio di <code>origine_prezzo</code> e <code>tipo_variazione_applicata</code>. Il campo <code>meta</code> resta per dettagli non strutturati (es. deroghe, flag specifici): qui stanno solo le dimensioni che servono per query dirette e filtri dashboard.</p>
+<p>Le stesse 8 colonne vengono propagate su <a href="../../tabelle/attivita_fatturabili/"><code>vendite.attivita_fatturabili</code></a>, preservando la tracciabilita' fino al layer fatture.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

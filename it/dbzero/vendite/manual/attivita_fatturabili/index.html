@@ -4257,6 +4257,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#snapshot-pricing-v5-14-04-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Snapshot pricing (v5, 14-04-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4437,6 +4448,61 @@ Queste righe sono <strong>pre‑documentali</strong>: quando il ciclo di fattura
 <h3 id="importanza-nel-sistema">Importanza nel sistema<a class="headerlink" href="#importanza-nel-sistema" title="Permanent link">&para;</a></h3>
 <p>Questa tabella è il <strong>cuore del ciclo di fatturazione</strong>: tutte le voci da fatturare convergono qui, vengono qualificate per <strong>quando</strong> fatturare (competenza, posticipo, sospensione) e, una volta prelevate, diventano <strong>dettaglio di fattura</strong>.
 La qualità e la coerenza dei dati in <code>vendite.attivita_fatturabili</code> determinano direttamente <strong>completezza, correttezza e ripetibilità</strong> dei documenti emessi.</p>
+<hr />
+<h3 id="snapshot-pricing-v5-14-04-2026">Snapshot pricing (v5, 14-04-2026)<a class="headerlink" href="#snapshot-pricing-v5-14-04-2026" title="Permanent link">&para;</a></h3>
+<p>Le 8 colonne snapshot pricing presenti su <a href="../../tabelle/commesse_attivita/"><code>vendite.commesse_attivita</code></a> sono <strong>propagate identiche</strong> su questa tabella per mantenere la tracciabilita' fino al layer di fatturazione. La valorizzazione avviene durante <code>fn_emit_attivita_fatturabili_da_commessa</code> (copia diretta dei campi snapshot dall'attivita' sorgente).</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prezzo_base_snapshot</code></td>
+<td>numeric(22,10)</td>
+<td>Prezzo base listino prima della variazione</td>
+</tr>
+<tr>
+<td><code>origine_prezzo</code></td>
+<td>varchar(32)</td>
+<td><code>PROMO</code> | <code>CONTRATTO_OVERRIDE</code> | <code>CONTRATTO_LISTINO</code> | <code>CATEGORIA</code> | <code>MANUALE</code></td>
+</tr>
+<tr>
+<td><code>tipo_variazione_applicata</code></td>
+<td>varchar(16)</td>
+<td><code>PERCENTUALE</code> | <code>VALORE_FISSO</code> | <code>PREZZO_FISSO</code> | <code>NESSUNA</code></td>
+</tr>
+<tr>
+<td><code>valore_variazione_applicata</code></td>
+<td>numeric(10,4)</td>
+<td>Valore della variazione effettivamente applicata</td>
+</tr>
+<tr>
+<td><code>promo_id</code></td>
+<td>bigint</td>
+<td>FK a <code>vendite.promo_articoli</code></td>
+</tr>
+<tr>
+<td><code>contratto_id</code></td>
+<td>bigint</td>
+<td>FK a <code>vendite.contratti</code></td>
+</tr>
+<tr>
+<td><code>categoria_cliente_id_snapshot</code></td>
+<td>smallint</td>
+<td>FK a <code>anagrafiche.categorie_clienti</code></td>
+</tr>
+<tr>
+<td><code>classe_utenza_id_snapshot</code></td>
+<td>integer</td>
+<td>FK a <code>config.classi_utenze</code></td>
+</tr>
+</tbody>
+</table>
+<p>CHECK sui domini di <code>origine_prezzo</code> e <code>tipo_variazione_applicata</code>. Indice dedicato su <code>origine_prezzo</code> per filtri dashboard.</p>
 
 
 

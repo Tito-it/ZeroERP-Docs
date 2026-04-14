@@ -3763,6 +3763,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Autenticazione e autorizzazione">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scope-emittente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope emittente
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -5056,6 +5073,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Autenticazione e autorizzazione">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scope-emittente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope emittente
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -5879,10 +5913,23 @@ I serializer sono <strong>inline</strong> (non in file separati):</p>
 </tr>
 <tr>
 <td>Scope emittente</td>
-<td><code>get_scope_user_id(request)</code> filtra i dati per emittente fiscale autorizzato</td>
+<td>Filtra i dati per emittente fiscale autorizzato (vedi sotto)</td>
 </tr>
 </tbody>
 </table>
+<h3 id="scope-emittente">Scope emittente<a class="headerlink" href="#scope-emittente" title="Permanent link">&para;</a></h3>
+<p>Due pattern disponibili in base al dominio:</p>
+<ol>
+<li><strong>Vendite</strong> — <code>get_scope_user_id(request)</code> passa <code>auth_user_id</code> alle funzioni SQL
+   che risolvono lo scope internamente via <code>fn_get_emittenti_scope_sr_ids</code>.</li>
+<li><strong>Search / Anagrafiche</strong> — <code>PermissionResolver.get_emittenti_sr_ids(request.user)</code>
+   risolve in Python i <code>soggetto_ruolo_id</code> degli emittenti autorizzati e li passa
+   come array <code>bigint[]</code> alle query SQL.</li>
+</ol>
+<p>Usare <code>get_emittenti_sr_ids</code> (non <code>get_emittenti_ids</code>) quando il SQL filtra su
+<code>emittenti_fiscali_billing_account.emittente_soggetto_ruolo_id</code>.
+<code>get_emittenti_ids</code> ritorna le PK di <code>emittenti_fiscali.id</code>, utili solo per
+lookup diretti sulla tabella emittenti.</p>
 <hr />
 <h2 id="decisioni-architetturali">Decisioni architetturali<a class="headerlink" href="#decisioni-architetturali" title="Permanent link">&para;</a></h2>
 <h3 id="validazione-input">Validazione input<a class="headerlink" href="#validazione-input" title="Permanent link">&para;</a></h3>

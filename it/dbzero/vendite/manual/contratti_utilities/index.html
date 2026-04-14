@@ -4214,6 +4214,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#coerenza-tipo_utenza_id-classe_utenza_id-pricing-v5-14-04-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coerenza tipo_utenza_id / classe_utenza_id (pricing v5, 14-04-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ruolo-nel-processo" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4293,8 +4304,18 @@ L’obiettivo e<code>rendere il contratto **autonomo e stabile**: i dati tecnici
 <li><code>contratto_id</code> → aggancio al contratto.</li>
 <li><code>istanza_dati_precontrattuali_id</code> → riferimento al record sorgente.</li>
 <li><code>classe_utenza_id</code> → snapshot della classe utenza.</li>
+<li><code>tipo_utenza_id</code> → snapshot del tipo utenza (dal 14-04-2026, pricing v5).</li>
 <li><code>param_1_num</code>, <code>param_2_txt</code>, <code>meta</code> → parametri tecnici snapshot.</li>
 </ul>
+<hr />
+<h3 id="coerenza-tipo_utenza_id-classe_utenza_id-pricing-v5-14-04-2026">Coerenza <code>tipo_utenza_id</code> / <code>classe_utenza_id</code> (pricing v5, 14-04-2026)<a class="headerlink" href="#coerenza-tipo_utenza_id-classe_utenza_id-pricing-v5-14-04-2026" title="Permanent link">&para;</a></h3>
+<p>Il contratto "fotografa" <code>tipo_utenza_id</code> e <code>classe_utenza_id</code> al momento della stipula: anche se derivabili dall'istanza precontrattuale, vengono congelati esplicitamente per consistenza storica e per query dirette nel resolver prezzi v5.</p>
+<p>Regole applicate dal trigger <code>trg_contratti_utilities_a10_guard_tipo_classe_ins_upd</code> -&gt; <a href="../../funzioni/trgfn_contratti_utilities_guard_tipo_classe/"><code>vendite.trgfn_contratti_utilities_guard_tipo_classe</code></a>:</p>
+<ul>
+<li><strong>Utility con dimensione tipo/classe</strong> (esiste almeno un <code>config.tipi_utenze</code> con <code>utility_id = NEW.utility_id</code>): <code>tipo_utenza_id</code> e <code>classe_utenza_id</code> entrambi NOT NULL, con <code>classi_utenze.tipo_utenza_id = NEW.tipo_utenza_id</code>. Errori: <code>E_CONTRATTO_UTILITY_TIPO_CLASSE_OBBLIGATORI</code>, <code>E_CONTRATTO_CLASSE_TIPO_INCOERENTE</code>.</li>
+<li><strong>Utility senza dimensione</strong> (commercio / <code>Base</code>): <code>tipo_utenza_id</code> e <code>classe_utenza_id</code> entrambi NULL. Errore: <code>E_CONTRATTO_UTILITY_SENZA_DIMENSIONE_TIPO_CLASSE_VIETATI</code>.</li>
+</ul>
+<p>Backfill al primo deploy: <code>tipo_utenza_id</code> derivato da <code>classi_utenze.tipo_utenza_id</code> dove <code>classe_utenza_id</code> e' valorizzata (changeSet <code>20260414-10</code>).</p>
 <hr />
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
 <p><code>vendite.contratti_utilities</code> e` il <strong>punto di consolidamento</strong> tra fase pre‑contrattuale e fase contrattuale:</p>

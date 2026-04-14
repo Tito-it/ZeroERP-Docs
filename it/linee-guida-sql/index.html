@@ -1089,6 +1089,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#7b-validitatemporale-daterange-nativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7b. Validitatemporale (daterange` nativo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#8-indici" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4640,6 +4651,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#7b-validitatemporale-daterange-nativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7b. Validitatemporale (daterange` nativo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#8-indici" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5258,6 +5280,79 @@ trgfn_config_stati_prevent_delete_if_used
 <span class="n">user_update</span><span class="w">    </span><span class="nb">TEXT</span><span class="w">      </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_USER</span>
 </code></pre></div>
 <p>I trigger o constraint di sistema possono aggiornare <code>date_update/user_update</code> su UPDATE manuale o con <code>trigger</code> dedicato.</p>
+<hr />
+<h3 id="7b-validitatemporale-daterange-nativo">7b. Validita<code>temporale (</code>daterange` nativo)<a class="headerlink" href="#7b-validitatemporale-daterange-nativo" title="Permanent link">&para;</a></h3>
+<p>Le tabelle con validita` temporale usano il pattern <strong>colonne input + colonna range calcolata</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th>Scopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>valido_dal</code></td>
+<td><code>DATE</code></td>
+<td>Data inizio validita` (input utente/API)</td>
+</tr>
+<tr>
+<td><code>valido_al</code></td>
+<td><code>DATE</code></td>
+<td>Data fine validita` (input utente/API, NULL = aperto)</td>
+</tr>
+<tr>
+<td><code>validita</code></td>
+<td><code>daterange NOT NULL</code></td>
+<td>Range calcolato dal trigger, usato per query e vincoli</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regole</strong>:</p>
+<ul>
+<li>La colonna <code>validita</code> e<code>**sempre** calcolata dal trigger</code>script.trgfn_set_validita()` — mai scritta direttamente</li>
+<li>Il trigger usa <code>COALESCE(valido_dal, '-infinity')</code> e <code>COALESCE(valido_al, 'infinity')</code> con bounds <code>[]</code>
+  (PG canonicalizza in <code>[)</code> per date). <code>validita</code> non e` <strong>mai</strong> NULL</li>
+<li>Per tabelle con colonne sorgente diverse (es. <code>data_inizio</code>/<code>data_fine</code>): trigger specifico nello schema di dominio</li>
+<li>Per <code>TIMESTAMPTZ</code> usare <code>tstzrange</code> con bounds <code>[)</code> e trigger specifico</li>
+</ul>
+<p><strong>Naming</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Contesto</th>
+<th>Nome colonna range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Colonne <code>valido_dal</code>/<code>valido_al</code></td>
+<td><code>validita</code></td>
+</tr>
+<tr>
+<td>Colonne dominio-specifiche (es. <code>data_inizio</code>/<code>data_fine</code>)</td>
+<td>Nome dominio (es. <code>periodo_sospensione</code>, <code>periodo_calcolo</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Query</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Containment (data nel range)</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">validita</span><span class="w"> </span><span class="o">@&gt;</span><span class="w"> </span><span class="k">CURRENT_DATE</span>
+
+<span class="c1">-- Overlap (due range si sovrappongono)</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">validita</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">other_range</span>
+</code></pre></div>
+<p><strong>Vincoli anti-overlap</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Su colonna nativa (preferito)</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">tabella</span>
+<span class="w">  </span><span class="k">ADD</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">ex_tabella_no_overlap</span>
+<span class="w">  </span><span class="n">EXCLUDE</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="n">gist</span><span class="w"> </span><span class="p">(</span><span class="n">key_col</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="o">=</span><span class="p">,</span><span class="w"> </span><span class="n">validita</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="p">);</span>
+</code></pre></div>
+<p>Per l'automazione dei vincoli overlap vedi <code>dbops.automazione_overlap</code> e <code>dbops.fn_apply_automazione_overlap</code>.</p>
+<blockquote>
+<p>Riferimento: <a href=".././dev/work-in-progress/migrazione-daterange/">migrazione-daterange.md</a> per analisi completa e decisioni architetturali.</p>
+</blockquote>
 <hr />
 <h3 id="8-indici">8. Indici<a class="headerlink" href="#8-indici" title="Permanent link">&para;</a></h3>
 <ul>

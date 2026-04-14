@@ -4275,6 +4275,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#categoria-cliente-per-pricing-v5-14-04-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Categoria cliente per pricing (v5, 14-04-26)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#policy-fatturazione-ordini" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4405,6 +4416,11 @@
 <td><code>anagrafiche.billing_account(id)</code></td>
 <td>ON UPDATE CASCADE, ON DELETE SET NULL</td>
 </tr>
+<tr>
+<td><code>categoria_cliente_id</code></td>
+<td><code>anagrafiche.categorie_clienti(id)</code></td>
+<td>ON UPDATE CASCADE, ON DELETE NO ACTION</td>
+</tr>
 </tbody>
 </table>
 <p>Nota naming: sia <code>anagrafiche.billing_account</code> sia <code>anagrafiche.pdp</code> usano <code>utility_id</code>, entrambi puntano a <code>config.utilities.id</code>. Il naming e uniforme anche nelle query/join.</p>
@@ -4473,6 +4489,15 @@
 <li><code>trgfn_fatture_righe_guard_normalize</code>: fallback — se <code>dest_billing_account_id</code> e NULL, eredita da <code>fatture.billing_account_id</code></li>
 </ol>
 <p>La risoluzione al padre e <strong>incondizionata</strong>: se <code>parent_account_id</code> e valorizzato, la fattura va al padre. Se non si vuole aggregare un figlio al padre, la soluzione e <strong>non impostare <code>parent_account_id</code></strong> (non serve un flag separato).</p>
+<hr />
+<h3 id="categoria-cliente-per-pricing-v5-14-04-26">Categoria cliente per pricing (v5, 14-04-26)<a class="headerlink" href="#categoria-cliente-per-pricing-v5-14-04-26" title="Permanent link">&para;</a></h3>
+<p>Il BA e' sempre associato a una <strong>categoria commerciale</strong> (<code>categoria_cliente_id</code> NOT NULL, FK verso <a href="../../tabelle/categorie_clienti/"><code>anagrafiche.categorie_clienti</code></a>). La categoria e' la dimensione su cui si appoggia lo STADIO 2 del resolver prezzi v5:</p>
+<ul>
+<li>Un BA <strong>senza contratto individuale</strong> risolve il prezzo tramite la matrice <code>anagrafiche.categorie_clienti_listini</code> filtrata per <code>(categoria_cliente_id, utility_id, emittente, classe_utenza)</code>.</li>
+<li>Un BA <strong>con contratto</strong> salta la categoria: STADIO 1 (contratto) batte STADIO 2.</li>
+<li>La <strong>partecipazione alla promo</strong> (STADIO 0) e' decisa a livello di categoria (<code>categorie_clienti.partecipa_promo</code>), non di singolo BA.</li>
+</ul>
+<p>Strategia di rollout: al primo deploy tutti i BA esistenti vengono backfillati alla categoria <code>STANDARD</code> (non partecipa alle promo); la colonna e' <code>NOT NULL</code> dal changeSet <code>20260414-03</code>. Nessun BA puo' restare orfano di categoria, quindi il resolver non incontra mai la condizione <code>BA senza categoria</code>.</p>
 <hr />
 <h3 id="policy-fatturazione-ordini">Policy fatturazione ordini<a class="headerlink" href="#policy-fatturazione-ordini" title="Permanent link">&para;</a></h3>
 <p>Il campo <code>fatturazione_ordini</code> (default <code>CONFERMATO</code>) definisce il default per <code>ordini.fatturazione_trigger</code> al momento dell'inserimento ordine:</p>

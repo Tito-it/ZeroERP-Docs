@@ -4217,6 +4217,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#logica" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4228,10 +4239,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#catena-di-risoluzione-delegata-a-fn_check_azione_processo" class="md-nav__link">
+  <a href="#catena-di-risoluzione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Catena di risoluzione (delegata a fn_check_azione_processo)
+        Catena di risoluzione
       
     </span>
   </a>
@@ -4239,10 +4250,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#esempio-di-output" class="md-nav__link">
+  <a href="#ottimizzazione-introdotta" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Esempio di output
+        Ottimizzazione introdotta
       
     </span>
   </a>
@@ -4261,10 +4272,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#integrazione-in-fn_get_user_profile" class="md-nav__link">
+  <a href="#integrazione-con-fn_get_user_profile" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Integrazione in fn_get_user_profile
+        Integrazione con fn_get_user_profile
       
     </span>
   </a>
@@ -4272,10 +4283,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#caching" class="md-nav__link">
+  <a href="#esempi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Caching
+        Esempi
       
     </span>
   </a>
@@ -4302,9 +4313,10 @@
 
 <h1 id="fn_get_user_actions_map">fn_get_user_actions_map<a class="headerlink" href="#fn_get_user_actions_map" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Ritorna la mappa completa delle azioni di processo abilitate/disabilitate
-per un utente, in un singolo roundtrip DB.
-Gemella di <code>fn_get_user_permissions_map</code> (che mappa le aree funzionali).</p>
+<p>Restituisce la mappa completa delle azioni di processo abilitate o negate
+per un utente, in un solo roundtrip DB.
+E' la gemella di <code>fn_get_user_permissions_map</code>, ma opera sul catalogo
+<code>config.azioni_processo</code>.</p>
 <h2 id="schema">Schema<a class="headerlink" href="#schema" title="Permanent link">&para;</a></h2>
 <p><code>script</code></p>
 <h2 id="firma">Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h2>
@@ -4335,45 +4347,72 @@ Gemella di <code>fn_get_user_permissions_map</code> (che mappa le aree funzional
 <ul>
 <li><strong>STABLE</strong>: solo lettura</li>
 <li><strong>SECURITY INVOKER</strong>: esegue con i permessi del chiamante</li>
+<li>Guard: <code>p_auth_user_id</code> obbligatorio e <code>&gt; 0</code></li>
 </ul>
-<h2 id="logica">Logica<a class="headerlink" href="#logica" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Guard: <code>p_auth_user_id</code> obbligatorio e &gt; 0</li>
-<li>Loop su <code>config.azioni_processo</code> dove <code>attivo = TRUE</code></li>
-<li>Per ogni azione, chiama <code>script.fn_check_azione_processo(p_auth_user_id, permission_codename)</code></li>
-<li>Compone JSONB <code>{codename: true/false, ...}</code></li>
-</ol>
-<h2 id="catena-di-risoluzione-delegata-a-fn_check_azione_processo">Catena di risoluzione (delegata a fn_check_azione_processo)<a class="headerlink" href="#catena-di-risoluzione-delegata-a-fn_check_azione_processo" title="Permanent link">&para;</a></h2>
-<ol>
-<li><code>ruolo_sistema</code>: DISABILITATO → false, ADMIN → true</li>
-<li>Override utente azione (se presente e valido)</li>
-<li>Profilo reparto azione (ereditato dall'UO)</li>
-<li>Default → false (negata)</li>
-</ol>
-<h2 id="esempio-di-output">Esempio di output<a class="headerlink" href="#esempio-di-output" title="Permanent link">&para;</a></h2>
+<h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
+<p>JSONB nel formato:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;genera_fatture_lotti&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;reset_lotto_draft&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;approva_rimessa&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;annulla_fattura&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="nt">&quot;run_commesse_push&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 <span class="p">}</span>
 </code></pre></div>
+<h2 id="logica">Logica<a class="headerlink" href="#logica" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Valida <code>p_auth_user_id</code></li>
+<li>Legge una sola volta il contesto utente:
+   <code>ruolo_sistema</code> + <code>unita_organizzativa_id</code></li>
+<li>Esegue una query set-based su <code>config.azioni_processo</code></li>
+<li>Applica la catena di risoluzione con <code>LEFT JOIN</code> su:
+   <code>config.user_override_azioni</code> e <code>config.profili_reparto_azioni</code></li>
+<li>Compone il risultato con <code>jsonb_object_agg</code></li>
+</ol>
+<h2 id="catena-di-risoluzione">Catena di risoluzione<a class="headerlink" href="#catena-di-risoluzione" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>1. ruolo_sistema:
+   - NULL / DISABILITATO -&gt; false
+   - ADMIN -&gt; true
+2. Override utente azione (se presente e valido)
+3. Profilo reparto azione (ereditato dalla UO)
+4. Default -&gt; false
+</code></pre></div>
+<h2 id="ottimizzazione-introdotta">Ottimizzazione introdotta<a class="headerlink" href="#ottimizzazione-introdotta" title="Permanent link">&para;</a></h2>
+<p>La versione iniziale iterava <code>config.azioni_processo</code> e chiamava
+<code>fn_check_azione_processo</code> per ogni riga.</p>
+<p>La versione corrente:</p>
+<ul>
+<li>legge <code>ruolo_sistema</code> una sola volta</li>
+<li>legge <code>unita_organizzativa_id</code> una sola volta</li>
+<li>evita il loop PL/pgSQL</li>
+<li>costruisce la mappa completa in forma set-based</li>
+</ul>
+<p>Questo riduce il costo soprattutto quando la funzione viene richiamata
+nel payload di <code>fn_get_user_profile</code>.</p>
 <h2 id="dipendenze">Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>config.azioni_processo</code> — tabella azioni registrate</li>
-<li><code>script.fn_check_azione_processo</code> — risoluzione singola azione</li>
+<li><code>config.azioni_processo</code></li>
+<li><code>config.user_override_azioni</code></li>
+<li><code>config.profili_reparto_azioni</code></li>
+<li><code>anagrafiche.risorse_umane_auth_user</code></li>
+<li><code>anagrafiche.risorse_umane</code></li>
 </ul>
-<h2 id="integrazione-in-fn_get_user_profile">Integrazione in fn_get_user_profile<a class="headerlink" href="#integrazione-in-fn_get_user_profile" title="Permanent link">&para;</a></h2>
-<p>Chiamata nel punto 5 (composizione risultato) per popolare la chiave <code>azioni_abilitate</code>:</p>
+<h2 id="integrazione-con-fn_get_user_profile">Integrazione con fn_get_user_profile<a class="headerlink" href="#integrazione-con-fn_get_user_profile" title="Permanent link">&para;</a></h2>
+<p>La funzione popola la chiave <code>azioni_abilitate</code> nel JSONB del profilo utente:</p>
 <div class="highlight"><pre><span></span><code><span class="n">v_result</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="p">...,</span>
 <span class="w">    </span><span class="s1">&#39;permessi_area&#39;</span><span class="p">,</span><span class="w">     </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_permissions_map</span><span class="p">(</span><span class="n">p_auth_user_id</span><span class="p">),</span>
 <span class="w">    </span><span class="s1">&#39;azioni_abilitate&#39;</span><span class="p">,</span><span class="w">  </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_actions_map</span><span class="p">(</span><span class="n">p_auth_user_id</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<h2 id="caching">Caching<a class="headerlink" href="#caching" title="Permanent link">&para;</a></h2>
-<p>Il risultato e' cacheable lato Redis (L2 <code>permissions_cache.py</code>).
-Se le azioni cambiano, la funzione si adatta senza toccare Python.</p>
+<h2 id="esempi">Esempi<a class="headerlink" href="#esempi" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Mappa completa azioni</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_actions_map</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+<span class="c1">-- Verifica singola chiave del JSONB</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="p">(</span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_actions_map</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">-&gt;</span><span class="s1">&#39;genera_fatture_lotti&#39;</span><span class="p">;</span>
+
+<span class="c1">-- Uso indiretto nel profilo</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_profile</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</code></pre></div>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

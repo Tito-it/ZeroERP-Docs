@@ -4382,6 +4382,11 @@
 <td><code>catalogo.note(target_tipo, id)</code> ← <code>(note_target_tipo, note_id)</code></td>
 <td>Nota associata all’articolo</td>
 </tr>
+<tr>
+<td>FK →</td>
+<td><code>config.listini_tipologie(id)</code> ← <code>listino_tipologia_id</code></td>
+<td>Tipologia listino v5</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -4403,6 +4408,7 @@
 <li><strong>Note</strong>: <code>note_target_tipo</code> è vincolato a <code>ARTICOLI</code> quando valorizzato.</li>
 <li><strong>Solo componente</strong>: se <code>is_solo_componente=true</code> l’articolo non può essere usato come prodotto in <code>articoli_componenti</code>.</li>
 <li><strong><code>uom_id</code> obbligatorio</strong>: dalla revisione del 07-04-2026 la colonna è <code>NOT NULL</code>. L'unità di misura principale è anagrafica e necessaria per il seed automatico della UoM operativa base.</li>
+<li><strong>Tipologia listino (pricing v5, 14-04-2026)</strong>: <code>listino_tipologia_id</code> nullable, FK a <code>config.listini_tipologie</code>. Un articolo senza tipologia non puo' essere inserito in un listino tipizzato (guard <code>trgfn_listini_righe_guard_tipologia</code>, codice errore <code>E_ARTICOLO_TIPOLOGIA_MANCANTE</code>). Un articolo con tipologia diversa dalla tipologia del listino genera <code>E_ARTICOLO_TIPOLOGIA_INCOMPATIBILE</code>. Backfill iniziale (14-04-2026): articoli con <code>voce_utility = false</code> mappati automaticamente a <code>PRODOTTI</code>; articoli voce utility lasciati NULL per mapping manuale alle 4 tipologie tecniche (<code>CONSUMO</code>, <code>QUOTA_FISSA</code>, <code>IMPOSTA</code>, <code>ONERE_SISTEMA</code>).</li>
 </ul>
 <blockquote>
 <p>Consigliato: proteggere l’<strong>immutabilità</strong> del <code>codice</code> con un trigger <code>BEFORE UPDATE</code> dedicato (se è business‑key) e con GRANT mirati.</p>

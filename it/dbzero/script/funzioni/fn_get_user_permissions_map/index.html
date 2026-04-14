@@ -4162,10 +4162,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#scopo-principale" class="md-nav__link">
+  <a href="#scopo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Scopo Principale
+        Scopo
       
     </span>
   </a>
@@ -4217,10 +4217,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ritorno" class="md-nav__link">
+  <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ritorno
+        Output
       
     </span>
   </a>
@@ -4239,10 +4239,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#catena-di-risoluzione-delegata-a-fn_resolve_livello_area" class="md-nav__link">
+  <a href="#catena-di-risoluzione" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Catena di risoluzione (delegata a fn_resolve_livello_area)
+        Catena di risoluzione
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ottimizzazione-introdotta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ottimizzazione introdotta
       
     </span>
   </a>
@@ -4254,17 +4265,6 @@
     <span class="md-ellipsis">
       
         Dipendenze
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#performance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Performance
       
     </span>
   </a>
@@ -4312,15 +4312,16 @@
 
 
 <h1 id="fn_get_user_permissions_map">fn_get_user_permissions_map<a class="headerlink" href="#fn_get_user_permissions_map" title="Permanent link">&para;</a></h1>
-<h3 id="scopo-principale">Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Restituisce la mappa completa dei livelli di accesso per tutte le aree
-funzionali attive, in un solo roundtrip DB. Evita N chiamate separate
-da Python a <code>fn_resolve_livello_area</code>.</p>
+funzionali attive in un solo roundtrip DB.
+Evita chiamate ripetute dal backend e, dalla revisione <code>20260410-14</code>,
+non usa piu' un loop PL/pgSQL per area.</p>
 <h2 id="schema">Schema<a class="headerlink" href="#schema" title="Permanent link">&para;</a></h2>
-<p><code>script</code> (funzione cross-dominio)</p>
+<p><code>script</code></p>
 <h2 id="firma">Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_permissions_map</span><span class="p">(</span>
-<span class="w">    </span><span class="n">p_auth_user_id</span><span class="w">  </span><span class="nb">integer</span>
+<span class="w">    </span><span class="n">p_auth_user_id</span><span class="w">  </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">risorse_umane_auth_user</span><span class="p">.</span><span class="n">auth_user_id</span><span class="o">%</span><span class="k">TYPE</span>
 <span class="p">)</span><span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="n">jsonb</span>
 </code></pre></div>
 <h2 id="parametri">Parametri<a class="headerlink" href="#parametri" title="Permanent link">&para;</a></h2>
@@ -4329,16 +4330,16 @@ da Python a <code>fn_resolve_livello_area</code>.</p>
 <tr>
 <th>Parametro</th>
 <th>Tipo</th>
-<th>Default</th>
+<th style="text-align: center;">Obbligatorio</th>
 <th>Descrizione</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>p_auth_user_id</code></td>
-<td>integer</td>
-<td>-</td>
-<td>ID utente Django (auth_user.id), obbligatorio</td>
+<td><code>risorse_umane_auth_user.auth_user_id%TYPE</code></td>
+<td style="text-align: center;">Si</td>
+<td>ID utente Django (<code>auth_user.id</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -4346,64 +4347,75 @@ da Python a <code>fn_resolve_livello_area</code>.</p>
 <ul>
 <li><strong>STABLE</strong>: solo lettura</li>
 <li><strong>SECURITY INVOKER</strong>: esegue con i permessi del chiamante</li>
-<li>Guard: <code>p_auth_user_id</code> obbligatorio e &gt; 0</li>
+<li>Guard: <code>p_auth_user_id</code> obbligatorio e <code>&gt; 0</code></li>
 </ul>
-<h2 id="ritorno">Ritorno<a class="headerlink" href="#ritorno" title="Permanent link">&para;</a></h2>
-<p>JSONB con una chiave per ogni area funzionale attiva. Valore = livello accesso risolto.</p>
+<h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
+<p>JSONB con una chiave per ogni area funzionale attiva e valore pari al
+livello effettivo risolto:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;anagrafiche&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TUTTO&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;vendite&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LETTURA&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;acquisti&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BLOCCATO&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;contabilita&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SCRITTURA&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;magazzino&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LETTURA&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;config&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TUTTO&quot;</span>
+<span class="w">  </span><span class="nt">&quot;catalogo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TUTTO&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;pagamenti&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BLOCCATO&quot;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Valori possibili per ogni area (enum <code>config.livello_accesso</code>):
-- <code>TUTTO</code> — accesso completo
-- <code>SCRITTURA</code> — lettura + scrittura
-- <code>LETTURA</code> — solo lettura
-- <code>BLOCCATO</code> — nessun accesso</p>
+<p>Valori possibili (enum <code>config.livello_accesso</code>):</p>
+<ul>
+<li><code>TUTTO</code></li>
+<li><code>LETTURA</code></li>
+<li><code>BLOCCATO</code></li>
+</ul>
 <h2 id="logica">Logica<a class="headerlink" href="#logica" title="Permanent link">&para;</a></h2>
 <ol>
-<li>Guard: <code>p_auth_user_id</code> non NULL e &gt; 0</li>
-<li>Loop su <code>config.aree_funzionali</code> WHERE <code>attiva = TRUE</code>, ordinato per <code>ordinamento</code>, <code>schema_db</code></li>
-<li>Per ogni area: chiama <code>script.fn_resolve_livello_area(p_auth_user_id, schema_db)</code></li>
-<li>Accumula risultato in JSONB</li>
-<li>Ritorna la mappa completa</li>
+<li>Valida <code>p_auth_user_id</code></li>
+<li>Legge una sola volta il contesto utente:
+   <code>ruolo_sistema</code> + <code>unita_organizzativa_id</code></li>
+<li>Esegue una query set-based su <code>config.aree_funzionali</code></li>
+<li>Applica la catena di risoluzione con <code>LEFT JOIN</code> su:
+   <code>config.user_override_aree</code> e <code>config.profili_reparto_aree</code></li>
+<li>Compone il risultato con <code>jsonb_object_agg</code></li>
 </ol>
-<h2 id="catena-di-risoluzione-delegata-a-fn_resolve_livello_area">Catena di risoluzione (delegata a fn_resolve_livello_area)<a class="headerlink" href="#catena-di-risoluzione-delegata-a-fn_resolve_livello_area" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>Per ogni area:
-  1. ruolo_sistema → ADMIN = TUTTO, DISABILITATO = BLOCCATO
-  2. Override utente area (config.user_override_aree) se presente e valido temporalmente
-  3. Profilo reparto (config.profili_reparto_aree) ereditato dalla UO
-  4. Default → BLOCCATO
+<h2 id="catena-di-risoluzione">Catena di risoluzione<a class="headerlink" href="#catena-di-risoluzione" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>1. ruolo_sistema:
+   - NULL / DISABILITATO -&gt; BLOCCATO
+   - ADMIN -&gt; TUTTO
+2. Override utente area (se presente e valido temporalmente)
+3. Profilo reparto area (ereditato dalla UO)
+4. Default -&gt; BLOCCATO
 </code></pre></div>
+<h2 id="ottimizzazione-introdotta">Ottimizzazione introdotta<a class="headerlink" href="#ottimizzazione-introdotta" title="Permanent link">&para;</a></h2>
+<p>La versione iniziale iterava le aree attive e chiamava il resolver area
+una volta per ciascuna.</p>
+<p>La versione corrente:</p>
+<ul>
+<li>legge <code>ruolo_sistema</code> una sola volta</li>
+<li>legge <code>unita_organizzativa_id</code> una sola volta</li>
+<li>evita il loop PL/pgSQL</li>
+<li>costruisce la mappa completa in forma set-based</li>
+</ul>
+<p>Questo riduce il costo della funzione, soprattutto quando viene chiamata
+indirettamente da <code>fn_get_user_profile</code>.</p>
 <h2 id="dipendenze">Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>config.aree_funzionali</code> — elenco aree attive</li>
-<li><code>script.fn_resolve_livello_area</code> — risoluzione livello per singola area</li>
-</ul>
-<h2 id="performance">Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h2>
-<ul>
-<li>~10 aree attive = ~10 chiamate leggere a <code>fn_resolve_livello_area</code></li>
-<li>Risultato cacheable lato Redis (<code>permissions_cache.py</code>)</li>
-<li>1 roundtrip DB vs 10 chiamate separate da Python</li>
+<li><code>config.aree_funzionali</code></li>
+<li><code>config.user_override_aree</code></li>
+<li><code>config.profili_reparto_aree</code></li>
+<li><code>anagrafiche.risorse_umane_auth_user</code></li>
+<li><code>anagrafiche.risorse_umane</code></li>
 </ul>
 <h2 id="integrazione-con-fn_get_user_profile">Integrazione con fn_get_user_profile<a class="headerlink" href="#integrazione-con-fn_get_user_profile" title="Permanent link">&para;</a></h2>
-<p>Questa funzione viene chiamata da <code>fn_get_user_profile</code> per popolare
-la chiave <code>permessi_area</code> nel JSONB di risposta dell'endpoint <code>/api/v1/core/me/</code>.</p>
+<p>La funzione viene chiamata da <code>fn_get_user_profile</code> per popolare la chiave
+<code>permessi_area</code> del profilo utente.</p>
 <h2 id="esempi">Esempi<a class="headerlink" href="#esempi" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Mappa permessi per utente con id=1</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Mappa completa aree</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_permissions_map</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 
-<span class="c1">-- Accesso a una singola area dal risultato</span>
+<span class="c1">-- Accesso a una singola area</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="p">(</span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_permissions_map</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;vendite&#39;</span><span class="p">;</span>
 
-<span class="c1">-- Uso nel profilo utente (chiamata interna)</span>
-<span class="c1">-- fn_get_user_profile chiama internamente fn_get_user_permissions_map</span>
+<span class="c1">-- Uso indiretto nel profilo</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_user_profile</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="c1">-- → { ..., &quot;permessi_area&quot;: {&quot;anagrafiche&quot;: &quot;TUTTO&quot;, ...} }</span>
 </code></pre></div>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

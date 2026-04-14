@@ -4236,6 +4236,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pricing-v5-modalita-a-b-c-14-04-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pricing v5 — modalita' A / B / C (14-04-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#meta-rinnovi-e-storicizzazione" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4366,6 +4377,86 @@
 <li><strong>Dopo l’attivazione</strong>: il contratto governa il ciclo commerciale; i precontrattuali restano <strong>storico di raccolta</strong>, utili per audit o riconciliazioni.</li>
 </ul>
 <p>Per attivita <strong>non‑utilities</strong> o servizi eterogenei, i dati precontrattuali possono <strong>non essere presenti</strong>: in tal caso le condizioni specifiche risiedono in <code>vendite.contratti.meta</code> e in <code>vendite.contratti_righe.meta</code>.</p>
+<hr />
+<h3 id="pricing-v5-modalita-a-b-c-14-04-2026">Pricing v5 — modalita' A / B / C (14-04-2026)<a class="headerlink" href="#pricing-v5-modalita-a-b-c-14-04-2026" title="Permanent link">&para;</a></h3>
+<p>Il contratto e' il <strong>ponte commerciale</strong> tra billing account e listino (STADIO 1 del resolver prezzi v5). Tre modalita' di pricing coesistono sulla stessa tabella:</p>
+<table>
+<thead>
+<tr>
+<th>Modalita'</th>
+<th><code>listino_id</code></th>
+<th><code>tipo_variazione_globale</code></th>
+<th>Righe <code>contratti_righe</code></th>
+<th>Esempio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A</strong> — listino + variazione globale</td>
+<td>NOT NULL</td>
+<td>NOT NULL</td>
+<td>vuoto o solo override mirati</td>
+<td>"Listino gas 2026 −10%"</td>
+</tr>
+<tr>
+<td><strong>B</strong> — listino con override</td>
+<td>NOT NULL</td>
+<td>NULL o NOT NULL</td>
+<td>righe con <code>prezzo_unitario</code> per articoli specifici</td>
+<td>"Listino gas 2026, art X a €50 fisso"</td>
+</tr>
+<tr>
+<td><strong>C</strong> — interamente negoziato</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>tutte le righe attive con <code>prezzo_unitario</code> NOT NULL</td>
+<td>Grande cliente con condizioni 100% su misura</td>
+</tr>
+</tbody>
+</table>
+<p>Campi introdotti:</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Tipo</th>
+<th>Nullable</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>listino_id</code></td>
+<td>bigint</td>
+<td>YES</td>
+<td>FK a <code>vendite.listini(id)</code>. NULL = modalita' C</td>
+</tr>
+<tr>
+<td><code>tipo_variazione_globale</code></td>
+<td>varchar(16)</td>
+<td>YES</td>
+<td><code>PERCENTUALE</code> | <code>VALORE_FISSO</code></td>
+</tr>
+<tr>
+<td><code>valore_variazione_globale</code></td>
+<td>numeric(10,4)</td>
+<td>YES</td>
+<td>Coerente con <code>tipo_variazione_globale</code></td>
+</tr>
+</tbody>
+</table>
+<p>Vincoli CHECK:</p>
+<ul>
+<li><code>chk_contratti_tipo_variazione_globale</code>: solo <code>PERCENTUALE</code>/<code>VALORE_FISSO</code> o NULL.</li>
+<li><code>chk_contratti_variazione_globale_coerente</code>: tipo e valore sono entrambi NULL o entrambi NOT NULL.</li>
+<li><code>chk_contratti_modalita_pricing</code>: se <code>listino_id IS NULL</code>, variazione globale = NULL (nessun punto di applicazione).</li>
+</ul>
+<p>Vincoli trigger (fail-fast all'attivazione):</p>
+<ul>
+<li><code>trg_contratti_a10_guard_modalita_c_activation_ins_upd</code> -&gt; <a href="../../funzioni/trgfn_contratti_guard_modalita_c_activation/"><code>vendite.trgfn_contratti_guard_modalita_c_activation</code></a>: scatta sia nella transizione verso stato <code>codice_interno = 'ATTIVO'</code> con <code>listino_id NULL</code>, sia quando un contratto gia' ATTIVO passa a modalita' C (UPDATE <code>listino_id</code> da NOT NULL a NULL). In entrambi i casi blocca se non esiste almeno una riga attiva o se qualche riga attiva ha <code>prezzo_unitario NULL</code>.</li>
+<li><code>trg_contratti_righe_a10_guard_modalita_c_ins_upd</code> su <code>contratti_righe</code> -&gt; <a href="../../funzioni/trgfn_contratti_righe_guard_modalita_c/"><code>vendite.trgfn_contratti_righe_guard_modalita_c</code></a>: su contratto gia' ATTIVO in modalita' C, la riga attiva deve avere <code>prezzo_unitario NOT NULL</code>.</li>
+</ul>
+<p>In stato <code>DRAFT</code> le righe incomplete sono ammesse: il contratto modalita' C non e' attivabile finche' le righe non sono complete.</p>
 <hr />
 <h3 id="meta-rinnovi-e-storicizzazione">Meta, rinnovi e storicizzazione<a class="headerlink" href="#meta-rinnovi-e-storicizzazione" title="Permanent link">&para;</a></h3>
 <ul>

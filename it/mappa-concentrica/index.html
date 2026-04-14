@@ -4451,6 +4451,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#completato-8-12-aprile-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Completato (8-12 aprile 2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#in-corso" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4510,17 +4521,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#mappa-concentrica-zeroerp-7-aprile-2026" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mappa Concentrica — ZeroERP (7 aprile 2026)
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -4544,7 +4544,7 @@
 <p>Documento vivo. Aggiornare ad ogni milestone significativa.</p>
 <p>Riferimento metodologico: <a href="../sviluppo-concentrico/">sviluppo-concentrico.md</a></p>
 </blockquote>
-<p><em>Ultimo aggiornamento: 7 aprile 2026</em></p>
+<p><em>Ultimo aggiornamento: 12 aprile 2026</em></p>
 <hr />
 <h2 id="visione-dinsieme">Visione d'insieme<a class="headerlink" href="#visione-dinsieme" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>                    ┌─────────────────────────────────────────────┐
@@ -4603,13 +4603,13 @@
 <td><code>dbops</code></td>
 <td>Schema DB</td>
 <td>Operativo</td>
-<td>fn_run_automations, apply_fk_index_policy, registry task, vw_duplicate_indexes, audit_log, sessioni_utente, request_log</td>
+<td>fn_run_automations, apply_fk_index_policy, registry task, vw_duplicate_indexes, audit_log, sessioni_utente, request_log, <strong>automazione daterange</strong></td>
 </tr>
 <tr>
 <td><code>script</code></td>
 <td>Schema DB</td>
 <td>Operativo</td>
-<td>fn_log_and_raise_error, viste e funzioni riusabili</td>
+<td>fn_log_and_raise_error, viste e funzioni riusabili, <strong>trgfn_set_validita</strong> (trigger generico daterange)</td>
 </tr>
 <tr>
 <td><code>public</code></td>
@@ -4630,7 +4630,7 @@
 <li>Error handling centralizzato (<code>ServiceError</code>, <code>ErrorManager.require</code>)</li>
 <li>Middleware API (exception handling, JWT audit, request context, request log)</li>
 <li>Pattern uniformi: <code>handle_post_json</code>, paginazione, throttling, search validators</li>
-<li>Automazioni DB: audit fields, tx_id, storicizzazione, lock colonne, protezione attivo</li>
+<li>Automazioni DB: audit fields, tx_id, storicizzazione, lock colonne, protezione attivo, <strong>daterange nativo</strong> (<code>script.trgfn_set_validita</code>)</li>
 <li><strong>Tracciamento processi e job</strong>: API per audit log, task registry multi-dominio, job run log (6 endpoint REST, 27 test)</li>
 <li><strong>Audit sessioni</strong>: login/refresh JWT tracciati in <code>dbops.sessioni_utente</code> con IP, user_agent, request_id (19 test)</li>
 <li><strong>Request logging</strong>: ogni request <code>/api/*</code> registrata in <code>dbops.request_log</code> con metodo, path, status, durata</li>
@@ -5017,7 +5017,7 @@
 <td>App Django</td>
 <td>Operativo</td>
 <td>Operativo</td>
-<td>Ciclo attivo: preventivi, ordini, DDT, fatture, pipeline fatturazione, lotti, commesse, <strong>listini</strong></td>
+<td>Ciclo attivo: preventivi, ordini, DDT, fatture, pipeline fatturazione, lotti, commesse, <strong>listini v3</strong> (pricing completo + rettifiche + alert)</td>
 </tr>
 <tr>
 <td><code>acquisti</code></td>
@@ -5115,6 +5115,14 @@ acquisti ─────► stesse dipendenze di vendite
 <tr>
 <td>Commesse (push, orchestrator, handlers)</td>
 <td>Operativo</td>
+</tr>
+<tr>
+<td>Listini v3 (N2/N5/N6/N7/N8a)</td>
+<td>Operativo — Sprint B-v3 completato (aprile 2026)</td>
+</tr>
+<tr>
+<td>Pricing commesse (N5/N7/N7-sblocco)</td>
+<td>Operativo — riallineamento, variazione, sblocco</td>
 </tr>
 </tbody>
 </table>
@@ -5256,7 +5264,7 @@ contabilita      usa     usa       -        -     (futuro)      -
 <li>Backend + frontend chiusi, 49 test verdi, doc consolidata in <a href="../dev/work-done/gestione-articoli/">work-done/gestione-articoli.md</a></li>
 <li>Building block prodotti: <code>ArticoloLookup.vue</code> cross-dominio + endpoint lookup</li>
 <li>~~Consolidamento WIP listini~~ — <strong>FATTO</strong> (6 aprile 2026)</li>
-<li>I due vecchi WIP <code>gestione-articoli-listini.md</code> + <code>gestione-listini.md</code> consolidati in <a href="../dev/work-in-progress/sviluppo-listini/">sviluppo-listini.md</a></li>
+<li>I due vecchi WIP <code>gestione-articoli-listini.md</code> + <code>gestione-listini.md</code> consolidati in sviluppo-listini.md (ora in <a href="../dev/work-done/sviluppo-listini-v1/">work-done</a>, superseded da <a href="../dev/work-in-progress/sviluppo-listini-v3/">sviluppo-listini-v3.md</a>)</li>
 <li>Estratte rettifiche prezzi (DB-L4) in <a href="../dev/work-in-progress/sviluppo-rettifiche/">sviluppo-rettifiche.md</a></li>
 <li>~~Drawer dedicato gestione permessi operatore~~ — <strong>FATTO</strong> (6 aprile 2026)</li>
 <li><code>OperatorePermessiTab</code> reso riutilizzabile (watch su <code>authUserId</code>)</li>
@@ -5274,28 +5282,57 @@ contabilita      usa     usa       -        -     (futuro)      -
 <li>~~Logo brand ottimizzato~~ — <strong>FATTO</strong> (5 aprile 2026)</li>
 <li>Master 1640x1640 → versioni ottimizzate 512/256/32 px per frontend, favicon (PNG+ICO), docs</li>
 </ul>
+<h3 id="completato-8-12-aprile-2026">Completato (8-12 aprile 2026)<a class="headerlink" href="#completato-8-12-aprile-2026" title="Permanent link">&para;</a></h3>
+<ul>
+<li>~~Migrazione <code>daterange</code> nativo PostgreSQL~~ — <strong>FATTO</strong> (12 aprile 2026)</li>
+<li>Infrastruttura: <code>dbops.automazione_overlap</code> + <code>script.trgfn_set_validita()</code> (trigger generico riusabile)</li>
+<li>Fase 1: 5 tabelle con GIST migrate (listini_versioni, listini_associazioni, uom_conversioni, contratti, articoli_componenti) + <code>fn_resolve_prezzo_listino</code> aggiornata</li>
+<li>Fase 2: 11 tabelle config/anagrafiche migrate + 5 funzioni permessi semplificate con <code>@&gt;</code></li>
+<li>Fase 3: 2 tabelle pratiche con <code>tstzrange</code></li>
+<li>Backend: ottimizzazione query repository (<code>validita @&gt;</code> al posto dei doppi confronti)</li>
+<li>Linee guida SQL: sezione 7b aggiunta</li>
+<li>Analisi: <a href="../dev/work-in-progress/migrazione-daterange/">migrazione-daterange.md</a></li>
+<li>~~Listini v3 — Sprint B completo~~ — <strong>FATTO</strong> (12 aprile 2026)</li>
+<li><strong>N8a</strong> Variazione % massa su BOZZA (backend + frontend dialog + 9 test)</li>
+<li><strong>N2</strong> Alert scadenze versioni (backend + frontend widget badge + 2 test)</li>
+<li><strong>N6</strong> Rettifica controllata riga ATTIVA non propagata (backend + trigger DB defense-in-depth + 4 test)</li>
+<li><strong>N5</strong> Riallineamento prezzo commessa (backend + 3 test)</li>
+<li><strong>N7</strong> Variazione prezzo eccezionale commessa + sblocco (backend + 6 test)</li>
+<li>Avviso UX programmazione chiusura versione ATTIVA (<code>ProgrammaChiusuraDialog.vue</code>)</li>
+<li>Documentazione: N3 lifecycle preventivo→commessa, N4 nota match_level 3, N8b guida "listino post-it"</li>
+<li>2 doc API create/aggiornate, error policies registrate, 1231 test totali</li>
+<li>Analisi: <a href="../dev/work-in-progress/sviluppo-listini-v3/">sviluppo-listini-v3.md</a></li>
+<li>~~Emittenti fiscali CRUD + BA mapping + Utilities~~ — <strong>FATTO</strong> (8 aprile 2026)</li>
+<li>Admin CRUD + sub-resource mapping BA + matrice utilities slot/override</li>
+<li>BB <code>list_entity_utility_matrix</code> + <code>UtilityPerRuoloSelect</code>, validazione P.IVA</li>
+<li>~~Matrice utilities tipi ruolo~~ — <strong>FATTO</strong> (8 aprile 2026)</li>
+<li>CRUD admin <code>config.utilities_tipi_ruolo</code>, app config attivata, drawer tab usage</li>
+<li>~~Refactor operatore-emittenti 1-a-1~~ — <strong>FATTO</strong> (9 aprile 2026)</li>
+<li><code>JwtAuditAuthentication</code> Option A pura, GUC session-scoped</li>
+<li>BE fasi 2-4 + FE completa + 7 fix critici review</li>
+<li>~~Refactor invariante univocita' listini~~ — <strong>FATTO</strong> (10 aprile 2026)</li>
+<li>Drop <code>priorita</code> da versioni e associazioni, constraint GIST cross-listino</li>
+<li>Permessi v2: 6 fasi, <code>model_permission</code> su 33 view, <code>IvaSelect</code>/<code>ContoContabileSelect</code></li>
+</ul>
 <h3 id="in-corso">In corso<a class="headerlink" href="#in-corso" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Gestione Soggetti</strong>: backend + frontend completati — in fase di test UI</li>
 <li><strong>Gestione Geografica</strong>: operativo — UI da migliorare</li>
 <li><strong>Gestione Clienti/Fornitori</strong>: drawer end-to-end operativo, v2 (subentro/disdetta) pianificata</li>
 <li><strong>Gestione Pratiche v2</strong>: frontend operativo — in fase di test UI</li>
-<li><strong>Listini vendita</strong>: backend + frontend implementati — in fase di test UI</li>
 <li><strong>Integrazione AI v2</strong>: evoluzione con contesto dinamico e nuovi tool — WIP</li>
 <li><strong>Autenticazione 2FA</strong>: fase 4 TOTP — WIP</li>
-<li><strong>Permessi v2</strong>: livello oggetto e granularita' fine — pianificato</li>
+<li><strong>Permessi v2</strong>: livello oggetto e granularita' fine — in corso (33 view gia' configurate)</li>
 <li><strong>Rettifiche prezzi (DB-L4)</strong>: motore delta + canali manuale/automatico — pianificato in WIP dedicato</li>
 </ul>
 <h3 id="breve-termine">Breve termine<a class="headerlink" href="#breve-termine" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Test UI reali su Articoli, Listini, UoM, Pratiche, Soggetti, Clienti, Fornitori</li>
+<li>Test UI reali su Articoli, UoM, Pratiche, Soggetti, Clienti, Fornitori</li>
 <li>Seed azioni processo per nuovi domini (catalogo, vendite) + prop <code>action</code> sui componenti</li>
 <li>Upload file allegati pratiche (storage filesystem/object storage)</li>
-<li>Documentazione API per catalogo e vendite/listini</li>
 </ul>
 <h3 id="medio-termine">Medio termine<a class="headerlink" href="#medio-termine" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Frontend listini: fase 6 (frontend) da testare su UI reale</li>
 <li>Integrazione <code>vendite</code> → <code>pratiche</code>: eventi di vendita generano pratiche con giornale</li>
 <li>Integrazione <code>anagrafiche</code> → <code>pratiche</code>: onboarding cliente/fornitore tracciato</li>
 <li>Attivazione handler flusso per automazioni specifiche</li>
@@ -5319,7 +5356,8 @@ contabilita      usa     usa       -        -     (futuro)      -
 <p>La mappa deve riflettere la realta', non le intenzioni. Aggiornare solo quando qualcosa cambia concretamente.</p>
 </blockquote>
 <hr />
-<h2 id="mappa-concentrica-zeroerp-7-aprile-2026"><em>Mappa Concentrica — ZeroERP (7 aprile 2026)</em><a class="headerlink" href="#mappa-concentrica-zeroerp-7-aprile-2026" title="Permanent link">&para;</a></h2>
+<p><em>Mappa Concentrica — ZeroERP (12 aprile 2026)</em></p>
+<hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>

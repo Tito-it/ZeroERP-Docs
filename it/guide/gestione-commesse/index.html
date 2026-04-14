@@ -4317,6 +4317,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#lifecycle-prezzo-dal-preventivo-alla-fattura" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle prezzo: dal preventivo alla fattura
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lifecycle prezzo: dal preventivo alla fattura">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#flusso-standard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flusso standard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gerarchia-prezzo-riassunto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gerarchia prezzo (riassunto)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#casi-limite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Casi limite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#error-handling" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4946,6 +4996,101 @@ esegue:</p>
     <span class="o">...</span>
 <span class="p">)</span>
 </code></pre></div>
+<hr />
+<h2 id="lifecycle-prezzo-dal-preventivo-alla-fattura">Lifecycle prezzo: dal preventivo alla fattura<a class="headerlink" href="#lifecycle-prezzo-dal-preventivo-alla-fattura" title="Permanent link">&para;</a></h2>
+<p>Questa sezione documenta il flusso completo del prezzo dall'origine (preventivo o ordine) fino alla fattura, passando per la commessa.</p>
+<h3 id="flusso-standard">Flusso standard<a class="headerlink" href="#flusso-standard" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>1. Creazione preventivo
+   L&#39;operatore inserisce righe con prezzo. Il prezzo puo venire da:
+   - Resolver listino (fn_resolve_prezzo_listino) alla data del documento
+   - Override manuale dell&#39;operatore (prezzo digitato a mano)
+
+2. Push in commessa
+   Il push (handler PREVENTIVO) crea commesse_attivita con:
+   - prezzo_snapshot = prezzo risolto o manuale
+   - listino_versione_id = versione usata dal resolver (NULL se manuale)
+   - listino_riga_id = riga usata dal resolver (NULL se manuale)
+   - prezzo_bloccato = TRUE se override manuale, FALSE se da resolver
+   - pricing_mode = &#39;FIXED&#39; (v1)
+
+3. Modifica preventivo post-push
+   Se il preventivo viene modificato dopo il push:
+   - commesse_attivita.prezzo_da_riallineare = TRUE (segnalazione, no update automatico)
+   - Il prezzo NON viene aggiornato silenziosamente
+   - L&#39;operatore deve decidere se riallineare (N5) o ignorare
+
+4. Riallineamento su conferma esplicita (N5)
+   POST .../riallinea-prezzo/ ricalcola dal resolver alla data originale
+   - Se la versione listino e cambiata: richiede conferma esplicita
+   - Aggiorna prezzo_snapshot + prezzo_unitario su attivita_fatturabili
+   - Azzera prezzo_da_riallineare
+   - prezzo_bloccato resta FALSE
+
+5. Variazione eccezionale (N7) — alternativa a N5
+   POST .../variazione-prezzo-eccezionale/ con prezzo manuale + motivo
+   - Imposta prezzo_bloccato = TRUE (il resolver non ricalcolera piu)
+   - Il prezzo manuale prevale su qualsiasi listino
+
+6. Sblocco (N7-sblocco) — reversibilita di N7
+   POST .../sblocca-prezzo/ ricalcola dal resolver e sblocca
+   - Imposta prezzo_bloccato = FALSE
+
+7. Conversione in ordine
+   Se il preventivo non e stato riallineato (prezzo_da_riallineare = TRUE),
+   il flag persiste sulla commessa. L&#39;ordine non lo azzera automaticamente.
+   L&#39;operatore puo riallineare in qualsiasi momento prima della fatturazione.
+
+8. Emissione fattura
+   La pipeline fatturazione legge SOLO da attivita_fatturabili:
+   - prezzo_unitario (snapshot gia propagato)
+   - prezzo_bloccato (informativo)
+   - NON rilegge mai il listino
+</code></pre></div>
+<h3 id="gerarchia-prezzo-riassunto">Gerarchia prezzo (riassunto)<a class="headerlink" href="#gerarchia-prezzo-riassunto" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Priorita</th>
+<th>Fonte</th>
+<th>prezzo_bloccato dopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Override manuale su documento (N7)</td>
+<td>TRUE</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Prezzo da resolver listino (standard o N5)</td>
+<td>FALSE</td>
+</tr>
+</tbody>
+</table>
+<h3 id="casi-limite">Casi limite<a class="headerlink" href="#casi-limite" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>Comportamento</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Preventivo modificato, commessa non riallineata, fattura emessa</td>
+<td>La fattura usa il prezzo dello snapshot originale. Il flag <code>prezzo_da_riallineare</code> resta TRUE come segnalazione storica</td>
+</tr>
+<tr>
+<td>Versione listino cambiata dopo lo snapshot</td>
+<td>N5 detecta il cambio e richiede conferma. Senza conferma, non aggiorna</td>
+</tr>
+<tr>
+<td>Riga commessa gia fatturata</td>
+<td>N5/N7/N7-sblocco rifiutano con 409. Per correggere serve NDC/NDD (DB-L4)</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="error-handling">Error handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
 <p>Tutte le funzioni usano <code>script.fn_log_and_raise_error</code> con:</p>

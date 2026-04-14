@@ -3138,6 +3138,89 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ottimizzazione-connessioni-database-in-produzione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ottimizzazione connessioni database in produzione
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ottimizzazione connessioni database in produzione">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#come-funziona-oggi-sviluppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Come funziona oggi (sviluppo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#primo-passo-riutilizzo-connessioni-conn_max_age" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Primo passo: riutilizzo connessioni (CONN_MAX_AGE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondo-passo-pgbouncer-pool-di-connessioni" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secondo passo: pgbouncer (pool di connessioni)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-serve-pgbouncer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando serve pgbouncer?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configurazione-tipica-pgbouncer-riferimento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configurazione tipica pgbouncer (riferimento)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nota-sul-listener-listennotify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nota sul listener LISTEN/NOTIFY
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#best-practice" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5519,6 +5602,89 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ottimizzazione-connessioni-database-in-produzione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ottimizzazione connessioni database in produzione
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ottimizzazione connessioni database in produzione">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#come-funziona-oggi-sviluppo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Come funziona oggi (sviluppo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#primo-passo-riutilizzo-connessioni-conn_max_age" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Primo passo: riutilizzo connessioni (CONN_MAX_AGE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondo-passo-pgbouncer-pool-di-connessioni" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secondo passo: pgbouncer (pool di connessioni)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-serve-pgbouncer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando serve pgbouncer?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configurazione-tipica-pgbouncer-riferimento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configurazione tipica pgbouncer (riferimento)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nota-sul-listener-listennotify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nota sul listener LISTEN/NOTIFY
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#best-practice" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6434,6 +6600,150 @@ ricevere l'identita per due strade diverse senza conflitti (la GUC e idempotente
 <li><a href=".././architettura-permessi-e-autorizzazioni/">Architettura permessi e autorizzazioni</a> — quadro generale GUC</li>
 <li><a href="../../postgresql/parametri-personalizzati-(GUC)/">Parametri Personalizzati GUC</a> — semantica session-scoped vs transaction-scoped</li>
 </ul>
+<hr />
+<h2 id="ottimizzazione-connessioni-database-in-produzione">Ottimizzazione connessioni database in produzione<a class="headerlink" href="#ottimizzazione-connessioni-database-in-produzione" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>Questa sezione spiega come funzionano le connessioni tra Django e PostgreSQL,
+cosa succede quando ci sono molti operatori collegati, e come preparare il sistema
+per la produzione. Il linguaggio e volutamente semplice e operativo.</p>
+</blockquote>
+<h3 id="come-funziona-oggi-sviluppo">Come funziona oggi (sviluppo)<a class="headerlink" href="#come-funziona-oggi-sviluppo" title="Permanent link">&para;</a></h3>
+<p>Ogni volta che un operatore fa una qualsiasi azione nell'interfaccia (aprire una lista,
+salvare un form, cercare un soggetto), il browser invia una richiesta HTTP al backend Django.
+Per ogni richiesta, Django:</p>
+<ol>
+<li><strong>Apre una nuova connessione</strong> a PostgreSQL</li>
+<li>Imposta le variabili GUC (<code>app.jwt_user</code>, <code>app.current_user_id</code>) per identificare l'operatore</li>
+<li>Esegue le query necessarie</li>
+<li>Resetta le variabili GUC</li>
+<li><strong>Chiude la connessione</strong></li>
+</ol>
+<p>Questo comportamento e determinato dal parametro Django <code>CONN_MAX_AGE = 0</code> (valore di default).
+In sviluppo funziona perfettamente, ma in produzione con molti operatori attivi diventa
+uno spreco: aprire e chiudere una connessione TCP ha un costo (handshake di rete,
+autenticazione PostgreSQL, allocazione memoria sul server DB).</p>
+<h3 id="primo-passo-riutilizzo-connessioni-conn_max_age">Primo passo: riutilizzo connessioni (<code>CONN_MAX_AGE</code>)<a class="headerlink" href="#primo-passo-riutilizzo-connessioni-conn_max_age" title="Permanent link">&para;</a></h3>
+<p>Il parametro <code>CONN_MAX_AGE</code> dice a Django: "dopo aver finito con questa richiesta,
+<strong>non chiudere</strong> la connessione — tienila aperta per le prossime richieste".</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># settings.py</span>
+<span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="o">...</span>
+        <span class="s1">&#39;CONN_MAX_AGE&#39;</span><span class="p">:</span> <span class="mi">600</span><span class="p">,</span>  <span class="c1"># 10 minuti</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Cosa cambia in pratica:</strong></p>
+<ul>
+<li>Con <code>CONN_MAX_AGE = 0</code>: 100 richieste = 100 connessioni aperte e chiuse</li>
+<li>Con <code>CONN_MAX_AGE = 600</code>: 100 richieste in 10 minuti = poche connessioni riutilizzate</li>
+</ul>
+<p><strong>Perche e sicuro nel nostro caso:</strong> il middleware <code>JwtAuditMiddleware</code> gia resetta le GUC
+a fine richiesta (vedi sezione precedente). Questo significa che quando la stessa connessione
+viene riutilizzata da un altro operatore, le variabili dell'operatore precedente sono gia
+state cancellate. Il codice era stato scritto fin dall'inizio per supportare questo scenario.</p>
+<p><strong>Limiti:</strong> ogni processo (worker) Gunicorn tiene aperta la sua connessione. Con 4 worker
+= massimo 4 connessioni permanenti verso PostgreSQL. Per un team di 5-15 operatori
+e piu che sufficiente.</p>
+<p><strong>Quando non basta piu:</strong> quando il numero di worker Gunicorn cresce (perche servono
+piu operatori simultanei), le connessioni permanenti verso PostgreSQL aumentano in modo
+proporzionale. A quel punto serve un <strong>pool di connessioni dedicato</strong>.</p>
+<h3 id="secondo-passo-pgbouncer-pool-di-connessioni">Secondo passo: pgbouncer (pool di connessioni)<a class="headerlink" href="#secondo-passo-pgbouncer-pool-di-connessioni" title="Permanent link">&para;</a></h3>
+<p>pgbouncer e un software leggero che si posiziona <strong>tra Django e PostgreSQL</strong> e gestisce
+un pool condiviso di connessioni. Invece di avere ogni worker con la sua connessione
+diretta, tutti i worker condividono un numero limitato di connessioni reali.</p>
+<div class="highlight"><pre><span></span><code>Senza pgbouncer:
+  Worker 1 ──────────── PostgreSQL (connessione 1)
+  Worker 2 ──────────── PostgreSQL (connessione 2)
+  Worker 3 ──────────── PostgreSQL (connessione 3)
+  Worker 4 ──────────── PostgreSQL (connessione 4)
+
+Con pgbouncer (transaction mode):
+  Worker 1 ─┐
+  Worker 2 ─┤── pgbouncer ─── PostgreSQL (2-3 connessioni reali)
+  Worker 3 ─┤
+  Worker 4 ─┘
+</code></pre></div>
+<p><strong>Come funziona (transaction mode):</strong></p>
+<ol>
+<li>Un worker chiede una connessione a pgbouncer</li>
+<li>pgbouncer gli assegna una connessione dal pool</li>
+<li>Il worker esegue la sua transazione (query, INSERT, UPDATE)</li>
+<li>Appena la transazione finisce, pgbouncer <strong>rimette la connessione nel pool</strong></li>
+<li>Un altro worker puo usare la stessa connessione</li>
+</ol>
+<p>Il vantaggio e che PostgreSQL vede solo poche connessioni (es. 10), anche se ci sono
+50 worker o 100 operatori collegati. PostgreSQL gestisce ogni connessione con un processo
+dedicato, quindi meno connessioni = meno memoria e CPU sul server DB.</p>
+<p><strong>Regola importante:</strong> quando si usa pgbouncer, <code>CONN_MAX_AGE</code> va <strong>riportato a 0</strong>.
+Il motivo e semplice: se Django tiene la connessione aperta (<code>CONN_MAX_AGE &gt; 0</code>),
+sta occupando uno slot nel pool di pgbouncer anche quando non sta facendo nulla.
+Questo vanifica il vantaggio del pool. Con <code>CONN_MAX_AGE = 0</code>, Django rilascia
+la connessione subito e pgbouncer la ricicla per altri worker.</p>
+<div class="highlight"><pre><span></span><code>Scenario                    │ CONN_MAX_AGE │ Perche
+────────────────────────────┼──────────────┼──────────────────────────
+Django → PostgreSQL diretto │ 600          │ Evita overhead apertura/chiusura
+Django → pgbouncer          │ 0            │ Lascia pgbouncer gestire il pool
+</code></pre></div>
+<p><strong>Perche e sicuro nel nostro caso:</strong> il reset delle GUC nel middleware funziona in entrambi
+gli scenari. La difesa e stata progettata fin dall'inizio proprio per supportare sia
+connessioni dirette che connessioni pooled.</p>
+<h3 id="quando-serve-pgbouncer">Quando serve pgbouncer?<a class="headerlink" href="#quando-serve-pgbouncer" title="Permanent link">&para;</a></h3>
+<p>Non serve subito. Ecco una guida orientativa:</p>
+<table>
+<thead>
+<tr>
+<th>Situazione</th>
+<th>Soluzione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-15 operatori, 2-4 worker Gunicorn</td>
+<td><code>CONN_MAX_AGE = 600</code> e sufficiente</td>
+</tr>
+<tr>
+<td>15-50 operatori, 8+ worker Gunicorn</td>
+<td>Valutare pgbouncer</td>
+</tr>
+<tr>
+<td>50+ operatori o microservizi multipli</td>
+<td>pgbouncer e raccomandato</td>
+</tr>
+</tbody>
+</table>
+<p>Il segnale che serve pgbouncer e quando PostgreSQL mostra molte connessioni aperte
+(<code>SELECT count(*) FROM pg_stat_activity</code>) rispetto al lavoro effettivo, o quando
+i tempi di connessione diventano visibili nelle metriche.</p>
+<h3 id="configurazione-tipica-pgbouncer-riferimento">Configurazione tipica pgbouncer (riferimento)<a class="headerlink" href="#configurazione-tipica-pgbouncer-riferimento" title="Permanent link">&para;</a></h3>
+<p>Questa e una configurazione di riferimento per quando si decidera di adottare pgbouncer.
+Non va applicata adesso — serve come base quando il momento arrivera.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">; /etc/pgbouncer/pgbouncer.ini (esempio)</span>
+<span class="k">[databases]</span>
+<span class="na">zeroerp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">host=&lt;db_host&gt; port=5432 dbname=zeroerp</span>
+
+<span class="k">[pgbouncer]</span>
+<span class="na">listen_addr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">127.0.0.1</span>
+<span class="na">listen_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6432</span>
+<span class="c1">; transaction mode: connessione condivisa, rilasciata a fine transazione</span>
+<span class="na">pool_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">transaction</span>
+<span class="c1">; connessioni reali verso PostgreSQL (regolare in base al carico)</span>
+<span class="na">default_pool_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">20</span>
+<span class="c1">; connessioni extra per picchi temporanei</span>
+<span class="na">reserve_pool_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">5</span>
+<span class="c1">; massimo connessioni client (worker Django + listener + management command)</span>
+<span class="na">max_client_conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">100</span>
+</code></pre></div>
+<p>Con pgbouncer attivo, Django si connette a <code>127.0.0.1:6432</code> invece che direttamente
+al server PostgreSQL. Basta cambiare <code>DB_HOST</code> e <code>DB_PORT</code> nelle variabili d'ambiente
+e riportare <code>CONN_MAX_AGE = 0</code>.</p>
+<h3 id="nota-sul-listener-listennotify">Nota sul listener LISTEN/NOTIFY<a class="headerlink" href="#nota-sul-listener-listennotify" title="Permanent link">&para;</a></h3>
+<p>Il <code>CambioRepartoListener</code> (descritto nella sezione cambio reparto) usa una connessione
+psycopg3 <strong>dedicata e persistente</strong> per ascoltare le notifiche PostgreSQL. Questa
+connessione <strong>non deve passare per pgbouncer</strong> in transaction mode, perche LISTEN
+richiede una connessione stabile che non viene mai rilasciata. In produzione con pgbouncer,
+il listener va configurato per connettersi <strong>direttamente</strong> a PostgreSQL, bypassando
+il pool.</p>
 <hr />
 <h2 id="best-practice">Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h2>
 <ul>

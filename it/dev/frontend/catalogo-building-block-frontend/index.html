@@ -4570,7 +4570,12 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>useLookup</code></td>
 <td><a href="../../../../../frontend/src/core/composables/useLookup.js">useLookup.js</a></td>
-<td>Cache dati lookup generico (caricamento immediato o lazy)</td>
+<td>Cache dati lookup <strong>per-istanza</strong> (caricamento immediato o lazy). Usare solo per lookup che devono ricaricarsi a ogni mount o con fetchFn non-idempotenti. Per lookup condivisi cross-componente preferire <code>useGlobalLookup</code></td>
+</tr>
+<tr>
+<td><code>useGlobalLookup</code> / <code>invalidateLookup</code> / <code>invalidateAllLookups</code></td>
+<td><a href="../../../../../frontend/src/core/composables/useGlobalLookup.js">useGlobalLookup.js</a></td>
+<td>Cache dati lookup <strong>modulo-level</strong> condivisa per-chiave string. Primo consumer fa la fetch, i successivi riusano stessa <code>items</code>/<code>loading</code> reattiva + stessa Promise in volo (dedup thundering herd). <code>invalidateLookup(key)</code> per refresh mirato post-CRUD admin, <code>invalidateAllLookups()</code> per logout/switch tenant. Adottato da <code>LookupSelect</code> (chiave = <code>rel</code>), <code>ListiniSearchTable</code> (<code>config.listini_tipologie</code>), <code>MatriceIndirizzi*</code> (<code>config.tipi_indirizzi</code>). Ref: sviluppo-listini-v6 §2.1 (V6-F1)</td>
 </tr>
 <tr>
 <td><code>useServerAutocomplete</code></td>
@@ -4585,7 +4590,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>useReadonlyMode</code></td>
 <td><a href="../../../../../frontend/src/core/composables/useReadonlyMode.js">useReadonlyMode.js</a></td>
-<td>Modalità sola lettura basata su permessi utente (provider/consumer)</td>
+<td>Modalità sola lettura basata su permessi utente (provider/consumer). Accetta <code>modelName</code> opzionale per granularita' oggetto v2: <code>useReadonlyMode('anagrafiche', 'conto_bancario')</code>. Senza model, fallback al livello area.</td>
 </tr>
 <tr>
 <td><code>useActionPermission</code></td>
@@ -4693,7 +4698,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>useAuthStore</code></td>
 <td><a href="../../../../../frontend/src/stores/auth.js">auth.js</a></td>
-<td>Autenticazione e autorizzazione (token, profilo, permessi, login/logout)</td>
+<td>Autenticazione e autorizzazione (token, profilo, permessi, login/logout). Getter permessi: <code>getLivelloArea(schemaDb)</code>, <code>isAreaReadonly(schemaDb)</code>, <code>isAreaBlocked(schemaDb)</code>, <code>getLivelloOggetto(schemaDb, modelName)</code>, <code>isObjectReadonly(schemaDb, modelName)</code>, <code>isObjectBlocked(schemaDb, modelName)</code>, <code>isActionAllowed(codename)</code>.</td>
 </tr>
 <tr>
 <td><code>useUiStore</code></td>
@@ -4870,6 +4875,11 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><code>getBillingAccountLookupById</code></td>
 <td><a href="../../../../../frontend/src/core/apiCore.js">apiCore.js</a></td>
 <td>Restore singolo BA arricchito per edit (<code>GET /anagrafiche/billing-account/{id}/lookup/</code>)</td>
+</tr>
+<tr>
+<td><code>lookupContiContabili</code></td>
+<td><a href="../../../../../frontend/src/core/apiCore.js">apiCore.js</a></td>
+<td>Lookup dedicato conti contabili con filtro tipo (<code>GET /core/lookup/conti-contabili/?tipo=A</code> o <code>?tipo=V</code>). Usato da <code>ContoContabileSelect</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -5549,7 +5559,17 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 <tr>
 <td><code>LookupSelect</code></td>
 <td><a href="../../../../../frontend/src/core/components/LookupSelect.vue">LookupSelect.vue</a></td>
-<td>Select generico per tabelle lookup whitelisted (<code>id, codice, descrizione</code>). Prop <code>rel</code> mappa alla whitelist in <code>dbops_repository.py</code> (~45 tabelle). Sostituisce il pattern <code>useLookup(() =&gt; lookupCodici(...))</code> + <code>&lt;Select&gt;</code>. Props: <code>rel</code> (obbligatorio), <code>placeholder</code>, <code>label-field</code> (default <code>descrizione</code>), <code>value-field</code> (default <code>id</code>), <code>show-clear</code>, <code>filter</code> (default true), <code>disabled</code>. Emette <code>@change</code>.</td>
+<td>Select generico per tabelle lookup whitelisted (<code>id, codice, descrizione</code>). Prop <code>rel</code> mappa alla whitelist in <code>dbops_repository.py</code> (~45 tabelle). Sostituisce il pattern <code>useLookup(() =&gt; lookupCodici(...))</code> + <code>&lt;Select&gt;</code>. Props: <code>rel</code> (obbligatorio), <code>placeholder</code>, <code>label-field</code> (default <code>descrizione</code>), <code>value-field</code> (default <code>id</code>), <code>show-clear</code>, <code>filter</code> (default true), <code>disabled</code>, <code>show-code</code> (mostra <code>"descrizione (codice)"</code> sia in display che dropdown — usa gli slot PrimeVue <code>#option</code> e <code>#value</code>). Emette <code>@change</code>.</td>
+</tr>
+<tr>
+<td><code>IvaSelect</code></td>
+<td><a href="../../../../../frontend/src/core/components/IvaSelect.vue">IvaSelect.vue</a></td>
+<td><strong>Wrapper standard IVA.</strong> Incapsula <code>LookupSelect rel="config.iva"</code> con <code>show-code</code> attivo. Da usare ovunque servano combo IVA per garantire display uniforme (<code>"descrizione (codice)"</code>). Props: <code>modelValue</code>, <code>placeholder</code>, <code>disabled</code>, <code>showClear</code> (default true). Usato da: ArticoloDrawer, ClienteDrawer, PreventiviRigaForm.</td>
+</tr>
+<tr>
+<td><code>ContoContabileSelect</code></td>
+<td><a href="../../../../../frontend/src/core/components/ContoContabileSelect.vue">ContoContabileSelect.vue</a></td>
+<td><strong>Wrapper standard conti contabili</strong> filtrati per tipo. Usa l'endpoint dedicato <code>GET /core/lookup/conti-contabili/?tipo=A</code> o <code>?tipo=V</code> (non il lookup generico, perche' espone <code>tipo_conto</code>). Props: <code>modelValue</code>, <code>tipo</code> (obbligatorio, <code>'A'</code> acquisto o <code>'V'</code> vendita, validator), <code>placeholder</code>, <code>disabled</code>, <code>showClear</code>. Display <code>"descrizione (codice)"</code>. Un'unica combo gestisce entrambi i tipi tramite la prop. Usato da: ArticoloDrawer (conto vendita V + conto acquisto A).</td>
 </tr>
 <tr>
 <td><code>UtilityPerRuoloSelect</code></td>

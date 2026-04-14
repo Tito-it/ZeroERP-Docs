@@ -4317,14 +4317,16 @@ Se ha almeno una riga, vede solo i record relativi agli emittenti autorizzati.</
 <h2 id="note">Note<a class="headerlink" href="#note" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Non applicabile alle APIView con SQL diretto</strong>: le view vendite attuali usano funzioni DB
-  e non hanno queryset ORM. Per queste, usare <code>PermissionResolver.get_emittenti_ids()</code> direttamente
-  nei service/repository.</li>
+  e non hanno queryset ORM. Per queste, usare <code>PermissionResolver.get_emittenti_sr_ids()</code> (ritorna
+  <code>soggetto_ruolo_id</code>) nei service/repository quando il SQL filtra su <code>emittente_soggetto_ruolo_id</code>.
+  Usare <code>get_emittenti_ids()</code> solo per lookup diretti su <code>emittenti_fiscali.id</code> (PK).</li>
 <li>Il mixin utilizza la cache per-request da <code>request._zeroerp_perms_cache</code> quando disponibile.</li>
 </ul>
 <h2 id="dipendenze">Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>PermissionResolver.get_ruolo_sistema()</code> — per bypass ADMIN</li>
-<li><code>PermissionResolver.get_emittenti_ids()</code> — per lista ID autorizzati</li>
+<li><code>PermissionResolver.get_emittenti_ids()</code> — per lista PK <code>emittenti_fiscali.id</code></li>
+<li><code>PermissionResolver.get_emittenti_sr_ids()</code> — per lista <code>soggetto_ruolo_id</code> (filtri su efba)</li>
 </ul>
 <h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link">&para;</a></h2>
 <p><code>apps/core/tests/mixins/test_emittente_fiscale_scope.py</code> — 7 test unitari.</p>

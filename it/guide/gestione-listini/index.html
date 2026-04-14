@@ -3235,6 +3235,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#guida-operativa-il-listino-post-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guida operativa: il "listino post-it"
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Guida operativa: il &quot;listino post-it&quot;">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quando-funziona" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando funziona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-non-funziona" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando NON funziona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabella-delle-soluzioni" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabella delle soluzioni
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operazioni-disponibili" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operazioni disponibili
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rettifiche-prezzi-previste-non-ancora-implementate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5270,6 +5331,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#guida-operativa-il-listino-post-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guida operativa: il "listino post-it"
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Guida operativa: il &quot;listino post-it&quot;">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quando-funziona" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando funziona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quando-non-funziona" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quando NON funziona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabella-delle-soluzioni" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabella delle soluzioni
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operazioni-disponibili" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operazioni disponibili
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rettifiche-prezzi-previste-non-ancora-implementate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5379,7 +5501,7 @@
 <hr />
 <h2 id="introduzione">Introduzione<a class="headerlink" href="#introduzione" title="Permanent link">&para;</a></h2>
 <p>In Zero ERP il <strong>listino</strong> non e un semplice elenco prezzi: e un sistema multi-livello che risponde alla domanda <em>"quanto costa questo articolo, per questo contesto, in questa data?"</em> tenendo conto di chi compra, quale utility eroga il servizio e chi emette la fattura.</p>
-<p>Questa guida spiega <strong>come funziona il sistema listini</strong> — quali entita lo compongono, come si relazionano, come il resolver determina il prezzo e quali regole governano il processo. La logica e la stessa sia per il dominio utility (gas, energia, idrico) sia per il dominio commercio (servizi, manifatturiero).</p>
+<p>Questa guida spiega <strong>come funziona il sistema listini</strong> — quali entita lo compongono, come si relazionano, come il resolver determina il prezzo e quali regole governano il processo. La logica e la stessa sia per l'ambito utility (gas, energia, idrico) sia per l'ambito commercio (servizi, manifatturiero).</p>
 <p><strong>Cosa troverai in questa guida:</strong></p>
 <ul>
 <li>Le entita coinvolte e il loro ruolo nel processo</li>
@@ -5390,12 +5512,15 @@
 <li>Le garanzie di coerenza offerte dal database</li>
 </ul>
 <h3 id="il-modello-e-generico-non-solo-per-le-utility">Il modello e generico, non solo per le utility<a class="headerlink" href="#il-modello-e-generico-non-solo-per-le-utility" title="Permanent link">&para;</a></h3>
-<p>La struttura listini funziona per qualsiasi tipo di azienda. Il campo <code>dominio</code> sul listino (<code>UTILITY</code> o <code>COMMERCIO</code>) classifica il perimetro, ma l'architettura sottostante — versioni, righe, associazioni, resolver — e identica in entrambi i casi.</p>
+<p>La struttura listini funziona per qualsiasi tipo di azienda. Il campo <code>utility_id</code> sul listino (FK a <code>config.utilities</code>, NOT NULL) classifica il servizio erogante: gas, energia, idrico, teleriscaldamento oppure "Base" per i listini di puro commercio. L'architettura sottostante — versioni, righe, associazioni, resolver — e identica in tutti i casi.</p>
 <p>In pratica:</p>
 <ul>
-<li><strong>Azienda utility</strong>: listini con dimensioni BA + utility + emittente, prezzi ad alta precisione per consumi minimi</li>
-<li><strong>Azienda non-utility</strong>: listini con dimensioni BA (o senza contesto), pricing standard per servizi/prodotti</li>
+<li><strong>Azienda utility</strong>: listini con <code>utility_id</code> specifico (Gas, Energia, Idrico), dimensioni righe BA + utility + emittente, prezzi ad alta precisione per consumi minimi</li>
+<li><strong>Azienda non-utility</strong>: listini con <code>utility_id = 5</code> (Base), dimensioni BA (o senza contesto), pricing standard per servizi/prodotti</li>
 </ul>
+<blockquote>
+<p><strong>Refactor 2026-04-12</strong>: il vecchio campo <code>dominio</code> (enum UTILITY/COMMERCIO) e<code>stato sostituito dalla FK</code>utility_id NOT NULL<code>verso</code>config.utilities`. La utility "Base" (id=5 nel seed standard) copre i listini commerciali.</p>
+</blockquote>
 <hr />
 <h2 id="tabelle-coinvolte">Tabelle coinvolte<a class="headerlink" href="#tabelle-coinvolte" title="Permanent link">&para;</a></h2>
 <ul>
@@ -5411,7 +5536,7 @@
 <hr />
 <h2 id="le-entita-e-il-loro-significato">Le entita e il loro significato<a class="headerlink" href="#le-entita-e-il-loro-significato" title="Permanent link">&para;</a></h2>
 <h3 id="listino-testata">Listino (testata)<a class="headerlink" href="#listino-testata" title="Permanent link">&para;</a></h3>
-<p>E il contenitore principale. Identifica un listino con un codice univoco, una descrizione e un dominio (<code>UTILITY</code> o <code>COMMERCIO</code>). Non contiene ne date ne prezzi: questi sono delegati alle entita figlie.</p>
+<p>E il contenitore principale. Identifica un listino con un codice univoco, una descrizione e una utility (<code>utility_id</code> NOT NULL, FK a <code>config.utilities</code>). Non contiene ne date ne prezzi: questi sono delegati alle entita figlie.</p>
 <p>Il listino e pensato come entita stabile nel tempo. Quello che cambia sono le sue versioni e le sue righe prezzo.</p>
 <h3 id="versione">Versione<a class="headerlink" href="#versione" title="Permanent link">&para;</a></h3>
 <p>E la finestra temporale in cui un listino e valido. Ogni versione ha:</p>
@@ -5487,7 +5612,7 @@
 <hr />
 <h2 id="ciclo-di-vita-di-un-listino">Ciclo di vita di un listino<a class="headerlink" href="#ciclo-di-vita-di-un-listino" title="Permanent link">&para;</a></h2>
 <h3 id="creazione">Creazione<a class="headerlink" href="#creazione" title="Permanent link">&para;</a></h3>
-<p>Un listino nasce con codice, descrizione e dominio. E subito attivo (<code>attivo=true</code>) ma non ancora operativo: servono almeno una versione e delle righe prezzo.</p>
+<p>Un listino nasce con codice, descrizione e utility. E subito attivo (<code>attivo=true</code>) ma non ancora operativo: servono almeno una versione e delle righe prezzo.</p>
 <h3 id="pubblicazione-di-una-versione">Pubblicazione di una versione<a class="headerlink" href="#pubblicazione-di-una-versione" title="Permanent link">&para;</a></h3>
 <p>Le versioni nascono in stato <code>BOZZA</code>. In questa fase si possono aggiungere, modificare e rimuovere righe prezzo liberamente. Quando la configurazione e pronta:</p>
 <ol>
@@ -5624,6 +5749,13 @@ Output: prezzo + riferimenti (listino_id, versione_id, riga_id, associazione_id)
 </tbody>
 </table>
 <p><strong>Vince la riga con livello piu basso</strong> (piu specifica). Il resolver cerca il match piu stretto: se esiste un prezzo specifico per BA + utility + emittente, quello prevale sul prezzo generico.</p>
+<blockquote>
+<p><strong>Nota sul livello 3 (BA + emittente senza utility):</strong> questo livello e rilevante
+esclusivamente in contesti multi-emittente (tipicamente utility) dove l'emittente
+fiscale e un soggetto distinto dall'azienda erogante. In contesti commercio con
+emittente unico, il livello 3 non produce mai un match differente dal livello 4
+(BA da solo) e puo essere ignorato in fase di configurazione.</p>
+</blockquote>
 <h3 id="fase-4-tie-break">Fase 4 — Tie-break<a class="headerlink" href="#fase-4-tie-break" title="Permanent link">&para;</a></h3>
 <p>Con l'invariante univocita stretta (refactor 2026-04-09) il caso "due righe con stesso match_level" e strutturalmente vietato dal database:</p>
 <ul>
@@ -5866,6 +5998,85 @@ INSERT/UPDATE listini_associazioni
 <li>Il resolver opera in lettura consistente: non puo vedere dati intermedi di una transazione in corso</li>
 </ul>
 <hr />
+<h2 id="guida-operativa-il-listino-post-it">Guida operativa: il "listino post-it"<a class="headerlink" href="#guida-operativa-il-listino-post-it" title="Permanent link">&para;</a></h2>
+<p>Il termine "listino post-it" descrive l'uso di un secondo listino piccolo per correggere
+il prezzo di un singolo articolo senza toccare il listino base. Come un post-it attaccato
+sopra il cartellone grande.</p>
+<h3 id="quando-funziona">Quando funziona<a class="headerlink" href="#quando-funziona" title="Permanent link">&para;</a></h3>
+<p>Il listino post-it funziona quando il prezzo corretto vale per un <strong>contesto specifico</strong> —
+un cliente preciso, una utility precisa. In quel caso la riga nel listino post-it ha il BA
+valorizzato (match_level 4) o BA+utility (match_level 2). Il resolver la trova prima della
+riga generica del listino base, perche e piu specifica.</p>
+<h3 id="quando-non-funziona">Quando NON funziona<a class="headerlink" href="#quando-non-funziona" title="Permanent link">&para;</a></h3>
+<p>Il listino post-it <strong>non funziona</strong> quando il prezzo corretto deve valere per <strong>tutti i
+clienti</strong> (riga generica, match_level 7). Entrambi i listini avrebbero un'associazione
+generica (NULL, NULL, NULL) per lo stesso periodo, e il vincolo
+<code>ex_listini_associazioni_no_overlap</code> lo impedisce a livello DB: non possono esistere due
+associazioni con lo stesso scope nello stesso periodo.</p>
+<h3 id="tabella-delle-soluzioni">Tabella delle soluzioni<a class="headerlink" href="#tabella-delle-soluzioni" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Situazione</th>
+<th>Soluzione corretta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prezzo sbagliato per un cliente specifico, articolo non ancora fatturato</td>
+<td>Rettifica controllata N6 sulla riga</td>
+</tr>
+<tr>
+<td>Prezzo sbagliato per un cliente specifico, articolo gia fatturato</td>
+<td>Listino post-it con BA valorizzato sulla riga</td>
+</tr>
+<tr>
+<td>Prezzo sbagliato per tutti i clienti, articolo non ancora fatturato</td>
+<td>Rettifica controllata N6 sulla riga</td>
+</tr>
+<tr>
+<td>Prezzo sbagliato per tutti i clienti, articolo gia fatturato</td>
+<td>Clone listino + correggi la riga + attiva (O1)</td>
+</tr>
+<tr>
+<td>Aumento prezzi annuale su tutto il listino</td>
+<td>Clone + variazione % massa (N8a) + attiva</td>
+</tr>
+</tbody>
+</table>
+<h3 id="operazioni-disponibili">Operazioni disponibili<a class="headerlink" href="#operazioni-disponibili" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Operazione</th>
+<th>Contesto</th>
+<th>API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Rettifica controllata (N6)</strong></td>
+<td>Riga ATTIVA non propagata</td>
+<td><code>PATCH .../rettifica-controllata/</code></td>
+</tr>
+<tr>
+<td><strong>Variazione % massa (N8a)</strong></td>
+<td>Righe BOZZA (aumento/riduzione)</td>
+<td><code>POST .../applica-variazione/</code></td>
+</tr>
+<tr>
+<td><strong>Clone versione (O1)</strong></td>
+<td>Da qualsiasi stato</td>
+<td><code>POST .../clona/</code></td>
+</tr>
+<tr>
+<td><strong>Programma chiusura</strong></td>
+<td>Versione ATTIVA, imposta <code>valido_al</code></td>
+<td><code>PATCH .../</code> con <code>valido_al</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
 <h2 id="rettifiche-prezzi-previste-non-ancora-implementate">Rettifiche prezzi (previste, non ancora implementate)<a class="headerlink" href="#rettifiche-prezzi-previste-non-ancora-implementate" title="Permanent link">&para;</a></h2>
 <p>Il sistema prevede un meccanismo di rettifica per gestire modifiche retroattive ai prezzi senza riscrivere le fatture emesse.</p>
 <h3 id="principio">Principio<a class="headerlink" href="#principio" title="Permanent link">&para;</a></h3>
@@ -5889,6 +6100,7 @@ erDiagram
     listini                ||--o{ listini_associazioni    : visibile_per
     listini_versioni       ||--o{ listini_righe           : contiene_prezzi
 
+    utilities              ||--o{ listini                 : classifica_testata
     articoli               ||--o{ listini_righe           : prezzato_in
     unita_misura           ||--o{ listini_righe           : unita_di
 
