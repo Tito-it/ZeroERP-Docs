@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.32">
+      <meta name="generator" content="zensical-0.0.33">
     
     
       
@@ -40,7 +40,7 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -4284,6 +4284,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#8b-suggerisci-prezzo-riga" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8b. Suggerisci prezzo riga
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#9-aggiorna-riga" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4392,6 +4403,17 @@
     <span class="md-ellipsis">
       
         Codici errore
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integrazione-pricing-v5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrazione pricing v5
       
     </span>
   </a>
@@ -4545,22 +4567,42 @@
 <li><code>articolo_id</code> (uuid string, <strong>obbligatorio</strong>)</li>
 <li><code>descrizione</code> (string, opzionale — override descrizione articolo)</li>
 <li><code>quantita</code> (decimal, opzionale)</li>
-<li><code>prezzo_unitario</code> (decimal, opzionale — proposto da listino nel frontend)</li>
+<li><code>prezzo_unitario</code> (decimal, opzionale — <strong>auto-fill dal resolver pricing v5 se omesso</strong>)</li>
 <li><code>sconto_percentuale</code> (decimal, opzionale, default 0)</li>
 <li><code>iva_id</code> (int, opzionale)</li>
 <li><code>uom_operativa_id</code> (int, opzionale)</li>
 <li><code>ordine</code> (int, opzionale)</li>
-<li>Regole: ammesso solo in stato BOZZA, ricalcolo totali automatico dopo insert</li>
-<li>Errori: <code>E_PREV_VALIDAZIONE</code> (400), <code>E_PREV_STATO_NON_MODIFICABILE</code> (409)</li>
+<li>Regole:</li>
+<li>Ammesso solo in stato BOZZA</li>
+<li><strong>Auto-fill prezzo</strong>: se <code>prezzo_unitario</code> non e' nel payload e la testata ha BA+utility+data validi, il service chiama <code>PricingService.resolve_prezzo</code> e popola il prezzo dal resolver v5 (3 stadi: promo/contratto/categoria)</li>
+<li><strong>L1 override</strong>: se <code>prezzo_unitario</code> e' passato e differisce dal resolver, serve l'azione di processo <code>prezzo_override_manuale</code>; altrimenti <code>E_PREV_OVERRIDE_NON_AUTORIZZATO</code> (403). Superuser bypassato</li>
+<li><strong>Meta audit</strong>: popolato sempre con <code>origine_prezzo</code> (PROMO/CONTRATTO_OVERRIDE/CONTRATTO_LISTINO/CATEGORIA/MANUALE) + <code>prezzo_resolver_context</code> (listino/contratto/promo + variazione). Se override manuale: anche <code>prezzo_base_resolver</code>, <code>delta_override</code>, <code>delta_override_pct</code>, <code>override_user_id</code></li>
+<li>Ricalcolo totali automatico dopo insert (trigger DB)</li>
+<li>Errori: <code>E_PREV_VALIDAZIONE</code> (400), <code>E_PREV_STATO_NON_MODIFICABILE</code> (409), <code>E_PREV_OVERRIDE_NON_AUTORIZZATO</code> (403)</li>
+</ul>
+<hr />
+<h3 id="8b-suggerisci-prezzo-riga">8b. Suggerisci prezzo riga<a class="headerlink" href="#8b-suggerisci-prezzo-riga" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Metodo: <code>POST</code></li>
+<li>Path: <code>/api/v1/vendite/preventivi/{id}/righe/suggerisci-prezzo/</code></li>
+<li>Body JSON:</li>
+<li><code>articolo_id</code> (uuid string, <strong>obbligatorio</strong>)</li>
+<li><code>uom_id</code> (int, <strong>obbligatorio</strong>)</li>
+<li>Scopo: calcola il prezzo suggerito dal resolver v5 senza creare la riga. Usato dal FE per pre-compilare il campo prezzo all'apertura del drawer. Nessun side-effect</li>
+<li>Output <code>200</code>: <code>{ "data": { "prezzo_finale": "50.00", "prezzo_base_snapshot": "52.50", "origine": "CATEGORIA", "listino_id": 100, "contratto_id": null, "promo_id": null, "tipo_variazione_applicata": "PERCENTUALE", "valore_variazione_applicata": "-5.00" } }</code></li>
+<li>Contesto derivato: BA, utility, data dalla testata preventivo; emittente dal JWT operatore</li>
+<li>Area: <code>vendite</code> livello LETTURA sufficiente (pura lettura)</li>
+<li>Errori: <code>E_PREV_NOT_FOUND</code> (404), <code>E_PREV_VALIDAZIONE</code> (400 — testata senza BA/utility/data o utente senza emittenti autorizzati), errori applicativi del resolver (<code>E_PREZZO_LISTINO_NON_TROVATO</code>, <code>E_CATEGORIA_LISTINO_NON_MAPPATA</code>, ...)</li>
 </ul>
 <hr />
 <h3 id="9-aggiorna-riga">9. Aggiorna riga<a class="headerlink" href="#9-aggiorna-riga" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Metodo: <code>PATCH</code></li>
 <li>Path: <code>/api/v1/vendite/preventivi/{id}/righe/{rid}/</code></li>
-<li>Body JSON: campi modificabili (quantita, prezzo_unitario, sconto_percentuale, descrizione, uom_operativa_id, iva_id, ordine)</li>
+<li>Body JSON: campi modificabili (<code>quantita</code>, <code>prezzo_unitario</code>, <code>sconto_percentuale</code>, <code>descrizione</code>, <code>uom_operativa_id</code>, <code>iva_id</code>, <code>ordine</code>)</li>
 <li>Regole: ammesso solo in stato BOZZA, ricalcolo totali dopo update</li>
-<li>Errori: <code>E_PREV_RIGA_NOT_FOUND</code> (404), <code>E_PREV_STATO_NON_MODIFICABILE</code> (409)</li>
+<li><strong>L1 override su PATCH</strong>: se il payload tocca <code>prezzo_unitario</code>, scatta lo stesso check dell'insert (autorizzazione + audit meta). L'articolo/UoM della riga esistente sono usati come contesto resolver</li>
+<li>Errori: <code>E_PREV_RIGA_NOT_FOUND</code> (404), <code>E_PREV_STATO_NON_MODIFICABILE</code> (409), <code>E_PREV_OVERRIDE_NON_AUTORIZZATO</code> (403)</li>
 </ul>
 <hr />
 <h3 id="10-elimina-riga">10. Elimina riga<a class="headerlink" href="#10-elimina-riga" title="Permanent link">&para;</a></h3>
@@ -4795,8 +4837,22 @@
 <td>409</td>
 <td>Stato non ammette generazione pratica</td>
 </tr>
+<tr>
+<td><code>E_PREV_OVERRIDE_NON_AUTORIZZATO</code></td>
+<td>403</td>
+<td>Modifica manuale del prezzo riga non autorizzata (serve azione <code>prezzo_override_manuale</code>). L1 del sistema autorizzazioni prezzi — vedi <a href="../../../../dev/work-in-progress/sviluppo-autorizzazioni-prezzi/">sviluppo-autorizzazioni-prezzi</a></td>
+</tr>
 </tbody>
 </table>
+<h2 id="integrazione-pricing-v5">Integrazione pricing v5<a class="headerlink" href="#integrazione-pricing-v5" title="Permanent link">&para;</a></h2>
+<p>Le righe preventivo usano il building block centralizzato <code>PricingService.resolve_prezzo</code> (<a href="../../../../dev/backend/catalogo-building-block-backend/">catalogo backend §Vendite Pricing v5</a>) per:</p>
+<ul>
+<li><strong>Auto-fill</strong> del prezzo quando il payload lo omette (endpoint 8) — resolver 3 stadi: PROMO → CONTRATTO → CATEGORIA</li>
+<li><strong>Suggerimento diagnostico</strong> pre-compilazione (endpoint 8b) — nessun side-effect</li>
+<li><strong>Audit override</strong> (endpoint 8/9) — meta JSONB popolato con origine del prezzo, contesto resolver e delta override manuale</li>
+</ul>
+<p>Il resolver risolve il prezzo usando BA, utility, data della testata preventivo + emittente derivato dal JWT operatore. Se la testata manca di uno di questi campi (caso legacy), il wiring e' skippato: il prezzo passa come da payload senza check ne' audit.</p>
+<p>Per la roadmap L2 (limite sconto via parametri) e L3 (approvazione out-of-policy via pratiche), vedi <a href="../../../../dev/work-in-progress/sviluppo-autorizzazioni-prezzi/">sviluppo-autorizzazioni-prezzi</a>.</p>
 
 
 
@@ -4851,7 +4907,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.91a19a9e.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

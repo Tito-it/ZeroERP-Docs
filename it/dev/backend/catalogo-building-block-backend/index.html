@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.32">
+      <meta name="generator" content="zensical-0.0.33">
     
     
       
@@ -40,7 +40,7 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -4228,6 +4228,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#vendite-pricing-v5-appsvendite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vendite — Pricing v5 (apps/vendite/)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#preventivi-vendita-appsvendite" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4868,6 +4879,107 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 </tbody>
 </table>
 <hr />
+<h2 id="vendite-pricing-v5-appsvendite">Vendite — Pricing v5 (<code>apps/vendite/</code>)<a class="headerlink" href="#vendite-pricing-v5-appsvendite" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PricingRepository.resolve_prezzo_listino_v2</code></td>
+<td><a href="../../../../../backend/apps/vendite/db/pricing_repository.py">pricing_repository.py</a></td>
+<td>Wrapper <code>vendite.fn_resolve_prezzo_listino_v2(uuid,bigint,date,bigint,integer,bigint,integer)</code>. Resolver a 3 stadi (promo → contratto → categoria). Ritorna 1 riga con prezzo + metadati snapshot.</td>
+</tr>
+<tr>
+<td><code>PricingRepository.resolve_prezzo_composito</code></td>
+<td><a href="../../../../../backend/apps/vendite/db/pricing_repository.py">pricing_repository.py</a></td>
+<td>Wrapper <code>vendite.fn_resolve_prezzo_composito(...)</code>. BoM ibrido A/B1/B2: ritorna N righe (CASO A) o 1 riga (B1/B2) secondo esposizione in fattura dei componenti.</td>
+</tr>
+<tr>
+<td><code>PricingService.resolve_prezzo</code></td>
+<td><a href="../../../../../backend/apps/vendite/services/pricing_service.py">pricing_service.py</a></td>
+<td>Facade <code>fn_resolve_prezzo_listino_v2</code>: valida input (UUID, int &gt; 0, date), delega al repo, traduce <code>DatabaseError</code> P0001 in <code>ServiceError</code> con codice preservato quando MESSAGE matcha un marker noto (<code>E_PREZZO_LISTINO_NON_TROVATO</code>, <code>E_CATEGORIA_LISTINO_NON_MAPPATA</code>, <code>E_PREZZO_LISTINO_RIGA_NON_TROVATA</code>, <code>E_ARTICOLO_NON_NEGOZIATO_SU_CONTRATTO_C</code>). Fallback <code>E_VENDITE_PRICING_FAILED</code>. <code>emittente_soggetto_ruolo_id</code> deve essere gia' risolto dal caller (derivato dal JWT).</td>
+</tr>
+<tr>
+<td><code>PricingService.resolve_prezzo_composito</code></td>
+<td><a href="../../../../../backend/apps/vendite/services/pricing_service.py">pricing_service.py</a></td>
+<td>Facade <code>fn_resolve_prezzo_composito</code>: stessa policy di validazione e traduzione errori. Caller tipico: pipeline di espansione attivita' commessa (F2-BE-12).</td>
+</tr>
+<tr>
+<td><code>PromoArticoliRepository</code></td>
+<td><a href="../../../../../backend/apps/vendite/db/promo_articoli_repository.py">promo_articoli_repository.py</a></td>
+<td>CRUD su <code>vendite.promo_articoli</code> (STADIO 0 resolver). Lista arricchita con JOIN articolo/uom.</td>
+</tr>
+<tr>
+<td><code>PromoArticoliService</code></td>
+<td><a href="../../../../../backend/apps/vendite/services/promo_articoli_service.py">promo_articoli_service.py</a></td>
+<td>Service admin promo. <code>PayloadValidator</code> + <code>map_integrity_error</code>. Ammette <code>tipo_variazione=PREZZO_FISSO</code> (vietato in listini e matrice categoria). Coerenza tipo/valore anticipata lato service.</td>
+</tr>
+<tr>
+<td><code>CatalogoRepository.ARTICOLI_CREATE_COLUMNS.listino_tipologia_id</code></td>
+<td><a href="../../../../../backend/apps/catalogo/db/catalogo_repository.py">catalogo_repository.py</a></td>
+<td>Colonna smallint nullable (FK <code>config.listini_tipologie</code>). Ereditata da <code>ARTICOLI_UPDATE_COLUMNS</code> e proiettata in <code>ARTICOLI_DETAIL_COLUMNS</code> insieme ai decode <code>tipologia_listino_codice</code>/<code>tipologia_listino_descrizione</code> via <code>vw_articoli_dettaglio</code>. Coerenza articolo↔riga listino imposta dal trigger DB <code>trgfn_listini_righe_guard_tipologia</code> (§7.2 v5).</td>
+</tr>
+<tr>
+<td><code>CatalogoRepository.list_articoli(listino_tipologia_id=)</code></td>
+<td><a href="../../../../../backend/apps/catalogo/db/catalogo_repository.py">catalogo_repository.py</a></td>
+<td>Filtro opzionale sulla lista articoli. Esposto via query param <code>listino_tipologia_id</code> su <code>GET /api/v1/catalogo/articoli/</code>.</td>
+</tr>
+<tr>
+<td><code>CatalogoBomRepository.COMPONENTE_WRITE_COLUMNS.esposto_in_fattura</code></td>
+<td><a href="../../../../../backend/apps/catalogo/db/catalogo_bom_repository.py">catalogo_bom_repository.py</a></td>
+<td>Flag bool (DDL default <code>false</code>) che decide la modalita' A/B1/B2 del <code>fn_resolve_prezzo_composito</code> (§8 v5): se almeno un componente ha <code>esposto_in_fattura=true</code>, il resolver emette N righe (una per componente) e la pipeline di creazione attivita' espande in <code>commesse_attivita</code>.</td>
+</tr>
+<tr>
+<td><code>PricingResolveView</code></td>
+<td><a href="../../../../../backend/apps/vendite/api/views_pricing.py">views_pricing.py</a></td>
+<td>Endpoint <code>POST /api/v1/vendite/pricing/resolve/</code>. Esposizione REST di <code>PricingService.resolve_prezzo</code> per UI di debug, smoke test e supporto operativo. <code>emittente_soggetto_ruolo_id</code> derivato automaticamente dal JWT operatore (override opzionale nel payload per diagnostica). Area <code>vendite</code> livello <code>LETTURA</code>. Nessun side-effect: solo lettura.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consumer previsti</strong> — <code>PricingService.resolve_prezzo</code> e' il building block centrale per <strong>qualsiasi calcolo prezzo</strong> in domini downstream. Al posto di duplicare logica (lookup listino / matrice / contratto) chiamare sempre il service:</p>
+<table>
+<thead>
+<tr>
+<th>Consumer</th>
+<th>Stato</th>
+<th>Dove chiamarlo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>commesse_attivita</code> (snapshot audit)</td>
+<td><strong>Done</strong> (F2-BE-11)</td>
+<td>Il DB <code>fn_upsert_commessa_attivita</code> popola gia' le 8 colonne snapshot</td>
+</tr>
+<tr>
+<td><code>preventivi_service.calcola_prezzo_riga</code></td>
+<td><strong>Da integrare</strong></td>
+<td>Al momento della creazione/modifica riga preventivo, sostituire lookup manuale con <code>PricingService.resolve_prezzo</code></td>
+</tr>
+<tr>
+<td><code>ordini_vendita</code> (riga ordine)</td>
+<td><strong>Da integrare</strong></td>
+<td>Stesso pattern preventivi</td>
+</tr>
+<tr>
+<td><code>pipeline fatturazione compositi</code> (F2-BE-12)</td>
+<td><strong>Bloccato</strong></td>
+<td>Scope separato, usera' <code>resolve_prezzo_composito</code></td>
+</tr>
+<tr>
+<td>Endpoint diagnostico <code>/pricing/resolve/</code></td>
+<td><strong>Done</strong></td>
+<td>Vedi <code>PricingResolveView</code></td>
+</tr>
+</tbody>
+</table>
+<p>Regola pratica: <strong>mai</strong> leggere direttamente <code>listini_righe.prezzo</code> o <code>categorie_clienti_listini</code> in un service di dominio. Sempre passare per <code>PricingService</code>: garantisce i 3 stadi del resolver, la traduzione errori uniforme e lo snapshot dei metadati (origine, listino, contratto, promo, categoria).</p>
+<hr />
 <h2 id="preventivi-vendita-appsvendite">Preventivi vendita (<code>apps/vendite/</code>)<a class="headerlink" href="#preventivi-vendita-appsvendite" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -5003,7 +5115,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.91a19a9e.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

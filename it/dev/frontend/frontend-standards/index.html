@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.32">
+      <meta name="generator" content="zensical-0.0.33">
     
     
       
@@ -40,7 +40,7 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -4279,6 +4279,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#colonna-azioni-di-riga-rowactionsmenu-responsive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colonna azioni di riga — RowActionsMenu (responsive)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#empty-state-liste-che-partono-vuote-standard" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4349,6 +4360,56 @@
     <span class="md-ellipsis">
       
         ⚠️ REGOLA CRITICA: Paginazione deterministica (backend)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pattern-master-detail-inline-gestione-righe-in-drawer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern Master-Detail inline (gestione righe in drawer)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pattern Master-Detail inline (gestione righe in drawer)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regole-del-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regole del pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#riferimento-implementativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Riferimento implementativo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#come-applicare-a-una-nuova-sub-entita" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Come applicare a una nuova sub-entita'
       
     </span>
   </a>
@@ -5464,11 +5525,179 @@ Se un pattern viene migliorato, il miglioramento si applica a tutte le schermate
 <li><strong>Indicatore pagina</strong>: <code>1/5</code> con JumpToPageDropdown per salto diretto</li>
 <li><strong>Font compatto</strong> sul paginator (<code>0.8rem</code>)</li>
 <li><strong>Pulsante Nuovo</strong>: componente <code>NewButton</code> — label fisso <code>$t('common.new')</code>, tooltip contestuale</li>
-<li><strong>Click riga</strong> → apre drawer in edit (no colonna azioni con icone)</li>
-<li><strong>Nessuna colonna azioni</strong> — l'interazione e' tramite click riga</li>
+<li><strong>Click riga</strong> → apre drawer in edit (modifica = interazione principale)</li>
+<li><strong>Colonna azioni</strong> riservata alle <strong>azioni secondarie</strong> (apri sub-drawer, disattiva, ecc.) — mai mettere la modifica tra le azioni: e' il click riga. Vedi sotto "Colonna azioni di riga".</li>
 <li><strong>Filtri</strong> sopra la tabella nella toolbar, flex-wrap per responsive</li>
 <li><strong>Ricerca</strong> con debounce 400ms (gestito da <code>useSearchTable</code>)</li>
 <li><strong>DataTable</strong> sempre con: <code>lazy</code>, <code>removable-sort</code>, <code>striped-rows</code>, <code>scrollable</code>, <code>scrollHeight="flex"</code></li>
+</ul>
+<h3 id="colonna-azioni-di-riga-rowactionsmenu-responsive">Colonna azioni di riga — <code>RowActionsMenu</code> (responsive)<a class="headerlink" href="#colonna-azioni-di-riga-rowactionsmenu-responsive" title="Permanent link">&para;</a></h3>
+<p>Le azioni secondarie su una riga (apri sub-drawer, disattiva, clona, ecc.) vanno
+sempre renderizzate tramite il building block <strong><code>RowActionsMenu</code></strong>
+(<code>src/core/components/RowActionsMenu.vue</code>). La modifica del record NON va tra le azioni:
+e' gestita dal click sulla riga del DataTable.</p>
+<p><strong>Comportamento responsive (CSS-first, nessun JS di detection):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Contesto</th>
+<th>Variante</th>
+<th>Dettaglio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Desktop <code>hover</code> + viewport <code>&gt;=1024px</code></td>
+<td>Inline</td>
+<td>Pulsanti icon-only con tooltip, un click = una azione</td>
+</tr>
+<tr>
+<td>Tablet / touch / viewport <code>&lt;1024px</code></td>
+<td>Compact</td>
+<td>Kebab <code>⋮</code> che apre un menu popup con label esplicite</td>
+</tr>
+</tbody>
+</table>
+<p>Lo switch e' realizzato da <code>@media (hover: none), (max-width: 1024px)</code> in <code>main.css</code>
+sulle classi <code>.app-row-actions-inline</code> / <code>.app-row-actions-compact</code>. Il componente
+renderizza entrambe le varianti, il CSS ne mostra una sola. Il breakpoint <code>hover: none</code>
+intercetta esplicitamente i dispositivi touch (es. iPad Pro) indipendentemente dalla
+larghezza del viewport.</p>
+<p><strong>Perche':</strong> su touch i tooltip non funzionano; con 3-4 azioni inline la colonna
+ruba larghezza; sul desktop c'e' spazio e il mouse hover — l'inline resta piu' veloce.
+La soluzione responsive combina il meglio di entrambe senza compromessi.</p>
+<p><strong>Pattern di uso nella SearchTable:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span> <span class="na">setup</span><span class="p">&gt;</span>
+<span class="k">import</span><span class="w"> </span><span class="nx">RowActionsMenu</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;../../core/components/RowActionsMenu.vue&#39;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">MANAGE_ICONS</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;../../core/constants&#39;</span>
+
+<span class="c1">// Costruttore azioni contestualizzato alla riga (dati, stato, permessi).</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">buildRowActions</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;gestisci-righe&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="nx">t</span><span class="p">(</span><span class="s1">&#39;dominio.gestisci_righe&#39;</span><span class="p">),</span>
+<span class="w">      </span><span class="nx">icon</span><span class="o">:</span><span class="w"> </span><span class="nx">MANAGE_ICONS</span><span class="p">.</span><span class="nx">CONTRATTI</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">command</span><span class="o">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;open-righe&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">),</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;disattiva&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="nx">t</span><span class="p">(</span><span class="s1">&#39;common.disattiva&#39;</span><span class="p">),</span>
+<span class="w">      </span><span class="nx">icon</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;pi pi-ban&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">severity</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;danger&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">visible</span><span class="o">:</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">attivo</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">command</span><span class="o">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">onDisattiva</span><span class="p">(</span><span class="nx">data</span><span class="p">),</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">template</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">Column</span> <span class="p">:</span><span class="na">header</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">t</span><span class="p">(</span><span class="s1">&#39;common.col_azioni&#39;</span><span class="p">)</span><span class="s">&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;app-col-actions&quot;</span> <span class="p">:</span><span class="na">exportable</span><span class="o">=</span><span class="s">&quot;</span><span class="kc">false</span><span class="s">&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">template</span> <span class="err">#</span><span class="na">body</span><span class="o">=</span><span class="s">&quot;{ data }&quot;</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">RowActionsMenu</span> <span class="p">:</span><span class="na">actions</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">buildRowActions</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="s">&quot;</span> <span class="p">/&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">template</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">Column</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">template</span><span class="p">&gt;</span>
+</code></pre></div>
+<p><strong>Formato azione:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="nx">string</span><span class="p">,</span><span class="w">              </span><span class="c1">// identificatore univoco</span>
+<span class="w">  </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="nx">string</span><span class="p">,</span><span class="w">            </span><span class="c1">// testo (tradotto, visibile nel popup + tooltip inline)</span>
+<span class="w">  </span><span class="nx">icon</span><span class="o">:</span><span class="w"> </span><span class="nx">string</span><span class="p">,</span><span class="w">             </span><span class="c1">// classe PrimeIcons (es. &#39;pi pi-ban&#39; o MANAGE_ICONS.X)</span>
+<span class="w">  </span><span class="nx">severity</span><span class="o">?:</span><span class="w"> </span><span class="s1">&#39;primary&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;warn&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;danger&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// opzionale (vedi tabella sotto)</span>
+<span class="w">  </span><span class="nx">visible</span><span class="o">?:</span><span class="w"> </span><span class="kr">boolean</span><span class="p">,</span><span class="w">        </span><span class="c1">// default true — azioni non applicabili si nascondono</span>
+<span class="w">  </span><span class="nx">disabled</span><span class="o">?:</span><span class="w"> </span><span class="kr">boolean</span><span class="p">,</span><span class="w">       </span><span class="c1">// default false — azione grigia ma presente</span>
+<span class="w">  </span><span class="nx">command</span><span class="o">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ow">void</span><span class="p">,</span><span class="w">      </span><span class="c1">// handler click</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Severity — colore inline e popup:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Inline (desktop)</th>
+<th>Popup (tablet/touch)</th>
+<th>Uso tipico</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>undefined</code></td>
+<td>Blu (<code>app-manage-btn</code>)</td>
+<td>Neutro</td>
+<td>Default: apri sub-drawer, clona, gestisci</td>
+</tr>
+<tr>
+<td><code>'primary'</code></td>
+<td>Verde (<code>app-action-btn</code>)</td>
+<td>Neutro</td>
+<td>State transition positiva (attiva, approva)</td>
+</tr>
+<tr>
+<td><code>'warn'</code></td>
+<td>Arancio (PrimeVue <code>severity="warn"</code>)</td>
+<td>Neutro</td>
+<td>Cautela (chiudi, blocca, scade)</td>
+</tr>
+<tr>
+<td><code>'danger'</code></td>
+<td>Rosso (<code>app-delete-btn</code>)</td>
+<td>Rosso (<code>app-menu-item-danger</code>)</td>
+<td>Distruttivo (elimina, disattiva)</td>
+</tr>
+</tbody>
+</table>
+<p>Solo <code>danger</code> differenzia anche nel popup: per le altre severity la label + icona bastano a distinguere l'azione.</p>
+<p><strong>Convenzioni centralizzate (niente valori hardcoded nelle liste):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Cosa</th>
+<th>Dove</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Icona kebab</td>
+<td><code>MANAGE_ICONS.KEBAB</code> in <code>src/core/constants.js</code></td>
+</tr>
+<tr>
+<td>Stile bottone standard</td>
+<td><code>.app-manage-btn</code> in <code>main.css</code></td>
+</tr>
+<tr>
+<td>Stile bottone distruttivo</td>
+<td><code>.app-delete-btn</code> in <code>main.css</code></td>
+</tr>
+<tr>
+<td>Larghezza colonna (auto / 60px)</td>
+<td><code>.app-col-actions</code> in <code>main.css</code> (media query)</td>
+</tr>
+<tr>
+<td>Voce menu distruttiva</td>
+<td><code>.app-menu-item-danger</code> in <code>main.css</code> (eredita <code>--app-btn-delete-*</code>)</td>
+</tr>
+<tr>
+<td>Tooltip fallback kebab</td>
+<td><code>common.altre_azioni</code> ("Altre azioni") in <code>it.json</code></td>
+</tr>
+<tr>
+<td>Header colonna azioni</td>
+<td><code>common.col_azioni</code> ("Azioni") in <code>it.json</code> — sempre questa chiave, mai domain-specific</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regole fisse:</strong></p>
+<ul>
+<li>La modifica record NON e' mai un'azione del menu: si apre via click riga.</li>
+<li>Ogni azione deve avere <code>label</code> tradotta (i18n) — l'inline la mostra come tooltip,
+  il popup come voce.</li>
+<li>Usare <code>visible: false</code> (non <code>disabled</code>) per azioni non applicabili — il popup
+  resta corto, la UX piu' leggibile.</li>
+<li><code>severity: 'danger'</code> per azioni irreversibili (elimina, disattiva), mai inline
+  <code>class="..."</code>.</li>
+<li>La colonna va sempre <code>class="app-col-actions"</code> + <code>:exportable="false"</code>.</li>
 </ul>
 <h3 id="empty-state-liste-che-partono-vuote-standard">Empty state — liste che partono vuote (standard)<a class="headerlink" href="#empty-state-liste-che-partono-vuote-standard" title="Permanent link">&para;</a></h3>
 <p>Le liste che possono selezionare troppi dati partono <strong>vuote</strong> e mostrano un placeholder
@@ -5693,6 +5922,26 @@ finche' l'utente non applica una ricerca (min 3 caratteri) o un filtro.</p>
 <td>Pulsanti azione (via <code>NewButton</code>)</td>
 <td>Responsive: solo icona su mobile</td>
 </tr>
+<tr>
+<td><code>app-col-actions</code></td>
+<td><code>&lt;Column&gt;</code> azioni di riga</td>
+<td>Larghezza auto su desktop, 60px su tablet/touch (media query <code>&lt;=1024px</code>)</td>
+</tr>
+<tr>
+<td><code>app-row-actions-inline</code></td>
+<td>Interno <code>RowActionsMenu</code></td>
+<td>Wrapper pulsanti inline — visibile solo con hover + viewport <code>&gt;=1024px</code></td>
+</tr>
+<tr>
+<td><code>app-row-actions-compact</code></td>
+<td>Interno <code>RowActionsMenu</code></td>
+<td>Wrapper kebab + menu popup — visibile su touch o viewport <code>&lt;1024px</code></td>
+</tr>
+<tr>
+<td><code>app-menu-item-danger</code></td>
+<td>Voce <code>Menu</code> PrimeVue</td>
+<td>Colore rosso per azioni distruttive — applicato via <code>severity: 'danger'</code></td>
+</tr>
 </tbody>
 </table>
 <h3 id="composable-usesearchtablestore">Composable <code>useSearchTable(store)</code><a class="headerlink" href="#composable-usesearchtablestore" title="Permanent link">&para;</a></h3>
@@ -5751,6 +6000,60 @@ valore nella colonna di sort. Con OFFSET alto il planner puo' restituire righe g
 nelle pagine precedenti, causando dati duplicati e pagine "bloccate".</p>
 <p>Stesso principio dei subfile AS/400 dove il RRN nascosto garantiva la posizione del cursore.</p>
 <p><strong>Dove applicare:</strong> TUTTE le query repository che usano <code>LIMIT %s OFFSET %s</code> — nessuna eccezione.</p>
+<hr />
+<h2 id="pattern-master-detail-inline-gestione-righe-in-drawer">Pattern Master-Detail inline (gestione righe in drawer)<a class="headerlink" href="#pattern-master-detail-inline-gestione-righe-in-drawer" title="Permanent link">&para;</a></h2>
+<p>Per le sub-entita' che richiedono inserimento/modifica riga (righe contratto, righe ordine,
+componenti BoM, ecc.) si usa un <strong>drawer master-detail inline</strong>: lista paginata sopra,
+form dettaglio sotto — tutto nello stesso drawer, zero drawer annidati.</p>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────┐
+│ DrawerTitle: &quot;Contratto - Righe&quot;                        │
+├─────────────────────────────────────────────────────────┤
+│                                           [BOZZA]  (dx) │
+│ Numero              │ Cliente                            │
+│ CNT0000001          │ Rossi Mario SRL                    │
+│ Valido dal          │ Valido al                          │
+│ 16/04/2026          │ 31/12/2026                         │
+├─────────────────────────────────────────────────────────┤
+│                                          [+ Nuovo]       │
+│ [◀ 1/3 ▶  10/pag]                                       │
+│ Articolo │ UoM │ Prezzo │ Qta │ Tipo   │ 🗑             │
+│ ART-001  │ kWh │ 25.50  │ 1   │ CANONE │ 🗑  ← sel.    │
+│ ART-002  │ mc  │ 12.00  │ 1   │ CONSUMO│ 🗑             │
+├─────────────────────────────────────────────────────────┤
+│ ═══════ Modifica riga ═══════                           │
+│ Articolo: [ART-001 ...] (disabled)                      │
+│ UoM: [kWh ▼]         Tipo: [CANONE ▼]                   │
+│ Prezzo: [25.50]       Qta: [1]                           │
+│ Ordine: [10]                                             │
+│                            [Annulla]  [Salva]            │
+├─────────────────────────────────────────────────────────┤
+│                                          [Chiudi]        │
+└─────────────────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="regole-del-pattern">Regole del pattern<a class="headerlink" href="#regole-del-pattern" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Drawer largo</strong>: usare <code>DRAWER_WIDTH.WIDE</code> (960px) per dare spazio alla lista + form</li>
+<li><strong>Intestazione contesto</strong>: in alto mostrare sempre i dati del parent (numero, cliente, stato, date). L'operatore deve sapere dove si trova senza tornare indietro. Tag stato allineato a destra</li>
+<li><strong>Paginazione</strong>: <code>paginator</code> con <code>rows="10"</code> e <code>rows-per-page-options="[10, 25]"</code>, <code>paginator-position="top"</code>, <code>data-key="id"</code></li>
+<li><strong>Pulsante Nuovo</strong>: usare <code>NewButton</code> (componente standard), posizionato in alto a destra sopra la tabella come nelle liste principali</li>
+<li><strong>Selezione riga</strong>: <code>selection-mode="single"</code> + <code>v-model:selection</code>. Click riga popola il form in edit mode con <code>@row-select</code></li>
+<li><strong>Form dettaglio</strong>: visibile SOLO quando attivo (Nuovo o click riga). Nascosto di default. Titolo "Nuova riga" o "Modifica riga"</li>
+<li><strong>Articolo</strong>: in create editabile (autocomplete), in edit disabled (immutabile)</li>
+<li><strong>UoM</strong>: filtrate per articolo via <code>listArticoloUom(articoloId)</code>, pre-seleziona la UoM base. Placeholder "Seleziona prima l'articolo" se nessun articolo scelto</li>
+<li><strong>Salva/Annulla</strong>: sempre in basso dopo il form. Salva crea o aggiorna, chiude form, emette <code>changed</code>. Annulla chiude form e deseleziona riga</li>
+<li><strong>Elimina</strong>: icona cestino sulla riga (<code>@click.stop</code> per non triggerare selezione). Se stavo editando quella riga, chiude il form</li>
+<li><strong><code>formMode</code></strong>: ref con 3 stati: <code>null</code> (nessun form), <code>'create'</code>, <code>'edit'</code>. Governa visibilita' e comportamento</li>
+</ol>
+<h3 id="riferimento-implementativo">Riferimento implementativo<a class="headerlink" href="#riferimento-implementativo" title="Permanent link">&para;</a></h3>
+<p>Primo caso: <code>ContrattoRigheDrawer.vue</code> (righe contratto pricing v5).</p>
+<h3 id="come-applicare-a-una-nuova-sub-entita">Come applicare a una nuova sub-entita'<a class="headerlink" href="#come-applicare-a-una-nuova-sub-entita" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Copiare la struttura di <code>ContrattoRigheDrawer.vue</code> come base</li>
+<li>Adattare le colonne DataTable e i campi del form</li>
+<li>Passare le props contesto dal parent (numero/codice, cliente, stato, date)</li>
+<li>Collegare le API CRUD (add/update/delete) allo store o direttamente</li>
+<li>Mantenere <code>data-key="id"</code> + paginazione a 10 + <code>NewButton</code> + <code>@click.stop</code> sul cestino</li>
+</ol>
 <hr />
 <h2 id="pattern-tab-view-viste-multi-sezione">Pattern Tab-View (viste multi-sezione)<a class="headerlink" href="#pattern-tab-view-viste-multi-sezione" title="Permanent link">&para;</a></h2>
 <p>Quando una pagina contiene piu' sezioni correlate (es. Gestione Geografica con 6 tab):</p>
@@ -6110,22 +6413,25 @@ Le mappe sono centralizzate in <code>core/utils/severity.js</code> — un solo p
 <tr>
 <td>&gt;= 1024px</td>
 <td>Desktop</td>
-<td>Layout completo: sidebar inline, tutti i filtri visibili</td>
+<td>Layout completo: sidebar inline, tutti i filtri visibili, azioni di riga inline</td>
 </tr>
 <tr>
 <td>768-1023px</td>
 <td>Tablet</td>
-<td>Pulsanti azione solo icona + tooltip, filtri flex-wrap</td>
+<td>Pulsanti azione solo icona + tooltip, filtri flex-wrap, azioni di riga in kebab <code>⋮</code></td>
 </tr>
 <tr>
 <td>&lt; 768px</td>
 <td>Mobile</td>
-<td>Sidebar overlay, padding ridotto</td>
+<td>Sidebar overlay, padding ridotto, azioni di riga in kebab <code>⋮</code></td>
 </tr>
 </tbody>
 </table>
 <p>Le classi responsive sono in <code>main.css</code> — nessun <code>@media</code> nei componenti scoped.
 Il breakpoint mobile e' gestito dallo store <code>ui.js</code> (<code>isMobile</code>, <code>isTablet</code>).</p>
+<p>Le azioni di riga (<code>RowActionsMenu</code>) usano in aggiunta <code>@media (hover: none)</code> per
+intercettare i dispositivi touch indipendentemente dalla larghezza del viewport
+(es. iPad Pro in landscape rende comunque il kebab perche' manca l'hover).</p>
 <hr />
 <h2 id="login">Login<a class="headerlink" href="#login" title="Permanent link">&para;</a></h2>
 <p>La schermata di login e' l'unica pagina senza sidebar e topbar.</p>
@@ -6433,6 +6739,11 @@ e' definito in un unico punto in <code>main.css</code>.</p>
 </code></pre></div>
 <p>Per aggiungere una nuova icona gestione: inserire la chiave in <code>MANAGE_ICONS</code> e usarla nel componente.
 Per cambiare il colore di tutte le icone gestione: modificare <code>.app-manage-btn</code> in <code>main.css</code>.</p>
+<p><strong>Colonna azioni di riga</strong> (pattern standard): i pulsanti <code>app-manage-btn</code> non si mettono piu'
+direttamente in un <code>&lt;template #body&gt;</code> del <code>&lt;Column&gt;</code>. Usare sempre il building block
+<code>RowActionsMenu</code> — gestisce automaticamente lo switch desktop inline / tablet kebab
+tramite CSS, e accetta un array di azioni dichiarativo. Vedi sezione "Colonna azioni di riga"
+nel pattern lista per l'API completa.</p>
 <p>Per l'inventario completo di classi CSS, pulsanti e componenti, consultare il
 <a href="../catalogo-building-block-frontend/">Catalogo Building Block Frontend</a>.</p>
 <h3 id="regole-css-per-i-componenti">Regole CSS per i componenti<a class="headerlink" href="#regole-css-per-i-componenti" title="Permanent link">&para;</a></h3>
@@ -6739,6 +7050,12 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
 <td>Pulsante "Nuovo" nella toolbar, auto-hide in readonly</td>
 <td><code>tooltip</code></td>
 <td>Tutte le SearchTable</td>
+</tr>
+<tr>
+<td><code>RowActionsMenu</code></td>
+<td>Azioni di riga responsive: pulsanti inline su desktop, kebab <code>⋮</code> su tablet/touch</td>
+<td><code>actions</code>, <code>tooltip</code>, <code>disabled</code></td>
+<td>Tutte le SearchTable con azioni secondarie</td>
 </tr>
 <tr>
 <td><code>PaginationInfo</code></td>
@@ -7372,7 +7689,7 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.91a19a9e.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

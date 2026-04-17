@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.32">
+      <meta name="generator" content="zensical-0.0.33">
     
     
       
@@ -40,7 +40,7 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -4228,6 +4228,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#stati-contratto-e-transizioni-ammesse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stati contratto e transizioni ammesse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modalita-pricing-contratto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modalita' pricing contratto
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#regole-operative-fondamentali" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4295,6 +4317,10 @@ NON contiene dati reali — solo definizioni e regole.</p>
 <li><strong>Emittente fiscale</strong>: entita' giuridica che emette fatture. Ogni operatore e' associato a uno o piu' emittenti.</li>
 <li><strong>Operatore</strong>: utente del sistema con profilo, reparto e permessi per area funzionale.</li>
 <li><strong>Commessa</strong>: contenitore di attivita' fatturabili provenienti da fonti diverse, convogliate nella pipeline di fatturazione.</li>
+<li><strong>Contratto</strong>: accordo commerciale tra un cliente (billing_account) e un listino. E' il ponte tra cliente e pricing, con tre modalita' (A/B/C) e una categoria cliente congelata alla creazione.</li>
+<li><strong>Categoria cliente</strong>: classificazione commerciale del cliente (STANDARD, BASE, SILVER, GOLD, PLATINUM). Determina variazioni di prezzo via matrice categoria/listino in STADIO 2 del resolver pricing. Sul contratto viene congelata come snapshot (<code>categoria_cliente_id_snapshot</code>) per audit storico.</li>
+<li><strong>Listino</strong>: catalogo di prezzi per (utility, tipologia, emittente). Unico base, le variazioni vivono in categoria cliente o contratto.</li>
+<li><strong>Promo</strong>: overlay temporale di prezzo su (articolo, uom), applicata in STADIO 0 del resolver per i clienti la cui categoria partecipa alle promo.</li>
 </ul>
 <h2 id="stati-pratica-e-transizioni-ammesse">Stati pratica e transizioni ammesse<a class="headerlink" href="#stati-pratica-e-transizioni-ammesse" title="Permanent link">&para;</a></h2>
 <table>
@@ -4447,6 +4473,74 @@ NON contiene dati reali — solo definizioni e regole.</p>
 </tr>
 </tbody>
 </table>
+<h2 id="stati-contratto-e-transizioni-ammesse">Stati contratto e transizioni ammesse<a class="headerlink" href="#stati-contratto-e-transizioni-ammesse" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Stato</th>
+<th>Significato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DRAFT</td>
+<td>Bozza in preparazione, modificabile</td>
+</tr>
+<tr>
+<td>ATTIVO</td>
+<td>Contratto in vigore</td>
+</tr>
+<tr>
+<td>SOSPESO</td>
+<td>Temporaneamente congelato</td>
+</tr>
+<tr>
+<td>CESSATO</td>
+<td>Chiuso, non piu' operativo</td>
+</tr>
+</tbody>
+</table>
+<p>Transizioni:</p>
+<ul>
+<li>DRAFT → ATTIVO (attivazione: trigger DB blocca se modalita' C con righe senza prezzo_unitario)</li>
+<li>ATTIVO → SOSPESO</li>
+<li>ATTIVO → CESSATO</li>
+<li>SOSPESO → ATTIVO (riattivazione)</li>
+<li>SOSPESO → CESSATO</li>
+</ul>
+<p>La categoria cliente snapshot e' modificabile <strong>solo in DRAFT</strong>. Una volta attivato il contratto, la categoria e' congelata (trigger DB).</p>
+<h2 id="modalita-pricing-contratto">Modalita' pricing contratto<a class="headerlink" href="#modalita-pricing-contratto" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Modalita'</th>
+<th>listino_id</th>
+<th>tipo_variazione_globale</th>
+<th>contratti_righe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A — Listino + variazione</td>
+<td>NOT NULL</td>
+<td>NOT NULL (PERC/VALORE_FISSO)</td>
+<td>vuote o override mirati</td>
+</tr>
+<tr>
+<td>B — Listino con override</td>
+<td>NOT NULL</td>
+<td>NULL</td>
+<td>righe con <code>prezzo_unitario</code> su articoli specifici</td>
+</tr>
+<tr>
+<td>C — Interamente negoziato</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>tutte le righe con <code>prezzo_unitario</code> NOT NULL</td>
+</tr>
+</tbody>
+</table>
+<p>Un contratto di ambito <code>COMMODITY</code> ha utility tecnica (gas/energia/idrico) con tipo e classe utenza dimensionali. Un contratto di ambito <code>COMMERCIO</code> usa l'utility virtuale Base e non ha dimensioni utenza.</p>
 <h2 id="regole-operative-fondamentali">Regole operative fondamentali<a class="headerlink" href="#regole-operative-fondamentali" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Transizioni a macchina di stati rigida</strong>: ogni cambio stato e' validato da trigger DB. Solo le transizioni esplicitamente configurate sono ammesse.</li>
@@ -4524,7 +4618,7 @@ NON contiene dati reali — solo definizioni e regole.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.91a19a9e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.63456bd9.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

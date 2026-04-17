@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.32">
+      <meta name="generator" content="zensical-0.0.33">
     
     
       
@@ -40,7 +40,7 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -5133,9 +5133,12 @@ Nota: in PostgreSQL non è possibile esprimere un UNIQUE parziale come table con
 <span class="w">    </span><span class="n">data_update</span><span class="w">         </span><span class="n">timestamptz</span><span class="w">  </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="n">now</span><span class="p">(),</span>
 <span class="w">    </span><span class="n">user_update</span><span class="w">         </span><span class="nb">text</span><span class="w">         </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_USER</span><span class="p">,</span>
 <span class="w">    </span><span class="n">tx_id</span><span class="w">               </span><span class="n">uuid</span><span class="w">         </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">    </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">chk_promo_articoli_date</span><span class="w">     </span><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span><span class="n">valido_al</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">valido_dal</span><span class="p">),</span>
-<span class="w">    </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">chk_promo_articoli_valore</span><span class="w">   </span><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span><span class="n">valore_variazione</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
-<span class="w">                                                  </span><span class="k">OR</span><span class="w"> </span><span class="n">tipo_variazione</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREZZO_FISSO&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">chk_promo_articoli_date</span><span class="w">     </span><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span><span class="n">valido_al</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">valido_dal</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">-- NOTE: il vincolo originario `chk_promo_articoli_valore` (&gt;0 per</span>
+<span class="w">    </span><span class="c1">-- PERCENTUALE/VALORE_FISSO, &gt;=0 per PREZZO_FISSO) e&#39; stato dropped</span>
+<span class="w">    </span><span class="c1">-- nel changeSet 20260415-02 per ammettere valori negativi (sconto)</span>
+<span class="w">    </span><span class="c1">-- coerenti con la formula matematica del resolver (§6.3). La</span>
+<span class="w">    </span><span class="c1">-- convenzione di segno e&#39; validata lato BE service + UI.</span>
 <span class="p">);</span>
 
 <span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">promo_articoli</span>
@@ -5152,15 +5155,18 @@ Nota: in PostgreSQL non è possibile esprimere un UNIQUE parziale come table con
 <h3 id="63-calcolo">6.3 Calcolo<a class="headerlink" href="#63-calcolo" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>prezzo_base = risultato risoluzione STADIO 1 o STADIO 2 (vedi resolver)
 
--- PERCENTUALE
+-- PERCENTUALE (convenzione firmata: negativo = sconto, positivo = aumento)
 prezzo_promo = prezzo_base * (1 + valore_variazione / 100)
 
--- VALORE_FISSO
+-- VALORE_FISSO (convenzione firmata: negativo = sconto, positivo = aumento)
 prezzo_promo = prezzo_base + valore_variazione
 
--- PREZZO_FISSO
+-- PREZZO_FISSO (prezzo assoluto sostitutivo, sempre &gt;= 0)
 prezzo_promo = valore_variazione
 </code></pre></div>
+<p>Coerente con matrice categorie/listini e variazione globale contratto.
+BE service rifiuta valore <code>0</code> per PERCENTUALE/VALORE_FISSO (no-op), valori
+negativi per PREZZO_FISSO (prezzo non puo' essere negativo).</p>
 <p>Il calcolo della promo si appoggia sempre al <strong>prezzo base</strong> risolto dal meccanismo "normale" (contratto o categoria): non si applica mai sopra un prezzo già scontato, per evitare doppio sconto implicito.</p>
 <hr />
 <h2 id="7-tipologia-articoli-e-coerenza-con-listino">7) Tipologia articoli e coerenza con listino<a class="headerlink" href="#7-tipologia-articoli-e-coerenza-con-listino" title="Permanent link">&para;</a></h2>
@@ -6258,7 +6264,7 @@ OUTPUT
 <tr>
 <td>F3-FE-08</td>
 <td>F2-BE-11</td>
-<td><code>CommessaAttivitaDrawer</code>: tab "Audit pricing" con <code>origine_prezzo</code>, variazione applicata, link a contratto/promo/matrice</td>
+<td><strong>SPOSTATO</strong> → <code>gestione-commesse-v2.md</code> §28. Richiede CommessaAttivitaDrawer (dominio commesse, non listini).</td>
 </tr>
 </tbody>
 </table>
@@ -6320,8 +6326,8 @@ OUTPUT
 <ul>
 <li>[ ] Fase 0 — v4 BE + FE chiuso end-to-end</li>
 </ul>
-<h3 id="fase-1-db">Fase 1 — DB<a class="headerlink" href="#fase-1-db" title="Permanent link">&para;</a></h3>
-<p><strong>Avanzamento al 14-04-2026</strong>: changeSet <code>20260414-01..17</code> prodotti e registrati. I passi F1-DB-01..19 sono stati tradotti in Liquibase (00_schema + 20_code) con doc manuale aggiornata e codici errore registrati in <code>config.messaggi_errore</code> (id 365..372). Da qui in avanti: snapshot commessa, resolver, pulizia, pgTAP.</p>
+<h3 id="fase-1-db-completata-15-04-2026">Fase 1 — DB ✅ COMPLETATA (15-04-2026)<a class="headerlink" href="#fase-1-db-completata-15-04-2026" title="Permanent link">&para;</a></h3>
+<p><strong>Stato finale</strong>: tutti gli step F1-DB-01..28 chiusi end-to-end. 30 changeSet Liquibase (<code>20260414-01..23</code> + <code>20260415-01..07</code>), 11 codici errore v5 in <code>config.messaggi_errore</code> (id 365..375), 8 pgTAP verdi, doc manuale auto/manual aggiornata per tutte le entità nuove e modificate. DB pricing v5 pulito, niente residui del modello pre-v5 (droppati <code>fn_resolve_prezzo_listino</code> vecchia, <code>listini_associazioni</code>, colonne legacy <code>listini_righe</code>, <code>articoli.voce_utility</code>).</p>
 <ul>
 <li>[x] <strong>Categoria cliente + BA.categoria (F1-DB-01..03)</strong> — changeSet <code>20260414-01..03</code> + seed <code>80_data/anagrafiche/categorie_clienti.csv</code>; backfill STANDARD + <code>NOT NULL</code> su <code>billing_account.categoria_cliente_id</code>.</li>
 <li>[x] <strong>Emittente su listino (F1-DB-04..06)</strong> — changeSet <code>20260414-04..06</code>; backfill CI-safe con guard <code>to_regclass('django.auth_user')</code>, fallback sul primo emittente attivo; <code>SET NOT NULL</code> + indice.</li>
@@ -6333,31 +6339,31 @@ OUTPUT
 <li>[x] <strong>Snapshot commessa (F1-DB-20..21)</strong> — changeSet <code>20260414-18</code> (commesse_attivita) + <code>20260414-19</code> (attivita_fatturabili): 8 colonne snapshot (<code>prezzo_base_snapshot</code>, <code>origine_prezzo</code>, <code>tipo/valore_variazione_applicata</code>, <code>promo_id</code>, <code>contratto_id</code>, <code>categoria_cliente_id_snapshot</code>, <code>classe_utenza_id_snapshot</code>) + 4 FK + 2 CHECK per tabella. Propagazione identica tra le due.</li>
 <li>[x] <strong>Resolver v2 + composito (F1-DB-22..23)</strong> — changeSet <code>20260414-20</code> (<code>fn_resolve_prezzo_listino_v2</code> a 3 stadi) e <code>20260414-21</code> (<code>fn_resolve_prezzo_composito</code> BoM ibrido). Analisi critica con ottimizzazioni: <code>%TYPE</code> in DECLARE, short-circuit, <code>WHEN SQLSTATE 'P0001'</code> ristretto, fix guard modalità C che copriva solo la transizione ad ATTIVO. Allineati 11 codici errore in CSV con i placeholder <code>%s</code> (bug runtime "format insufficient args" risolto). Doc manuale in <code>vendite/manual/fn_resolve_prezzo_listino_v2.md</code> e <code>fn_resolve_prezzo_composito.md</code>.</li>
 <li>[x] <strong>Fix collaterali trovati durante i test</strong> — changeSet <code>20260414-22</code> (drop CHECK <code>valido_al &gt;= valido_dal</code> ridondanti su matrice e promo, il daterange costruttore rifiuta prima con 22000) e <code>20260414-23</code> (<code>trgfn_contratti_snapshot_precontrattuali</code> aggiornato per popolare <code>tipo_utenza_id</code> dalla classe — altrimenti il guard tipo/classe bloccava gli insert automatici di <code>contratti_utilities</code>).</li>
-<li>[ ] Drop listini_associazioni + colonne righe (F1-DB-24..27) — <strong>rinviato</strong>: la vecchia <code>fn_resolve_prezzo_listino</code> è ancora chiamata dal BE. Il cleanup deve essere coordinato con F2-BE (audit callers + cutover). Vedi nota "Coordinamento cleanup" in fondo alla Fase 1.</li>
-<li>[ ] Drop <code>voce_utility</code> (F1-DB-28) — <strong>rinviato</strong> stessa ragione (audit DB+BE da fare in F2).</li>
-<li>[x] <strong>pgTAP (F1-DB-T1..T6)</strong> — 7 file in <code>db/pgtap/</code> (51 asserzioni totali):<ul>
-<li><code>anagrafiche/test-categorie-clienti-v1.sql</code> (T1.1 — 7 test)</li>
-<li><code>anagrafiche/test-categorie-clienti-listini-v1.sql</code> (T1.2 — 10 test)</li>
-<li><code>vendite/test-contratti-modalita-pricing-v1.sql</code> (T2.1 — 8 test)</li>
-<li><code>vendite/test-contratti-utilities-guard-tipo-classe-v1.sql</code> (T2.2 — 7 test, seed tipo_utenza di appoggio in-TX)</li>
-<li><code>vendite/test-promo-articoli-v1.sql</code> (T3 — 9 test)</li>
-<li><code>vendite/test-listini-righe-guard-tipologia-v1.sql</code> (T4 — 4 test)</li>
-<li><code>vendite/test-fn-resolve-prezzo-listino-v2-v1.sql</code> (T5 — 7 test, setup completo listino+matrice+contratto+promo)</li>
-<li><code>vendite/test-fn-resolve-prezzo-composito-v1.sql</code> (T6 — 4 test, articolo composito sintetico con BoM in-TX)</li>
-<li>Tutti i test sono in <code>BEGIN;...ROLLBACK;</code> → idempotenti.</li>
+<li>[x] <strong>Drop check valore promo (15-04-2026)</strong> — changeSet <code>20260415-02</code>: <code>chk_promo_articoli_valore</code> rimosso. Convenzione segno (sconto/maggiorazione) demandata a UI/business; pgTAP <code>test-promo-articoli-v1.sql</code> test 4 aggiornato a <code>lives_ok</code>.</li>
+<li>[x] <strong>Cleanup totale F1-DB-24..28 (15-04-2026)</strong> — strategia "pulisci come se non fosse mai esistito" su conferma utente (no produzione, BE/FE non chiamano più la vecchia funzione). 5 changeSet <code>20260415-03..07</code>:<ul>
+<li><code>-03</code>: <code>DROP FUNCTION vendite.fn_resolve_prezzo_listino</code> (vecchia firma 7-livelli). Niente wrapper deprecato.</li>
+<li><code>-04</code>: drop colonne legacy <code>listini_righe.{billing_account_id, utility_id, emittente_soggetto_ruolo_id}</code> + <code>CREATE UNIQUE INDEX uq_listini_righe_key_attiva ... WHERE attivo IS TRUE</code>.</li>
+<li><code>-05</code>: <code>DROP TABLE vendite.listini_associazioni CASCADE</code>.</li>
+<li><code>-06</code>: ricrea <code>vw_articoli_dettaglio</code> senza <code>voce_utility</code>, aggiunge <code>listino_tipologia_id</code> + <code>tipologia_listino_codice/descrizione</code>.</li>
+<li><code>-07</code>: <code>DROP COLUMN catalogo.articoli.voce_utility</code>.</li>
+<li>Modifiche in-place ai 2 backfill (<code>20260414-15</code>, <code>20260415-01</code>): rimosso filtro <code>voce_utility=FALSE</code> → assegnano PRODOTTI a tutti gli articoli senza <code>listino_tipologia_id</code>. Le voci utility "vere" vanno mappate manualmente (guard <code>trgfn_listini_righe_guard_tipologia</code> impedisce insert in listino di tipologia incompatibile).</li>
+<li>Cancellati 3 pgTAP obsoleti (<code>test-listini-resolve-prezzo-v1</code>, <code>test-listini-integrita-v1</code>, <code>test-listini-resolve-commessa-prezzi-v1</code>) e aggiornati T4/T6 per rimuovere riferimenti a <code>voce_utility</code>.</li>
 </ul>
 </li>
-<li>[ ] pgTAP smoke post-cleanup (F1-DB-T7) — rinviato con F1-DB-24..28.</li>
+<li>[x] <strong>pgTAP (F1-DB-T1..T6)</strong> — 8 file in <code>db/pgtap/</code> (~56 asserzioni totali, tutti verdi):<ul>
+<li><code>anagrafiche/test-categorie-clienti-v1.sql</code> (T1.1)</li>
+<li><code>anagrafiche/test-categorie-clienti-listini-v1.sql</code> (T1.2)</li>
+<li><code>vendite/test-contratti-modalita-pricing-v1.sql</code> (T2.1)</li>
+<li><code>vendite/test-contratti-utilities-guard-tipo-classe-v1.sql</code> (T2.2, seed <code>tipi_utenze</code> di appoggio in-TX)</li>
+<li><code>vendite/test-promo-articoli-v1.sql</code> (T3)</li>
+<li><code>vendite/test-listini-righe-guard-tipologia-v1.sql</code> (T4, 3 test focus sul guard)</li>
+<li><code>vendite/test-fn-resolve-prezzo-listino-v2-v1.sql</code> (T5, setup completo listino+matrice+contratto+promo)</li>
+<li><code>vendite/test-fn-resolve-prezzo-composito-v1.sql</code> (T6, articolo composito sintetico con BoM in-TX)</li>
+<li>Tutti in <code>BEGIN;...ROLLBACK;</code> → idempotenti.</li>
 </ul>
-<h3 id="coordinamento-cleanup-post-f2">Coordinamento cleanup (post F2)<a class="headerlink" href="#coordinamento-cleanup-post-f2" title="Permanent link">&para;</a></h3>
-<p>Gli step <code>F1-DB-24..28</code> (drop colonne obsolete su <code>listini_righe</code>, DROP <code>listini_associazioni</code>, wrapper deprecato <code>fn_resolve_prezzo_listino</code>, DROP <code>voce_utility</code>) <strong>non</strong> sono safe in isolamento DB: la vecchia <code>fn_resolve_prezzo_listino</code> è ancora invocata dal backend Django. Il cleanup segue questa sequenza coordinata:</p>
-<ol>
-<li>F2-BE-09 (pricing_service) migra i callers a <code>fn_resolve_prezzo_listino_v2</code>.</li>
-<li>F2-BE-13/14 (cleanup BE) rimuove i riferimenti a <code>listini_associazioni</code> e <code>articoli.voce_utility</code>.</li>
-<li>Ricreazione di <code>vw_articoli_dettaglio</code> senza <code>voce_utility</code> (4 versioni attuali in <code>20_code/catalogo/</code>).</li>
-<li>Applicazione F1-DB-24..28 come unico batch atomico.</li>
-<li>Rimozione pgTAP obsoleti (<code>test-listini-resolve-*</code>, <code>test-listini-integrita-v1</code>) e scrittura F1-DB-T7 come smoke.</li>
-</ol>
+</li>
+<li><strong>F1-DB-T7 smoke post-cleanup</strong>: non eseguito. La copertura combinata di T1..T6 + <code>DROP IF EXISTS</code> nei changeSet <code>20260415-03..07</code> è sufficiente; uno smoke aggiuntivo darebbe garanzie marginali.</li>
+</ul>
 <h3 id="fase-2-backend_1">Fase 2 — Backend<a class="headerlink" href="#fase-2-backend_1" title="Permanent link">&para;</a></h3>
 <p><strong>Avanzamento al 14-04-2026 (sera)</strong>: F2-BE-01 chiuso end-to-end. CRUD admin
 <code>anagrafiche.categorie_clienti</code> (repository + service + views + urls + 43 test)
@@ -6369,20 +6375,36 @@ tracciato in <code>sviluppo-listini-v6.md</code> come V6-B1 per refactor trasver
 <li>[x] <strong>F2-BE-01 Admin categorie_clienti + F1-DB-03 whitelist lookup</strong> — 30 test service + 10 test API + 3 test boundary ordinamento + 6 test meta semantics + 5 test bool filter parsing. Endpoints: <code>GET/POST/PATCH /api/v1/anagrafiche/categorie-clienti/</code>, lookup via <code>GET /api/v1/core/lookup/codici/?rel=anagrafiche.categorie_clienti</code>.</li>
 <li>[x] <strong>F2-BE-02 matrice categorie_clienti_listini</strong> — chiuso 2026-04-15. Repository con JOIN arricchito (codici/descrizioni categoria/utility/emittente/classe_utenza/listino), service con <code>PayloadValidator</code> + <code>map_integrity_error</code> (UNIQUE/FK + EXCLUDE → <code>E_ANAG_MATRICE_OVERLAP</code>), dimensioni immutabili in PATCH, coerenza <code>tipo_variazione</code>/<code>valore_variazione</code> e range date anticipata lato service. Endpoint <code>GET/POST/PATCH /api/v1/anagrafiche/categorie-clienti-listini/</code>. 32 test service + 10 test API. Doc: <a href="../../../backend/anagrafiche/manual/api_categorie_clienti_listini/">api_categorie_clienti_listini.md</a>.</li>
 <li><strong>F1-DB-08 whitelist lookup</strong>: NON APPLICABILE. La tabella non espone <code>codice</code>/<code>descrizione</code> → non candidata per <code>/core/lookup/codici/</code>. Decisione formalizzata nel doc API.</li>
-<li>[ ] F2-BE-03 promo_articoli (+ F1-DB-15 whitelist)</li>
-<li>[ ] BA con categoria (F2-BE-04)</li>
-<li>[ ] Contratti estesi (F2-BE-05..06)</li>
-<li>[ ] Articoli + BoM (F2-BE-07..08)</li>
-<li>[ ] Resolver + snapshot + espansione (F2-BE-09..12)</li>
-<li>[ ] Cleanup (F2-BE-13..14)</li>
-<li>[ ] Test Django (F2-BE-15)</li>
+<li>[x] <strong>F2-BE-03 promo_articoli</strong> — chiuso 2026-04-15. Repository con JOIN articolo/uom. Service con <code>PayloadValidator</code> + <code>map_integrity_error</code> (UNIQUE codice + 2 FK + EXCLUDE no-overlap → <code>E_VENDITE_PROMO_OVERLAP</code>). <code>PREZZO_FISSO</code> ammesso solo qui (coerente con doc v5 §6); coerenza tipo/valore anticipata (&gt; 0 per PERCENTUALE/VALORE_FISSO, &gt;= 0 per PREZZO_FISSO). <code>codice</code>/<code>articolo_id</code>/<code>uom_id</code> immutabili in PATCH. 32 test service. Endpoint <code>GET/POST/PATCH /api/v1/vendite/promo-articoli/</code>. Doc: <a href="../../../backend/vendite/manual/api_promo_articoli/">api_promo_articoli.md</a>. F1-DB-15 whitelist lookup: <strong>NON APPLICABILE</strong> (tabella senza <code>codice/descrizione</code> anagrafici, semantica temporale).</li>
+<li>[x] <strong>F2-BE-04 BA + categoria_cliente_id</strong> — chiuso 2026-04-15. <code>ClientiRepository.create_billing_account</code> accetta <code>categoria_cliente_id</code> opzionale (default <code>STANDARD</code> via subquery); <code>ClientiService.crea_cliente</code> estrae <code>ba_categoria_cliente_id</code> dal payload. <code>ClientiRepository.get_cliente</code> espone categoria joinata. Nuovo <code>ClientiRepository.update_ba_categoria</code> + <code>update_cliente</code> integra PATCH misto BA+cliente. 6 test service.</li>
+<li>[x] <strong>F2-BE-05 Contratti Pass A (repo + service)</strong> — chiuso 2026-04-15. <code>ContrattiRepository</code> (CRUD testata + righe + utility 1:1 + <code>generate_numero</code> + lookup stati/utility), <code>ContrattiService</code> con validazione pre-DB modalita' A/B/C (listino + variazione globale coppia coerente, C rifiuta variazione), filtro <code>data_da</code> default 01-01 anno-1 (feedback_filtro_data_liste), <code>numero</code> generato via <code>script.fn_generate_codice('contratto')</code> + rifiuto in payload, stato iniziale DRAFT risolto in service, traduzione P0001 trigger -&gt; codici applicativi (<code>E_CONTRATTO_MODALITA_C_*</code>, <code>E_CONTRATTO_UTILITY_TIPO_CLASSE_*</code>, <code>E_CONTRATTO_CLASSE_TIPO_INCOERENTE</code>, <code>E_CONTRATTO_UTILITY_SENZA_DIMENSIONE_TIPO_CLASSE_VIETATI</code>) con match multi-substring stretto coerente col pattern <code>pricing_service</code>, <code>map_integrity_error</code> per UNIQUE (<code>uq_contratti_numero</code>, <code>uq_contratti_utilities_contratto_id</code>) + EXCLUDE (<code>ex_contratti_no_overlap</code> -&gt; <code>E_VENDITE_CONTRATTO_OVERLAP</code>) + FK (13 vincoli). 7 nuovi <code>ErrorPolicy</code> in <code>error_policies.py</code>. 27 test service (incl. integrity mapping overlap, DB error translation, immutabilita' identificativi). Suite 1454 -&gt; 1481 OK.</li>
+<li>[x] <strong>F2-BE-06 Contratti Pass B (views + API + doc)</strong> — chiuso 2026-04-15. <code>views_contratti.py</code> + <code>urls_contratti.py</code> registrati in <code>urls_v1.py</code>. 6 endpoint:</li>
+<li><code>GET/POST /api/v1/vendite/contratti/</code></li>
+<li><code>GET/PATCH /api/v1/vendite/contratti/&lt;id&gt;/</code></li>
+<li><code>POST /api/v1/vendite/contratti/&lt;id&gt;/cambia-stato/</code></li>
+<li><code>POST /api/v1/vendite/contratti/&lt;id&gt;/righe/</code> + <code>PATCH/DELETE /&lt;riga_id&gt;/</code></li>
+<li><code>POST/PATCH /api/v1/vendite/contratti/&lt;id&gt;/utility/</code></li>
 </ul>
+<p><code>DomainAPIView</code> + <code>area_funzionale="vendite"</code> (pattern listini, no model_permission). <code>OpenApiParameter</code> per ogni filtro lista, <code>inline_serializer</code> per request/response. 16 test API (<code>test_contratti_api.py</code>) con mock service + JWT. Doc API completa in <code>api_contratti.md</code> (input/output/regole/codici errore/dipendenze DB). Suite 1481 -&gt; 1497 OK (+16).
+- [x] <strong>F2-BE-07 Articoli + <code>listino_tipologia_id</code></strong> — chiuso 2026-04-15. Aggiunto <code>listino_tipologia_id</code> a <code>ARTICOLI_CREATE_COLUMNS</code> (ereditato da UPDATE via comprehension) e a <code>ARTICOLI_DETAIL_COLUMNS</code> + proiezioni <code>tipologia_listino_codice</code>/<code>tipologia_listino_descrizione</code> dalla view <code>vw_articoli_dettaglio</code> (refresh DB gia' applicato). Validazione via <code>_ARTICOLO_INT_FIELDS</code> (nullable int), allineata al pattern degli altri FK articolo. Filtro opzionale <code>listino_tipologia_id</code> in <code>fn_list_articoli</code> + endpoint <code>GET /api/v1/catalogo/articoli/?listino_tipologia_id=</code> con <code>OpenApiParameter</code>. Guard semantico articolo↔riga listino a carico del trigger DB <code>trgfn_listini_righe_guard_tipologia</code> (fail-fast, <code>E_ARTICOLO_TIPOLOGIA_INCOMPATIBILE</code>).
+- [x] <strong>F2-BE-08 BoM + <code>esposto_in_fattura</code></strong> — chiuso 2026-04-15. Aggiunto <code>esposto_in_fattura: bool</code> a <code>COMPONENTE_WRITE_COLUMNS</code> e a <code>COMPONENTE_DETAIL_COLUMNS</code>; flag estratto nel loop bool di <code>_extract_componente_payload</code> (default DB <code>false</code> se omesso). Nessun default esplicito nel service: coerente con pattern "fail parlante" se malformato. Il campo alimenta <code>fn_resolve_prezzo_composito</code> BoM ibrido (§8.2 v5) e l'espansione in <code>commesse_attivita</code> (F2-BE-12).
+- <strong>Test F2-BE-07/08</strong>: 3 nuovi test in <code>apps.catalogo.tests.services.test_catalogo_service</code> (listino_tipologia_id ok + validazione float invalid + componente esposto_in_fattura ok). Suite totale: 1454/1454 OK (+3 vs 1451).
+- [x] <strong>F2-BE-09+10 Pricing service (resolver v2 + composito)</strong> — chiuso 2026-04-15. <code>PricingRepository</code> wrapper su <code>fn_resolve_prezzo_listino_v2</code> + <code>fn_resolve_prezzo_composito</code>. <code>PricingService.resolve_prezzo</code> + <code>resolve_prezzo_composito</code> con validazione input tipizzata (UUID, positive int, date) e traduzione <code>DatabaseError</code> P0001 in <code>ServiceError</code> preservando codici noti (<code>E_PREZZO_LISTINO_NON_TROVATO</code>, <code>E_CATEGORIA_LISTINO_NON_MAPPATA</code>, <code>E_PREZZO_LISTINO_RIGA_NON_TROVATA</code>, <code>E_ARTICOLO_NON_NEGOZIATO_SU_CONTRATTO_C</code>). Fallback <code>E_VENDITE_PRICING_FAILED</code>. 13 test. Doc: <a href="../../../backend/vendite/manual/pricing_service/">pricing_service.md</a>. <strong>Sblocca F2-BE-13/14 cleanup</strong> (coordinamento con DB F1-DB-24..28).
+- [x] <strong>F2-BE-11 Snapshot audit BE wiring</strong> — chiuso end-to-end 2026-04-15. DB team ha esteso <code>fn_upsert_commessa_attivita</code> (7 parametri snapshot pricing v5 obbligatori senza DEFAULT) e <code>fn_batch_upsert_commessa_attivita</code> (estrae le 8 chiavi dal JSONB e le propaga al single-upsert). BE: <code>CommessaAttivitaInput</code> dataclass +8 campi opzionali (<code>prezzo_base_snapshot</code>, <code>origine_prezzo</code>, <code>tipo/valore_variazione_applicata</code>, <code>promo_id</code>, <code>contratto_id</code>, <code>categoria_cliente_id_snapshot</code>, <code>classe_utenza_id_snapshot</code>), <code>upsert_attivita</code> SQL con 8 named params, <code>_inp_to_jsonb_row</code> serializza le 8 chiavi allineate al wrapper batch DB. 2 test nuovi. Suite 1497 -&gt; 1499 OK. Nessuna dipendenza DB residua.
+- [ ] <strong>F2-BE-12 Espansione pipeline compositi</strong> — bloccato + scope ridiscusso. Richiede wiring <code>pricing_service.resolve_prezzo_composito</code> nei 6 source handler con espansione N righe per componente esposto, <code>segment_key</code> differenziato per componente e popolazione snapshot audit. Serve decisione architetturale (espansione lato handler Python vs lato <code>fn_list_*_da_pushare</code> DB). Sprint separato.
+- [x] <strong>F2-BE-13 Cleanup <code>listini_associazioni</code></strong> — chiuso 2026-04-15. Rimossi: <code>ASSOCIAZIONE_*_COLUMNS</code> + 5 metodi repo (list/get/create/update/delete + <code>test_resolver</code> vecchio) + 5 funzioni service <code>fn_*_associazione*</code> + <code>fn_test_resolver_prezzo</code> + helper <code>_get_associazione_or_raise</code>/<code>_extract_associazione_payload</code> + 2 regole <code>_translate_integrity_error</code> + 2 classi view <code>ApiListinoAssociaz*</code> + <code>ApiListinoTestPrezzo</code> + 2 inline serializer + 2 rotte <code>/associazioni/</code> + rotta <code>/test-prezzo/</code> + 5 test API + 2 test service. <code>fn_get_listino_dettaglio</code> non popola piu' il campo <code>"associazioni"</code>. <code>fn_delete_listino</code> guard solo su <code>versioni_count</code> (la colonna <code>associazioni_count</code> resta esposta con valore costante 0 per retrocompatibilita' FE finche' DB non droppa la tabella).
+- [x] <strong>F2-BE-14 Cleanup <code>articoli.voce_utility</code></strong> — chiuso 2026-04-15. Rimossi in BE: <code>ARTICOLI_CREATE_COLUMNS["voce_utility"]</code>, <code>ARTICOLI_DETAIL_COLUMNS</code> (proiezione <code>a.voce_utility</code>), param repo <code>list_articoli</code>/<code>lookup_articoli</code>, param service <code>fn_list_articoli</code>/<code>fn_lookup_articoli</code>, campo serializer <code>_articolo_write_fields</code>, 2 <code>OpenApiParameter</code>, 2 estrazioni query param, schema + field mapping <code>CercaArticoliTool</code> AI. La colonna DB <code>articoli.voce_utility</code> e' ora orfana lato BE: safe per <code>DROP COLUMN</code> nel batch DB F1-DB-28.
+- [ ] Test Django (F2-BE-15)</p>
+<p><strong>Cleanup DB (F1-DB-24..28) sbloccato dopo F2-BE-13/14</strong>: l'ultimo batch atomico puo' ora procedere (DROP <code>listini_associazioni</code>, DROP <code>fn_resolve_prezzo_listino</code> vecchia, DROP <code>articoli.voce_utility</code> + ricreazione <code>vw_articoli_dettaglio</code>).</p>
 <h3 id="fase-3-frontend_1">Fase 3 — Frontend<a class="headerlink" href="#fase-3-frontend_1" title="Permanent link">&para;</a></h3>
 <ul>
-<li>[ ] Admin categorie + matrice + promo (F3-FE-01..03)</li>
+<li>[x] <strong>F3-FE-02 Matrice categorie/listini (Amm. Software)</strong> — chiuso 2026-04-15. Pattern UtilitiesTipiRuolo replicato 1:1 per matrice <code>anagrafiche.categorie_clienti_listini</code> sotto Amm. Software. File creati: <code>amministrazione/api/categorieClientiListini.js</code>, <code>stores/categorieClientiListini.js</code>, <code>components/CategorieClientiListiniSearchTable.vue</code>, <code>components/CategoriaClienteListinoDrawer.vue</code>, <code>views/CategorieClientiListiniListView.vue</code>. Filtri toolbar: categoria (<code>LookupSelect rel="anagrafiche.categorie_clienti"</code>), utility (<code>rel="config.utilities"</code>), emittente (<code>useLookup(listEmittentiFiscali)</code> → <code>option-value="soggetto_ruolo_id"</code>), listino (<code>rel="vendite.listini"</code>), attivo. Drawer campi: 4 dimensioni (immutabili in edit) + listino + tipo/valore variazione opzionale (coppia coerente anticipata UI) + valido_dal/al + attivo. Drawer readonly cumulativo via <code>useReadonlyMode('amm_software')</code> parent + <code>useInjectReadonly</code> nel drawer (prop <code>readonly</code> combinata). Navigation entry + route <code>/amm-software/matrice-categorie-listini</code> + i18n namespace <code>amministrazione.matrice_categorie_listini.*</code>. BE minimal: <code>vendite.listini</code> aggiunto a whitelist lookup + <code>list_emittenti_fiscali</code> ora esporta <code>soggetto_ruolo_id</code>. Vite build OK, suite BE 1501/1501.</li>
+<li>[x] <strong>F3-FE-01 Admin categorie_clienti (Amm. Software)</strong> — chiuso 2026-04-15. CRUD minimo (list + filtri + create + edit, no delete; disattivazione soft via <code>attivo</code>). File creati: <code>amministrazione/api/categorieClienti.js</code>, <code>stores/categorieClienti.js</code>, <code>components/CategorieClientiSearchTable.vue</code>, <code>components/CategoriaClienteDrawer.vue</code>, <code>views/CategorieClientiListView.vue</code>. Filtri toolbar: search (min 3), partecipa_promo (yes/no/all), attivo. Drawer campi: codice (immutabile in edit, upper-case in create), descrizione, ordinamento, partecipa_promo, attivo. Drawer readonly cumulativo via <code>useReadonlyMode('amm_software')</code> parent + <code>useInjectReadonly</code>. Nav entry subito prima della matrice (<code>/amm-software/categorie-clienti</code>). Pattern UtilitiesTipiRuolo replicato, <code>DRAWER_WIDTH.SIMPLE</code>. Vite build OK (bundle 9.28 kB).</li>
+<li>[x] <strong>F3-FE-03 Admin promo_articoli (Vendite)</strong> — chiuso 2026-04-15. CRUD minimo STADIO 0 resolver v5. Dominio <code>vendite</code> (scelta esplicita: operativa-commerciale, non admin config). File creati: <code>vendite/api/promoArticoli.js</code>, <code>stores/promoArticoli.js</code>, <code>components/PromoArticoliSearchTable.vue</code>, <code>components/PromoArticoloDrawer.vue</code>, <code>views/PromoArticoliListView.vue</code>. Filtri toolbar: search, uom, tipo_variazione, attivo. Drawer campi: codice (immutabile in edit), descrizione, articolo (via <code>ArticoloLookup</code> core riusabile), uom (<code>LookupSelect rel="catalogo.unita_misura"</code>), tipo_variazione (3 valori incl. <code>PREZZO_FISSO</code> unico qui), valore (hint segno firmato per PERC/VF, <code>&gt;=0</code> per PREZZO_FISSO), valido_dal/al, attivo. Restore <code>articolo_obj</code> da display fields per AutoComplete server-side (<code>_display: codice — descrizione</code>). Nav entry <code>/vendite/promo-articoli</code> + route + i18n namespace <code>vendite.promo_articoli.*</code> (28 chiavi). <code>useReadonlyMode('vendite')</code> parent. Vite build OK (bundle 13 kB).</li>
+<li><strong>Bug fix BE e DB associato</strong>: rimosso vincolo <code>valore &gt; 0</code> per PERCENTUALE/VALORE_FISSO (ora <code>!= 0</code>) — coerente col resolver matematico (formula <code>base * (1 + valore/100)</code> firma negativo = sconto). DB team ha droppato il CHECK <code>chk_promo_articoli_valore</code> nel changeSet <code>20260415-02</code>. BE aggiornato in <code>promo_articoli_service.py</code> + test regressione <code>test_create_percentuale_negativo_ok</code>. Doc v5 §6.1 + §6.3 riallineati.</li>
 <li>[ ] BA + contratti (F3-FE-04..05)</li>
 <li>[ ] Articoli + BoM (F3-FE-06..07)</li>
-<li>[ ] Audit pricing commessa (F3-FE-08)</li>
+<li>[x] ~~Audit pricing commessa (F3-FE-08)~~ — SPOSTATO in <code>gestione-commesse-v2.md</code> §28</li>
 <li>[ ] Cleanup + build (F3-FE-09..10)</li>
 </ul>
 <h3 id="fase-4-documentazione">Fase 4 — Documentazione<a class="headerlink" href="#fase-4-documentazione" title="Permanent link">&para;</a></h3>
@@ -6391,6 +6413,18 @@ tracciato in <code>sviluppo-listini-v6.md</code> come V6-B1 per refactor trasver
 <li>[ ] Manuali DB aggiornati</li>
 <li>[ ] API doc aggiornata</li>
 <li>[ ] Archivio WIP</li>
+</ul>
+<hr />
+<h2 id="debito-tecnico-residuo-da-affrontare-a-chiusura-v5">Debito tecnico residuo (da affrontare a chiusura v5)<a class="headerlink" href="#debito-tecnico-residuo-da-affrontare-a-chiusura-v5" title="Permanent link">&para;</a></h2>
+<p>Lista rilevata durante review critica 2026-04-15 post F3-FE-01/02/03. Non blocca lo sprint corrente; da ripulire prima della chiusura v5 (Fase 4 / gate produzione).</p>
+<ul>
+<li><strong>Search guard 1-2 char cross-store</strong>: tutti gli store admin FE (incl. quelli pre-esistenti UtilitiesTipiRuolo/TipiRuoloTipiIndirizzo) implementano <code>if (searchTerm.length &gt; 0 &amp;&amp; searchTerm.length &lt; 3) return</code>. Se l'utente digita "abc" (fetch), poi cancella a "ab", la lista NON si aggiorna ma l'input mostra "ab": incoerenza UX. Refactor globale da proporre: svuotare risultati o forzare fetch con search vuoto sotto soglia.</li>
+<li><strong>Magic string <code>useReadonlyMode('amm_software'|'vendite'|...)</code> + <code>emitDataChanged('categorie_clienti'|...)</code></strong>: chiavi dominio/entita' sparse in componenti e store come stringhe libere. Se un dominio viene rinominato, la readonly mode e il refresh cross-tab si rompono silenziosamente. Soluzione: enum centralizzato in <code>core/constants.js</code> (es. <code>READONLY_DOMAINS.AMM_SOFTWARE</code>, <code>TAB_ENTITIES.CATEGORIE_CLIENTI</code>) referenziato sia dai consumer che dai provider.</li>
+<li><strong><code>boolOptions</code> / <code>tipoVariazioneOptions</code> duplicate</strong>: micro-duplicazioni fra SearchTable admin (3 copie di <code>[null/true/false]</code>). Candidato per helper <code>core/components/options.js</code> con factory <code>buildBoolOptions(t)</code> che prende l'i18n handle.</li>
+<li><strong>UX cambio tipo variazione</strong>: nei drawer (matrice + promo) il cambio da PERCENTUALE a VALORE_FISSO mantiene il valore numerico ma ne cambia la semantica (10 diventa 10€ invece di 10%). Candidato reset automatico del valore al cambio tipo, con toast info.</li>
+<li><strong>Guida <code>gestione-listini.md</code> da riscrivere</strong>: il doc operativo corrente e' pre-v5 (cita <code>listini_associazioni</code>, nessun riferimento alle 3 modalita' contratto A/B/C, convenzione segno variazione non documentata). Riscrittura completa a chiusura Fase 4.</li>
+<li><strong>Smoke UI end-to-end mancante</strong>: ogni sprint FE ha solo verifica vite build, no test manuale sistematico su flussi admin reali (login, CRUD, readonly). Proporre checklist smoke per F3-FE-10.</li>
+<li><strong>i18n namespace rigido</strong>: se una feature sposta menu (es. promo_articoli da <code>vendite/</code> a <code>amm-software/</code>) serve rebase chiavi <code>vendite.*</code> → <code>amministrazione.*</code>. Pattern progetto, ma degrada in cambi organizzativi.</li>
 </ul>
 <hr />
 <p><em>Sviluppo Listini — ZeroERP (14 aprile 2026, WIP v5 — modello unico base + categoria + contratto + promo, resolver 3 stadi)</em></p>
@@ -6454,7 +6488,7 @@ tracciato in <code>sviluppo-listini-v6.md</code> come V6-B1 per refactor trasver
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.91a19a9e.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

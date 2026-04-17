@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.32">
+      <meta name="generator" content="zensical-0.0.33">
     
     
       
@@ -40,7 +40,7 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -4379,7 +4379,7 @@
 <td><code>valore_variazione</code></td>
 <td>numeric(10,4)</td>
 <td>NO</td>
-<td>Valore (sempre &gt; 0 per PERCENTUALE/VALORE_FISSO; &gt;= 0 per PREZZO_FISSO)</td>
+<td>Valore libero (segno gestito da UI/business)</td>
 </tr>
 <tr>
 <td><code>valido_dal</code></td>
@@ -4411,8 +4411,8 @@
 <h3 id="regole-di-validazione">Regole di validazione<a class="headerlink" href="#regole-di-validazione" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>chk_promo_articoli_tipo_variazione</code></strong>: <code>tipo_variazione</code> ∈ {<code>PERCENTUALE</code>, <code>VALORE_FISSO</code>, <code>PREZZO_FISSO</code>}.</li>
-<li><strong><code>chk_promo_articoli_date</code></strong>: <code>valido_al &gt;= valido_dal</code>.</li>
-<li><strong><code>chk_promo_articoli_valore</code></strong>: coerenza tra <code>tipo_variazione</code> e segno di <code>valore_variazione</code> (&gt; 0 per le variazioni relative, &gt;= 0 per il prezzo assoluto).</li>
+<li><strong>Range di validita'</strong>: il trigger <code>script.trgfn_set_validita</code> costruisce <code>daterange(valido_dal, valido_al, '[]')</code>; l'inversione delle date e' rifiutata dal costruttore con SQLSTATE 22000 senza bisogno di un CHECK applicativo.</li>
+<li><strong>Valore variazione</strong>: nessun vincolo sul segno (il CHECK <code>chk_promo_articoli_valore</code> rimosso il 15-04-2026 perche' restringeva inutilmente la semantica algebrica del resolver: negativo=sconto, positivo=maggiorazione).</li>
 <li><strong><code>ex_promo_articoli_no_overlap</code></strong>: nessuna sovrapposizione temporale per la stessa coppia <code>(articolo_id, uom_id)</code> quando <code>attivo IS TRUE</code>. Implementato come <code>EXCLUDE USING gist</code> (richiede <code>btree_gist</code>, gia' attivo dalla baseline).</li>
 </ul>
 <hr />
@@ -4545,7 +4545,7 @@ erDiagram
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.91a19a9e.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
