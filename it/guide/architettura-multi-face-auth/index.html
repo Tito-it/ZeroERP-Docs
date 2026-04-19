@@ -1,0 +1,5240 @@
+
+<!doctype html>
+<html lang="it" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.33">
+    
+    
+      
+        <title>Guida Tecnica – Architettura Multi-Face Auth - Zero ERP Documentation</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.53a7feaf.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,a=__md_scope)=>JSON.parse(t.getItem(a.pathname+"."+e)),__md_set=(e,t,a=localStorage,_=__md_scope)=>{try{a.setItem(_.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-label="Navigazione"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#guida-tecnica-architettura-multi-face-auth" class="md-skip">
+          Vai al contenuto
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Intestazione">
+    <a href="../../" title="Zero ERP Documentation" class="md-header__button md-logo" aria-label="Zero ERP Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigazione">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Zero ERP Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Guida Tecnica – Architettura Multi-Face Auth
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Cerca">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Cerca">
+  <button type="button" class="md-search__button">
+    Cerca
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/Tito-it/ZeroErp" title="Apri repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Tito-it/ZeroErp
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../manifesto/" class="md-tabs__link">
+          
+  
+  Visione e Filosofia
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../installazione/" class="md-tabs__link">
+          
+  
+  Installazione
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../architettura/" class="md-tabs__link">
+          
+  
+  Architettura
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../dbzero/" class="md-tabs__link">
+          
+  
+  DB Zero
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../backend/" class="md-tabs__link">
+          
+  
+  Backend (Django)
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../gestione-pratiche/" class="md-tabs__link">
+          
+  
+  Guide tecniche
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorial/framework-automazione-db/" class="md-tabs__link">
+          
+  
+  Tutorial
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../dbzero/tools/gen_db_docs/" class="md-tabs__link">
+          
+  
+  Strumenti
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../dev/api/" class="md-tabs__link">
+          
+  
+  Sviluppatori
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../glossario/devops&db/" class="md-tabs__link">
+          
+  
+  Glossario
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigazione" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Zero ERP Documentation" class="md-nav__button md-logo" aria-label="Zero ERP Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    Zero ERP Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Tito-it/ZeroErp" title="Apri repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Tito-it/ZeroErp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visione e Filosofia
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Visione e Filosofia
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../manifesto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manifesto
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sviluppo-concentrico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sviluppo Concentrico
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduzione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cos’è Zero ERP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../perche-zeroerp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Perchè Zero ERP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installazione
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installazione
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prerequisiti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LICENSE-GPL3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licenza
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architettura
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architettura
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architettura/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architettura
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Database
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../liquibase-setup-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Liquibase Setup & Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../linee-guida-sql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linee Guida SQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../linee-guida-trigger/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linee Guida Trigger
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2_4" id="__nav_4_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Db PostgresSQL
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Db PostgresSQL
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../postgresql/intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Panoramica
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../postgresql/aggiornamento-versione-postgresql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aggiornamento versione
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../postgresql/parametri-personalizzati-(GUC)/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parametri personalizzati (GUC)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2_4_4" id="__nav_4_2_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estensioni
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_4_2_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Estensioni
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../postgresql/estensioni-utilizzate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utilizzate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../postgresql/dblink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dblink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../postgresql/pgAgent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pgAgent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../postgresql/pgcrypto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pgcrypto
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../dbzero/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DB Zero
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    DB Zero
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../dbzero/acquisti/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schemi
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Schemi
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/anagrafiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anagrafiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/catalogo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalogo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/dbops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dbops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/magazzino/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Magazzino
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/maintenance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintenance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pratiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/public/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/storico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storico
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/script/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/vendite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vendite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../backend/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backend (Django)
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Backend (Django)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../backend/acquisti/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aree
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Aree
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/anagrafiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anagrafiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/catalogo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalogo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/contabilita/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contabilita
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/magazzino/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Magazzino
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/storico/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storico
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/vendite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vendite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide tecniche
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide tecniche
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione pratiche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../soggetti-e-ruoli-anagrafici/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Soggetti e ruoli anagrafici
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../risorse-umane-e-accessi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risorse Umane e Accessi al Software
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architettura-permessi-e-autorizzazioni/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architettura Permessi e Autorizzazioni
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audit-e-tracciabilita/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit e tracciabilità
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-delle-istanze-utility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione delle Istanze Utility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generazione-cliente/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generazione di un cliente
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-degli-indirizzi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione degli indirizzi
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../riclassificazione-vie/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Riclassificazione vie
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-dei-contatti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione dei contatti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-conti-bancari/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione conti bancari
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-listini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione listini
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fatturazione
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-dei-pagamenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione dei pagamenti
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrazione-ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrazione Ai
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-mail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestione mail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tx_id_implementation_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementazione Transaction ID
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storicizzazione-tabelle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storicizzazione Tabelle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configurazione-e-gestione-parametri/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configurazione e gestione parametri
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../automazione-db/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Automazione DB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Log
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_21">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Log
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Messaggi-di-Errore-e-Generazione-Log/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Messaggi di Errore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../messaggi-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Messaggi di Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Analisi-tracciamento-processi-e-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi e Job
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorial
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorial
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/framework-automazione-db/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Framework automazione DB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strumenti
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Strumenti
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/tools/gen_db_docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generatore Documentazione
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sviluppatori
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sviluppatori
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/frontend-standards.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3" id="__nav_10_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Server
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3_1" id="__nav_10_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backend
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Backend
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/backend/backend-dev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guida backend-dev
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/backend/checklist-post-upgrade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checklist post upgrade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/backend/configurazione-django/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configurazione Django
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3_2" id="__nav_10_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Database
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/db/dbdev/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VM dbdev (PostgreSQL)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3_3" id="__nav_10_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infrastruttura
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Infrastruttura
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/infra/proxmox/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proxmox
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_3_4" id="__nav_10_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workstation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Workstation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/workstation-dev/configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vm wrk1-dev (ubuntu)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_10_4" id="__nav_10_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    GitHub
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/github/configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentazione
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossario
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Glossario
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../glossario/devops&db/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dev&Ops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../glossario/process-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="Indice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Indice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-cosa-significa-multi-face" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Cosa significa "multi-face"
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-tre-cose-diverse-tenute-separate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Tre cose diverse, tenute separate
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Tre cose diverse, tenute separate">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-perche-lo-stesso-auth_user-non-va-condiviso-tra-contesti" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Perche' lo stesso auth_user non va condiviso tra contesti
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-il-nuovo-bridge-identita_digitali" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Il nuovo bridge: identita_digitali
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Il nuovo bridge: identita_digitali">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-struttura-concettuale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Struttura concettuale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-il-vincolo-persona-fisica-pura-si-sposta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Il vincolo "persona fisica pura" si sposta
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-rapporto-con-risorse_umane_auth_user" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Rapporto con risorse_umane_auth_user
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-il-livello-capability-profili_accesso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Il livello capability: profili_accesso
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Il livello capability: profili_accesso">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-generalizzazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Generalizzazione
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-come-viene-assegnato-un-profilo-a-un-utente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Come viene assegnato un profilo a un utente
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-preset-per-i-portali" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Preset per i portali
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-il-livello-scope-dove-guardo-cosa-vedo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Il livello scope: dove guardo, cosa vedo
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Il livello scope: dove guardo, cosa vedo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-il-problema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Il problema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-generalizzazione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Generalizzazione
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-whitelist-ef-come-caso-particolare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Whitelist EF come caso particolare
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-row-level-security-la-difesa-al-livello-giusto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Row Level Security: la difesa al livello giusto
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Row Level Security: la difesa al livello giusto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-il-salto-di-qualita" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Il salto di qualita'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-come-si-alimentano-le-rls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Come si alimentano le RLS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-defense-in-depth-non-sostituzione" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Defense-in-depth, non sostituzione
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-namespace-api-separati" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Namespace API separati
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Namespace API separati">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-perche-separati" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Perche' separati
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-pattern-di-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Pattern di view
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-condivisione-dei-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Condivisione dei service
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-onboarding-dei-portali" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Onboarding dei portali
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Onboarding dei portali">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-invito-da-admin-clienti-e-fornitori" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Invito da admin (clienti e fornitori)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-self-service-shop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Self-service (shop)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-recupero-password" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Recupero password
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-sync-auth_useris_active-generalizzata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Sync auth_user.is_active generalizzata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-audit-e-identita-nel-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Audit e identita' nel DB
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-diagrammi-er" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Diagrammi ER
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Diagrammi ER">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-bridge-identita" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 Bridge identita'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-capability-generalizzata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 Capability generalizzata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-scope-generalizzato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 Scope generalizzato
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-riepilogo-cambiamenti" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Riepilogo cambiamenti
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-perche-questo-disegno-e-coerente-con-zeroerp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Perche' questo disegno e' coerente con ZeroErp
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-evoluzioni-future" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Evoluzioni future
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+  
+  
+
+
+<h1 id="guida-tecnica-architettura-multi-face-auth">Guida Tecnica – Architettura Multi-Face Auth<a class="headerlink" href="#guida-tecnica-architettura-multi-face-auth" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Destinatari:</strong> sviluppatori database, backend, frontend e analisti funzionali</p>
+<p><strong>Prerequisiti:</strong> <a href=".././soggetti-e-ruoli-anagrafici/">Guida Soggetti &amp; Ruoli</a>, <a href=".././architettura-permessi-e-autorizzazioni/">Architettura Permessi e Autorizzazioni</a>, <a href=".././risorse-umane-e-accessi/">Risorse Umane e Accessi</a></p>
+<p><strong>Stato:</strong> Proposta architetturale – v1.0</p>
+</blockquote>
+<hr />
+<h2 id="1-cosa-significa-multi-face">1. Cosa significa "multi-face"<a class="headerlink" href="#1-cosa-significa-multi-face" title="Permanent link">&para;</a></h2>
+<p>Il sistema attuale pensa a chi entra nel software come <strong>dipendente</strong>: una risorsa
+umana con un reparto, un'ereditarieta' di permessi, uno scope per emittente fiscale.
+Questo va benissimo finche' l'unico modo di usare ZeroErp e' da dentro l'azienda.</p>
+<p>Nella vita reale un ERP serio ha <strong>piu' facce</strong>:</p>
+<ul>
+<li><strong>Operatore interno</strong> — il dipendente che gia' conosciamo</li>
+<li><strong>Cliente portale</strong> — il cliente B2B che entra per vedere le proprie fatture, pagamenti, scadenze</li>
+<li><strong>Fornitore portale</strong> — il fornitore che entra per vedere gli ordini ricevuti, lo stato pagamenti verso di se'</li>
+<li><strong>Cliente del negozio online</strong> — chi si registra sul sito, fa un ordine, vuole rivederlo</li>
+<li><strong>Partner / integratore API</strong> — in futuro, sistemi terzi che chiamano le API con un'identita' propria</li>
+</ul>
+<p>Tutte queste persone hanno una cosa in comune: <strong>entrano nel software con un account</strong>.
+Ma hanno rapporti molto diversi con l'azienda — e chiedono permessi, scope e interfacce diverse.</p>
+<p>Questa guida propone un modello che <strong>abbraccia tutti i casi senza rattoppare quello
+degli operatori interni</strong>. Il disegno tiene fermo cio' che funziona (soggetti/ruoli,
+audit JWT, sync login, token monouso) e generalizza solo cio' che oggi e' troppo stretto.</p>
+<hr />
+<h2 id="2-tre-cose-diverse-tenute-separate">2. Tre cose diverse, tenute separate<a class="headerlink" href="#2-tre-cose-diverse-tenute-separate" title="Permanent link">&para;</a></h2>
+<p>Il cuore del modello e' <strong>separare tre concetti</strong> che oggi sono fusi insieme:</p>
+<table>
+<thead>
+<tr>
+<th>Dimensione</th>
+<th>Domanda a cui risponde</th>
+<th>Dove sta oggi</th>
+<th>Dove dovrebbe stare</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Identita'</strong></td>
+<td>Chi e' questa persona nel sistema?</td>
+<td><code>risorse_umane_auth_user</code> (solo dipendenti)</td>
+<td><code>identita_digitali</code> (bridge generico)</td>
+</tr>
+<tr>
+<td><strong>Capability</strong></td>
+<td>Cosa puo' fare?</td>
+<td><code>profili_reparto_aree</code> (solo reparti)</td>
+<td><code>profili_accesso</code> (reparti o portali)</td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>Su quali dati opera?</td>
+<td><code>user_emittenti_fiscali</code> (solo EF)</td>
+<td><code>identita_scope_bindings</code> (policy generiche)</td>
+</tr>
+</tbody>
+</table>
+<p>Tenerle separate permette di combinarle liberamente. Un cliente portale ha
+un'<strong>identita'</strong> diversa da un dipendente, un <strong>set di capability</strong> molto piu' ristretto
+e uno <strong>scope</strong> che e' "i miei billing account, non altri".</p>
+<h3 id="21-perche-lo-stesso-auth_user-non-va-condiviso-tra-contesti">2.1 Perche' lo stesso <code>auth_user</code> non va condiviso tra contesti<a class="headerlink" href="#21-perche-lo-stesso-auth_user-non-va-condiviso-tra-contesti" title="Permanent link">&para;</a></h3>
+<p>Mario Rossi puo' essere contemporaneamente:</p>
+<ul>
+<li>dipendente della mia azienda (identita' interna)</li>
+<li>titolare di un'azienda fornitrice che io pago (identita' fornitore)</li>
+<li>cliente privato di un mio negozio online (identita' shop)</li>
+</ul>
+<p>Sono <strong>tre relazioni diverse</strong> con la mia azienda. Non ha senso che condividano
+lo stesso account: ognuna ha la sua password, il suo flusso di login, la sua
+interfaccia. In ZeroErp un <code>auth_user</code> rappresenta <strong>un'identita' in un contesto</strong>,
+non una persona fisica. Se Mario ha tre cappelli, ha tre account.</p>
+<p>Questo non e' un compromesso — e' il modello corretto. Lo dice chiaramente anche
+la <a href=".././soggetti-e-ruoli-anagrafici/">guida soggetti e ruoli</a>: il soggetto e'
+l'identita' stabile, il ruolo e' la funzione nel sistema. Un <code>auth_user</code> nasce
+dal ruolo, non dal soggetto.</p>
+<hr />
+<h2 id="3-il-nuovo-bridge-identita_digitali">3. Il nuovo bridge: <code>identita_digitali</code><a class="headerlink" href="#3-il-nuovo-bridge-identita_digitali" title="Permanent link">&para;</a></h2>
+<p>La tabella <a href="../../dbzero/anagrafiche/tabelle/risorse_umane_auth_user/">anagrafiche.risorse_umane_auth_user</a>
+resta valida <strong>come caso particolare</strong> — il bridge del dipendente. Accanto a lei
+nasce <code>anagrafiche.identita_digitali</code>, il bridge generico che collega qualunque
+<code>soggetti_ruoli</code> a un <code>auth_user</code>.</p>
+<h3 id="31-struttura-concettuale">3.1 Struttura concettuale<a class="headerlink" href="#31-struttura-concettuale" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>anagrafiche.identita_digitali
+    id                    BIGINT PK
+    soggetto_ruolo_id     BIGINT FK  (a anagrafiche.soggetti_ruoli)
+    auth_user_id          INT  FK UNIQUE  (a django.auth_user)
+    ruolo_applicativo     ENUM      (OPERATORE | CLIENTE_PORTALE | FORNITORE_PORTALE |
+                                     SHOP_CUSTOMER | API_CLIENT | DISABILITATO)
+    attivo                BOOLEAN
+    valido_dal            DATE
+    valido_al             DATE      NULLABLE
+    deve_cambiare_password BOOLEAN
+    invito_inviato_at     TIMESTAMPTZ NULLABLE
+    date_insert/update, user_insert/update   (audit standard)
+    UNIQUE (auth_user_id)
+    UNIQUE (soggetto_ruolo_id) WHERE attivo = true
+</code></pre></div>
+<p><strong>Regole di dominio:</strong></p>
+<ul>
+<li>Un <code>auth_user</code> ha <strong>una sola</strong> identita' digitale attiva alla volta</li>
+<li>Un <code>soggetti_ruoli</code> puo' avere piu' identita' nel tempo (cessazione e rientro),
+  ma una sola attiva</li>
+<li><code>ruolo_applicativo</code> dice <strong>in quale veste</strong> l'utente si logga</li>
+</ul>
+<h3 id="32-il-vincolo-persona-fisica-pura-si-sposta">3.2 Il vincolo "persona fisica pura" si sposta<a class="headerlink" href="#32-il-vincolo-persona-fisica-pura-si-sposta" title="Permanent link">&para;</a></h3>
+<p>Oggi la regola <strong>R4</strong> (<a href=".././risorse-umane-e-accessi/#r4--collegamento-a-django-solo-persona-fisica-pura">Risorse umane §R4</a>)
+vieta il collegamento a <code>auth_user</code> per chi ha partita IVA. Questa regola nasce
+dalla natura del ruolo RIS_UMANA (solo persone fisiche dipendenti), non dal bridge.</p>
+<p>Nel nuovo modello la regola diventa:</p>
+<blockquote>
+<p><em>Se <code>ruolo_applicativo = OPERATORE</code>, allora il <code>soggetto_ruolo</code> deve essere
+RIS_UMANA su soggetto persona fisica pura. Per gli altri ruoli applicativi,
+il vincolo non si applica.</em></p>
+</blockquote>
+<p>Cosi' un cliente persona giuridica (S.r.l., S.p.A., Ente) puo' avere un account
+sul portale, senza rompere la regola originale.</p>
+<h3 id="33-rapporto-con-risorse_umane_auth_user">3.3 Rapporto con <code>risorse_umane_auth_user</code><a class="headerlink" href="#33-rapporto-con-risorse_umane_auth_user" title="Permanent link">&para;</a></h3>
+<p>Durante la migrazione i due bridge convivono. Poi <code>risorse_umane_auth_user</code>
+diventa una <strong>vista letta</strong> costruita sopra <code>identita_digitali</code> filtrando
+<code>ruolo_applicativo IN (OPERATORE)</code>. Cosi' il codice esistente non si accorge
+della differenza, ma la vera sorgente dati e' una sola.</p>
+<hr />
+<h2 id="4-il-livello-capability-profili_accesso">4. Il livello capability: <code>profili_accesso</code><a class="headerlink" href="#4-il-livello-capability-profili_accesso" title="Permanent link">&para;</a></h2>
+<p>Oggi i permessi sono <strong>per reparto</strong> (<a href="../../dbzero/config/tabelle/profili_reparto_aree/">profili_reparto_aree</a>).
+Un cliente portale non ha un reparto: ha un <strong>ruolo nel mondo</strong> (cliente),
+a cui corrisponde un set standard di permessi.</p>
+<h3 id="41-generalizzazione">4.1 Generalizzazione<a class="headerlink" href="#41-generalizzazione" title="Permanent link">&para;</a></h3>
+<p>Nasce <code>config.profili_accesso</code>, che contiene <strong>tutti</strong> i profili di permesso:</p>
+<div class="highlight"><pre><span></span><code>config.profili_accesso
+    id              INT PK
+    tipo            ENUM (REPARTO | PORTALE | AD_HOC)
+    codice          VARCHAR UNIQUE    (AMMINISTRAZIONE, VENDITE, CLIENTE_PORTALE, ...)
+    descrizione     TEXT
+    attivo          BOOLEAN
+</code></pre></div>
+<p>Le tabelle esistenti di dettaglio (<code>profili_reparto_aree</code>, <code>profili_reparto_azioni</code>)
+diventano <code>profili_accesso_aree</code> e <code>profili_accesso_azioni</code>, legate a <code>profili_accesso</code>
+invece che direttamente a <code>unita_organizzative</code>.</p>
+<h3 id="42-come-viene-assegnato-un-profilo-a-un-utente">4.2 Come viene assegnato un profilo a un utente<a class="headerlink" href="#42-come-viene-assegnato-un-profilo-a-un-utente" title="Permanent link">&para;</a></h3>
+<p>Nasce una tabella di <strong>binding</strong> che dice "quale profilo vale per questa identita'":</p>
+<div class="highlight"><pre><span></span><code>config.profili_accesso_bindings
+    id                     BIGINT PK
+    profilo_accesso_id     INT FK
+    -- esattamente uno dei tre seguenti deve essere valorizzato:
+    unita_organizzativa_id INT FK NULL    (se il profilo vale per un reparto)
+    identita_digitale_id   BIGINT FK NULL (se il profilo vale per una singola identita&#39;)
+    ruolo_applicativo      ENUM  NULL     (se il profilo vale per tutti gli utenti di quel ruolo)
+</code></pre></div>
+<p>Cosi' la catena di risoluzione diventa:</p>
+<div class="highlight"><pre><span></span><code>1. profilo binding per identita&#39; specifica?     -&gt; ha priorita&#39;
+2. profilo binding per reparto (se OPERATORE)?  -&gt; ereditato come oggi
+3. profilo binding per ruolo applicativo?       -&gt; fallback standard per CLIENTE, FORNITORE, SHOP
+4. default -&gt; BLOCCATO
+</code></pre></div>
+<h3 id="43-preset-per-i-portali">4.3 Preset per i portali<a class="headerlink" href="#43-preset-per-i-portali" title="Permanent link">&para;</a></h3>
+<p>I ruoli portale hanno un <strong>preset di capability stretto e immutabile</strong>, perche'
+non ha senso configurare 100 clienti uno per uno. L'admin di sistema definisce
+<strong>un</strong> profilo <code>CLIENTE_PORTALE</code> con permessi standard (lettura propri
+documenti, creazione ticket, ecc.), e tutti i clienti ne ereditano.</p>
+<p>Eccezioni per singolo cliente restano possibili via <code>user_override_*</code> (gia'
+esistenti) — ma non sono la norma.</p>
+<hr />
+<h2 id="5-il-livello-scope-dove-guardo-cosa-vedo">5. Il livello scope: dove guardo, cosa vedo<a class="headerlink" href="#5-il-livello-scope-dove-guardo-cosa-vedo" title="Permanent link">&para;</a></h2>
+<h3 id="51-il-problema">5.1 Il problema<a class="headerlink" href="#51-il-problema" title="Permanent link">&para;</a></h3>
+<p>Un operatore interno e' limitato dagli <strong>emittenti fiscali</strong> (<a href="../../dbzero/config/tabelle/user_emittenti_fiscali/">user_emittenti_fiscali</a>).
+Un cliente portale deve vedere solo i <strong>propri billing account</strong>, mai quelli di altri clienti.
+Un fornitore vede solo i <strong>propri ordini ricevuti</strong>.
+Un cliente shop vede solo le <strong>proprie transazioni personali</strong>.</p>
+<p>Quattro regole di scope, tutte diverse. La whitelist EF esistente va bene per il
+primo caso, ma non si estende.</p>
+<h3 id="52-generalizzazione">5.2 Generalizzazione<a class="headerlink" href="#52-generalizzazione" title="Permanent link">&para;</a></h3>
+<p>Nasce <code>config.scope_policy</code>:</p>
+<div class="highlight"><pre><span></span><code>config.scope_policy
+    id          INT PK
+    codice      VARCHAR UNIQUE   (EF_WHITELIST, BA_OWNERSHIP, FORNITORE_OWNERSHIP, SELF_OWNERSHIP, ...)
+    descrizione TEXT
+    funzione_db VARCHAR           (nome funzione PL/pgSQL che implementa il check)
+</code></pre></div>
+<p>Ogni policy e' implementata da una funzione SQL che, dati <code>(identita_id, target)</code>,
+risponde <em>true</em> o <em>false</em>. Esempio:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Policy BA_OWNERSHIP: il cliente portale vede solo i BA dove e&#39; titolare</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_scope_ba_ownership</span><span class="p">(</span><span class="n">p_identita_id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="p">,</span><span class="w"> </span><span class="n">p_billing_account_id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="p">)</span>
+<span class="k">RETURNS</span><span class="w"> </span><span class="nb">BOOLEAN</span><span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="k">STABLE</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">        </span><span class="k">FROM</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">identita_digitali</span><span class="w"> </span><span class="n">id</span>
+<span class="w">        </span><span class="k">JOIN</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">soggetti_ruoli</span><span class="w"> </span><span class="n">sr</span><span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">id</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span>
+<span class="w">        </span><span class="k">JOIN</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">clienti</span><span class="w"> </span><span class="k">c</span><span class="w">          </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">soggetto_ruolo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sr</span><span class="p">.</span><span class="n">id</span>
+<span class="w">        </span><span class="k">JOIN</span><span class="w"> </span><span class="n">anagrafiche</span><span class="p">.</span><span class="n">billing_account</span><span class="w"> </span><span class="n">ba</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">ba</span><span class="p">.</span><span class="n">cliente_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span>
+<span class="w">        </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_identita_id</span>
+<span class="w">          </span><span class="k">AND</span><span class="w"> </span><span class="n">ba</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_billing_account_id</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="err">$$</span><span class="p">;</span>
+</code></pre></div>
+<p>Poi i binding: <code>config.identita_scope_bindings</code> collega un'identita' a una o piu' policy.</p>
+<h3 id="53-whitelist-ef-come-caso-particolare">5.3 Whitelist EF come caso particolare<a class="headerlink" href="#53-whitelist-ef-come-caso-particolare" title="Permanent link">&para;</a></h3>
+<p><code>user_emittenti_fiscali</code> non scompare: rimane come tabella di supporto alla policy
+<code>EF_WHITELIST</code>. La funzione <code>fn_scope_ef_whitelist</code> resta quella di oggi, solo
+avvolta nel nuovo framework. Nessuna migrazione dati distruttiva.</p>
+<hr />
+<h2 id="6-row-level-security-la-difesa-al-livello-giusto">6. Row Level Security: la difesa al livello giusto<a class="headerlink" href="#6-row-level-security-la-difesa-al-livello-giusto" title="Permanent link">&para;</a></h2>
+<h3 id="61-il-salto-di-qualita">6.1 Il salto di qualita'<a class="headerlink" href="#61-il-salto-di-qualita" title="Permanent link">&para;</a></h3>
+<p>Oggi il backend filtra i queryset tramite il <a href=".././architettura-permessi-e-autorizzazioni/#63-mixin-per-ambito-emittente-fiscale">EmittenteFiscaleScopeMixin</a>.
+Funziona, ma se un endpoint dimentica il mixin, i dati escono.</p>
+<p>Con il nuovo modello si introducono <strong>policy RLS native PostgreSQL</strong> sulle tabelle
+dati sensibili. Sono regole scritte nel DB che dicono: <em>questa riga e' visibile
+solo se l'utente corrente ha uno scope che la include</em>.</p>
+<p>Esempio sulle fatture:</p>
+<div class="highlight"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span><span class="w"> </span><span class="n">ENABLE</span><span class="w"> </span><span class="k">ROW</span><span class="w"> </span><span class="k">LEVEL</span><span class="w"> </span><span class="k">SECURITY</span><span class="p">;</span>
+
+<span class="k">CREATE</span><span class="w"> </span><span class="n">POLICY</span><span class="w"> </span><span class="n">rls_fatture_scope</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span>
+<span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="k">SELECT</span>
+<span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="p">(</span>
+<span class="w">        </span><span class="n">script</span><span class="p">.</span><span class="n">fn_identita_vede_billing_account</span><span class="p">(</span>
+<span class="w">            </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.current_identita_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)::</span><span class="nb">bigint</span><span class="p">,</span>
+<span class="w">            </span><span class="n">billing_account_id</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">    </span><span class="p">);</span>
+</code></pre></div>
+<h3 id="62-come-si-alimentano-le-rls">6.2 Come si alimentano le RLS<a class="headerlink" href="#62-come-si-alimentano-le-rls" title="Permanent link">&para;</a></h3>
+<p>Il middleware esistente <a href=".././risorse-umane-e-accessi/#propagazione-identita-utente-al-database-guc-app">JwtAuditAuthentication</a>
+oggi propaga <code>app.jwt_user</code> e <code>app.current_user_id</code>. Si aggiungono due GUC:</p>
+<ul>
+<li><code>app.current_identita_id</code> — id del record in <code>identita_digitali</code></li>
+<li><code>app.ruolo_applicativo</code> — il ruolo dell'utente corrente (OPERATORE, CLIENTE_PORTALE, ...)</li>
+</ul>
+<p>Con queste informazioni le policy RLS lavorano autonome. Il backend <strong>non deve piu'
+filtrare manualmente</strong> per scope: il DB lo fa sempre, anche se lo sviluppatore
+si dimentica.</p>
+<h3 id="63-defense-in-depth-non-sostituzione">6.3 Defense-in-depth, non sostituzione<a class="headerlink" href="#63-defense-in-depth-non-sostituzione" title="Permanent link">&para;</a></h3>
+<p>Le permission class Django restano (autenticazione, verifica capability sull'area).
+Le RLS DB si aggiungono come rete di sicurezza per lo <strong>scope dati</strong>. I due livelli
+non si sovrappongono:</p>
+<table>
+<thead>
+<tr>
+<th>Cosa controlla</th>
+<th>Dove</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Se l'utente puo' chiamare l'endpoint</td>
+<td>Django (<code>ZeroERPPermission</code>)</td>
+</tr>
+<tr>
+<td>Se l'utente puo' eseguire quell'azione</td>
+<td>Django (capability dal profilo)</td>
+</tr>
+<tr>
+<td>Quali righe vede nelle query</td>
+<td>DB (RLS policy)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-namespace-api-separati">7. Namespace API separati<a class="headerlink" href="#7-namespace-api-separati" title="Permanent link">&para;</a></h2>
+<h3 id="71-perche-separati">7.1 Perche' separati<a class="headerlink" href="#71-perche-separati" title="Permanent link">&para;</a></h3>
+<p>Oggi le API vivono sotto <code>/api/*</code>. Esporre gli stessi endpoint a clienti portale
+significa aggiungere molte guard <em>negli</em> endpoint — fragile e difficile da auditare.</p>
+<p>Meglio dividere per <strong>contesto d'uso</strong>:</p>
+<div class="highlight"><pre><span></span><code>/api/admin/*         -&gt; operatori interni (ZeroERPPermission esistente)
+/api/portale/*       -&gt; clienti e fornitori (PortaleBasePermission nuova)
+/api/shop/*          -&gt; negozio online, anche pubblico (endpoint aperti + ShopPermission)
+</code></pre></div>
+<h3 id="72-pattern-di-view">7.2 Pattern di view<a class="headerlink" href="#72-pattern-di-view" title="Permanent link">&para;</a></h3>
+<p>Ogni namespace ha una <strong>base view</strong> dedicata:</p>
+<ul>
+<li><code>AdminAPIView</code> — eredita <code>DomainAPIView</code> (gia' esistente), area funzionale richiesta</li>
+<li><code>PortaleAPIView</code> — richiede <code>ruolo_applicativo IN (CLIENTE_PORTALE, FORNITORE_PORTALE)</code> e scope attivo</li>
+<li><code>ShopAPIView</code> — opzionalmente autenticata (anonimi per catalogo pubblico, autenticati per checkout)</li>
+</ul>
+<p>Gli endpoint admin non sono mai raggiungibili da un utente portale, e viceversa.
+Il confine e' nel routing, non nel codice di ogni view.</p>
+<h3 id="73-condivisione-dei-service">7.3 Condivisione dei service<a class="headerlink" href="#73-condivisione-dei-service" title="Permanent link">&para;</a></h3>
+<p>I <strong>service di dominio</strong> (es. <code>FattureService</code>, <code>OrdiniService</code>) restano condivisi.
+Il portale cliente chiama lo stesso <code>FattureService.list()</code> dell'admin — la
+differenza e' che la query riceve filtri automatici via RLS, quindi il cliente
+vede solo le sue fatture.</p>
+<p>Zero duplicazione di logica di business.</p>
+<hr />
+<h2 id="8-onboarding-dei-portali">8. Onboarding dei portali<a class="headerlink" href="#8-onboarding-dei-portali" title="Permanent link">&para;</a></h2>
+<h3 id="81-invito-da-admin-clienti-e-fornitori">8.1 Invito da admin (clienti e fornitori)<a class="headerlink" href="#81-invito-da-admin-clienti-e-fornitori" title="Permanent link">&para;</a></h3>
+<p>Simmetrico al flusso operatori (<a href=".././risorse-umane-e-accessi/#invito-operatore">Risorse umane §Invito operatore</a>):</p>
+<ol>
+<li>L'admin apre il cliente/fornitore in anagrafica</li>
+<li>Preme "Abilita accesso portale"</li>
+<li>Il sistema crea <code>auth_user</code> + <code>identita_digitali(CLIENTE_PORTALE, attiva=false)</code> + token monouso INVITO_PORTALE</li>
+<li>Email al referente del cliente con link di attivazione</li>
+<li>Il referente sceglie la password, l'identita' si attiva</li>
+</ol>
+<p>Riusa tutto l'impianto esistente: <a href="../../dbzero/config/tabelle/token_monouso/">token_monouso</a>,
+<a href=".././risorse-umane-e-accessi/#sync-auth_user-is_active">fn_sync_auth_user_is_active</a> (generalizzata),
+middleware <code>PasswordChangeRequiredMiddleware</code>.</p>
+<h3 id="82-self-service-shop">8.2 Self-service (shop)<a class="headerlink" href="#82-self-service-shop" title="Permanent link">&para;</a></h3>
+<p>Per il negozio online il flusso e' autonomo:</p>
+<ol>
+<li>Visitatore compila form registrazione (nome, cognome, email, password)</li>
+<li>Il sistema crea in transazione: <code>soggetti(PF, PR)</code> + <code>soggetti_ruoli(CLIENTE)</code> + <code>clienti</code> + <code>billing_account</code> minimal + <code>auth_user</code> (is_active=false) + <code>identita_digitali(SHOP_CUSTOMER, attiva=false)</code> + token VERIFICA_EMAIL</li>
+<li>Email di verifica</li>
+<li>Al click sul link: <code>auth_user.is_active=true</code>, identita' attiva, primo login consentito</li>
+</ol>
+<p>Tutto il sistema anagrafico esistente regge — si aggiunge solo un endpoint
+pubblico <code>/api/shop/register/</code> con throttle aggressivo per prevenire spam.</p>
+<h3 id="83-recupero-password">8.3 Recupero password<a class="headerlink" href="#83-recupero-password" title="Permanent link">&para;</a></h3>
+<p>Il flusso esistente (<a href=".././risorse-umane-e-accessi/#reset-password-dimenticata">Risorse umane §Reset password dimenticata</a>)
+funziona per tutti i ruoli applicativi. L'unica accortezza e' personalizzare
+il <strong>template email</strong> per ruolo, cosi' un cliente non riceve un'email "operatore aziendale".</p>
+<hr />
+<h2 id="9-sync-auth_useris_active-generalizzata">9. Sync <code>auth_user.is_active</code> generalizzata<a class="headerlink" href="#9-sync-auth_useris_active-generalizzata" title="Permanent link">&para;</a></h2>
+<p>La funzione <code>fn_sync_auth_user_is_active</code> oggi parte da <code>risorse_umane_id</code>.
+Nel nuovo modello parte da <code>auth_user_id</code> e:</p>
+<ol>
+<li>Trova l'identita' digitale attiva per quel <code>auth_user</code></li>
+<li>Se <code>ruolo_applicativo = DISABILITATO</code> -&gt; <code>is_active = false</code></li>
+<li>Se identita' non attiva o finestra validita' scaduta -&gt; <code>is_active = false</code></li>
+<li>Se OPERATORE: applica anche la logica esistente su <code>risorse_umane.attivo</code></li>
+<li>Se CLIENTE_PORTALE / FORNITORE_PORTALE / SHOP: verifica lo stato del
+   soggetto_ruolo sottostante (es. cliente non disabilitato)</li>
+<li>Altrimenti -&gt; <code>is_active = true</code></li>
+</ol>
+<p>I trigger che oggi la invocano continuano a farlo. Nasce un nuovo trigger
+<code>trg_identita_digitali_sync_auth_user_active</code> simmetrico a quello esistente
+sul bridge risorse umane.</p>
+<p>Il management command <code>sync_auth_user_active</code> e il job pgAgent giornaliero
+non cambiano chiamante — cambiano solo query interne.</p>
+<hr />
+<h2 id="10-audit-e-identita-nel-db">10. Audit e identita' nel DB<a class="headerlink" href="#10-audit-e-identita-nel-db" title="Permanent link">&para;</a></h2>
+<p>I GUC PostgreSQL propagati dalla <a href=".././risorse-umane-e-accessi/#soluzione-adottata-hook-nella-drf-authentication-class">JwtAuditAuthentication</a>:</p>
+<table>
+<thead>
+<tr>
+<th>GUC</th>
+<th>Oggi</th>
+<th>Dopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app.jwt_user</code></td>
+<td>username Django</td>
+<td>invariato</td>
+</tr>
+<tr>
+<td><code>app.current_user_id</code></td>
+<td><code>auth_user.id</code></td>
+<td>invariato</td>
+</tr>
+<tr>
+<td><code>app.current_identita_id</code></td>
+<td>(non esiste)</td>
+<td>id in <code>identita_digitali</code> (nuovo)</td>
+</tr>
+<tr>
+<td><code>app.ruolo_applicativo</code></td>
+<td>(non esiste)</td>
+<td>ruolo dell'identita' corrente (nuovo)</td>
+</tr>
+<tr>
+<td><code>app.soggetto_ruolo_id</code></td>
+<td>(non esiste)</td>
+<td>soggetto_ruolo dell'identita' (nuovo)</td>
+</tr>
+</tbody>
+</table>
+<p>I trigger di audit esistenti non toccano i nuovi GUC, quindi non cambiano.
+Le policy RLS e le funzioni di scope usano i nuovi GUC.</p>
+<hr />
+<h2 id="11-diagrammi-er">11. Diagrammi ER<a class="headerlink" href="#11-diagrammi-er" title="Permanent link">&para;</a></h2>
+<h3 id="111-bridge-identita">11.1 Bridge identita'<a class="headerlink" href="#111-bridge-identita" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>erDiagram
+    soggetti {
+        uuid id PK
+        text ragione_sociale
+    }
+
+    soggetti_ruoli {
+        bigint id PK
+        uuid soggetto_id FK
+        int tipo_ruolo_id FK
+    }
+
+    identita_digitali {
+        bigint id PK
+        bigint soggetto_ruolo_id FK
+        int auth_user_id FK
+        enum ruolo_applicativo
+        boolean attivo
+        date valido_dal
+        date valido_al
+    }
+
+    auth_user {
+        int id PK
+        varchar username
+        boolean is_active
+    }
+
+    risorse_umane {
+        bigint id PK
+        bigint soggetto_ruolo_id FK
+        int unita_organizzativa_id FK
+    }
+
+    soggetti ||--o{ soggetti_ruoli : "ha ruoli"
+    soggetti_ruoli ||--o{ identita_digitali : "puo' loggarsi come"
+    auth_user ||--|| identita_digitali : "identita'"
+    soggetti_ruoli ||--o| risorse_umane : "se RIS_UMANA"</code></pre>
+<h3 id="112-capability-generalizzata">11.2 Capability generalizzata<a class="headerlink" href="#112-capability-generalizzata" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>erDiagram
+    profili_accesso {
+        int id PK
+        enum tipo
+        varchar codice
+    }
+
+    profili_accesso_aree {
+        int id PK
+        int profilo_accesso_id FK
+        int area_id FK
+        enum livello
+    }
+
+    profili_accesso_bindings {
+        bigint id PK
+        int profilo_accesso_id FK
+        int unita_organizzativa_id FK
+        bigint identita_digitale_id FK
+        enum ruolo_applicativo
+    }
+
+    aree_funzionali {
+        int id PK
+        varchar codice
+    }
+
+    profili_accesso ||--o{ profili_accesso_aree : "livello per area"
+    aree_funzionali ||--o{ profili_accesso_aree : "classifica"
+    profili_accesso ||--o{ profili_accesso_bindings : "assegnato a"</code></pre>
+<h3 id="113-scope-generalizzato">11.3 Scope generalizzato<a class="headerlink" href="#113-scope-generalizzato" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>erDiagram
+    scope_policy {
+        int id PK
+        varchar codice
+        varchar funzione_db
+    }
+
+    identita_scope_bindings {
+        bigint id PK
+        bigint identita_digitale_id FK
+        int scope_policy_id FK
+        jsonb parametri
+    }
+
+    identita_digitali {
+        bigint id PK
+        int auth_user_id FK
+    }
+
+    identita_digitali ||--o{ identita_scope_bindings : "vincolata da"
+    scope_policy ||--o{ identita_scope_bindings : "policy applicata"</code></pre>
+<hr />
+<h2 id="12-riepilogo-cambiamenti">12. Riepilogo cambiamenti<a class="headerlink" href="#12-riepilogo-cambiamenti" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Cosa resta</th>
+<th>Cosa si generalizza</th>
+<th>Cosa nasce</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>auth_user</code> Django</td>
+<td>—</td>
+<td><code>identita_digitali</code> (bridge generico)</td>
+</tr>
+<tr>
+<td><code>soggetti</code>, <code>soggetti_ruoli</code></td>
+<td>—</td>
+<td>ENUM <code>ruolo_applicativo</code></td>
+</tr>
+<tr>
+<td><code>risorse_umane</code></td>
+<td>Vista di compatibilita' su <code>identita_digitali</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>Token monouso, sync is_active, middleware JWT</td>
+<td>Funzioni generalizzate per identita'</td>
+<td>Nuovi GUC PG</td>
+</tr>
+<tr>
+<td><code>user_emittenti_fiscali</code></td>
+<td>Diventa caso particolare di scope_policy</td>
+<td><code>scope_policy</code> + <code>identita_scope_bindings</code></td>
+</tr>
+<tr>
+<td><code>profili_reparto_aree</code></td>
+<td>Diventa <code>profili_accesso_aree</code></td>
+<td><code>profili_accesso_bindings</code> (multi-tipo)</td>
+</tr>
+<tr>
+<td><code>user_override_*</code></td>
+<td>Invariati</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Audit trigger</td>
+<td>Invariati</td>
+<td>RLS policy sulle tabelle dati</td>
+</tr>
+<tr>
+<td>Permission class Django</td>
+<td>Generalizzate</td>
+<td><code>PortaleAPIView</code>, <code>ShopAPIView</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13-perche-questo-disegno-e-coerente-con-zeroerp">13. Perche' questo disegno e' coerente con ZeroErp<a class="headerlink" href="#13-perche-questo-disegno-e-coerente-con-zeroerp" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Onora il modello soggetti/ruoli</strong>: non lo aggira, lo estende nel verso corretto</li>
+<li><strong>DB-first</strong>: le RLS sono il livello giusto per lo scope, e il DB diventa la
+  verita' unica anche sulla sicurezza dati</li>
+<li><strong>Nessuna duplicazione di logica business</strong>: i service dominio restano
+  condivisi tra admin e portale</li>
+<li><strong>Additive, non distruttivo</strong>: tabelle e funzioni esistenti convivono con
+  quelle nuove, con viste di compatibilita' per il codice legacy</li>
+<li><strong>Estensibile</strong>: aggiungere in futuro ruoli come PARTNER_API, BANCA_PSP,
+  AGENTE_COMMERCIALE richiede un enum value + un profilo + una policy,
+  non refactor strutturali</li>
+</ul>
+<hr />
+<h2 id="14-evoluzioni-future">14. Evoluzioni future<a class="headerlink" href="#14-evoluzioni-future" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>SSO OAuth/OIDC per i portali</strong>: un fornitore puo' loggarsi con l'IdP della
+  sua azienda. Il bridge <code>identita_digitali</code> lo supporta nativamente</li>
+<li><strong>Multi-tenant per gestori separati</strong>: se un giorno ZeroErp servira' piu'
+  aziende sullo stesso DB, il modello scope policy e' gia' pronto per
+  discriminare anche per tenant</li>
+<li><strong>API client programmatici</strong>: ruolo <code>API_CLIENT</code> gia' previsto, con
+  autenticazione via token lungo (non password) e scope aziendale</li>
+<li><strong>Ruolo AGENTE / VENDITORE</strong>: un venditore esterno vede solo i propri clienti,
+  una policy scope <code>AGENTE_OWNERSHIP</code> lo risolve senza codice nuovo</li>
+</ul>
+<hr />
+<div style="text-align: center; margin-top: 2rem;">
+  <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
+  <br>
+  <strong>&copy; 2025-2026 Zero ERP</strong> <em><strong>&bull; powered by Tid &bull;</strong></em>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      
+        <script src="../../../assets/javascripts/mermaid.min.js"></script>
+      
+        <script src="../../../assets/javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
+</html>

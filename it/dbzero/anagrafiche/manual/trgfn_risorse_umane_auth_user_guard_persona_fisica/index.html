@@ -4192,6 +4192,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#storico-del-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storico del refactor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ruolo-nel-processo" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4235,11 +4246,12 @@
 <a href="../../tabelle/risorse_umane/">anagrafiche.risorse_umane</a>
 <a href="../../tabelle/soggetti/">anagrafiche.soggetti</a></p>
 <p><strong>Approfondimento funzioni:</strong></p>
-<p><a href="../../../script/funzioni/fn_log_and_raise_error/">script.fn_log_and_raise_error</a></p>
+<p><a href="../../../script/funzioni/fn_guard_soggetto_pf_pura/">script.fn_guard_soggetto_pf_pura</a>
+<a href="../../../script/funzioni/fn_log_and_raise_error/">script.fn_log_and_raise_error</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-03-2026)
+<p>(latest review 18-04-2026)
 La trigger function
 <strong><code>anagrafiche.trgfn_risorse_umane_auth_user_guard_persona_fisica()</code></strong>
 impedisce di collegare un account Django (<code>auth_user</code>) a una risorsa umana che
@@ -4253,11 +4265,35 @@ non corrisponde a una <strong>persona fisica pura</strong>.</p>
 <h3 id="regole-applicate">Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Trigger <strong>BEFORE INSERT OR UPDATE</strong> su <code>anagrafiche.risorse_umane_auth_user</code>.</li>
-<li>Risale dalla <code>risorsa_umana</code> al <code>soggetto</code> associato.</li>
+<li>Risale dalla <code>risorsa_umana</code> al <code>soggetto</code> associato (legge
+  <code>anagrafiche.risorse_umane.soggetto_id</code>).</li>
+<li>La verifica PF pura e' <strong>delegata</strong> a
+  <a href="../../../script/funzioni/fn_guard_soggetto_pf_pura/"><code>script.fn_guard_soggetto_pf_pura</code></a>
+  (funzione riusabile condivisa con il nuovo guard di coerenza su
+  <code>identita_digitali</code>).</li>
 <li>Se il soggetto ha <code>partita_iva</code> valorizzata:</li>
 <li>blocca l'operazione con errore <code>E_AUTH_USER_SOGGETTO_CON_PIVA</code>.</li>
 <li>Se il soggetto non ha <code>codice_fiscale</code>:</li>
 <li>blocca l'operazione con errore <code>E_AUTH_USER_SOGGETTO_SENZA_CF</code>.</li>
+</ul>
+<hr />
+<h3 id="storico-del-refactor">Storico del refactor<a class="headerlink" href="#storico-del-refactor" title="Permanent link">&para;</a></h3>
+<p><strong>2026-04-18 (§4.2 WIP multi-face-auth)</strong>: la logica inline di verifica
+"no P.IVA + CF presente" e' stata estratta nella funzione riusabile
+<code>script.fn_guard_soggetto_pf_pura</code>. Questo trigger ora fa solo due cose:</p>
+<ol>
+<li>Risolve il <code>soggetto_id</code> dal <code>risorsa_umana_id</code> del NEW.</li>
+<li>Delega la verifica alla funzione condivisa.</li>
+</ol>
+<p>Vantaggi:</p>
+<ul>
+<li>Stessa logica usata anche dal guard di coerenza su <code>identita_digitali</code>
+  (ruolo applicativo <code>OPERATORE</code>), evitando duplicazione e rischio di
+  divergenza.</li>
+<li>Testabilita' indipendente della funzione riusabile (pgTAP mirato).</li>
+<li>Invariato il comportamento esterno: stessi codici errore, stesso trigger
+  installato (BEFORE INSERT OR UPDATE), stessa API. Il refactor e'
+  trasparente per i chiamanti.</li>
 </ul>
 <hr />
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>

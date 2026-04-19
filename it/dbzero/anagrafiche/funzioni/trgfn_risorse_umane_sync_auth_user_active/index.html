@@ -4181,10 +4181,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#regola-applicata" class="md-nav__link">
+  <a href="#regole-applicate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Regola applicata
+        Regole applicate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storico-del-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storico del refactor
       
     </span>
   </a>
@@ -4238,7 +4249,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-03-2026)
+<p>(latest review 18-04-2026)
 La trigger function
 <strong><code>anagrafiche.trgfn_risorse_umane_sync_auth_user_active()</code></strong> sincronizza
 <code>django.auth_user.is_active</code> quando cambiano gli attributi di stato della
@@ -4250,21 +4261,38 @@ tabella <code>anagrafiche.risorse_umane</code>.</p>
 <li><code>valido_al</code></li>
 </ul>
 <hr />
-<h3 id="regola-applicata">Regola applicata<a class="headerlink" href="#regola-applicata" title="Permanent link">&para;</a></h3>
+<h3 id="regole-applicate">Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Trigger <strong>AFTER UPDATE OF attivo, valido_dal, valido_al</strong> su
   <code>anagrafiche.risorse_umane</code>.</li>
-<li>Esegue la sincronizzazione solo se esiste un collegamento in
-  <code>anagrafiche.risorse_umane_auth_user</code>.</li>
-<li>Se il bridge esiste, chiama
-  <code>anagrafiche.fn_sync_auth_user_is_active(NEW.id)</code>.</li>
-<li>Essendo un trigger <code>AFTER</code>, il valore di ritorno e' ignorato (<code>RETURN NULL</code>).</li>
+<li>Risolve l'<code>auth_user_id</code> dal bridge <code>risorse_umane_auth_user</code> tramite
+  <code>SELECT rau.auth_user_id ... WHERE rau.risorsa_umana_id = NEW.id LIMIT 1</code>.</li>
+<li>Se <code>FOUND</code>, chiama
+  <code>anagrafiche.fn_sync_auth_user_is_active(v_auth_user_id)</code>.</li>
+<li>Se la risorsa non ha un collegamento auth_user, salta silenziosamente
+  (niente da sincronizzare).</li>
+<li>Essendo un trigger <code>AFTER</code>, il valore di ritorno è ignorato (<code>RETURN NULL</code>).</li>
 </ul>
 <hr />
+<h3 id="storico-del-refactor">Storico del refactor<a class="headerlink" href="#storico-del-refactor" title="Permanent link">&para;</a></h3>
+<p><strong>2026-04-18 (§4.5 F2 WIP multi-face-auth)</strong>: la funzione ora risolve
+esplicitamente l'<code>auth_user_id</code> dal bridge prima di chiamare la funzione
+sync, coerente con la nuova firma di
+<a href=".././fn_sync_auth_user_is_active/"><code>fn_sync_auth_user_is_active(p_auth_user_id integer)</code></a>.</p>
+<p>Prima del refactor la funzione passava direttamente <code>NEW.id</code>
+(<code>risorsa_umana.id</code>) sfruttando il fatto che la vecchia firma accettava
+<code>p_risorsa_umana_id</code>. Con la nuova firma serve l'<code>auth_user_id</code>, che va
+risolto tramite il bridge RUA.</p>
+<p>Ottimizzazione: <code>SELECT INTO</code> + <code>FOUND</code> in una sola query, invece del
+pattern precedente <code>IF EXISTS(...) THEN PERFORM fn_sync(NEW.id);</code> che
+faceva due query.</p>
+<hr />
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
-<p>La funzione fa si' che la validita' temporale e lo stato operativo della
+<p>La funzione fa sì che la validità temporale e lo stato operativo della
 risorsa umana si riflettano automaticamente sull'accesso applicativo
-dell'utente collegato, senza demandare al backend il ricalcolo a ogni update.</p>
+dell'utente collegato, senza demandare al backend il ricalcolo a ogni
+UPDATE. È uno dei 3 trigger reattivi che mantengono allineato
+<code>auth_user.is_active</code> con i bridge auth.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

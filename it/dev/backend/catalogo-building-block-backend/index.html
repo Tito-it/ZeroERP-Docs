@@ -4217,6 +4217,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#multi-face-auth-costanti-e-modelli-appscoreservices-appsanagrafiche-appsconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Face Auth — Costanti e Modelli (apps/core/services/, apps/anagrafiche/, apps/config/)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#middleware-appscoremiddleware" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4318,7 +4329,17 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>AdminAPIView</code></td>
 <td><a href="../../../../../backend/apps/core/api/base_views.py">base_views.py</a></td>
-<td>Base view per endpoint admin-only</td>
+<td>Base view per endpoint admin-only (check binding <code>SUPER_ADMIN</code> via <code>PermissionResolver.is_super_admin</code>). Post multi-face auth sostituisce il vecchio check <code>ruolo_sistema = ADMIN</code>.</td>
+</tr>
+<tr>
+<td><code>PortaleAPIView</code></td>
+<td><a href="../../../../../backend/apps/core/api/base_views.py">base_views.py</a></td>
+<td>Base view per <code>/api/portale/*</code> (clienti + fornitori). JWT + <code>PortaleBasePermission</code> (<code>ruolo_applicativo ∈ {CLIENTE_PORTALE, FORNITORE_PORTALE}</code>). <code>skip_area_check = True</code> implicito (scope dati applicato via RLS).</td>
+</tr>
+<tr>
+<td><code>ShopAPIView</code></td>
+<td><a href="../../../../../backend/apps/core/api/base_views.py">base_views.py</a></td>
+<td>Base view per <code>/api/shop/*</code> (negozio online). JWT opzionale + <code>ShopBasePermission</code> (anonimo o <code>SHOP_CUSTOMER</code>). Le view che richiedono autenticazione (checkout, ordini) devono verificare <code>request.user.is_authenticated</code>.</td>
 </tr>
 <tr>
 <td><code>StandardPageNumberPagination</code></td>
@@ -4398,12 +4419,22 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>IsAdminZeroERP</code></td>
 <td><a href="../../../../../backend/apps/core/api/permissions.py">permissions.py</a></td>
-<td>Permission check per ruolo ADMIN</td>
+<td>Permission check per binding <code>SUPER_ADMIN</code> (via <code>PermissionResolver.is_super_admin</code>). Nome invariato per retrocompat con <code>AdminAPIView</code>; la semantica e' passata da "ruolo_sistema=ADMIN" a "binding SUPER_ADMIN attivo".</td>
 </tr>
 <tr>
 <td><code>ZeroERPPermission</code></td>
 <td><a href="../../../../../backend/apps/core/api/permissions.py">permissions.py</a></td>
-<td>Permission resolver centrale con area/action/livello</td>
+<td>Permission resolver centrale con area/action/livello. Multi-face: check <code>ruolo_applicativo=DISABILITATO</code> -&gt; 403 immediato; poi <code>is_super_admin</code> -&gt; bypass; altrimenti catena livello area/oggetto/azione.</td>
+</tr>
+<tr>
+<td><code>PortaleBasePermission</code></td>
+<td><a href="../../../../../backend/apps/core/api/permissions.py">permissions.py</a></td>
+<td>Permission class per <code>/api/portale/*</code>. Richiede <code>ruolo_applicativo ∈ {CLIENTE_PORTALE, FORNITORE_PORTALE}</code>. Non verifica livello area (set endpoint portale ristretto). Usata da <code>PortaleAPIView</code>.</td>
+</tr>
+<tr>
+<td><code>ShopBasePermission</code></td>
+<td><a href="../../../../../backend/apps/core/api/permissions.py">permissions.py</a></td>
+<td>Permission class per <code>/api/shop/*</code>. Ammette anonimo (catalogo pubblico) o <code>SHOP_CUSTOMER</code> autenticato. Altri ruoli (OPERATORE, CLIENTE_PORTALE, ...) respinti con 403. Usata da <code>ShopAPIView</code>.</td>
 </tr>
 <tr>
 <td><code>LoginRateThrottle</code></td>
@@ -4438,7 +4469,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>JwtAuditAuthentication</code></td>
 <td><a href="../../../../../backend/apps/core/api/jwt_audit_authentication.py">jwt_audit_authentication.py</a></td>
-<td><strong>Subclass <code>JWTAuthentication</code></strong> che propaga <code>app.jwt_user</code> + <code>app.current_user_id</code> come GUC PG session-scoped subito dopo <code>authenticate()</code> di successo. E' il punto del flusso DRF in cui l'identita JWT e' gia risolta E il view body non e ancora partito → i trigger DB di audit/scope vedono le GUC durante le scritture. Registrata in <code>REST_FRAMEWORK.DEFAULT_AUTHENTICATION_CLASSES</code> + <code>DomainAPIView</code> + <code>AdminAPIView</code>. Setta marker <code>request._zeroerp_jwt_guc_set</code> letto da <code>JwtAuditMiddleware.process_response</code> per il reset simmetrico. Vedi guida <code>risorse-umane-e-accessi.md</code> sezione "Propagazione identita utente al database (GUC)"</td>
+<td><strong>Subclass <code>JWTAuthentication</code></strong> che propaga <strong>5 GUC</strong> di sessione PG subito dopo <code>authenticate()</code> di successo: <code>app.jwt_user</code>, <code>app.current_user_id</code> (sempre), <code>app.current_identita_id</code>, <code>app.ruolo_applicativo</code>, <code>app.soggetto_ruolo_id</code> (solo se identita attiva, altrimenti stringa vuota — fail-open documentato). Single round-trip via CTE che risolve <code>identita_digitali</code> attiva. Registrata in <code>REST_FRAMEWORK.DEFAULT_AUTHENTICATION_CLASSES</code> + tutte le base view (<code>DomainAPIView</code>, <code>AdminAPIView</code>, <code>PortaleAPIView</code>, <code>ShopAPIView</code>). Setta marker <code>request._zeroerp_jwt_guc_set</code> letto da <code>JwtAuditMiddleware.process_response</code> per il reset simmetrico dei 5 GUC. Vedi guida <code>risorse-umane-e-accessi.md</code> sezione "Propagazione identita utente al database (GUC)" e <code>architettura-multi-face-auth.md</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -4539,9 +4570,14 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td>Consuma token (marca come usato)</td>
 </tr>
 <tr>
-<td><code>PermissionResolver.get_ruolo_sistema</code></td>
+<td><code>PermissionResolver.is_super_admin</code></td>
 <td><a href="../../../../../backend/apps/core/services/permissions_resolver.py">permissions_resolver.py</a></td>
-<td>Ruolo utente (ADMIN, OPERATIVO, DISABILITATO)</td>
+<td>Verifica binding <code>SUPER_ADMIN</code> attivo per l'utente (bypass totale). Delega a <code>script.fn_is_super_admin</code>. Sostituisce il vecchio <code>get_ruolo_sistema() == "ADMIN"</code>.</td>
+</tr>
+<tr>
+<td><code>PermissionResolver.get_ruolo_applicativo</code></td>
+<td><a href="../../../../../backend/apps/core/services/permissions_resolver.py">permissions_resolver.py</a></td>
+<td>Ritorna <code>ruolo_applicativo</code> dell'identita attiva (<code>OPERATORE</code>, <code>CLIENTE_PORTALE</code>, <code>FORNITORE_PORTALE</code>, <code>SHOP_CUSTOMER</code>, <code>API_CLIENT</code>, <code>DISABILITATO</code>). GUC-first (<code>app.ruolo_applicativo</code>) con fallback query su <code>anagrafiche.identita_digitali</code>. Sostituisce il vecchio <code>get_ruolo_sistema</code>.</td>
 </tr>
 <tr>
 <td><code>PermissionResolver.get_livello_area</code></td>
@@ -4851,6 +4887,49 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 </tbody>
 </table>
 <hr />
+<h2 id="multi-face-auth-costanti-e-modelli-appscoreservices-appsanagrafiche-appsconfig">Multi-Face Auth — Costanti e Modelli (<code>apps/core/services/</code>, <code>apps/anagrafiche/</code>, <code>apps/config/</code>)<a class="headerlink" href="#multi-face-auth-costanti-e-modelli-appscoreservices-appsanagrafiche-appsconfig" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RUOLO_APPLICATIVO</code>, <code>RUOLI_PORTALE</code>, <code>RUOLI_SHOP</code></td>
+<td><a href="../../../../../backend/apps/core/services/auth_constants.py">auth_constants.py</a></td>
+<td>Enum dei ruoli applicativi (<code>OPERATORE</code>, <code>CLIENTE_PORTALE</code>, <code>FORNITORE_PORTALE</code>, <code>SHOP_CUSTOMER</code>, <code>API_CLIENT</code>, <code>DISABILITATO</code>) + subset per i namespace portale/shop. Fonte unica lato Python; equivalente DB: <code>config.ruolo_applicativo</code>.</td>
+</tr>
+<tr>
+<td><code>TIPO_PROFILO_ACCESSO</code>, <code>SUPER_ADMIN_PROFILO_CODICE</code></td>
+<td><a href="../../../../../backend/apps/core/services/auth_constants.py">auth_constants.py</a></td>
+<td>Enum tipo profilo (<code>REPARTO</code>, <code>PORTALE</code>, <code>AD_HOC</code>, <code>SUPER_ADMIN</code>) + codice riservato del profilo di bypass totale (seed id 9100).</td>
+</tr>
+<tr>
+<td><code>IdentitaDigitale</code></td>
+<td><a href="../../../../../backend/apps/anagrafiche/models.py">anagrafiche/models.py</a></td>
+<td>Model ORM (<code>managed=False</code>) del bridge generico <code>soggetti_ruoli &lt;-&gt; auth_user</code>. Campi stateful: <code>ruolo_applicativo</code>, <code>attivo</code>, <code>valido_dal/al</code>, <code>deve_cambiare_password</code>, <code>invito_inviato_at</code>, <code>tentativi_falliti</code>, <code>bloccato_fino_a</code>, <code>totp_obbligatorio</code>, <code>storicizza</code>. Sostituisce <code>RisorseUmaneAuthUser</code> (ora vista in transizione).</td>
+</tr>
+<tr>
+<td><code>ProfiloAccesso</code>, <code>ProfiloAccessoArea</code>, <code>ProfiloAccessoAzione</code>, <code>ProfiloAccessoBinding</code></td>
+<td><a href="../../../../../backend/apps/config/models.py">config/models.py</a></td>
+<td>Model ORM dei profili accesso generalizzati (tipo REPARTO / PORTALE / AD_HOC / SUPER_ADMIN). I bindings supportano xor 3-vie: reparto, identita' singola, ruolo applicativo. Sostituiscono <code>ProfiloRepartoArea/Azione</code> (kept per lettura legacy).</td>
+</tr>
+<tr>
+<td><code>ScopePolicy</code>, <code>IdentitaScopeBinding</code></td>
+<td><a href="../../../../../backend/apps/config/models.py">config/models.py</a></td>
+<td>Model ORM per le policy di scope dati (EF_WHITELIST, BA_OWNERSHIP, FORNITORE_OWNERSHIP). La funzione SQL di check e' indicata in <code>funzione_db</code>. Bindings opzionali con <code>parametri JSONB</code>.</td>
+</tr>
+<tr>
+<td><code>RisorseUmaneAuthUser</code></td>
+<td><a href="../../../../../backend/apps/anagrafiche/models.py">anagrafiche/models.py</a></td>
+<td><strong>DEPRECATO</strong> post-cutover §4.6.H.2: ora read-only (vista su <code>identita_digitali</code>). I writer passano a <code>IdentitaDigitale</code>.</td>
+</tr>
+</tbody>
+</table>
+<hr />
 <h2 id="middleware-appscoremiddleware">Middleware (<code>apps/core/middleware/</code>)<a class="headerlink" href="#middleware-appscoremiddleware" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -4874,7 +4953,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>JwtAuditMiddleware</code></td>
 <td><a href="../../../../../backend/apps/core/middleware/jwt_audit_middleware.py">jwt_audit_middleware.py</a></td>
-<td>Pre-load cache permessi Redis L2, rifiuto early <code>DISABILITATO</code> con 403, <strong>reset simmetrico</strong> delle GUC <code>app.jwt_user</code>/<code>app.current_user_id</code> settate da <code>JwtAuditAuthentication</code> (vedi sotto). Il setting delle GUC NON avviene piu' qui dallo sprint BE-2.0ter</td>
+<td>Pre-load cache permessi Redis L2, rifiuto early <code>ruolo_applicativo=DISABILITATO</code> con 403 (via <code>PermissionResolver.get_ruolo_applicativo</code>), <strong>reset simmetrico</strong> dei 5 GUC settati da <code>JwtAuditAuthentication</code> (<code>app.jwt_user</code>, <code>app.current_user_id</code>, <code>app.current_identita_id</code>, <code>app.ruolo_applicativo</code>, <code>app.soggetto_ruolo_id</code>). Il setting delle GUC NON avviene piu' qui dallo sprint BE-2.0ter.</td>
 </tr>
 </tbody>
 </table>

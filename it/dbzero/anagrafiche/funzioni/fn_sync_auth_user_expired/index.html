@@ -4181,10 +4181,43 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#estensione-45-multi-face-auth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estensione §4.5 multi-face-auth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#regole-applicate" class="md-nav__link">
     <span class="md-ellipsis">
       
         Regole applicate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uso-previsto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Uso previsto
       
     </span>
   </a>
@@ -4230,37 +4263,67 @@
 <h2 id="documentazione-concettuale-funzione-anagrafichefn_sync_auth_user_expired">📘 Documentazione Concettuale – Funzione <code>anagrafiche.fn_sync_auth_user_expired()</code><a class="headerlink" href="#documentazione-concettuale-funzione-anagrafichefn_sync_auth_user_expired" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
+<p>Architettura di riferimento:</p>
+<p><a href="../../../../guide/architettura-multi-face-auth/">Architettura Multi-Face Auth</a></p>
 <p><strong>Approfondimento tabelle:</strong></p>
-<p><a href="../../tabelle/risorse_umane/">anagrafiche.risorse_umane</a>
+<p><a href="../../tabelle/identita_digitali/">anagrafiche.identita_digitali</a>
+<a href="../../tabelle/risorse_umane/">anagrafiche.risorse_umane</a>
 <a href="../../tabelle/risorse_umane_auth_user/">anagrafiche.risorse_umane_auth_user</a></p>
 <p><strong>Approfondimento funzioni:</strong></p>
 <p><a href=".././fn_sync_auth_user_is_active/">anagrafiche.fn_sync_auth_user_is_active</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-03-2026)
-La funzione <strong><code>anagrafiche.fn_sync_auth_user_expired()</code></strong> esegue una
-sincronizzazione batch degli utenti Django collegati a risorse umane con
-finestra di validita' scaduta.</p>
-<p>Serve a coprire il caso in cui una risorsa diventi non valida per semplice
-decorrenza della data, senza che avvenga un <code>UPDATE</code> esplicito sulla tabella.</p>
+<p>(latest review 18-04-2026)</p>
+<p>La funzione <strong><code>anagrafiche.fn_sync_auth_user_expired()</code></strong> esegue una
+sincronizzazione batch degli utenti Django collegati a bridge auth con
+finestra di validità scaduta.</p>
+<p>Copre il caso in cui un'identità (o una risorsa umana) diventi non valida
+per semplice decorrenza della data, senza che avvenga un <code>UPDATE</code> esplicito
+che triggeri i trigger reattivi.</p>
+<hr />
+<h3 id="estensione-45-multi-face-auth">Estensione §4.5 multi-face-auth<a class="headerlink" href="#estensione-45-multi-face-auth" title="Permanent link">&para;</a></h3>
+<p>Con la generalizzazione del modello (§4.5.5 WIP multi-face-auth), la
+funzione ora copre <strong>entrambi i modelli</strong>:</p>
+<ul>
+<li><strong>Ramo legacy</strong> (<code>risorse_umane</code>): risorse umane con <code>valido_al &lt;
+  CURRENT_DATE</code> che hanno un collegamento in <code>risorse_umane_auth_user</code>.</li>
+<li><strong>Ramo nuovo</strong> (<code>identita_digitali</code>): qualsiasi identità attiva (tutti i
+  ruoli applicativi: operatori, clienti portale, fornitori portale, shop
+  customer, api_client) con <code>valido_al &lt; CURRENT_DATE</code>.</li>
+</ul>
+<p>Le due sorgenti sono combinate via <code>UNION</code> e poi filtrate con
+<code>SELECT DISTINCT auth_user_id</code> per evitare double-sync quando lo stesso
+utente è presente in entrambi i modelli durante la transizione.</p>
 <hr />
 <h3 id="regole-applicate">Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Cerca le righe di <code>anagrafiche.risorse_umane</code> con <code>valido_al &lt; CURRENT_DATE</code>.</li>
-<li>Considera solo le risorse che hanno un collegamento in
-  <code>anagrafiche.risorse_umane_auth_user</code>.</li>
-<li>Considera solo gli <code>auth_user</code> ancora attivi.</li>
-<li>Per ogni risorsa trovata chiama
-  <code>anagrafiche.fn_sync_auth_user_is_active(risorsa_umana_id)</code>.</li>
-<li>Ritorna il numero di utenti effettivamente aggiornati.</li>
-<li>In ambienti senza schema <code>django</code>, non esegue nulla e ritorna <code>0</code>.</li>
+<li>La query interna seleziona solo <code>auth_user</code> ancora <code>is_active = true</code>
+  (gli utenti già disattivati non serve re-sincronizzarli).</li>
+<li>Per ogni <code>auth_user_id</code> trovato chiama
+  <code>anagrafiche.fn_sync_auth_user_is_active(auth_user_id)</code> che applica la
+  logica fail-closed (fuori finestra → <code>false</code>).</li>
+<li>Incrementa il contatore solo se la funzione ritorna <code>true</code> (ovvero se
+  <code>auth_user.is_active</code> è stato effettivamente modificato).</li>
+<li>In ambienti CI senza schema <code>django</code>, la funzione esce subito con <code>0</code>.</li>
+</ul>
+<hr />
+<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
+<p>Ritorna <code>integer</code> — numero di utenti effettivamente disattivati.</p>
+<hr />
+<h3 id="uso-previsto">Uso previsto<a class="headerlink" href="#uso-previsto" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>pgAgent</strong>: job giornaliero schedulato (tipicamente alle prime ore del
+  mattino) via <code>db/changelog/migrations_v2/85_pgagent/</code>.</li>
+<li><strong>Management command Django</strong>: <code>python manage.py sync_auth_user_active</code>
+  per esecuzioni manuali o invocate da pipeline di manutenzione.</li>
 </ul>
 <hr />
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
-<p>La funzione e' pensata come job periodico di riallineamento. Non sostituisce i
-trigger reattivi, ma li completa per il caso di scadenza "overnight" della
-validita' temporale della risorsa umana.</p>
+<p>La funzione completa il sistema di propagazione dello stato di login: i
+trigger reattivi gestiscono i cambi espliciti, questa funzione gestisce i
+cambi temporali impliciti (scadenza overnight). Con l'estensione del ramo
+<code>identita_digitali</code>, copre ora anche portali clienti/fornitori e shop.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

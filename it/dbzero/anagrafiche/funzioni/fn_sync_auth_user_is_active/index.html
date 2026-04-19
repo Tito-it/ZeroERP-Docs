@@ -4181,10 +4181,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#regole-applicate" class="md-nav__link">
+  <a href="#parametri-di-input" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Regole applicate
+        Parametri di input
       
     </span>
   </a>
@@ -4192,13 +4192,96 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ruolo-nel-processo" class="md-nav__link">
+  <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ruolo nel processo
+        Output
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#algoritmo-expand-align-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Algoritmo (expand-align-contract)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-bug-latente-32b-verifica-2026-04-18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix bug latente §3.2.b (verifica 2026-04-18)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regole-implementative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regole implementative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chiamanti" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chiamanti
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chiamanti">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trigger-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trigger DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#funzione-batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Funzione batch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Service Python
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -4230,42 +4313,116 @@
 <h2 id="documentazione-concettuale-funzione-anagrafichefn_sync_auth_user_is_active">📘 Documentazione Concettuale – Funzione <code>anagrafiche.fn_sync_auth_user_is_active()</code><a class="headerlink" href="#documentazione-concettuale-funzione-anagrafichefn_sync_auth_user_is_active" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
+<p>Architettura di riferimento:</p>
+<p><a href="../../../../guide/architettura-multi-face-auth/">Architettura Multi-Face Auth</a></p>
 <p><strong>Approfondimento tabelle:</strong></p>
-<p><a href="../../tabelle/risorse_umane/">anagrafiche.risorse_umane</a>
-<a href="../../tabelle/risorse_umane_auth_user/">anagrafiche.risorse_umane_auth_user</a></p>
+<p><a href="../../tabelle/identita_digitali/">anagrafiche.identita_digitali</a>
+<a href="../../tabelle/risorse_umane_auth_user/">anagrafiche.risorse_umane_auth_user</a>
+<a href="../../tabelle/risorse_umane/">anagrafiche.risorse_umane</a>
+<a href="../../tabelle/soggetti/">anagrafiche.soggetti</a></p>
 <p><strong>Approfondimento funzioni:</strong></p>
 <p><a href=".././fn_sync_auth_user_expired/">anagrafiche.fn_sync_auth_user_expired</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-03-2026)
-La funzione <strong><code>anagrafiche.fn_sync_auth_user_is_active()</code></strong> allinea il campo
-<code>django.auth_user.is_active</code> allo stato effettivo della risorsa umana
-collegata.</p>
-<p>La funzione centralizza in un solo punto il calcolo dell'abilitazione
-applicativa dell'utente.</p>
+<p>(latest review 18-04-2026)</p>
+<p>La funzione <strong><code>anagrafiche.fn_sync_auth_user_is_active()</code></strong> allinea il campo
+<code>django.auth_user.is_active</code> allo stato effettivo del bridge auth associato.</p>
+<p>Con la generalizzazione §4.5 del modello multi-face auth la funzione ha
+cambiato firma: parte da <code>auth_user_id</code> invece che da <code>risorsa_umana_id</code>,
+risolve internamente il bridge (nuovo o legacy) e gestisce tutti i ruoli
+applicativi (operatore, portale clienti, portale fornitori, shop customer,
+api_client, disabilitato).</p>
 <hr />
-<h3 id="regole-applicate">Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
-<p>L'utente deve risultare attivo solo se tutte queste condizioni sono vere:</p>
+<h3 id="parametri-di-input">Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parametro</th>
+<th>Tipo</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>p_auth_user_id</code></td>
+<td><code>integer</code></td>
+<td>ID dell'utente Django. NOT NULL, &gt; 0.</td>
+</tr>
+</tbody>
+</table>
+<p>Il parametro è dichiarato con <code>%TYPE</code> della colonna
+<code>anagrafiche.identita_digitali.auth_user_id</code>.</p>
+<hr />
+<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
+<p><code>boolean</code> — <code>true</code> solo se la funzione ha <strong>effettivamente modificato</strong> la
+riga <code>django.auth_user</code> (UPDATE applicato perché il valore è cambiato).
+<code>false</code> in tutti gli altri casi (utente orfano, nessun cambio, schema django
+assente).</p>
+<hr />
+<h3 id="algoritmo-expand-align-contract">Algoritmo (expand-align-contract)<a class="headerlink" href="#algoritmo-expand-align-contract" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Guard parametro</strong> — <code>p_auth_user_id IS NULL OR &lt;= 0</code> → <code>E_PARAMETRO_INVALIDO</code>.</li>
+<li><strong>Priorità: nuovo bridge</strong> — cerca identità attiva in
+   <code>anagrafiche.identita_digitali</code> per <code>auth_user_id</code>. Se trovata, procede al
+   calcolo basato su <code>identita_digitali</code>.</li>
+<li><strong>Fallback legacy</strong> — se nessuna identità, cerca bridge in
+   <code>risorse_umane_auth_user</code>. Necessario durante la transizione §4.5 → §4.6
+   quando <code>identita_digitali</code> è ancora vuota. Post cutover §4.6 il ramo
+   legacy diventa dead code.</li>
+<li><strong>Calcolo <code>is_active</code> atteso</strong>:</li>
+<li><code>DISABILITATO</code> → <code>false</code></li>
+<li>altri ruoli → AND di: identità attiva, finestra <code>[valido_dal, valido_al]</code>
+     valida, <code>soggetti.attivo = true</code></li>
+<li><strong>OPERATORE in più</strong>: AND con <code>risorse_umane.attivo</code> + finestra RU
+     (vincolo legacy mantenuto durante transizione, rimuovibile post §4.6)</li>
+<li><strong>UPDATE auth_user.is_active</strong> solo se il valore cambia (short-circuit
+   se lo stato è già corretto). Gestione difensiva dell'assenza schema Django
+   (ambienti CI senza Django: no-op silente).</li>
+</ol>
+<hr />
+<h3 id="fix-bug-latente-32b-verifica-2026-04-18">Fix bug latente §3.2.b (verifica 2026-04-18)<a class="headerlink" href="#fix-bug-latente-32b-verifica-2026-04-18" title="Permanent link">&para;</a></h3>
+<p>La firma precedente accettava <code>p_risorsa_umana_id bigint</code>, ma 3 metodi di
+<code>AmmSoftwareRepository</code> (<code>update_operatore</code>, <code>disabilita_operatore</code>,
+<code>riattiva_operatore</code>) la invocavano passando invece un <code>auth_user_id</code>.
+Il bug era coperto dai trigger AFTER su <code>risorse_umane_auth_user</code> che
+chiamavano la funzione con il parametro corretto, ma lasciava un rischio
+di comportamento non deterministico in caso di collisione di id tra
+<code>auth_user</code> e <code>risorse_umane</code>.</p>
+<p>La nuova firma <code>(p_auth_user_id)</code> rende <strong>automaticamente corretti</strong> i 3
+metodi Python senza toccare il codice chiamante.</p>
+<hr />
+<h3 id="regole-implementative">Regole implementative<a class="headerlink" href="#regole-implementative" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>anagrafiche.risorse_umane.attivo = true</code></li>
-<li><code>anagrafiche.risorse_umane_auth_user.attivo = true</code></li>
-<li>la data corrente rientra nella finestra <code>[valido_dal, valido_al]</code></li>
-</ul>
-<p>Inoltre:</p>
-<ul>
-<li>il parametro <code>p_risorsa_umana_id</code> deve essere valorizzato e maggiore di zero;</li>
-<li>se non esiste il collegamento verso <code>auth_user</code>, la funzione non fa nulla;</li>
-<li>se lo schema <code>django</code> non e' presente, la funzione non fa nulla;</li>
-<li>aggiorna <code>django.auth_user.is_active</code> solo se il valore atteso e quello
-  corrente sono diversi;</li>
-<li>ritorna <code>true</code> solo se ha realmente modificato la riga <code>auth_user</code>.</li>
+<li>Variabili locali e parametro tipizzati con <code>%TYPE</code> (policy ZeroErp).</li>
+<li><code>LANGUAGE plpgsql</code> (non <code>sql</code>): la funzione ha flusso condizionale
+  complesso + EXECUTE dinamico per dialog con <code>django.auth_user</code>.</li>
+<li><code>EXECUTE</code> dinamico su <code>django.auth_user</code>: evita dipendenza statica dallo
+  schema <code>django</code> (compatibilità CI).</li>
+<li>Codici errore: <code>E_PARAMETRO_INVALIDO</code> (già in <code>messaggi_errore</code>).</li>
 </ul>
 <hr />
-<h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
-<p>Questa funzione e' il punto unico di sincronizzazione tra stato HR e stato di
-accesso applicativo. I trigger su <code>risorse_umane</code> e <code>risorse_umane_auth_user</code>
-la richiamano per evitare che il backend debba replicare la stessa logica.</p>
+<h3 id="chiamanti">Chiamanti<a class="headerlink" href="#chiamanti" title="Permanent link">&para;</a></h3>
+<h4 id="trigger-db">Trigger DB<a class="headerlink" href="#trigger-db" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>anagrafiche.trgfn_risorse_umane_auth_user_sync_active</code> — passa
+  <code>NEW.auth_user_id</code> (aggiornato in §4.5 F2).</li>
+<li><code>anagrafiche.trgfn_risorse_umane_sync_auth_user_active</code> — risolve
+  <code>auth_user_id</code> dal bridge RUA prima di chiamare (aggiornato in §4.5 F2).</li>
+<li><code>anagrafiche.trgfn_identita_digitali_sync_auth_user_active</code> — nuovo:
+  passa <code>NEW.auth_user_id</code> (§4.5 F4).</li>
+</ul>
+<h4 id="funzione-batch">Funzione batch<a class="headerlink" href="#funzione-batch" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>anagrafiche.fn_sync_auth_user_expired</code> — loop daily via pgAgent con
+  <code>DISTINCT auth_user_id</code> su UNION di risorse_umane scadute + identità scadute.</li>
+</ul>
+<h4 id="service-python">Service Python<a class="headerlink" href="#service-python" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>AmmSoftwareRepository.update_operatore / disabilita_operatore /
+  riattiva_operatore</code> — passano <code>auth_user_id</code> (ora corretto grazie alla
+  nuova firma; fix implicito del bug latente §3.2.b).</li>
+</ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

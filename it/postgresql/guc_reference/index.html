@@ -4218,7 +4218,7 @@
 
 <h2 id="elenco-guc-definite-in-zero-erp">Elenco GUC definite in Zero ERP<a class="headerlink" href="#elenco-guc-definite-in-zero-erp" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p>(latest review 02-01-26)</p>
+<p>(latest review 19-04-2026)</p>
 <p><strong>Vedi anche</strong></p>
 <ul>
 <li><a href=".././parametri-personalizzati-(GUC)/">Parametri personalizzati (GUC)</a></li>
@@ -4266,6 +4266,41 @@
 <td>trigger audit/log</td>
 </tr>
 <tr>
+<td><code>app.jwt_user</code></td>
+<td>n/d</td>
+<td>sessione</td>
+<td>Username Django dell'utente autenticato (set da <code>JwtAuditAuthentication</code>).</td>
+<td>middleware audit JWT</td>
+</tr>
+<tr>
+<td><code>app.current_user_id</code></td>
+<td>n/d</td>
+<td>sessione</td>
+<td><code>auth_user.id</code> (stringa) dell'utente autenticato.</td>
+<td>middleware audit JWT, resolver legacy</td>
+</tr>
+<tr>
+<td><code>app.current_identita_id</code></td>
+<td>n/d</td>
+<td>sessione</td>
+<td><code>identita_digitali.id</code> della veste attiva per la richiesta corrente (§4.7).</td>
+<td>policy RLS, <code>fn_scope_*</code>, <code>fn_current_identita_context</code></td>
+</tr>
+<tr>
+<td><code>app.ruolo_applicativo</code></td>
+<td>n/d</td>
+<td>sessione</td>
+<td>Valore <code>config.ruolo_applicativo</code> dell'identità corrente (§4.7).</td>
+<td>policy RLS, resolver multi-face-auth</td>
+</tr>
+<tr>
+<td><code>app.soggetto_ruolo_id</code></td>
+<td>n/d</td>
+<td>sessione</td>
+<td><code>soggetti_ruoli.id</code> dell'identità corrente (§4.7).</td>
+<td>policy <code>BA_OWNERSHIP</code>, <code>FORNITORE_OWNERSHIP</code></td>
+</tr>
+<tr>
 <td><code>zeroerp.maintenance_indirizzi_dettaglio</code></td>
 <td>off</td>
 <td>sessione</td>
@@ -4286,6 +4321,13 @@
 <ul>
 <li>I default indicati come <code>n/d</code> dipendono dalla configurazione dell'istanza.</li>
 <li>Le GUC di manutenzione sono <strong>locali di sessione</strong> e si usano solo in procedure controllate.</li>
+<li>Le GUC <code>app.*</code> relative al contesto identità (§4.7 WIP multi-face-auth)
+  sono popolate dal middleware <code>JwtAuditAuthentication</code> al login e resettate
+  nella response. Vanno lette sempre con <code>current_setting('&lt;name&gt;', true)</code>
+  (missing_ok=true) per evitare errori in connessioni senza utente loggato
+  (es. job batch, test). La funzione
+  <a href="../../dbzero/script/funzioni/fn_current_identita_context/"><code>script.fn_current_identita_context</code></a>
+  incapsula la lettura tipata dei tre GUC.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

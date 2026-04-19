@@ -5726,6 +5726,31 @@
 </ul>
 </blockquote>
 <hr />
+<blockquote>
+<p><strong>Evoluzione in corso — Multi-Face Auth (aprile 2026)</strong></p>
+<p>Questa guida descrive il modello attuale, centrato sul <strong>dipendente interno</strong>.
+E' in corso di sviluppo un'estensione che generalizza il bridge verso <code>auth_user</code>
+per supportare anche <strong>clienti portale</strong>, <strong>fornitori portale</strong> e <strong>utenti del
+negozio online</strong>. I cambiamenti principali previsti:</p>
+<ul>
+<li>Nuovo bridge generico <code>anagrafiche.identita_digitali</code> accanto a
+  <code>risorse_umane_auth_user</code> (che diventera' un caso particolare)</li>
+<li>Regola <strong>R4</strong> ridisegnata: il vincolo "persona fisica pura" si sposta
+  sul ruolo RIS_UMANA, non sul bridge</li>
+<li>Sync <code>auth_user.is_active</code> generalizzata per tutti i tipi di identita'</li>
+<li>Nuovi GUC PostgreSQL <code>app.current_identita_id</code>, <code>app.ruolo_applicativo</code>,
+  <code>app.soggetto_ruolo_id</code></li>
+</ul>
+<p>Questa guida resta <strong>autoritativa per il codice in produzione</strong>. I riferimenti
+al nuovo modello verranno integrati fase per fase, man mano che le migrazioni
+DB vengono applicate.</p>
+<p>Dettagli:</p>
+<ul>
+<li>Guida architetturale: <a href=".././architettura-multi-face-auth/">architettura-multi-face-auth</a></li>
+<li>Piano di sviluppo: <a href="../../dev/work-in-progress/sviluppo-multi-face-auth/">sviluppo-multi-face-auth</a></li>
+</ul>
+</blockquote>
+<hr />
 <h2 id="introduzione">Introduzione<a class="headerlink" href="#introduzione" title="Permanent link">&para;</a></h2>
 <p>In Zero ERP una <strong>risorsa umana</strong> e la rappresentazione di una persona che lavora per l'azienda: un dipendente, un consulente, un collaboratore. Non e un semplice record anagrafico — e l'identita operativa della persona all'interno del sistema.</p>
 <p>Questa guida copre <strong>due aspetti strettamente legati</strong>: il modulo risorse umane (chi sono le persone nell'organico, come sono organizzate) e il <strong>governo dell'accesso al software</strong> (chi puo entrare, cosa puo fare, cosa succede quando qualcuno cambia reparto o lascia l'azienda). I due aspetti sono inseparabili perche in Zero ERP e proprio la risorsa umana a determinare se e come un utente accede al sistema.</p>

@@ -4181,10 +4181,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#regola-applicata" class="md-nav__link">
+  <a href="#regole-applicate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Regola applicata
+        Regole applicate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storico-del-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storico del refactor
       
     </span>
   </a>
@@ -4238,7 +4249,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-03-2026)
+<p>(latest review 18-04-2026)
 La trigger function
 <strong><code>anagrafiche.trgfn_risorse_umane_auth_user_sync_active()</code></strong> sincronizza lo
 stato <code>django.auth_user.is_active</code> quando cambia il <strong>bridge</strong>
@@ -4246,18 +4257,34 @@ stato <code>django.auth_user.is_active</code> quando cambia il <strong>bridge</s
 <p>La funzione interviene sia alla creazione del collegamento sia quando cambia il
 flag <code>attivo</code> del bridge.</p>
 <hr />
-<h3 id="regola-applicata">Regola applicata<a class="headerlink" href="#regola-applicata" title="Permanent link">&para;</a></h3>
+<h3 id="regole-applicate">Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Trigger <strong>AFTER INSERT</strong> e <strong>AFTER UPDATE OF attivo</strong> su
-  <code>anagrafiche.risorse_umane_auth_user</code>.</li>
-<li>Chiama <code>anagrafiche.fn_sync_auth_user_is_active(NEW.risorsa_umana_id)</code>.</li>
-<li>Essendo un trigger <code>AFTER</code>, il valore di ritorno e' ignorato (<code>RETURN NULL</code>).</li>
+  <code>anagrafiche.risorse_umane_auth_user</code>, fase <code>z90</code>.</li>
+<li>Chiama <code>anagrafiche.fn_sync_auth_user_is_active(NEW.auth_user_id)</code>.</li>
+<li>Essendo un trigger <code>AFTER</code>, il valore di ritorno è ignorato (<code>RETURN NULL</code>).</li>
 </ul>
+<hr />
+<h3 id="storico-del-refactor">Storico del refactor<a class="headerlink" href="#storico-del-refactor" title="Permanent link">&para;</a></h3>
+<p><strong>2026-04-18 (§4.5 F2 WIP multi-face-auth)</strong>: cambiato il parametro passato
+alla funzione sync da <code>NEW.risorsa_umana_id</code> a <code>NEW.auth_user_id</code>, coerente
+con la nuova firma della funzione
+<a href="../../funzioni/fn_sync_auth_user_is_active/"><code>fn_sync_auth_user_is_active(p_auth_user_id integer)</code></a>.
+Il trigger installato sulla tabella non cambia (stesso nome, stessa fase,
+stessi eventi): cambia solo il body della trigger function.</p>
 <hr />
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
 <p>La funzione mantiene allineato l'utente Django con lo stato operativo del
-bridge risorsa→auth_user, evitando che la gestione dell'attivazione resti
-distribuita tra backend e database.</p>
+bridge, evitando che la gestione dell'attivazione resti distribuita tra
+backend e database. È uno dei 3 trigger reattivi che mantengono
+<code>auth_user.is_active</code> coerente con i bridge:</p>
+<ul>
+<li>Questo trigger: reagisce ai cambi del bridge legacy operatori.</li>
+<li><code>trgfn_risorse_umane_sync_auth_user_active</code>: reagisce ai cambi della
+  risorsa umana parent.</li>
+<li><code>trgfn_identita_digitali_sync_auth_user_active</code> (§4.5 F4): reagisce
+  ai cambi del nuovo bridge generico (tutti i ruoli applicativi).</li>
+</ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

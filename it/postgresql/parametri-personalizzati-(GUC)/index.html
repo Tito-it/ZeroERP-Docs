@@ -1221,6 +1221,67 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#guc-di-sessione-app-contesto-identita-multi-face-auth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUC di sessione app.* (contesto identità multi-face-auth)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GUC di sessione app.* (contesto identità multi-face-auth)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#set-base-pre-esistente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set base (pre-esistente)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-multi-face-auth-47-wip-introdotti-2026-04-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set multi-face-auth (§4.7 WIP, introdotti 2026-04-19)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helper-scriptfn_current_identita_context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helper script.fn_current_identita_context()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invariante-tutto-o-niente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invariante "tutto o niente"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#differenza-guc-vs-parametri-tabellari" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4375,6 +4436,67 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#guc-di-sessione-app-contesto-identita-multi-face-auth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUC di sessione app.* (contesto identità multi-face-auth)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GUC di sessione app.* (contesto identità multi-face-auth)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#set-base-pre-esistente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set base (pre-esistente)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-multi-face-auth-47-wip-introdotti-2026-04-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set multi-face-auth (§4.7 WIP, introdotti 2026-04-19)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helper-scriptfn_current_identita_context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helper script.fn_current_identita_context()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invariante-tutto-o-niente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invariante "tutto o niente"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#differenza-guc-vs-parametri-tabellari" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4527,6 +4649,55 @@
 </code></pre></div>
 * <strong><code>dbops.tx_id</code></strong> <em>(temporanea)</em>
   UUID di sessione che identifica le operazioni della stessa transazione. Viene settato da trigger PL/pgSQL e reset al commit/rollback.</p>
+<hr />
+<h3 id="guc-di-sessione-app-contesto-identita-multi-face-auth">GUC di sessione <code>app.*</code> (contesto identità multi-face-auth)<a class="headerlink" href="#guc-di-sessione-app-contesto-identita-multi-face-auth" title="Permanent link">&para;</a></h3>
+<p>Il prefisso <strong><code>app.</code></strong> è riservato alle GUC <strong>session-scoped</strong> popolate dal
+middleware <code>JwtAuditAuthentication</code> al momento dell'autenticazione HTTP e
+resettate in <code>process_response</code>. Descrivono il <strong>contesto identità</strong> della
+richiesta corrente e sono lette da:</p>
+<ul>
+<li>funzioni resolver (<code>fn_resolve_*</code>, <code>fn_check_*</code>, <code>fn_scope_*</code>),</li>
+<li>policy RLS (§4.9 WIP multi-face-auth),</li>
+<li>trigger di audit/log che collegano operazioni DB → identità utente.</li>
+</ul>
+<p>Tutte sono impostate via <code>set_config('app.&lt;nome&gt;', &lt;valore&gt;, is_local := false)</code>
+a livello di sessione dalla connessione del pool (reset a fine request).</p>
+<h4 id="set-base-pre-esistente">Set base (pre-esistente)<a class="headerlink" href="#set-base-pre-esistente" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong><code>app.jwt_user</code></strong> — username stringa dell'utente Django autenticato.</li>
+<li><strong><code>app.current_user_id</code></strong> — <code>auth_user.id</code> come stringa.</li>
+</ul>
+<h4 id="set-multi-face-auth-47-wip-introdotti-2026-04-19">Set multi-face-auth (§4.7 WIP, introdotti 2026-04-19)<a class="headerlink" href="#set-multi-face-auth-47-wip-introdotti-2026-04-19" title="Permanent link">&para;</a></h4>
+<p>Tre GUC aggiuntive descrivono la <strong>veste</strong> con cui l'utente accede in questa
+sessione (operatore interno vs cliente portale vs fornitore vs shop vs api
+client), usate dalle policy di scope / RLS per filtrare i dati in modo
+coerente col ruolo applicativo:</p>
+<ul>
+<li><strong><code>app.current_identita_id</code></strong> — <code>anagrafiche.identita_digitali.id</code> della
+  veste attiva per questa sessione. Lettura tipica: <code>NULLIF(current_setting('app.current_identita_id', true), '')::bigint</code>.</li>
+<li><strong><code>app.ruolo_applicativo</code></strong> — valore dell'enum <code>config.ruolo_applicativo</code>
+  dell'identità corrente. Usato dalle policy che vincolano l'accesso per
+  dimensione "chi sei" (es. i <code>CLIENTE_PORTALE</code> non vedono l'area acquisti).</li>
+<li><strong><code>app.soggetto_ruolo_id</code></strong> — <code>anagrafiche.soggetti_ruoli.id</code> dell'identità
+  corrente. Usato da policy <strong>BA_OWNERSHIP</strong> / <strong>FORNITORE_OWNERSHIP</strong> per
+  mappare l'utente al soggetto anagrafico proprietario dei dati.</li>
+</ul>
+<h4 id="helper-scriptfn_current_identita_context">Helper <code>script.fn_current_identita_context()</code><a class="headerlink" href="#helper-scriptfn_current_identita_context" title="Permanent link">&para;</a></h4>
+<p>Per leggere tutte e tre le GUC in un colpo solo e ottenere un record
+tipato, usare la funzione di convenienza
+<a href="../../dbzero/script/funzioni/fn_current_identita_context/"><code>script.fn_current_identita_context</code></a>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_current_identita_context</span><span class="p">();</span>
+<span class="c1">--  current_identita_id | ruolo_applicativo | soggetto_ruolo_id</span>
+<span class="c1">-- ---------------------+-------------------+-------------------</span>
+<span class="c1">--                   42 | OPERATORE         |               123</span>
+</code></pre></div>
+<p>La funzione fa il parsing dei tre GUC (fail-soft: restituisce <code>NULL</code> per i
+campi non impostati) e applica i cast ai tipi corretti.</p>
+<h4 id="invariante-tutto-o-niente">Invariante "tutto o niente"<a class="headerlink" href="#invariante-tutto-o-niente" title="Permanent link">&para;</a></h4>
+<p>Il middleware <strong>deve</strong> popolare tutti e tre i GUC contemporaneamente (oppure
+nessuno, per i percorsi non autenticati): dati parziali producono stati
+incoerenti nelle policy RLS. Se una sola delle tre è <code>NULL</code>, le policy
+applicate via <code>fn_scope_*</code> falliscono in modo <strong>fail-closed</strong>.</p>
 <hr />
 <h3 id="differenza-guc-vs-parametri-tabellari">Differenza GUC vs Parametri Tabellari<a class="headerlink" href="#differenza-guc-vs-parametri-tabellari" title="Permanent link">&para;</a></h3>
 <table>

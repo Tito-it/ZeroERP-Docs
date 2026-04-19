@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#documentazione-concettuale-funzione-venditefn_resolve_prezzo_listino" class="md-skip">
+        <a href="#documentazione-concettuale-resolver-pricing-venditefn_resolve_prezzo_listino_v2" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -4158,22 +4158,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#documentazione-concettuale-funzione-venditefn_resolve_prezzo_listino" class="md-nav__link">
+  <a href="#documentazione-concettuale-resolver-pricing-venditefn_resolve_prezzo_listino_v2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📘 Documentazione Concettuale – Funzione vendite.fn_resolve_prezzo_listino
+        📘 Documentazione Concettuale – Resolver Pricing vendite.fn_resolve_prezzo_listino_v2
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Funzione vendite.fn_resolve_prezzo_listino">
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Resolver Pricing vendite.fn_resolve_prezzo_listino_v2">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#scopo-principale" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🎯 Scopo Principale
+        🎯 Scopo principale
       
     </span>
   </a>
@@ -4181,10 +4181,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#regole-principali" class="md-nav__link">
+  <a href="#dimensioni-di-input" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Regole principali
+        🔑 Dimensioni di input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stadi-del-resolver-ordine-deterministico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🪜 Stadi del resolver (ordine deterministico)
       
     </span>
   </a>
@@ -4195,7 +4206,18 @@
   <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output
+        📤 Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#domande-aperte-sul-modello" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧭 Domande aperte sul modello
       
     </span>
   </a>
@@ -4227,52 +4249,124 @@
 
   <h1 id="__skip">Fn resolve prezzo listino</h1>
 
-<h2 id="documentazione-concettuale-funzione-venditefn_resolve_prezzo_listino">📘 Documentazione Concettuale – Funzione <code>vendite.fn_resolve_prezzo_listino</code><a class="headerlink" href="#documentazione-concettuale-funzione-venditefn_resolve_prezzo_listino" title="Permanent link">&para;</a></h2>
+<h2 id="documentazione-concettuale-resolver-pricing-venditefn_resolve_prezzo_listino_v2">📘 Documentazione Concettuale – Resolver Pricing <code>vendite.fn_resolve_prezzo_listino_v2</code><a class="headerlink" href="#documentazione-concettuale-resolver-pricing-venditefn_resolve_prezzo_listino_v2" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p><strong>Approfondimento tabelle:</strong></p>
-<p>• <a href="../../tabelle/listini/">vendite.listini</a><br />
-• <a href="../../tabelle/listini_versioni/">vendite.listini_versioni</a><br />
-• <a href="../../tabelle/listini_associazioni/">vendite.listini_associazioni</a><br />
-• <a href="../../tabelle/listini_righe/">vendite.listini_righe</a><br />
-</p>
+<p><strong>Funzione corrente</strong>: <a href="../../funzioni/fn_resolve_prezzo_listino_v2/"><code>vendite.fn_resolve_prezzo_listino_v2</code></a>
+<strong>Funzione deprecata (v1)</strong>: il vecchio <code>fn_resolve_prezzo_listino</code> e la tabella <code>listini_associazioni</code> sono stati rimossi in F2-BE-13 (pricing v5). Se trovi riferimenti, sono legacy.</p>
+<p><strong>Approfondimento tabelle</strong>:
+• <a href="../../tabelle/listini/">vendite.listini</a>
+• <a href="../../tabelle/listini_versioni/">vendite.listini_versioni</a>
+• <a href="../../tabelle/listini_righe/">vendite.listini_righe</a>
+• <a href="../../tabelle/contratti/">vendite.contratti</a>
+• <a href="../../tabelle/contratti_righe/">vendite.contratti_righe</a>
+• <a href="../../tabelle/promo_articoli/">vendite.promo_articoli</a>
+• <a href="../../../anagrafiche/tabelle/categorie_clienti_listini/">anagrafiche.categorie_clienti_listini</a></p>
 </blockquote>
-<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>La funzione <code>vendite.fn_resolve_prezzo_listino</code> risolve in modo deterministico il
-prezzo da applicare per <code>articolo + uom + data_riferimento</code>, considerando contesto
-BA/utility/emittente e priorita` multi-listino.</p>
+<h3 id="scopo-principale">🎯 Scopo principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>Risolve in modo deterministico il prezzo applicabile per una coppia
+<code>(articolo, uom)</code> in una data, dato un billing account. Unica funzione usata da
+preventivi, commesse e fatturazione: zero logica duplicata applicativa.</p>
 <hr />
-<h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
+<h3 id="dimensioni-di-input">🔑 Dimensioni di input<a class="headerlink" href="#dimensioni-di-input" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parametro</th>
+<th>Tipo</th>
+<th>Obbligatorio</th>
+<th>Origine suggerita</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>p_articolo_id</code></td>
+<td>uuid</td>
+<td>sì</td>
+<td>identifica l'articolo</td>
+</tr>
+<tr>
+<td><code>p_uom_id</code></td>
+<td>bigint</td>
+<td>sì</td>
+<td>UoM operativa (filtrata per articolo)</td>
+</tr>
+<tr>
+<td><code>p_data_riferimento</code></td>
+<td>date</td>
+<td>sì</td>
+<td>data alla quale valutare contratto/listino/promo</td>
+</tr>
+<tr>
+<td><code>p_ba_id</code></td>
+<td>bigint</td>
+<td>sì</td>
+<td>billing account (determina categoria e partecipa_promo)</td>
+</tr>
+<tr>
+<td><code>p_utility_id</code></td>
+<td>integer</td>
+<td>sì</td>
+<td>utility del servizio</td>
+</tr>
+<tr>
+<td><code>p_emittente_soggetto_ruolo_id</code></td>
+<td>bigint</td>
+<td>sì</td>
+<td>emittente fiscale (derivato dal JWT operatore)</td>
+</tr>
+<tr>
+<td><code>p_classe_utenza_id</code></td>
+<td>integer</td>
+<td>no</td>
+<td>classe utenza del PDP (raffina match matrice categoria)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dimensioni derivate (mai input):</strong></p>
 <ul>
-<li><code>p_data_riferimento</code> e` obbligatoria.</li>
-<li>Input ID numerici validi solo se <code>&gt; 0</code>.</li>
-<li>La risoluzione usa solo record <code>attivo=true</code> e versioni <code>stato='ATTIVA'</code>.</li>
-<li>Precedenze implementate:</li>
-<li>BA+utility+emittente</li>
-<li>BA+utility</li>
-<li>BA+emittente (non-utility)</li>
-<li>BA (non-utility)</li>
-<li>utility+emittente</li>
-<li>utility</li>
-<li>fallback articolo+uom</li>
-<li>Tie-break:</li>
-<li><code>listini_associazioni.priorita</code></li>
-<li><code>listini_versioni.priorita</code></li>
-<li>validita<code>piu</code> recente/specifica</li>
-<li>Se nessun match: errore esplicito <code>PRICE_NOT_FOUND</code>.</li>
-<li>Se pareggio totale: errore esplicito <code>AMBIGUOUS_PRICE_MATCH</code>.</li>
+<li><strong>Categoria cliente</strong>: da <code>contratti.categoria_cliente_id_snapshot</code> se esiste contratto attivo, altrimenti da <code>billing_account.categoria_cliente_id</code>.</li>
+<li><strong>Partecipazione a promo</strong>: da <code>categorie_clienti.partecipa_promo</code> (derivato dal BA).</li>
+<li><strong>Tipologia listino</strong>: dimensione interna del listino, matchata a STADIO 2 tramite matrice; non input.</li>
 </ul>
 <hr />
-<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
-<p>Ritorna una riga con:</p>
+<h3 id="stadi-del-resolver-ordine-deterministico">🪜 Stadi del resolver (ordine deterministico)<a class="headerlink" href="#stadi-del-resolver-ordine-deterministico" title="Permanent link">&para;</a></h3>
+<p><strong>STADIO 1 — CONTRATTO</strong> (se esiste contratto ATTIVO per <code>(ba, utility, data)</code>):</p>
+<ol>
+<li><strong><code>CONTRATTO_OVERRIDE</code></strong> — se <code>contratti_righe.prezzo_unitario</code> specifico per l'articolo è valorizzato → usato direttamente, nessuna variazione.</li>
+<li><strong><code>CONTRATTO_LISTINO</code></strong> — altrimenti prende la riga del listino del contratto (<code>contratti.listino_id</code> + versione valida alla data + riga su articolo+uom). Se il contratto ha <code>tipo_variazione_globale</code> applica la formula (<code>PERCENTUALE</code> / <code>VALORE_FISSO</code>) sul prezzo base.</li>
+<li>Se nessun listino su contratto C (precontrattuale) → errore <code>E_ARTICOLO_NON_NEGOZIATO_SU_CONTRATTO_C</code>.</li>
+</ol>
+<p><strong>STADIO 2 — CATEGORIA</strong> (solo se non c'è contratto attivo):</p>
+<ol>
+<li>Lookup su <code>anagrafiche.categorie_clienti_listini</code> filtrando per:</li>
+<li><code>categoria_cliente_id</code> (da BA)</li>
+<li><code>utility_id</code>, <code>emittente_soggetto_ruolo_id</code>, validita alla data</li>
+<li><code>classe_utenza_id</code> specifico (se fornito) OR NULL fallback (priorita al match specifico)</li>
+<li>Estrae <code>listino_id</code> + eventuale <code>tipo_variazione</code> matrice, poi la riga listino attiva per <code>(articolo, uom, data)</code>.</li>
+<li>Errori possibili: <code>E_CATEGORIA_LISTINO_NON_MAPPATA</code>, <code>E_PREZZO_LISTINO_RIGA_NON_TROVATA</code>, <code>E_PREZZO_LISTINO_NON_TROVATO</code> (BA senza categoria e senza contratto).</li>
+</ol>
+<p><strong>STADIO 0 — PROMO</strong> (overlay finale, sempre ultimo):</p>
+<p>Se la categoria del cliente ha <code>partecipa_promo = TRUE</code> e esiste una <code>vendite.promo_articoli</code> attiva per <code>(articolo, uom)</code> alla data → sostituisce il risultato degli stadi precedenti applicando <code>tipo_variazione</code> (<code>PERCENTUALE</code> / <code>VALORE_FISSO</code> / <code>PREZZO_FISSO</code>).</p>
+<hr />
+<h3 id="output">📤 Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
+<p>Ritorna una singola riga con:</p>
 <ul>
-<li>listino selezionato,</li>
-<li>versione selezionata,</li>
-<li>riga prezzo selezionata,</li>
-<li>associazione usata,</li>
-<li>prezzo,</li>
-<li>livello di match (<code>match_level</code>).</li>
+<li><code>prezzo_finale</code>, <code>prezzo_base_snapshot</code></li>
+<li><code>tipo_variazione_applicata</code>, <code>valore_variazione_applicata</code></li>
+<li><code>origine</code> (<code>CONTRATTO_OVERRIDE</code> | <code>CONTRATTO_LISTINO</code> | <code>CATEGORIA</code> | <code>PROMO</code>)</li>
+<li>FK della catena: <code>listino_id</code>, <code>listino_versione_id</code>, <code>listino_riga_id</code>, <code>contratto_id</code>, <code>promo_id</code>, <code>categoria_cliente_listino_id</code></li>
+<li>Snapshot: <code>categoria_cliente_id_snapshot</code>, <code>classe_utenza_id_snapshot</code></li>
 </ul>
+<hr />
+<h3 id="domande-aperte-sul-modello">🧭 Domande aperte sul modello<a class="headerlink" href="#domande-aperte-sul-modello" title="Permanent link">&para;</a></h3>
+<p>Il modello <code>vendite.contratti_utilities</code> contiene <code>tipo_utenza_id</code> e <code>classe_utenza_id</code>
+(per contratto). Attualmente:</p>
+<ul>
+<li><strong><code>classe_utenza_id</code></strong>: passata al resolver come <strong>input</strong> del caller, non letta dal contratto. Incoerenza potenziale se il contratto la dichiara diversa.</li>
+<li><strong><code>tipo_utenza_id</code></strong>: <strong>non usata</strong> dal resolver. La matrice <code>categorie_clienti_listini</code> non ha la colonna corrispondente.</li>
+</ul>
+<p>Se il modello pricing dovesse considerare tipo/classe utenza in modo coerente col contratto, servono cambi DB + migrazione dati. Decisione di architettura, non bug.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
