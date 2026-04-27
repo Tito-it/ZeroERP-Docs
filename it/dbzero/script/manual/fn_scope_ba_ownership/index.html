@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4295,14 +4325,15 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 18-04-2026)</p>
+<p>(latest review 20-04-2026 — ruolo-aware)</p>
 <p>La funzione <strong><code>script.fn_scope_ba_ownership</code></strong> implementa la policy di scope
 <code>BA_OWNERSHIP</code>: verifica che un'identità digitale di tipo cliente possa
 vedere uno specifico <code>billing_account</code>.</p>
-<p>Regola: il BA appartiene all'identità se e solo se condividono il
-<strong>soggetto_ruolo</strong> (ovvero il cliente). La stessa policy copre sia
-<code>CLIENTE_PORTALE</code> (portale B2B) sia <code>SHOP_CUSTOMER</code> (shop online) perché
-condividono il ruolo anagrafico <code>CL</code>.</p>
+<p>Regola: il BA appartiene all'identità se e solo se (1) condividono il
+<strong>soggetto_ruolo</strong> (ovvero il cliente) e (2) l'identità è in veste cliente
+(<code>ruolo_applicativo IN ('CLIENTE_PORTALE', 'SHOP_CUSTOMER')</code>). Il filtro
+veste fa parte del contratto della scope function — non è delegato alle
+policy RLS (difesa-in-profondità §V sviluppo-concentrico).</p>
 <hr />
 <h3 id="parametri-di-input">Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -4344,6 +4375,10 @@ condividono il ruolo anagrafico <code>CL</code>.</p>
 <td><code>false</code></td>
 </tr>
 <tr>
+<td>Identità in veste non-cliente (es. OPERATORE, FORNITORE_PORTALE, DISABILITATO)</td>
+<td><code>false</code></td>
+</tr>
+<tr>
 <td>BA inesistente</td>
 <td><code>false</code></td>
 </tr>
@@ -4352,7 +4387,7 @@ condividono il ruolo anagrafico <code>CL</code>.</p>
 <td><code>false</code></td>
 </tr>
 <tr>
-<td>BA appartiene al <code>soggetto_ruolo</code> dell'identità</td>
+<td>Identità CLIENTE_PORTALE o SHOP_CUSTOMER attiva + BA con stesso SR</td>
 <td><code>true</code></td>
 </tr>
 </tbody>
@@ -4370,8 +4405,9 @@ condividono il ruolo anagrafico <code>CL</code>.</p>
 <div class="highlight"><pre><span></span><code>identita_digitali.soggetto_ruolo_id
     = billing_account.soggetto_ruolo_id  (join diretto)
 AND identita_digitali.id = p_identita_id
-AND billing_account.id   = p_billing_account_id
 AND identita_digitali.attivo = true
+AND identita_digitali.ruolo_applicativo IN (&#39;CLIENTE_PORTALE&#39;, &#39;SHOP_CUSTOMER&#39;)
+AND billing_account.id = p_billing_account_id
 </code></pre></div>
 <p><code>billing_account</code> ha FK diretta a <code>soggetti_ruoli</code> (colonna
 <code>soggetto_ruolo_id</code>), quindi non serve passare da <code>anagrafiche.clienti</code>.</p>
@@ -4459,7 +4495,7 @@ unificarla con <code>BA_OWNERSHIP</code> perché:</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

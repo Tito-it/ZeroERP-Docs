@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4214,6 +4244,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#volatilita" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Volatilita'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4262,17 +4303,25 @@
 <li><strong>Centralizzare i testi</strong>
   Conservare tutti i messaggi (errori, avvisi, info) in tabella, evitando hard‑coding in trigger, procedure o sorgenti SQL.</li>
 <li>
-<p><strong>Internazionalizzazione avanzata</strong>
+<p><strong>Internazionalizzazione avanzata con fallback</strong>
   Selezionare dinamicamente la lingua di output in base a:</p>
 </li>
 <li>
 <p>parametro <code>p_lingua</code></p>
 </li>
-<li>impostazione configurazione <code>myapp.user_language</code></li>
+<li>GUC <code>myapp.user_language</code> (impostata dal middleware BE per-request)</li>
 <li>default <code>'it'</code></li>
-<li><strong>Placeholder dinamici</strong>
-  Utilizzare <code>format()</code> per sostituire i placeholder <code>%s</code> nel template con i valori runtime, abilitando messaggi parametrizzati.</li>
 </ul>
+<p>Post <strong>23-04-2026</strong> (migration <code>20260423-02-01</code>) e' attivo il
+  <strong>fallback lingua IT</strong>: se la lingua risolta <code>lingua_eff</code> non ha
+  riga per il codice richiesto, la funzione ricade su <code>lingua='it'</code>
+  invece di ritornare il placeholder. Solo se nemmeno <code>'it'</code> ha
+  riga viene restituito il placeholder legacy
+  <code>[MESSAGGIO NON DEFINITO: &lt;codice&gt;]</code>. Questo permette il rollout
+  incrementale delle traduzioni EN senza dover tradurre tutti i
+  codici in un solo colpo.
+* <strong>Placeholder dinamici</strong>
+  Utilizzare <code>format()</code> per sostituire i placeholder <code>%s</code> nel template con i valori runtime, abilitando messaggi parametrizzati.</p>
 <hr />
 <h3 id="parametri-di-input">Parametri di Input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -4316,15 +4365,25 @@
 <span class="w">  </span><span class="s1">&#39;it&#39;</span>
 <span class="p">);</span>
 </code></pre></div>
-2. <strong>Recupero del template</strong></p>
-<p><div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">messaggio</span>
+2. <strong>Recupero del template con fallback lingua</strong> (post 23-04-2026)</p>
+<p>Single-query che preferisce la lingua richiesta ma ricade su <code>'it'</code>
+   se manca: ordering booleano + LIMIT 1 garantisce che la riga con
+   <code>lingua = lingua_eff</code> vinca, altrimenti passa quella <code>'it'</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">messaggio</span>
 <span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">tmpl</span>
 <span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">messaggi_errore</span>
 <span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_codice</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">lingua</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lingua_eff</span><span class="p">;</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">lingua</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="n">lingua_eff</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;it&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">lingua</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lingua_eff</span><span class="p">)</span><span class="w"> </span><span class="k">DESC</span>
+<span class="w"> </span><span class="k">LIMIT</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
 </code></pre></div>
-3. <strong>Messaggio non definito</strong></p>
-<ul>
+<p>Quando <code>lingua_eff = 'it'</code> la IN degenera a singolo valore, la
+   ORDER BY e' idempotente e il LIMIT 1 restituisce il match esatto
+   (comportamento legacy).</p>
+<ol>
+<li>
+<p><strong>Messaggio non definito</strong> (nessuna lingua disponibile, nemmeno <code>'it'</code>)</p>
+</li>
 <li>
 <p>Se <code>tmpl IS NULL</code>, restituisce:</p>
 <p><div class="highlight"><pre><span></span><code>[MESSAGGIO NON DEFINITO: &lt;p_codice&gt;]
@@ -4337,13 +4396,22 @@
 </code></pre></div>
    * Altrimenti restituisce <code>tmpl</code> originale.</p>
 </li>
-</ul>
+</ol>
 <hr />
 <h3 id="valore-di-ritorno">Valore di Ritorno<a class="headerlink" href="#valore-di-ritorno" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>text</code></strong>
   Messaggio finale, con eventuale sostituzione di <code>%s</code> applicata.</li>
 </ul>
+<hr />
+<h3 id="volatilita">Volatilita'<a class="headerlink" href="#volatilita" title="Permanent link">&para;</a></h3>
+<p><strong><code>STABLE</code></strong> (post 23-04-2026). La fn legge da <code>config.messaggi_errore</code>
+quindi il risultato cambia tra query diverse se la tabella viene
+modificata, ma resta costante all'interno di una singola query. La
+versione pre-23-04-2026 era marcata <code>IMMUTABLE</code> per errore — bug
+latente: il planner poteva cachare risultati stantii dopo UPDATE dei
+seed. Corretto nella stessa migration che ha introdotto il fallback
+lingua.</p>
 <hr />
 <h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4416,7 +4484,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

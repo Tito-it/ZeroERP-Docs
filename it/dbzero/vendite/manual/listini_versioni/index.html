@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4192,6 +4222,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#workflow-stato-e-transizioni-dal-2026-04-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow stato e transizioni (dal 2026-04-24)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chiusura-automatica-via-framework-dbopsautomazione_chiusura_scadenze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chiusura automatica via framework dbops.automazione_chiusura_scadenze
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#workflow-clone-publish" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4279,6 +4331,112 @@ Vedi sezione <em>Workflow clone + publish</em> qui sotto.</p>
   (<code>ex_listini_versioni_no_overlap</code>, fix <code>20260409-01</code>). <strong>BOZZE e CHIUSE possono
   coesistere</strong> con un'ATTIVA (e tra loro) anche su intervalli sovrapposti — vedi
   sezione <em>Workflow clone + publish</em> qui sotto.</li>
+</ul>
+<hr />
+<h3 id="workflow-stato-e-transizioni-dal-2026-04-24">Workflow stato e transizioni (dal 2026-04-24)<a class="headerlink" href="#workflow-stato-e-transizioni-dal-2026-04-24" title="Permanent link">&para;</a></h3>
+<p>Le transizioni di stato sono <strong>vincolate da guard trigger</strong>
+(<code>trg_listini_versioni_a10_guard_transizione_stato_upd</code> →
+<code>vendite.trgfn_listini_versioni_guard_transizione_stato</code>,
+migration <code>20260424-01-...</code>).</p>
+<p>Matrice transizioni ammesse:</p>
+<table>
+<thead>
+<tr>
+<th>Da</th>
+<th>A</th>
+<th>Ammessa</th>
+<th>Condizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BOZZA</td>
+<td>ATTIVA</td>
+<td>si</td>
+<td>—</td>
+</tr>
+<tr>
+<td>ATTIVA</td>
+<td>CHIUSA</td>
+<td>si</td>
+<td><code>valido_al IS NOT NULL AND valido_al &lt; CURRENT_DATE</code></td>
+</tr>
+<tr>
+<td>BOZZA</td>
+<td>CHIUSA</td>
+<td><strong>no</strong></td>
+<td>una bozza si cancella, non si chiude</td>
+</tr>
+<tr>
+<td>ATTIVA</td>
+<td>BOZZA</td>
+<td><strong>no</strong></td>
+<td>immutabile all'indietro</td>
+</tr>
+<tr>
+<td>CHIUSA</td>
+<td>*</td>
+<td><strong>no</strong></td>
+<td>stato terminale</td>
+</tr>
+</tbody>
+</table>
+<p>Violazione → <code>script.fn_log_and_raise_error</code> con codice
+<code>E_VERSIONE_STATO_TRANSIZIONE_INVALIDA</code> (id 391 in <code>config.messaggi_errore</code>).</p>
+<p><strong>Principio di applicabilita'</strong> (linee-guida-sql §7c): la versione e'
+<em>operativamente applicabile</em> quando <code>validita @&gt; data_riferimento</code>.
+Lo <code>stato</code> e' flag gestionale per UI/audit/reportistica; il resolver
+prezzi (<code>fn_resolve_prezzo_listino_v2</code>) <strong>non</strong> filtra per stato —
+le date comandano.</p>
+<p><strong>INSERT non vincolato</strong>: il guard scatta solo su UPDATE OF stato.
+Consente seed/import di versioni direttamente in ATTIVA o CHIUSA.</p>
+<p><strong>Path utente per chiudere una versione</strong>: non esiste piu' un'azione
+manuale "cambia stato a CHIUSA". L'utente imposta <code>valido_al</code> (PATCH);
+la chiusura di stato avviene automaticamente alla scadenza tramite
+il job notturno descritto qui sotto.</p>
+<hr />
+<h3 id="chiusura-automatica-via-framework-dbopsautomazione_chiusura_scadenze">Chiusura automatica via framework <code>dbops.automazione_chiusura_scadenze</code><a class="headerlink" href="#chiusura-automatica-via-framework-dbopsautomazione_chiusura_scadenze" title="Permanent link">&para;</a></h3>
+<p>Dal <strong>2026-04-26</strong> la chiusura automatica delle versioni listino e'
+gestita dal <strong>framework parametrico</strong> <code>dbops.fn_apply_chiusura_scadenze()</code>,
+invocato dal job pgAgent unico <code>chiusura_scadenze_daily</code> (daily 00:05).</p>
+<p>La configurazione vive in <code>dbops.automazione_chiusura_scadenze</code>
+(riga <code>id=1</code>):</p>
+<ul>
+<li><code>schema_tabella='vendite'</code>, <code>nome_tabella='listini_versioni'</code></li>
+<li><code>tipo_stato='VARCHAR'</code>, <code>col_stato='stato'</code></li>
+<li><code>stato_attivo_codice='ATTIVA'</code>, <code>stato_chiuso_codice='CHIUSA'</code></li>
+</ul>
+<p>Il framework esegue UPDATE dinamico equivalente a:</p>
+<div class="highlight"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">listini_versioni</span>
+<span class="w">   </span><span class="k">SET</span><span class="w"> </span><span class="n">stato</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CHIUSA&#39;</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">stato</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ATTIVA&#39;</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">valido_al</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">valido_al</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="k">CURRENT_DATE</span><span class="p">;</span>
+</code></pre></div>
+<p>L'UPDATE attraversa il guard <code>trg_listini_versioni_a10_guard_transizione_stato_upd</code>
+e lo soddisfa per costruzione. Nessun bypass.</p>
+<blockquote>
+<p><strong>Nota storica</strong>: la funzione specifica <code>vendite.fn_listini_versioni_close_scadute()</code>
+(creata il 24-04-2026) e' stata droppata il 26-04-2026 dalla migration
+<code>20260426-04</code>. La logica e' stata promossa al nucleo <code>dbops</code> come
+framework riusabile da N tabelle (manifesto sviluppo concentrico §7:
+due consumatori reali → astrazione validata).</p>
+</blockquote>
+<p>Conseguenze UX:</p>
+<ul>
+<li>fra l'impostazione di <code>valido_al = CURRENT_DATE</code> e le 00:05 del
+  giorno successivo lo <strong>stato resta ATTIVA</strong>; l'applicabilita'
+  operativa e' gia' falsa (le date comandano).</li>
+<li>Semantica: <code>valido_al = oggi</code> significa "ultimo giorno di validita' = oggi";
+  la chiusura scatta dalle 00:05 di domani.</li>
+<li>badge UI basati solo su <code>stato</code> mostreranno ATTIVA finche' il job non
+  scatta. Se serve feedback immediato, usare <code>valido_al &lt;= CURRENT_DATE</code>
+  (o <code>NOT (validita @&gt; CURRENT_DATE)</code>) invece dello stato.</li>
+</ul>
+<p>Riferimenti:</p>
+<ul>
+<li><a href="../../../../guide/processi-pgagent-funzionali/">Catalogo processi pgAgent funzionali</a></li>
+<li><a href="../../../../linee-guida-sql/">linee-guida-sql §7c</a> — pattern "ciclo stato + finestra di validita'"</li>
 </ul>
 <blockquote>
 <p>🗑️ <strong>Campo <code>priorita</code> RIMOSSO il 2026-04-09 (Fase 2 refactor)</strong>. Con l'invariante
@@ -4398,7 +4556,7 @@ translator backend ("Esiste già una versione attiva sovrapposta").</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

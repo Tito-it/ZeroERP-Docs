@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4211,6 +4241,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="🚦 Vincoli &amp; Regole">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#immutabilita-bom-trigger-block_modifica_struttura-22-04-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Immutabilità BoM (trigger block_modifica_struttura, 22-04-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -4337,7 +4384,8 @@
 • <a href="../../../dbops/funzioni/trgfn_tx_id_managed/"><code>dbops.trgfn_tx_id_managed</code></a> <br />
 • <a href="../../../dbops/funzioni/trgfn_child_requires_active_parent/"><code>dbops.trgfn_child_requires_active_parent</code></a> <br />
 • <a href="../../../script/funzioni/trgfn_audit_data_user_generic/"><code>script.trgfn_audit_data_user_generic</code></a> <br />
-• <a href="../../../script/funzioni/trgfn_storico_generic/"><code>script.trgfn_storico_generic</code></a>  </p>
+• <a href="../../../script/funzioni/trgfn_storico_generic/"><code>script.trgfn_storico_generic</code></a><br />
+• <a href="../../funzioni/trgfn_articoli_componenti_block_modifica_struttura/"><code>catalogo.trgfn_articoli_componenti_block_modifica_struttura</code></a> <em>(immutabilità BoM, 22-04-2026)</em>  </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
@@ -4417,6 +4465,16 @@ GUARD su <code>is_composito</code></p>
 usa <strong>due FK verso la stessa entità</strong> (<code>catalogo.articoli</code>) con ruoli diversi
 (prodotto vs componente), e la logica richiede controlli <strong>distinti e specifici</strong>.</p>
 </blockquote>
+<h4 id="immutabilita-bom-trigger-block_modifica_struttura-22-04-2026">Immutabilità BoM (trigger <code>block_modifica_struttura</code>, 22-04-2026)<a class="headerlink" href="#immutabilita-bom-trigger-block_modifica_struttura-22-04-2026" title="Permanent link">&para;</a></h4>
+<p>A partire dal trigger <code>trg_articoli_componenti_a10_block_update_struct_upd_dlt</code> (<code>20260422-01</code>), la BoM è <strong>immutabile</strong> sui campi di struttura:</p>
+<ul>
+<li><strong>DELETE</strong>: sempre bloccato (errore <code>E_BOM_MODIFICA_VIETATA</code> id 387). Non si elimina una riga BoM: si chiude.</li>
+<li><strong>UPDATE</strong> dei campi <code>coeff_qta</code>, <code>componente_id</code>, <code>obbligatorio</code>, <code>esposto_in_fattura</code>, <code>partecipa_qta</code>, <code>determina_qta_padre</code>, <code>valido_dal</code>, <code>validita</code>: bloccato (<code>E_BOM_MODIFICA_VIETATA</code>).</li>
+<li><strong>UPDATE</strong> di <code>valido_al</code>: ammesso, con check <code>NEW.valido_al &gt;= OLD.valido_dal</code> (<code>E_BOM_VALIDO_AL_INVALIDO</code> id 388 in caso di range invalido). È l'unico modo per chiudere una riga.</li>
+<li><strong>UPDATE</strong> di <code>note_*</code>, <code>meta</code>, <code>attivo</code>, e dei campi audit: ammesso (non sono campi di struttura).</li>
+</ul>
+<p><strong>Pattern operativo "chiudi+inserisci nuova versione"</strong>: per evolvere una BoM, l'admin chiude la riga corrente (UPDATE <code>valido_al = oggi</code>) e inserisce una nuova riga con <code>valido_dal</code> successivo. L'exclusion constraint daterange esistente garantisce non-overlap. Vedi <a href="../../../../guide/gestione-listini/#53-immutabilita-della-bom-pattern-chiudi-nuova-versione">guida gestione listini §5.3</a>.</p>
+<p><strong>Razionale</strong>: le righe <code>vendite.commesse_attivita</code> e le fatturazioni che hanno consumato la BoM restano ancorate ai valori <code>prezzo_snapshot</code>/<code>prezzo_bloccato</code> registrati al momento del push. Modificare la BoM "sotto" alle commesse rompe la ricostruzione storica e l'audit.</p>
 <hr />
 <h3 id="indicizzazione">Indicizzazione<a class="headerlink" href="#indicizzazione" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4580,7 +4638,7 @@ erDiagram
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

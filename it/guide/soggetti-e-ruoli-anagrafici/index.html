@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2323,6 +2323,8 @@
       
         
       
+        
+      
     
     
     
@@ -3284,6 +3286,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -3311,10 +3341,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="">
             
   
   
@@ -3332,8 +3362,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4853,26 +4883,32 @@
 </blockquote>
 <hr />
 <blockquote>
-<p><strong>Evoluzione in corso — Multi-Face Auth (aprile 2026)</strong></p>
-<p>Il modello soggetti/ruoli resta il <strong>perno anagrafico</strong> di ZeroErp e non
-cambia. In sviluppo e' un'estensione che aggiunge un nuovo bridge verso
-<code>auth_user</code> per i ruoli commerciali (CLIENTE, FORNITORE) oltre a RIS_UMANA:</p>
+<p><strong>Multi-Face Auth — stato post-cutover (aprile 2026)</strong></p>
+<p>Il modello soggetti/ruoli resta il <strong>perno anagrafico</strong> di ZeroErp e
+non e' cambiato. Dal 19-04-2026 il bridge verso <code>auth_user</code> e' stato
+generalizzato via la nuova tabella
+<a href="../../dbzero/anagrafiche/tabelle/identita_digitali/">anagrafiche.identita_digitali</a>,
+che collega un generico <code>soggetti_ruoli</code> a un <code>auth_user</code> per 5 ruoli
+applicativi (OPERATORE, CLIENTE_PORTALE, FORNITORE_PORTALE,
+SHOP_CUSTOMER, API_CLIENT, piu' lo stato DISABILITATO).</p>
 <ul>
-<li>Nuova tabella <code>anagrafiche.identita_digitali</code> che collega un generico
-  <code>soggetti_ruoli</code> a un <code>auth_user</code> (oggi esiste solo
-  <code>risorse_umane_auth_user</code> per i dipendenti)</li>
-<li>Un soggetto PG (cliente azienda, fornitore azienda) potra' avere un account
-  di accesso a un portale: il vincolo "persona fisica pura" si sposta sul
-  solo ruolo RIS_UMANA</li>
-<li>Nessuna modifica a <code>soggetti</code>, <code>soggetti_ruoli</code>, <code>tipi_ruoli</code> o alle
-  tabelle specializzate (clienti, fornitori, ecc.)</li>
+<li>Un soggetto PG (cliente azienda, fornitore azienda) puo' avere
+  un account di accesso ad un portale: il vincolo "persona fisica
+  pura" si applica solo al ruolo applicativo OPERATORE.</li>
+<li>La ex tabella bridge <code>risorse_umane_auth_user</code> e' ora una <strong>vista
+  read-only</strong> di compatibilita' che legge da <code>identita_digitali</code>
+  filtrando <code>ruolo_applicativo = 'OPERATORE'</code> (cutover §13.3.2).
+  La tabella originale e' stata archiviata come
+  <code>_legacy_risorse_umane_auth_user</code>.</li>
+<li>Nessuna modifica a <code>soggetti</code>, <code>soggetti_ruoli</code>, <code>tipi_ruoli</code> o
+  alle tabelle specializzate (clienti, fornitori, ecc.).</li>
 </ul>
-<p>Questa guida resta <strong>autoritativa</strong> per il modello anagrafico. Il nuovo
-bridge viene descritto separatamente.</p>
-<p>Dettagli:</p>
+<p>Questa guida resta <strong>autoritativa</strong> per il modello anagrafico.
+Per il modello auth multi-veste, i profili di accesso generalizzati
+e le scope policy (portali + shop):</p>
 <ul>
 <li>Guida architetturale: <a href=".././architettura-multi-face-auth/">architettura-multi-face-auth</a></li>
-<li>Piano di sviluppo: <a href="../../dev/work-in-progress/sviluppo-multi-face-auth/">sviluppo-multi-face-auth</a></li>
+<li>Piano di sviluppo storico: <a href="../../dev/work-done/sviluppo-multi-face-auth/">sviluppo-multi-face-auth</a></li>
 </ul>
 </blockquote>
 <hr />
@@ -5485,7 +5521,7 @@ bridge viene descritto separatamente.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

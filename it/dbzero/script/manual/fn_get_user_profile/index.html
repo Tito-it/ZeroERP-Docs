@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4248,6 +4278,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ruolo_sistema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ruolo_sistema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is_super_admin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_super_admin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ruolo_applicativo-top-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ruolo_applicativo (top-level)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#risorse_umane" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4341,6 +4404,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#context-awareness-post-pr-b-21-04-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context-awareness (post PR-B 21-04-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ottimizzazioni-introdotte" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4394,12 +4468,16 @@
 <p><a href="../../funzioni/fn_get_soggetto_dati_by_ruolo/">script.fn_get_soggetto_dati_by_ruolo</a>
 <a href="../../funzioni/fn_get_user_permissions_map/">script.fn_get_user_permissions_map</a>
 <a href="../../funzioni/fn_get_user_actions_map/">script.fn_get_user_actions_map</a>
-<a href="../../funzioni/fn_get_user_object_permissions_map/">script.fn_get_user_object_permissions_map</a></p>
+<a href="../../funzioni/fn_get_user_object_permissions_map/">script.fn_get_user_object_permissions_map</a>
+<a href="../../funzioni/fn_is_super_admin/">script.fn_is_super_admin</a>
+<a href="../../funzioni/fn_current_identita_context/">script.fn_current_identita_context</a></p>
 <p>Approfondimento tabelle:</p>
-<p><a href="../../../anagrafiche/tabelle/risorse_umane_auth_user/">anagrafiche.risorse_umane_auth_user</a>
+<p><a href="../../../anagrafiche/tabelle/identita_digitali/">anagrafiche.identita_digitali</a>
 <a href="../../../anagrafiche/tabelle/risorse_umane/">anagrafiche.risorse_umane</a>
 <a href="../../../anagrafiche/tabelle/emittenti_fiscali/">anagrafiche.emittenti_fiscali</a>
 <a href="../../../config/tabelle/user_emittenti_fiscali/">config.user_emittenti_fiscali</a></p>
+<p>Guide:</p>
+<p><a href="../../../../guide/architettura-multi-face-auth/">Architettura Multi-Face Auth</a> §4.7 GUC + §13.7 bug multi-veste top-level</p>
 </blockquote>
 <p>La funzione <strong><code>script.fn_get_user_profile(p_auth_user_id)</code></strong> restituisce un
 <strong>JSONB</strong> con il profilo completo dell'utente loggato.</p>
@@ -4407,12 +4485,14 @@
 La funzione aggrega in una sola chiamata:</p>
 <ul>
 <li>dati <code>auth_user</code></li>
-<li>ruolo sistema</li>
+<li>ruolo sistema ricostruito (ADMIN / OPERATIVO)</li>
+<li>flag <code>is_super_admin</code> context-aware</li>
+<li>campo top-level <code>ruolo_applicativo</code> GUC-aware (veste del JWT corrente)</li>
 <li>dettaglio risorsa umana</li>
 <li>soggetto anagrafico</li>
 <li>emittente fiscale risolto</li>
-<li>mappa permessi area</li>
-<li>mappa azioni abilitate</li>
+<li>mappa permessi area (context-aware)</li>
+<li>mappa azioni abilitate (context-aware)</li>
 <li>mappa override oggetto attivi</li>
 <li>flag <code>deve_cambiare_password</code></li>
 </ul>
@@ -4467,12 +4547,12 @@ La funzione aggrega in una sola chiamata:</p>
 <td>profilo non costruibile</td>
 </tr>
 <tr>
-<td>nessun record <code>risorse_umane_auth_user</code></td>
+<td>nessuna <code>identita_digitali</code> OPERATORE</td>
 <td><code>E_ADMIN_VALIDAZIONE</code></td>
-<td>utente non collegato a risorsa</td>
+<td>user non collegato a risorsa</td>
 </tr>
 <tr>
-<td><code>ruolo_sistema = DISABILITATO</code></td>
+<td>identita attivo=false o ruolo DISABILITATO</td>
 <td><code>E_UTENTE_DISABILITATO</code></td>
 <td>login bloccato</td>
 </tr>
@@ -4487,29 +4567,37 @@ La funzione aggrega in una sola chiamata:</p>
 <td>utente disattivato</td>
 </tr>
 <tr>
-<td><code>CURRENT_DATE &lt; valido_dal</code></td>
+<td><code>CURRENT_DATE &lt; valido_dal</code> (identita o ru)</td>
 <td><code>E_UTENTE_NON_ATTIVO</code></td>
 <td>utente non ancora attivo</td>
 </tr>
 <tr>
-<td><code>CURRENT_DATE &gt; valido_al</code></td>
+<td><code>CURRENT_DATE &gt; valido_al</code> (identita o ru)</td>
 <td><code>E_UTENTE_SCADUTO</code></td>
 <td>utente scaduto</td>
 </tr>
 </tbody>
 </table>
 <p>Tutti i guard usano <code>script.fn_log_and_raise_error</code>.</p>
+<p><strong>Nota</strong> (post PR-B 21-04-2026): la funzione richiede ancora un'identita
+OPERATORE attiva per completare (e' pensata per lo scoped operatore +
+metadata emittente/RU). Utenti single-veste CLIENTE_PORTALE /
+SHOP_CUSTOMER / FORNITORE_PORTALE non hanno un profilo full qui: il BE
+usa endpoint dedicati o fallback. Se in futuro si estende <code>/me/</code> a
+single-veste non-operatore, il guard va reso condizionale.</p>
 <hr />
 <h3 id="struttura-del-jsonb">Struttura del JSONB<a class="headerlink" href="#struttura-del-jsonb" title="Permanent link">&para;</a></h3>
-<p>La funzione restituisce un JSONB con 9 chiavi principali:</p>
+<p>La funzione restituisce un JSONB con 11 chiavi principali:</p>
 <ol>
 <li><code>utente</code></li>
-<li><code>ruolo_sistema</code></li>
+<li><code>ruolo_sistema</code> — ricostruito (ADMIN / OPERATIVO)</li>
+<li><code>is_super_admin</code> — context-aware (post PR-B)</li>
+<li><code>ruolo_applicativo</code> — top-level GUC-aware (post PR-B)</li>
 <li><code>risorse_umane</code></li>
 <li><code>soggetto</code></li>
 <li><code>emittente</code></li>
-<li><code>permessi_area</code></li>
-<li><code>azioni_abilitate</code></li>
+<li><code>permessi_area</code> — context-aware (post PR-B)</li>
+<li><code>azioni_abilitate</code> — context-aware (post PR-B)</li>
 <li><code>permessi_oggetto</code></li>
 <li><code>deve_cambiare_password</code></li>
 </ol>
@@ -4523,6 +4611,8 @@ La funzione aggrega in una sola chiamata:</p>
 <span class="w">    </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;m@example.com&quot;</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">&quot;ruolo_sistema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ADMIN&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;is_super_admin&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ruolo_applicativo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OPERATORE&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;risorse_umane&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;risorsa_umana_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;risorse_umane_auth_user_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
@@ -4560,6 +4650,41 @@ La funzione aggrega in una sola chiamata:</p>
 <li><code>last_name</code></li>
 <li><code>email</code></li>
 </ul>
+<h4 id="ruolo_sistema"><code>ruolo_sistema</code><a class="headerlink" href="#ruolo_sistema" title="Permanent link">&para;</a></h4>
+<p>Stringa ricostruita per retrocompatibilita' output: <code>ADMIN</code> se l'utente
+e' super admin nel contesto corrente, <code>OPERATIVO</code> altrimenti. Il campo
+non corrisponde a una colonna DB: il vecchio
+<code>risorse_umane_auth_user.ruolo_sistema</code> e' stato sostituito dal modello
+binding SUPER_ADMIN (post cutover §13.3).</p>
+<h4 id="is_super_admin"><code>is_super_admin</code><a class="headerlink" href="#is_super_admin" title="Permanent link">&para;</a></h4>
+<p>Boolean prodotto da <code>script.fn_is_super_admin(p_auth_user_id)</code>.
+<strong>Context-aware</strong> (post PR-B 21-04-2026): se la GUC
+<code>app.ruolo_applicativo</code> e' popolata e diversa da <code>OPERATORE</code>, ritorna
+<code>false</code> (fail-closed — il bypass SUPER_ADMIN non si attiva in contesti
+portale/shop). Se la GUC non e' popolata, applica la logica legacy:
+EXISTS identita OPERATORE attiva con binding SUPER_ADMIN attivo.</p>
+<h4 id="ruolo_applicativo-top-level"><code>ruolo_applicativo</code> (top-level)<a class="headerlink" href="#ruolo_applicativo-top-level" title="Permanent link">&para;</a></h4>
+<p>Stringa che riflette la <strong>veste del JWT corrente</strong>. <strong>GUC-first</strong>
+(post PR-B 21-04-2026, migration <code>20260421-05</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="n">v_ruolo_applicativo_out</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span>
+<span class="w">    </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.ruolo_applicativo&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">v_ruolo_applicativo</span><span class="p">::</span><span class="nb">text</span><span class="w">  </span><span class="c1">-- fallback: identita OPERATORE</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>Priorita':</p>
+<ol>
+<li><strong>GUC <code>app.ruolo_applicativo</code></strong> — popolata dal middleware BE
+   <code>JwtAuditAuthentication</code> su ogni request autenticata. Riflette la
+   veste scelta dall'utente al login (OPERATORE / CLIENTE_PORTALE /
+   SHOP_CUSTOMER / FORNITORE_PORTALE / API_CLIENT).</li>
+<li><strong>Fallback</strong> — valore dell'identita OPERATORE gia' caricata dalla
+   query iniziale (single round-trip DB). Utilizzato per chiamate
+   fuori request HTTP (cron, tool CLI, psql).</li>
+</ol>
+<p><strong>Pre-PR-B</strong>: il campo esponeva sempre il <code>ruolo_applicativo</code>
+dell'identita OPERATORE, causando il bug §13.7 per utenti multi-veste
+loggati su canale portale (top-level=<code>OPERATORE</code> invece di
+<code>CLIENTE_PORTALE</code>, guard FE non redirigeva a <code>/portale</code>).</p>
 <h4 id="risorse_umane"><code>risorse_umane</code><a class="headerlink" href="#risorse_umane" title="Permanent link">&para;</a></h4>
 <p>JSONB costruito da <code>anagrafiche.risorse_umane</code> con lookup su:</p>
 <ul>
@@ -4602,10 +4727,16 @@ convertito in JSONB.</p>
 <p>Se nessun emittente e' disponibile, il valore e' <code>null</code>.</p>
 <h4 id="permessi_area"><code>permessi_area</code><a class="headerlink" href="#permessi_area" title="Permanent link">&para;</a></h4>
 <p>Mappa <code>{schema_db: livello}</code> prodotta da
-<code>script.fn_get_user_permissions_map(p_auth_user_id)</code>.</p>
+<code>script.fn_get_user_permissions_map(p_auth_user_id)</code>. <strong>Context-aware</strong>
+(post PR-B 21-04-2026, migration <code>20260421-04-03</code>): se GUC
+<code>app.ruolo_applicativo</code> popolata e <code>!= OPERATORE</code>, tutti i valori sono
+<code>BLOCCATO</code> (fail-closed — i resolver permessi sono OPERATORE-only).</p>
 <h4 id="azioni_abilitate"><code>azioni_abilitate</code><a class="headerlink" href="#azioni_abilitate" title="Permanent link">&para;</a></h4>
 <p>Mappa <code>{permission_codename: boolean}</code> prodotta da
-<code>script.fn_get_user_actions_map(p_auth_user_id)</code>.</p>
+<code>script.fn_get_user_actions_map(p_auth_user_id)</code>. <strong>Context-aware</strong>
+(post PR-B 21-04-2026, migration <code>20260421-04-04</code>): se GUC
+<code>app.ruolo_applicativo</code> popolata e <code>!= OPERATORE</code>, tutti i valori sono
+<code>false</code>.</p>
 <h4 id="permessi_oggetto"><code>permessi_oggetto</code><a class="headerlink" href="#permessi_oggetto" title="Permanent link">&para;</a></h4>
 <p>Mappa <code>{app_label.model_name: livello}</code> prodotta da
 <code>script.fn_get_user_object_permissions_map(p_auth_user_id)</code>.</p>
@@ -4619,8 +4750,11 @@ normalizzato con <code>COALESCE(..., false)</code>.</p>
 <ol>
 <li>Guard su <code>p_auth_user_id</code></li>
 <li>Query unica per leggere:
-   <code>auth_user + risorse_umane_auth_user + risorse_umane + qualifica + UO</code></li>
-<li>Guard su ruolo, validita' e stato attivo</li>
+   <code>auth_user + identita_digitali (OPERATORE) + risorse_umane + qualifica + UO</code></li>
+<li>Guard su identita attiva, ruolo, validita' e stato attivo</li>
+<li>Calcolo <code>is_super_admin</code> via <code>fn_is_super_admin</code> (context-aware)</li>
+<li>Calcolo top-level <code>ruolo_applicativo</code> via COALESCE GUC / fallback
+   identita OPERATORE (context-aware post PR-B)</li>
 <li>Costruzione blocco <code>risorse_umane</code></li>
 <li>Costruzione blocco <code>soggetto</code> via <code>fn_get_soggetto_dati_by_ruolo</code></li>
 <li>Risoluzione emittente con priorita':</li>
@@ -4628,6 +4762,46 @@ normalizzato con <code>COALESCE(..., false)</code>.</p>
 <li>fallback gestore globale <code>emittenti_fiscali_billing_account</code></li>
 <li>Composizione finale con <code>jsonb_build_object</code></li>
 </ol>
+<h3 id="context-awareness-post-pr-b-21-04-2026">Context-awareness (post PR-B 21-04-2026)<a class="headerlink" href="#context-awareness-post-pr-b-21-04-2026" title="Permanent link">&para;</a></h3>
+<p>Dopo il merge di PR-B (SSO multi-veste + shop B2C), l'utente puo' avere
+N identita attive e scegliere la veste al login. 4 campi del profilo
+sono stati resi context-aware tramite la GUC <code>app.ruolo_applicativo</code>
+(popolata dal middleware BE <code>JwtAuditAuthentication</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Migration</th>
+<th>Comportamento se GUC != OPERATORE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>is_super_admin</code></td>
+<td><code>20260421-03</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>ruolo_applicativo</code> (top-level)</td>
+<td><code>20260421-05</code></td>
+<td>valore GUC letterale</td>
+</tr>
+<tr>
+<td><code>permessi_area</code></td>
+<td><code>20260421-04-03</code></td>
+<td><code>{area: BLOCCATO}</code> per ogni area</td>
+</tr>
+<tr>
+<td><code>azioni_abilitate</code></td>
+<td><code>20260421-04-04</code></td>
+<td><code>{azione: false}</code> per ogni azione</td>
+</tr>
+</tbody>
+</table>
+<p>Tutti i campi implementano <strong>fail-soft su GUC mancante</strong>: se la GUC
+non e' popolata (test pgTAP, psql manuale, cron), applicano la logica
+legacy basata sull'identita OPERATORE dell'utente. Il contratto del
+JSONB non cambia, solo la derivazione dei valori.</p>
 <hr />
 <h3 id="ottimizzazioni-introdotte">Ottimizzazioni introdotte<a class="headerlink" href="#ottimizzazioni-introdotte" title="Permanent link">&para;</a></h3>
 <p>La revisione <code>20260410-16</code> ha ridotto il costo della funzione in due punti:</p>
@@ -4708,7 +4882,7 @@ non il contratto del JSONB.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

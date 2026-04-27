@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4203,10 +4233,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#algoritmo-expand-align-contract" class="md-nav__link">
+  <a href="#algoritmo-or-multi-veste-post-20-04-2026" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Algoritmo (expand-align-contract)
+        Algoritmo (OR multi-veste post 20-04-2026)
       
     </span>
   </a>
@@ -4325,14 +4355,14 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 18-04-2026)</p>
+<p>(latest review 20-04-2026 — semantica OR multi-veste)</p>
 <p>La funzione <strong><code>anagrafiche.fn_sync_auth_user_is_active()</code></strong> allinea il campo
-<code>django.auth_user.is_active</code> allo stato effettivo del bridge auth associato.</p>
-<p>Con la generalizzazione §4.5 del modello multi-face auth la funzione ha
-cambiato firma: parte da <code>auth_user_id</code> invece che da <code>risorsa_umana_id</code>,
-risolve internamente il bridge (nuovo o legacy) e gestisce tutti i ruoli
-applicativi (operatore, portale clienti, portale fornitori, shop customer,
-api_client, disabilitato).</p>
+<code>django.auth_user.is_active</code> allo stato effettivo delle identita digitali
+dell'utente.</p>
+<p>Post 20-04-2026 (modello SSO multi-veste) la funzione ha una logica <strong>OR
+su N identita</strong>: <code>auth_user.is_active = true</code> se e solo se esiste almeno
+un'identita utilizzabile per l'utente (cioe' attiva, con ruolo applicativo
+diverso da DISABILITATO, in finestra temporale, con soggetto parent attivo).</p>
 <hr />
 <h3 id="parametri-di-input">Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -4360,26 +4390,35 @@ riga <code>django.auth_user</code> (UPDATE applicato perché il valore è cambia
 <code>false</code> in tutti gli altri casi (utente orfano, nessun cambio, schema django
 assente).</p>
 <hr />
-<h3 id="algoritmo-expand-align-contract">Algoritmo (expand-align-contract)<a class="headerlink" href="#algoritmo-expand-align-contract" title="Permanent link">&para;</a></h3>
+<h3 id="algoritmo-or-multi-veste-post-20-04-2026">Algoritmo (OR multi-veste post 20-04-2026)<a class="headerlink" href="#algoritmo-or-multi-veste-post-20-04-2026" title="Permanent link">&para;</a></h3>
 <ol>
 <li><strong>Guard parametro</strong> — <code>p_auth_user_id IS NULL OR &lt;= 0</code> → <code>E_PARAMETRO_INVALIDO</code>.</li>
-<li><strong>Priorità: nuovo bridge</strong> — cerca identità attiva in
-   <code>anagrafiche.identita_digitali</code> per <code>auth_user_id</code>. Se trovata, procede al
-   calcolo basato su <code>identita_digitali</code>.</li>
-<li><strong>Fallback legacy</strong> — se nessuna identità, cerca bridge in
-   <code>risorse_umane_auth_user</code>. Necessario durante la transizione §4.5 → §4.6
-   quando <code>identita_digitali</code> è ancora vuota. Post cutover §4.6 il ramo
-   legacy diventa dead code.</li>
-<li><strong>Calcolo <code>is_active</code> atteso</strong>:</li>
-<li><code>DISABILITATO</code> → <code>false</code></li>
-<li>altri ruoli → AND di: identità attiva, finestra <code>[valido_dal, valido_al]</code>
-     valida, <code>soggetti.attivo = true</code></li>
-<li><strong>OPERATORE in più</strong>: AND con <code>risorse_umane.attivo</code> + finestra RU
-     (vincolo legacy mantenuto durante transizione, rimuovibile post §4.6)</li>
-<li><strong>UPDATE auth_user.is_active</strong> solo se il valore cambia (short-circuit
-   se lo stato è già corretto). Gestione difensiva dell'assenza schema Django
-   (ambienti CI senza Django: no-op silente).</li>
+<li><strong>Calcolo OR</strong> — singola query <code>EXISTS (...)</code> sulle N identita
+   digitali dell'utente. <code>is_active = true</code> se esiste almeno un'identita
+   che soddisfa tutti i criteri:</li>
+<li><code>id.attivo = true</code></li>
+<li><code>id.ruolo_applicativo &lt;&gt; 'DISABILITATO'</code> (fail-closed per convenzione)</li>
+<li><code>CURRENT_DATE BETWEEN id.valido_dal AND COALESCE(id.valido_al, CURRENT_DATE)</code></li>
+<li>Soggetto parent attivo (via <code>soggetti_ruoli</code> → <code>soggetti.attivo = true</code>)</li>
+<li><strong>No-op ambiente CI</strong> — se schema Django assente, <code>RETURN false</code>
+   silente (CI senza Django non ha auth_user da sincronizzare).</li>
+<li><strong>UPDATE</strong> — <code>auth_user.is_active = &lt;OR&gt;</code> solo se diverso dal valore
+   corrente. Se l'auth_user non esiste (orfano), <code>RETURN false</code>.</li>
 </ol>
+<p><strong>Motivazione OR:</strong> Django <code>is_active</code> e' il flag globale di autorizzazione
+al login. Se l'utente ha 3 vesti e ne vengono disattivate 2, deve
+comunque poter loggare con la terza. Il blocco della singola veste
+disattivata e' applicato dalla policy RLS + permission class namespace,
+non dal flag <code>is_active</code>.</p>
+<p><strong>Rimossi rispetto a versioni pre-20-04:</strong></p>
+<ul>
+<li>Fallback legacy su <code>risorse_umane_auth_user</code> (ora vista post cutover
+  19-04-2026, gia' rimosso in migration 20260419-92).</li>
+<li>Doppia verifica per OPERATORE su <code>risorse_umane.attivo</code> (vincolo legacy
+  transitorio gia' rimosso in 20260419-92).</li>
+<li>Assunzione 1:1 user→identita (sostituita da query aggregata sul set
+  delle identita).</li>
+</ul>
 <hr />
 <h3 id="fix-bug-latente-32b-verifica-2026-04-18">Fix bug latente §3.2.b (verifica 2026-04-18)<a class="headerlink" href="#fix-bug-latente-32b-verifica-2026-04-18" title="Permanent link">&para;</a></h3>
 <p>La firma precedente accettava <code>p_risorsa_umana_id bigint</code>, ma 3 metodi di
@@ -4490,7 +4529,7 @@ metodi Python senza toccare il codice chiamante.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

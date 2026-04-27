@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4217,6 +4247,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#multi-face-stesso-auth_user-veste-diversa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-face: stesso auth_user, veste diversa
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4298,13 +4339,23 @@
 <h1 id="endpoint-get-apiv1coreme-profilo-utente-corrente">Endpoint GET /api/v1/core/me/ — Profilo utente corrente<a class="headerlink" href="#endpoint-get-apiv1coreme-profilo-utente-corrente" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Restituisce il profilo completo dell'utente autenticato: dati anagrafici (soggetto),
-risorse umane, ruolo_sistema e dati emittente fiscale associato.</p>
+risorse umane, ruolo_sistema/ruolo_applicativo, dati emittente fiscale associato
+e <strong>dettaglio dell'identita digitale del JWT corrente</strong> (multi-face auth §8.3.6).</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <p>Il frontend chiama questo endpoint dopo il login (via <code>fetchProfile()</code> nello store auth)
 per popolare i dati utente visibili in topbar, sidebar e componenti profilo.</p>
-<p>Il payload e' prodotto interamente dalla funzione DB <code>script.fn_get_user_profile(auth_user_id)</code>,
+<p>Il payload e' prodotto principalmente dalla funzione DB <code>script.fn_get_user_profile(auth_user_id)</code>,
 che a sua volta riusa <code>script.fn_get_soggetto_dati_by_ruolo(soggetto_ruolo_id)</code> per i blocchi
-soggetto utente e soggetto emittente.</p>
+soggetto utente e soggetto emittente. Il backend arricchisce il payload con:</p>
+<ul>
+<li><code>is_admin_globale</code> — derivato da regola Q1 refactor operatore-emittenti</li>
+<li><code>is_super_admin</code> — da <code>PermissionResolver.is_super_admin</code> (fallback se fn DB non lo popola)</li>
+<li><code>ruolo_applicativo</code> — da <code>PermissionResolver.get_ruolo_applicativo</code> (fallback)</li>
+<li><code>identita</code> — dettaglio dell'identita specifica del JWT corrente (§8.3.6 multi-face).
+  Post modello 1:N, un auth_user puo' avere piu' identita attive (es. OPERATORE +
+  CLIENTE_PORTALE); il JWT indica quale "veste" stai usando, e /me/ deve riflettere
+  ESATTAMENTE quella (non una a caso).</li>
+</ul>
 <p>Il backend non contiene logica business: orchestra la chiamata DB e restituisce il JSONB.</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
@@ -4331,7 +4382,17 @@ soggetto utente e soggetto emittente.</p>
 <tr>
 <td><code>ruolo_sistema</code></td>
 <td>string/null</td>
-<td>ADMIN, OPERATIVO, DISABILITATO o null</td>
+<td><strong>LEGACY</strong> — ADMIN, OPERATIVO, DISABILITATO o null. Ricostruito da <code>is_super_admin + ruolo_applicativo</code>. Nuovi consumer usino i due campi nativi</td>
+</tr>
+<tr>
+<td><code>is_super_admin</code></td>
+<td>boolean</td>
+<td>True se l'utente ha binding attivo al profilo SUPER_ADMIN (id 9100) <strong>sulla veste OPERATORE</strong> (§8.3.7 filtro DB). Letto via <code>PermissionResolver.is_super_admin</code></td>
+</tr>
+<tr>
+<td><code>ruolo_applicativo</code></td>
+<td>string/null</td>
+<td>Ruolo applicativo dell'identita attiva del JWT: <code>OPERATORE</code> | <code>CLIENTE_PORTALE</code> | <code>FORNITORE_PORTALE</code> | <code>SHOP_CUSTOMER</code> | <code>API_CLIENT</code> | <code>DISABILITATO</code> | null</td>
 </tr>
 <tr>
 <td><code>risorse_umane</code></td>
@@ -4349,6 +4410,16 @@ soggetto utente e soggetto emittente.</p>
 <td>Dati emittente fiscale + soggetto ditta (null se non associato)</td>
 </tr>
 <tr>
+<td><code>is_admin_globale</code></td>
+<td>boolean</td>
+<td>True se l'utente e' admin globale (ruolo_sistema=ADMIN + nessuna riga in <code>user_emittenti_fiscali</code>). Refactor operatore-emittenti Q1</td>
+</tr>
+<tr>
+<td><code>identita</code></td>
+<td>object/null</td>
+<td><strong>§8.3.6 multi-face</strong> — dettaglio dell'identita digitale specifica del JWT corrente: <code>id</code>, <code>soggetto_ruolo_id</code>, <code>ruolo_applicativo</code>, <code>attivo</code>, <code>valido_dal</code>, <code>valido_al</code>, <code>invito_inviato_at</code>. <code>null</code> per token pre-refactor (JwtAuditAuthentication §8.3.4 li rifiuta gia' con 401; caso difensivo)</td>
+</tr>
+<tr>
 <td><code>permessi_area</code></td>
 <td>object</td>
 <td>Mappa livello accesso per area funzionale: <code>{schema_db: "TUTTO"\|"LETTURA"\|"BLOCCATO"}</code>. Prodotta da <code>fn_get_user_permissions_map</code></td>
@@ -4358,11 +4429,23 @@ soggetto utente e soggetto emittente.</p>
 <h3 id="esempio-risposta">Esempio risposta<a class="headerlink" href="#esempio-risposta" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;utente&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;auth_user_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mtitini&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;utente&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;auth_user_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mtitini&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;first_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Michele&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;last_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Titini&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;m@example.com&quot;</span><span class="w"> </span><span class="p">},</span>
 <span class="w">    </span><span class="nt">&quot;ruolo_sistema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ADMIN&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;risorse_umane&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;risorsa_umana_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;qualifica_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DEV&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;soggetto&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;soggetto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;019...&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;nome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Michele&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;cognome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Titini&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;emittente&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;emittente_fiscale_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;ragione_sociale_completa&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Azienda SRL&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;is_super_admin&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;ruolo_applicativo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OPERATORE&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;risorse_umane&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;risorsa_umana_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;qualifica_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DEV&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unita_organizzativa_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IT&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;soggetto&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;soggetto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;019...&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;nome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Michele&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;cognome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Titini&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;emittente&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;emittente_fiscale_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;ragione_sociale_completa&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Azienda SRL&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;is_admin_globale&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;identita&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;soggetto_ruolo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;ruolo_applicativo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OPERATORE&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;attivo&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;valido_dal&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;valido_al&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;invito_inviato_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="nt">&quot;permessi_area&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">&quot;anagrafiche&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TUTTO&quot;</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">&quot;vendite&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LETTURA&quot;</span><span class="p">,</span>
@@ -4376,6 +4459,21 @@ soggetto utente e soggetto emittente.</p>
 <span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;request_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
+<h3 id="multi-face-stesso-auth_user-veste-diversa">Multi-face: stesso auth_user, veste diversa<a class="headerlink" href="#multi-face-stesso-auth_user-veste-diversa" title="Permanent link">&para;</a></h3>
+<p>Se l'utente <code>mtitini</code> avesse anche un'identita <code>CLIENTE_PORTALE</code> (id=2, scenario
+teorico di auto-invito), chiamando /me/ con JWT ottenuto via <code>/admin/token/</code>:</p>
+<ul>
+<li><code>identita.id</code> sarebbe <strong>5</strong> (veste OPERATORE), <strong>non</strong> 2</li>
+<li><code>identita.ruolo_applicativo</code> sarebbe <code>"OPERATORE"</code></li>
+<li><code>is_super_admin</code> sarebbe <code>true</code> (il filtro DB e' su veste OPERATORE)</li>
+</ul>
+<p>Con JWT ottenuto via <code>/portale/token/</code> (se portale fosse attivo):</p>
+<ul>
+<li><code>identita.id</code> sarebbe <strong>2</strong></li>
+<li><code>identita.ruolo_applicativo</code> sarebbe <code>"CLIENTE_PORTALE"</code></li>
+<li><code>is_super_admin</code> sarebbe <code>false</code> (binding SUPER_ADMIN e' legato a OPERATORE)</li>
+</ul>
+<p>Il FE usa <code>identita.ruolo_applicativo</code> per decidere la UI della veste attiva.</p>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li>L'endpoint restituisce sempre i dati dell'utente <strong>autenticato</strong> — non e' possibile consultare il profilo di altri utenti (per quello usare <code>/users/&lt;id&gt;/permessi-effettivi/</code>)</li>
@@ -4462,11 +4560,23 @@ soggetto utente e soggetto emittente.</p>
 <tbody>
 <tr>
 <td><code>apps/core/api/me_view.py</code></td>
-<td><code>UserProfileView(APIView)</code> — GET con JWT + <code>@extend_schema</code></td>
+<td><code>UserProfileView(DomainAPIView)</code> — GET con JWT + <code>@extend_schema</code> + helper <code>_identita_del_jwt</code> per blocco <code>identita</code></td>
 </tr>
 <tr>
 <td><code>apps/core/db/core_repository.py</code></td>
 <td><code>CoreRepository.get_user_profile()</code> — chiama la fn DB</td>
+</tr>
+<tr>
+<td><code>apps/core/db/auth_repository.py</code></td>
+<td><code>AuthRepository.get_identita_dettaglio(identita_id, auth_user_id)</code> — query identita con guard anti-tampering (filtra anche auth_user_id)</td>
+</tr>
+<tr>
+<td><code>apps/core/services/permissions_resolver.py</code></td>
+<td><code>PermissionResolver.is_super_admin</code> / <code>get_ruolo_applicativo</code> — fallback se <code>fn_get_user_profile</code> non popola</td>
+</tr>
+<tr>
+<td><code>apps/core/services/auth_constants.py</code></td>
+<td><code>JWT_CLAIM_IDENTITA_ID = "identita_id"</code> — usato in <code>_identita_del_jwt</code></td>
 </tr>
 <tr>
 <td><code>apps/core/api/urls_v1.py</code></td>
@@ -4478,7 +4588,7 @@ soggetto utente e soggetto emittente.</p>
 </tr>
 <tr>
 <td><code>apps/core/tests/api/test_me_view.py</code></td>
-<td>6 test unitari (mock DB, no dipendenze esterne)</td>
+<td>Test unitari (mock DB + mock AuthRepository, incluso <code>IdentitaDelJwtTests</code> per §8.3.6)</td>
 </tr>
 </tbody>
 </table>
@@ -4498,6 +4608,21 @@ soggetto utente e soggetto emittente.</p>
 <td>Utente senza <code>risorse_umane_auth_user</code> o funzione DB restituisce NULL</td>
 </tr>
 <tr>
+<td><code>E_JWT_SENZA_IDENTITA</code></td>
+<td>401</td>
+<td>JWT senza claim <code>identita_id</code> (token pre-§8.3.2) — intercettato da <code>JwtAuditAuthentication</code> a monte della view</td>
+</tr>
+<tr>
+<td><code>E_IDENTITA_NON_ATTIVA</code></td>
+<td>401</td>
+<td>Claim <code>identita_id</code> non corrisponde a identita attiva (revocata dopo emissione JWT) — intercettato a monte</td>
+</tr>
+<tr>
+<td><code>E_AUTHENTICATION_FAILED</code></td>
+<td>401</td>
+<td>JWT scaduto, invalido o non fornito</td>
+</tr>
+<tr>
 <td>eccezione PL/pgSQL</td>
 <td>400/500</td>
 <td>Guard nella funzione DB (auth_user_id non valido) — gestito dal middleware</td>
@@ -4510,6 +4635,14 @@ soggetto utente e soggetto emittente.</p>
 <li><code>20260309-01-create-fn-get-soggetto-dati-by-ruolo-mctit.yaml</code></li>
 <li><code>20260309-02-create-fn-get-user-profile-mctit.yaml</code></li>
 <li>Le funzioni devono essere deployate sul DB prima di attivare l'endpoint</li>
+<li><strong>§8.3.6 multi-face</strong> (post migration <code>20260420-01..11</code>): il campo <code>identita</code> viene
+  popolato dal backend leggendo <code>request.auth.get("identita_id")</code> (claim JWT iniettato
+  da <code>MultiVesteTokenSerializer</code> §8.3.2) e delegando a <code>AuthRepository.get_identita_dettaglio</code>.
+  Post-cutover, i JWT senza <code>identita_id</code> sono gia' rifiutati a monte da
+  <code>JwtAuditAuthentication.authenticate()</code> con <code>E_JWT_SENZA_IDENTITA</code> (401) —
+  quindi il caso <code>identita: null</code> e' puramente difensivo.</li>
+<li><code>ruolo_sistema</code> resta esposto per retrocompat FE; nuovi consumer usino
+  <code>is_super_admin</code> + <code>ruolo_applicativo</code> + <code>identita.ruolo_applicativo</code>.</li>
 </ul>
 
 
@@ -4565,7 +4698,7 @@ soggetto utente e soggetto emittente.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

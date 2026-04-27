@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4298,6 +4328,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Errori">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regola-contatto-inline-refactor-28-04-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regola contatto inline (refactor 28-04-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normalizzazione-fiscale-automatica-trigger-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normalizzazione fiscale automatica (trigger DB)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -4791,8 +4849,38 @@ La view usa <code>DomainAPIView</code> con <code>area_funzionale = "anagrafiche"
 <td>400</td>
 <td>Indirizzi obbligatori mancanti per il ruolo FO (trigger DB)</td>
 </tr>
+<tr>
+<td><code>E_FORNITORI_RITENUTA_ALIQUOTA_OBBLIGATORIA</code></td>
+<td>400</td>
+<td><code>ritenuta_acconto = true</code> senza <code>ritenuta_aliquota &gt; 0</code> (trigger DB <code>trgfn_fornitori_guard_normalize</code>)</td>
+</tr>
+<tr>
+<td><code>E_CONTATTO_INCOMPLETO</code></td>
+<td>400</td>
+<td>Payload <code>contatto</code> parziale: almeno un campo valorizzato MA mancano <code>nominativo</code> o <code>tipo_contatto_id</code>. Il <code>context.missing</code> lista i campi mancanti</td>
+</tr>
 </tbody>
 </table>
+<h4 id="regola-contatto-inline-refactor-28-04-2026">Regola contatto inline (refactor 28-04-2026)<a class="headerlink" href="#regola-contatto-inline-refactor-28-04-2026" title="Permanent link">&para;</a></h4>
+<p>Il contatto e' opzionale per il fornitore. Stati possibili applicati da
+<code>classify_contatto_payload</code>:</p>
+<ul>
+<li><code>EMPTY</code> (nessun campo valorizzato) → contatto NON creato, fornitore
+  creato senza contatto inline</li>
+<li><code>PARTIAL</code> (campi valorizzati MA mancano <code>nominativo</code>/<code>tipo_contatto_id</code>)
+  → solleva <code>E_CONTATTO_INCOMPLETO</code> (sostituisce il vecchio silent
+  skip che faceva perdere dati)</li>
+<li><code>VALID</code> (<code>nominativo</code> + <code>tipo_contatto_id</code> presenti) → procede</li>
+</ul>
+<h4 id="normalizzazione-fiscale-automatica-trigger-db">Normalizzazione fiscale automatica (trigger DB)<a class="headerlink" href="#normalizzazione-fiscale-automatica-trigger-db" title="Permanent link">&para;</a></h4>
+<p>Il trigger <code>trgfn_fornitori_guard_normalize</code> applica:</p>
+<ul>
+<li><code>canale_fe</code> → uppercase senza spazi</li>
+<li><code>pec_email</code> → lowercase trimmed</li>
+<li>se <code>ritenuta_acconto = false</code> → <code>ritenuta_aliquota</code> forzato a <code>NULL</code></li>
+<li>se <code>ritenuta_acconto = true</code> con aliquota non valida → solleva
+  <code>E_FORNITORI_RITENUTA_ALIQUOTA_OBBLIGATORIA</code></li>
+</ul>
 <hr />
 <h2 id="3-dettaglio-fornitore">3. Dettaglio fornitore<a class="headerlink" href="#3-dettaglio-fornitore" title="Permanent link">&para;</a></h2>
 <p>Restituisce il dettaglio completo di un fornitore con dati soggetto e decodifiche FK.</p>
@@ -5144,7 +5232,7 @@ backend Python:</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4192,10 +4222,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#flusso-di-esecuzione" class="md-nav__link">
+  <a href="#flusso-di-esecuzione-post-23-04-2026" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Flusso di Esecuzione
+        Flusso di Esecuzione (post 23-04-2026)
       
     </span>
   </a>
@@ -4214,10 +4244,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#esempi-di-utilizzo" class="md-nav__link">
+  <a href="#esempi-di-utilizzo-post-23-04-2026" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Esempi di Utilizzo
+        Esempi di Utilizzo (post 23-04-2026)
       
     </span>
   </a>
@@ -4278,20 +4308,31 @@
 <span class="w">  </span><span class="n">p_function_name</span><span class="w">  </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- nome di trigger o funzione chiamante</span>
 <span class="w">  </span><span class="n">p_error_code</span><span class="w">     </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- codice testuale di messaggio (config.messaggi_errore.codice)</span>
 <span class="w">  </span><span class="n">p_context</span><span class="w">        </span><span class="n">JSONB</span><span class="p">,</span><span class="w">                      </span><span class="c1">-- payload di contesto (parametri, variabili, metadata)</span>
+<span class="w">  </span><span class="n">p_tx_id</span><span class="w">          </span><span class="n">UUID</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- transaction id per correlazione audit (ammesso NULL)</span>
 <span class="w">  </span><span class="n">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">[]</span><span class="w">                     </span><span class="c1">-- valori da sostituire a &#39;%s&#39; nel template messaggio</span>
 <span class="p">)</span>
 <span class="k">RETURNS</span><span class="w"> </span><span class="n">VOID</span>
 <span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
 <span class="k">VOLATILE</span>
 <span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
-<span class="p">...</span><span class="n">implementazione</span><span class="w"> </span><span class="n">completa</span><span class="w"> </span><span class="n">con</span><span class="w"> </span><span class="n">dblink_exec</span><span class="p">...</span>
+<span class="p">...</span><span class="n">implementazione</span><span class="w"> </span><span class="n">con</span><span class="w"> </span><span class="n">fn_log_error_only</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">fn_get_messaggio</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">RAISE</span><span class="p">...</span>
 <span class="err">$$</span><span class="p">;</span>
 </code></pre></div>
+<blockquote>
+<p>⚠️ <strong>Breaking change 23-04-2026</strong>: la firma ha acquisito il parametro
+fisso <code>p_tx_id UUID</code> al 5° posto (prima del <code>VARIADIC</code>). Ogni caller
+che passava direttamente i valori dopo <code>p_context</code> va aggiornato:
+inserire <code>NEW.tx_id</code> (trigger) o <code>NULL::uuid</code> (caller generico) come 5°
+argomento. Migrazione che ha introdotto il cambio:
+<code>20260423-02-update-fn-get-messaggio-e-log-raise-fallback-lingua</code>.</p>
+</blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(last review 28-12-25)
-* <strong>Entrypoint unificato</strong> per error handling: evita duplicazioni di log e raise in trigger, procedure e funzioni.
-* <strong>Logging remoto sicuro</strong>: usa <code>dblink_exec</code> su connessione permanente fornita da <code>script.fn_ensure_logconn()</code>, per isolare il log dall’eventuale rollback della sessione principale.
-* <strong>Escalation immediata</strong>: rialza l’eccezione con <code>DETAIL</code> e <code>HINT</code> recuperati dalla tabella dei messaggi.</p>
+<p>(last review 24-04-2026)</p>
+<ul>
+<li><strong>Entrypoint unificato</strong> per error handling: evita duplicazioni di log e raise in trigger, procedure e funzioni.</li>
+<li><strong>Logging delegato a <code>fn_log_error_only</code></strong> (post 23-04-2026): la fn non scrive direttamente via <code>dblink_exec</code>, ma invoca <code>script.fn_log_error_only(...)</code> che a sua volta usa <code>dblink</code> su connessione permanente (<code>fn_ensure_logconn</code>) per isolare il log dall'eventuale rollback della sessione principale.</li>
+<li><strong>Escalation immediata</strong>: rialza l'eccezione con <code>DETAIL</code> e <code>HINT</code> recuperati dalla tabella dei messaggi con fallback lingua.</li>
+</ul>
 <hr />
 <h3 id="parametri">Parametri<a class="headerlink" href="#parametri" title="Permanent link">&para;</a></h3>
 <table>
@@ -4311,7 +4352,7 @@
 <tr>
 <td><code>p_function_name</code></td>
 <td><code>TEXT</code></td>
-<td>Nome del trigger/funzione o componente chiamante</td>
+<td>Nome del trigger/funzione o componente chiamante <em>(vedi nota 1)</em></td>
 </tr>
 <tr>
 <td><code>p_error_code</code></td>
@@ -4324,57 +4365,80 @@
 <td>Contesto in formato JSONB (es. parametri, utente, stack trace)</td>
 </tr>
 <tr>
+<td><code>p_tx_id</code></td>
+<td><code>UUID</code></td>
+<td>Transaction id per correlazione audit <em>(post 23-04-2026, vedi nota 2)</em></td>
+</tr>
+<tr>
 <td><code>p_valori</code></td>
 <td><code>TEXT[]</code></td>
 <td>Array variadico di valori per sostituire i placeholder <code>%s</code> nel template messaggio</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Note</strong>:</p>
+<ol>
+<li><strong>Cast <code>TG_NAME::text</code> nei trigger</strong>: la variabile speciale <code>TG_NAME</code> e' di tipo <code>name</code> (non <code>text</code>). Senza cast esplicito la function resolution di PostgreSQL fallisce con <code>la funzione script.fn_log_and_raise_error(..., name, ...) non esiste</code>. Anche se in alcuni contesti l'assignment cast implicito salva, nei chiamanti con molti parametri (specialmente con variadic) <strong>il cast e' obbligatorio</strong>.</li>
+<li><strong><code>p_tx_id</code> per correlazione audit</strong>: nei trigger passare <code>NEW.tx_id</code> (colonna audit standard); in caller non-trigger dove non c'e' un tx_id disponibile passare <code>NULL::uuid</code>. La fn gestisce il NULL senza errori.</li>
+</ol>
 <hr />
-<h3 id="flusso-di-esecuzione">Flusso di Esecuzione<a class="headerlink" href="#flusso-di-esecuzione" title="Permanent link">&para;</a></h3>
+<h3 id="flusso-di-esecuzione-post-23-04-2026">Flusso di Esecuzione (post 23-04-2026)<a class="headerlink" href="#flusso-di-esecuzione-post-23-04-2026" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Assicuro connessione dblink</strong></li>
+<li><strong>Delega del logging a <code>fn_log_error_only</code></strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_ensure_logconn</span><span class="p">();</span>
+<p>Il logging via dblink e' delegato a <code>script.fn_log_error_only</code>,
+   che internamente invoca <code>fn_ensure_logconn</code> + <code>dblink_exec</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_error_only</span><span class="p">(</span>
+<span class="w">    </span><span class="n">p_area</span><span class="p">,</span><span class="w"> </span><span class="n">p_function_name</span><span class="p">,</span><span class="w"> </span><span class="n">p_error_code</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_context</span><span class="p">,</span><span class="w"> </span><span class="n">p_tx_id</span><span class="p">,</span><span class="w"> </span><span class="k">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span>
+<span class="p">);</span>
 </code></pre></div>
 <ol>
-<li><strong>Recupero messaggio e metadati</strong></li>
+<li><strong>Risoluzione lingua di sessione</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">messaggio</span><span class="p">,</span><span class="w"> </span><span class="n">causa</span><span class="p">,</span><span class="w"> </span><span class="n">soluzione</span>
-<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_id</span><span class="p">,</span><span class="w"> </span><span class="n">v_messaggio</span><span class="p">,</span><span class="w"> </span><span class="n">v_causa</span><span class="p">,</span><span class="w"> </span><span class="n">v_soluzione</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">messaggi_errore</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_error_code</span>
-<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">lingua</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lingua</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="n">v_lang</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.user_language&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;it&#39;</span><span class="p">);</span>
 </code></pre></div>
-<p>Se non trovato, imposta testo, causa e soluzione di default indicativi.</p>
 <ol>
-<li><strong>Formattazione del messaggio</strong></li>
+<li><strong>Recupero messaggio con fallback lingua</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">array_length</span><span class="p">(</span><span class="n">p_valori</span><span class="p">,</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="n">v_messaggio</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="n">v_messaggio</span><span class="p">,</span><span class="w"> </span><span class="k">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="p">);</span>
+<p>Il <strong>messaggio testuale</strong> e' delegato a <code>script.fn_get_messaggio</code>,
+   che applica il fallback lingua IT internamente (migration
+   <code>20260423-02-01</code>).</p>
+<div class="highlight"><pre><span></span><code><span class="n">v_msg</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_get_messaggio</span><span class="p">(</span><span class="n">p_error_code</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">v_lang</span><span class="p">);</span>
+</code></pre></div>
+<ol>
+<li><strong>Recupero causa/soluzione con fallback IT inline</strong></li>
+</ol>
+<p>Single-query: preferisci <code>v_lang</code>, ricadi su <code>'it'</code> se manca.</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">causa</span><span class="p">,</span><span class="w"> </span><span class="n">soluzione</span>
+<span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_detail</span><span class="p">,</span><span class="w"> </span><span class="n">v_hint</span>
+<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">messaggi_errore</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_error_code</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">lingua</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="n">v_lang</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;it&#39;</span><span class="p">)</span>
+<span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">lingua</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lang</span><span class="p">)</span><span class="w"> </span><span class="k">DESC</span>
+<span class="w"> </span><span class="k">LIMIT</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+</code></pre></div>
+<p><strong>Semantica row-atomic</strong>: se la riga EN esiste ma ha <code>causa=NULL</code>
+   e/o <code>soluzione=NULL</code>, la fn <strong>mantiene i NULL della riga EN</strong> senza
+   mescolarli con i valori IT. E' intenzionale: chi legge gli errori
+   non deve vedere <code>DETAIL</code> in IT e <code>HINT</code> in EN per lo stesso
+   errore. La traduzione si considera "completa" solo quando tutti i
+   campi sono popolati.</p>
+<p>Se non c'e' riga ne' in <code>v_lang</code> ne' in <code>'it'</code>, <code>v_detail</code> e
+   <code>v_hint</code> restano NULL e il RAISE usa stringa vuota (coalesce).</p>
+<ol>
+<li><strong>Formattazione del messaggio con VARIADIC</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">array_length</span><span class="p">(</span><span class="n">p_valori</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">    </span><span class="n">v_msg</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="n">v_msg</span><span class="p">,</span><span class="w"> </span><span class="k">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="p">);</span>
 <span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 </code></pre></div>
 <ol>
-<li><strong>Preparazione dell’INSERT remoto</strong></li>
+<li><strong>Sollevamento dell'eccezione con DETAIL/HINT localizzati</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="n">sql_text</span><span class="w"> </span><span class="o">:=</span>
-<span class="w">  </span><span class="s1">&#39;INSERT INTO dbops.error_log(occurred_at, area, function_name,&#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="s1">&#39; messaggio_errore_id, context, tx_id) VALUES (&#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="s1">&#39;now(), &#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">quote_literal</span><span class="p">(</span><span class="n">p_area</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">quote_literal</span><span class="p">(</span><span class="n">p_function_name</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_id</span><span class="o">::</span><span class="nb">text</span><span class="p">,</span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;, &#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">quote_literal</span><span class="p">(</span><span class="n">v_context</span><span class="o">::</span><span class="nb">text</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;::jsonb, &#39;</span><span class="w"> </span><span class="o">||</span>
-<span class="w">  </span><span class="n">quote_literal</span><span class="p">(</span><span class="n">md5</span><span class="p">(</span><span class="n">txid_current</span><span class="p">()</span><span class="o">::</span><span class="nb">text</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;::uuid&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;);&#39;</span><span class="p">;</span>
-</code></pre></div>
-<ol>
-<li><strong>Esecuzione tramite dblink</strong></li>
-</ol>
-<div class="highlight"><pre><span></span><code><span class="k">PERFORM</span><span class="w"> </span><span class="n">dblink_exec</span><span class="p">(</span><span class="s1">&#39;logconn&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">sql_text</span><span class="p">);</span>
-</code></pre></div>
-<ol>
-<li><strong>Sollevamento dell’eccezione</strong></li>
-</ol>
-<div class="highlight"><pre><span></span><code><span class="k">RAISE</span><span class="w"> </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="s1">&#39;%&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_messaggio</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[Errore sconosciuto]&#39;</span><span class="p">)</span>
-<span class="w">  </span><span class="k">USING</span><span class="w"> </span><span class="n">DETAIL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_causa</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">),</span>
-<span class="w">        </span><span class="n">HINT</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_soluzione</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">RAISE</span><span class="w"> </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="s1">&#39;%&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_msg</span>
+<span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="n">DETAIL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_detail</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span>
+<span class="w">          </span><span class="n">HINT</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_hint</span><span class="p">,</span><span class="w">   </span><span class="s1">&#39;&#39;</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="comportamenti-e-side-effects">Comportamenti e Side Effects<a class="headerlink" href="#comportamenti-e-side-effects" title="Permanent link">&para;</a></h3>
@@ -4384,38 +4448,61 @@
 <li><strong>Separazione transazionale</strong>: l’INSERT remoto non viene rollbackato insieme alla sessione principale.</li>
 </ul>
 <hr />
-<h3 id="esempi-di-utilizzo">Esempi di Utilizzo<a class="headerlink" href="#esempi-di-utilizzo" title="Permanent link">&para;</a></h3>
+<h3 id="esempi-di-utilizzo-post-23-04-2026">Esempi di Utilizzo (post 23-04-2026)<a class="headerlink" href="#esempi-di-utilizzo-post-23-04-2026" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Trigger PL/pgSQL con placeholder</strong></li>
+<li><strong>Trigger PL/pgSQL con <code>NEW.tx_id</code> + placeholder VARIADIC</strong></li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ERROR&#39;</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">TG_NAME</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ERR_INVALID_STATUS&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">OLD</span><span class="mf">.</span><span class="n">id</span><span class="p">),</span>
-<span class="w">    </span><span class="k">OLD</span><span class="mf">.</span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">status</span>
-<span class="w">  </span><span class="p">);</span>
+<span class="w">    </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">        </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="n">TG_NAME</span><span class="o">::</span><span class="nb">text</span><span class="p">,</span><span class="w">                              </span><span class="c1">-- cast obbligatorio</span>
+<span class="w">        </span><span class="s1">&#39;ERR_INVALID_STATUS&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">id</span><span class="p">),</span>
+<span class="w">        </span><span class="k">NEW</span><span class="mf">.</span><span class="n">tx_id</span><span class="p">,</span><span class="w">                                  </span><span class="c1">-- p_tx_id UUID</span>
+<span class="w">        </span><span class="k">OLD</span><span class="mf">.</span><span class="n">status</span><span class="o">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">status</span><span class="o">::</span><span class="nb">text</span><span class="w">          </span><span class="c1">-- VARIADIC %s</span>
+<span class="w">    </span><span class="p">);</span>
 <span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 </code></pre></div>
 <ol>
-<li><strong>Procedure backend</strong></li>
+<li><strong>Funzione/procedura senza tx_id di riga (usa NULL::uuid)</strong></li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="k">BEGIN</span>
-<span class="w">  </span><span class="c1">-- operazioni...</span>
+<span class="w">    </span><span class="c1">-- operazioni...</span>
 <span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">  </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;backend&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;sync_data&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ERR_TIMEOUT&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">current_user</span><span class="p">),</span>
-<span class="w">    </span><span class="n">now</span><span class="p">()</span><span class="o">::</span><span class="nb">text</span>
-<span class="w">  </span><span class="p">);</span>
+<span class="w">    </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">        </span><span class="s1">&#39;backend&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;sync_data&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;ERR_TIMEOUT&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">current_user</span><span class="p">),</span>
+<span class="w">        </span><span class="k">NULL</span><span class="o">::</span><span class="nb">uuid</span><span class="p">,</span><span class="w">                                 </span><span class="c1">-- p_tx_id NULL ammesso</span>
+<span class="w">        </span><span class="n">now</span><span class="p">()</span><span class="o">::</span><span class="nb">text</span><span class="w">                                 </span><span class="c1">-- VARIADIC %s</span>
+<span class="w">    </span><span class="p">);</span>
 <span class="k">END</span><span class="p">;</span>
+</code></pre></div>
+<ol>
+<li><strong>Caller senza placeholder VARIADIC (solo messaggio statico)</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">TG_NAME</span><span class="o">::</span><span class="nb">text</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;E_OPERAZIONE_NON_AMMESSA&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;versione_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">id</span><span class="p">),</span>
+<span class="w">    </span><span class="k">NEW</span><span class="mf">.</span><span class="n">tx_id</span>
+<span class="w">    </span><span class="c1">-- p_valori VARIADIC omesso: il messaggio non ha %s</span>
+<span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Resilienza dei log</strong>: l’uso di dblink isola il logging dall’eventuale rollback.</li>
+<li><strong>Resilienza dei log</strong>: l'uso di dblink isola il logging dall'eventuale rollback.</li>
 <li><strong>Flessibilità</strong>: placeholder <code>%s</code> e <code>p_valori</code> rendono i messaggi dinamici e contestuali.</li>
 <li><strong>Manutenibilità</strong>: modifiche ai messaggi avvengono solo in <code>config.messaggi_errore</code>.</li>
 <li><strong>Tracciabilità completa</strong>: contesto, transazione e multilingua integrate nel flusso.</li>
+<li><strong>Rollout incrementale traduzioni</strong> (post 23-04-2026): il fallback
+  lingua IT su messaggio, causa e soluzione permette di aggiungere
+  traduzioni EN (o altre lingue) un codice alla volta, senza dover
+  tradurre tutti i ~390 codici errore in un solo commit. La semantica
+  row-atomic evita mix di lingue nello stesso errore.</li>
 </ul>
 <hr />
 <blockquote>
@@ -4481,7 +4568,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2323,6 +2323,8 @@
       
         
       
+        
+      
     
     
     
@@ -3722,6 +3724,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -3749,10 +3779,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="">
             
   
   
@@ -3770,8 +3800,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5715,39 +5745,77 @@
 
 <h1 id="guida-risorse-umane-e-accessi-al-software">Guida – Risorse Umane e Accessi al Software<a class="headerlink" href="#guida-risorse-umane-e-accessi-al-software" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p>(latest review 31-03-2026)</p>
+<p>(latest review 19-04-2026, post-cutover multi-face-auth)</p>
 <p>Destinatari: sviluppatori database, backend, integratori e analisti funzionali</p>
 <p>Vedi anche</p>
 <ul>
 <li><a href=".././soggetti-e-ruoli-anagrafici/">Guida Soggetti &amp; Ruoli</a></li>
 <li><a href=".././gestione-dei-contatti/">Gestione dei contatti</a></li>
 <li><a href=".././architettura-permessi-e-autorizzazioni/">Architettura Permessi e Autorizzazioni</a></li>
+<li><a href=".././architettura-multi-face-auth/">Architettura Multi-Face Auth</a></li>
 <li><a href=".././gestione-mail/">Guida Gestione Mail</a></li>
 </ul>
 </blockquote>
 <hr />
 <blockquote>
-<p><strong>Evoluzione in corso — Multi-Face Auth (aprile 2026)</strong></p>
-<p>Questa guida descrive il modello attuale, centrato sul <strong>dipendente interno</strong>.
-E' in corso di sviluppo un'estensione che generalizza il bridge verso <code>auth_user</code>
-per supportare anche <strong>clienti portale</strong>, <strong>fornitori portale</strong> e <strong>utenti del
-negozio online</strong>. I cambiamenti principali previsti:</p>
+<p><strong>Multi-Face Auth — modello post-cutover (aprile 2026)</strong></p>
+<p>Il bridge verso <code>auth_user</code> e' stato generalizzato (cutover
+§13.3.2 del 19-04-2026). I riferimenti nel corpo di questa guida a
+<code>risorse_umane_auth_user</code> come <strong>tabella</strong> vanno riletti come <strong>vista
+read-only di compatibilita'</strong> che legge da <code>identita_digitali</code>
+filtrando <code>ruolo_applicativo = 'OPERATORE'</code>. La ex tabella e'
+archiviata come <code>_legacy_risorse_umane_auth_user</code>.</p>
+<p><strong>Mappature chiave</strong> (legacy → nuovo modello):</p>
+<table>
+<thead>
+<tr>
+<th>Concetto legacy</th>
+<th>Post-cutover</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>risorse_umane_auth_user</code> (tabella writable)</td>
+<td>Vista read-only; writer passano da <code>identita_digitali</code></td>
+</tr>
+<tr>
+<td><code>ruolo_sistema = 'ADMIN'</code></td>
+<td>Binding <code>SUPER_ADMIN</code> (profilo id=9100) su <code>profili_accesso_bindings</code> AD_HOC</td>
+</tr>
+<tr>
+<td><code>ruolo_sistema = 'DISABILITATO'</code></td>
+<td><code>identita_digitali.ruolo_applicativo = 'DISABILITATO'</code> oppure <code>attivo = false</code></td>
+</tr>
+<tr>
+<td><code>ruolo_sistema = 'OPERATIVO'</code></td>
+<td><code>ruolo_applicativo = 'OPERATORE'</code> + <code>attivo = true</code> + nessun binding SUPER_ADMIN</td>
+</tr>
+<tr>
+<td><code>trgfn_risorse_umane_auth_user_sync_active</code> (legacy)</td>
+<td><code>fn_sync_auth_user_is_active(auth_user_id)</code> letta solo da <code>identita_digitali</code></td>
+</tr>
+<tr>
+<td>Vincolo R4 sul bridge (PF pura)</td>
+<td>Guard <code>fn_guard_soggetto_pf_pura</code> su <code>identita_digitali</code> quando <code>ruolo_applicativo='OPERATORE'</code> (portali/shop non hanno il vincolo)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Nuovi elementi</strong> introdotti dal refactor:</p>
 <ul>
-<li>Nuovo bridge generico <code>anagrafiche.identita_digitali</code> accanto a
-  <code>risorse_umane_auth_user</code> (che diventera' un caso particolare)</li>
-<li>Regola <strong>R4</strong> ridisegnata: il vincolo "persona fisica pura" si sposta
-  sul ruolo RIS_UMANA, non sul bridge</li>
-<li>Sync <code>auth_user.is_active</code> generalizzata per tutti i tipi di identita'</li>
-<li>Nuovi GUC PostgreSQL <code>app.current_identita_id</code>, <code>app.ruolo_applicativo</code>,
-  <code>app.soggetto_ruolo_id</code></li>
+<li><a href="../../dbzero/anagrafiche/tabelle/identita_digitali/">anagrafiche.identita_digitali</a>
+  — bridge generalizzato per 5 ruoli applicativi</li>
+<li>GUC PostgreSQL <code>app.current_identita_id</code>, <code>app.ruolo_applicativo</code>,
+  <code>app.soggetto_ruolo_id</code> propagati da <code>JwtAuditAuthentication</code></li>
+<li>Scope policy generalizzato (<code>BA_OWNERSHIP</code>, <code>FORNITORE_OWNERSHIP</code>,
+  <code>EF_WHITELIST</code>) con fn <code>script.fn_scope_*</code> inlineable</li>
+<li>Policy RLS predisposte su 6 tabelle sensibili (dry-run completato;
+  attivazione <code>ENABLE ROW LEVEL SECURITY</code> differita a quando le API
+  portale/shop di dominio saranno sviluppate)</li>
 </ul>
-<p>Questa guida resta <strong>autoritativa per il codice in produzione</strong>. I riferimenti
-al nuovo modello verranno integrati fase per fase, man mano che le migrazioni
-DB vengono applicate.</p>
 <p>Dettagli:</p>
 <ul>
 <li>Guida architetturale: <a href=".././architettura-multi-face-auth/">architettura-multi-face-auth</a></li>
-<li>Piano di sviluppo: <a href="../../dev/work-in-progress/sviluppo-multi-face-auth/">sviluppo-multi-face-auth</a></li>
+<li>Piano di sviluppo: <a href="../../dev/work-done/sviluppo-multi-face-auth/">sviluppo-multi-face-auth</a></li>
 </ul>
 </blockquote>
 <hr />
@@ -6844,7 +6912,7 @@ il pool.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

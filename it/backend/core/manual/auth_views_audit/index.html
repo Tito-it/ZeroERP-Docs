@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -2315,6 +2315,8 @@
       
         
       
+        
+      
     
     
     
@@ -2928,6 +2930,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -2952,10 +2982,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -2973,8 +3003,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4185,10 +4215,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#audittokenobtainpairview" class="md-nav__link">
+  <a href="#gerarchia-delle-classi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AuditTokenObtainPairView
+        Gerarchia delle classi
       
     </span>
   </a>
@@ -4196,10 +4226,43 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#audittokenrefreshview" class="md-nav__link">
+  <a href="#audittokenobtainpairview-base-astratta" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AuditTokenRefreshView
+        AuditTokenObtainPairView (base astratta)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subclass-login-adminportaleshop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subclass login (Admin/Portale/Shop)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audittokenrefreshview-base-astratta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AuditTokenRefreshView (base astratta)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subclass-refresh-adminportaleshop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subclass refresh (Admin/Portale/Shop)
       
     </span>
   </a>
@@ -4245,10 +4308,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dipendenze-db" class="md-nav__link">
+  <a href="#dipendenze" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dipendenze DB
+        Dipendenze
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test
       
     </span>
   </a>
@@ -4260,6 +4334,17 @@
     <span class="md-ellipsis">
       
         Note di migrazione
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documenti-correlati" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documenti correlati
       
     </span>
   </a>
@@ -4286,37 +4371,173 @@
 
 <h1 id="auth-views-audit-core-django">Auth Views Audit (Core Django)<a class="headerlink" href="#auth-views-audit-core-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Override delle view SimpleJWT per registrare eventi di login e refresh nella tabella <code>dbops.sessioni_utente</code>.</p>
+<p>Override delle view SimpleJWT per agganciare: (a) l'audit login/refresh nella
+tabella <code>dbops.sessioni_utente</code>, (b) il controllo blocco utente per tentativi
+falliti, (c) il throttle IP, (d) il guard cross-namespace multi-veste (§8.3).</p>
+<p>Per il <strong>contratto HTTP completo</strong> dei 6 endpoint (3 login + 3 refresh, uno
+per namespace), i claim JWT custom e i codici errore → vedi
+<a href="../api_multi_veste_token/">api_multi_veste_token.md</a>. Questo documento
+descrive l'architettura interna delle view.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>File <code>apps/core/api/auth_views.py</code>. Contiene due classi che estendono le view standard di SimpleJWT agganciando il logging delle sessioni dopo ogni operazione con successo.</p>
-<h3 id="audittokenobtainpairview"><code>AuditTokenObtainPairView</code><a class="headerlink" href="#audittokenobtainpairview" title="Permanent link">&para;</a></h3>
-<p>Estende <code>TokenObtainPairView</code>. Dopo login con successo (HTTP 200), chiama <code>session_audit_service.record_login()</code> con lo <code>user_id</code> dell'utente autenticato.</p>
-<h3 id="audittokenrefreshview"><code>AuditTokenRefreshView</code><a class="headerlink" href="#audittokenrefreshview" title="Permanent link">&para;</a></h3>
-<p>Estende <code>TokenRefreshView</code>. Dopo refresh con successo (HTTP 200), chiama <code>session_audit_service.record_refresh()</code> decodificando lo <code>user_id</code> dal refresh token nel body.</p>
-<h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
+<p>File <code>apps/core/api/auth_views.py</code>. Post refactor multi-face §8.3, le view di
+login/refresh sono organizzate in <strong>2 classi base astratte</strong> + <strong>6 subclass
+namespace-specific</strong>.</p>
+<h3 id="gerarchia-delle-classi">Gerarchia delle classi<a class="headerlink" href="#gerarchia-delle-classi" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>TokenObtainPairView  (SimpleJWT)
+  └── AuditTokenObtainPairView       [ASTRATTA]  audit + throttle + blocco
+        ├── AdminTokenView           → /api/v1/admin/token/    (OPERATORE)
+        ├── PortaleTokenView         → /api/v1/portale/token/  (CLIENTE/FORNITORE_PORTALE)
+        └── ShopTokenView            → /api/v1/shop/token/     (SHOP_CUSTOMER)
+
+TokenRefreshView  (SimpleJWT)
+  └── AuditTokenRefreshView          [ASTRATTA]  audit + guard cross-namespace
+        ├── AdminTokenRefreshView    → /api/v1/admin/token/refresh/
+        ├── PortaleTokenRefreshView  → /api/v1/portale/token/refresh/
+        └── ShopTokenRefreshView     → /api/v1/shop/token/refresh/
+</code></pre></div>
+<h3 id="audittokenobtainpairview-base-astratta"><code>AuditTokenObtainPairView</code> (base astratta)<a class="headerlink" href="#audittokenobtainpairview-base-astratta" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>POST /api/v1/auth/token/</code> — credenziali <code>username</code> + <code>password</code> (login)</li>
-<li><code>POST /api/v1/auth/token/refresh/</code> — <code>refresh</code> token (refresh)</li>
+<li><strong>Astratta</strong>: <code>serializer_class = None</code> + <code>assert</code> guard in <code>post()</code>.
+  Istanziarla direttamente → <code>AssertionError</code>. Le subclass DEVONO fornire
+  un <code>serializer_class</code> sottoclasse di <code>MultiVesteTokenSerializer</code>.</li>
+<li><strong>Throttle</strong>: <code>LoginRateThrottle</code> (5 tentativi / 5 minuti per IP).</li>
+<li><strong>Blocco utente</strong>: prima del login chiama
+  <code>AuthRepository.check_blocco_login(auth_user_id)</code> che solleva errore DB
+  (<code>E_UTENTE_BLOCCATO</code>) se l'utente ha <code>bloccato_fino_a &gt; now()</code>.</li>
+<li><strong>Tentativi falliti</strong>: dopo login fallito chiama
+  <code>registra_tentativo_login(successo=False)</code>. Eccezione: <code>VesteNonAttivaError</code>
+  (credenziali OK ma veste sbagliata) NON viene contato come tentativo.</li>
+<li><strong>Audit login</strong>: dopo login OK, popola le 5 GUC di sessione via
+  <code>set_jwt_gucs(username, user_id, identita_id, request)</code> (l'<code>identita_id</code>
+  e' estratto dal refresh appena emesso tramite <code>_extract_identita_id_from_refresh</code>),
+  poi chiama <code>session_audit_service.record_login(user_id, request, jti)</code>.</li>
+<li><strong>Flag password_change_required</strong>: se <code>AuthRepository.get_deve_cambiare_password(user.id)</code>
+  ritorna True, aggiunge <code>password_change_required: true</code> alla response.</li>
 </ul>
+<h3 id="subclass-login-adminportaleshop">Subclass login (Admin/Portale/Shop)<a class="headerlink" href="#subclass-login-adminportaleshop" title="Permanent link">&para;</a></h3>
+<p>Differiscono dalla base SOLO per <code>serializer_class</code>:</p>
+<ul>
+<li><code>AdminTokenView.serializer_class = AdminTokenSerializer</code> (veste <code>OPERATORE</code>)</li>
+<li><code>PortaleTokenView.serializer_class = PortaleTokenSerializer</code> (vesti portale)</li>
+<li><code>ShopTokenView.serializer_class = ShopTokenSerializer</code> (veste <code>SHOP_CUSTOMER</code>)</li>
+</ul>
+<p>Il serializer concreto (subclass di <code>MultiVesteTokenSerializer</code>) risolve
+l'identita attiva dell'utente con <code>ruolo_applicativo</code> nel subset ammesso e
+inietta i claim <code>identita_id</code> + <code>ruolo_applicativo</code> nel JWT. Se l'utente
+non ha la veste richiesta dal namespace → <code>VesteNonAttivaError</code> (403).</p>
+<h3 id="audittokenrefreshview-base-astratta"><code>AuditTokenRefreshView</code> (base astratta)<a class="headerlink" href="#audittokenrefreshview-base-astratta" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Astratta</strong>: <code>expected_ruoli_applicativi = ()</code> + <code>assert</code> guard in <code>post()</code>.
+  Istanziarla direttamente → <code>AssertionError</code>.</li>
+<li><strong>Guard cross-namespace</strong>: estrae il claim <code>ruolo_applicativo</code> dal refresh
+  token via <code>_extract_ruolo_applicativo_from_refresh</code> (decode non-verificato
+  del payload JWT — firma gia' validata da SimpleJWT a monte) e rifiuta con
+  <code>VesteNonAttivaError</code> se non rientra in <code>expected_ruoli_applicativi</code>.</li>
+<li><strong>Audit refresh</strong>: dopo refresh OK, risolve lo username dal <code>user_id</code> del
+  claim (<code>_resolve_username</code>), popola le GUC e chiama
+  <code>session_audit_service.record_refresh</code>.</li>
+<li><strong>Claim preservation</strong>: SimpleJWT con <code>ROTATE_REFRESH_TOKENS=True</code> ruota
+  solo <code>jti/exp/iat</code>; i claim custom (<code>identita_id</code>, <code>ruolo_applicativo</code>,
+  <code>sid</code>) sono preservati nel nuovo refresh.</li>
+</ul>
+<h3 id="subclass-refresh-adminportaleshop">Subclass refresh (Admin/Portale/Shop)<a class="headerlink" href="#subclass-refresh-adminportaleshop" title="Permanent link">&para;</a></h3>
+<p>Differiscono dalla base SOLO per <code>expected_ruoli_applicativi</code>:</p>
+<ul>
+<li><code>AdminTokenRefreshView.expected_ruoli_applicativi = ("OPERATORE",)</code></li>
+<li><code>PortaleTokenRefreshView.expected_ruoli_applicativi = ("CLIENTE_PORTALE", "FORNITORE_PORTALE")</code></li>
+<li><code>ShopTokenRefreshView.expected_ruoli_applicativi = ("SHOP_CUSTOMER",)</code></li>
+</ul>
+<h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
+<p>Vedi <a href="../api_multi_veste_token/">api_multi_veste_token.md</a> §Input. Tutti e 6
+gli endpoint accettano JSON body standard SimpleJWT (<code>username+password</code>
+per login, <code>refresh</code> per refresh).</p>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
-<p>Stessi output delle view SimpleJWT standard:
-- Login: <code>{"access": "...", "refresh": "..."}</code>
-- Refresh: <code>{"access": "..."}</code></p>
-<p>Effetto aggiuntivo: INSERT in <code>dbops.sessioni_utente</code>.</p>
+<p>Envelope SimpleJWT standard (<code>access</code> + <code>refresh</code> + eventuale
+<code>password_change_required</code> al login). Il JWT contiene i claim custom
+(<code>identita_id</code>, <code>ruolo_applicativo</code>, <code>sid</code>) documentati in
+<a href="../api_multi_veste_token/">api_multi_veste_token.md</a> §Claim JWT custom.</p>
+<p><strong>Effetto aggiuntivo</strong>: INSERT in <code>dbops.sessioni_utente</code> (audit login/refresh).</p>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Il logging avviene <strong>solo</strong> dopo risposta con successo (status 200). Login/refresh falliti non generano record.</li>
-<li>Se il logging fallisce, l'errore e' gestito silenziosamente dal service (non interrompe la response).</li>
-<li>Le view sono registrate in <code>zeroerp_backend/urls.py</code> con <code>permission_classes=[AllowAny]</code> (endpoint pubblici di autenticazione).</li>
-<li>Estrazione <code>user_id</code> nel refresh: decodifica del refresh token via <code>RefreshToken(refresh_str)</code> per ottenere il claim <code>user_id</code>.</li>
+<li>Il logging sessione avviene <strong>solo</strong> dopo risposta con successo (status 200).
+  Login/refresh falliti non generano record.</li>
+<li><code>VesteNonAttivaError</code> al login e' catturato prima di
+  <code>AuthenticationFailed</code> per <strong>non</strong> incrementare tentativi falliti (no
+  autoblock su errore "canale sbagliato").</li>
+<li><code>set_jwt_gucs</code> ritorna <code>False</code> se <code>identita_id</code> e' None o l'identita
+  non e' attiva: in quel caso viene loggato <code>security.{login,refresh}_guc_mancate</code>
+  e l'audit procede con GUC vuote (user_insert='zeroerp_app').</li>
+<li>Le 6 view concrete sono registrate in <code>zeroerp_backend/urls.py</code> con
+  <code>permission_classes=[AllowAny]</code> (endpoint pubblici di autenticazione).</li>
+<li><strong>Breaking change §8.3.1</strong>: il path legacy <code>/api/v1/auth/token/</code> e'
+  stato rimosso senza alias. Client pre-refactor devono essere aggiornati.</li>
 </ul>
-<h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
+<h2 id="dipendenze">Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Ruolo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dbops.sessioni_utente</code></td>
+<td>INSERT via <code>session_audit_service</code> (login/refresh/logout)</td>
+</tr>
+<tr>
+<td><code>anagrafiche.identita_digitali</code></td>
+<td>Source di <code>identita_id</code> + <code>ruolo_applicativo</code> iniettati nel JWT</td>
+</tr>
+<tr>
+<td><code>script.fn_check_blocco_login</code></td>
+<td>Blocco utente per tentativi falliti</td>
+</tr>
+<tr>
+<td><code>script.fn_registra_tentativo_login</code></td>
+<td>Incremento/reset contatore tentativi</td>
+</tr>
+<tr>
+<td><code>MultiVesteTokenSerializer</code></td>
+<td>Iniezione claim custom + risoluzione veste</td>
+</tr>
+<tr>
+<td><code>JwtAuditAuthentication</code></td>
+<td>Validazione claim + popolamento GUC a ogni request</td>
+</tr>
+</tbody>
+</table>
+<h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>dbops.sessioni_utente</code> (INSERT via <code>session_audit_service</code>)</li>
+<li><code>apps/core/tests/api/test_auth_views.py</code> — test behavior login/refresh,
+  guard astratta, cross-namespace (Admin/Portale/Shop), no-tentativo su
+  <code>VesteNonAttivaError</code>, extract helpers.</li>
+<li><code>apps/core/tests/api/test_multi_veste_token_serializer.py</code> — test serializer,
+  <code>VesteNonAttivaError</code>, claim injection.</li>
+<li><code>apps/core/tests/api/test_jwt_audit_authentication.py</code> — test authenticate
+  multi-face (<code>E_JWT_SENZA_IDENTITA</code>, <code>E_IDENTITA_NON_ATTIVA</code>, CTE GUC).</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Le view sostituiscono <code>TokenObtainPairView</code> e <code>TokenRefreshView</code> nel routing. Il contratto HTTP resta identico: nessun impatto sui client.</li>
+<li>Le view base <code>AuditTokenObtainPairView</code> / <code>AuditTokenRefreshView</code>
+  sostituiscono <code>TokenObtainPairView</code> / <code>TokenRefreshView</code> nel routing
+  <strong>tramite subclass concrete</strong>, mai direttamente.</li>
+<li>Pre-§8.3: esistevano solo 2 route (<code>/auth/token/</code> + <code>/auth/token/refresh/</code>)
+  sulla base, senza guard cross-veste, senza claim custom.</li>
+<li>Post-§8.3: 6 route + claim custom + guard cross-namespace + audit
+  identita-aware. Il contratto HTTP esterno resta compatibile con client
+  SimpleJWT standard (stesso input/output base), ma:</li>
+<li>I client devono aggiornarsi al nuovo path (<code>/admin/</code> etc.).</li>
+<li>Il JWT contiene claim aggiuntivi — ignorati dai consumer che non li
+     leggono, letti da <code>/me/</code> e <code>JwtAuditAuthentication</code>.</li>
+</ul>
+<h2 id="documenti-correlati">Documenti correlati<a class="headerlink" href="#documenti-correlati" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../api_multi_veste_token/">api_multi_veste_token.md</a> — contratto HTTP
+  completo 6 endpoint + claim + error codes</li>
+<li><a href="../api_user_profile/">api_user_profile.md</a> — <code>/me/</code> espone <code>identita</code></li>
+<li><a href="../api_logout/">api_logout.md</a> — logout + blacklist refresh</li>
+<li><a href="../api_token_cambio_password/">api_token_cambio_password.md</a> — cambio password</li>
 </ul>
 
 
@@ -4372,7 +4593,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

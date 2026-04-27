@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.33">
+      <meta name="generator" content="zensical-0.0.34">
     
     
       
@@ -1096,6 +1096,45 @@
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7c-ciclo-stato-finestra-di-validita" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7c. Ciclo stato + finestra di validita`
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7c. Ciclo stato + finestra di validita`">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#framework-dbopsautomazione_chiusura_scadenze-post-26-04-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Framework dbops.automazione_chiusura_scadenze (post 26-04-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#componenti-tabella-specifici-non-generalizzati-nel-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Componenti tabella-specifici (NON generalizzati nel framework)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -2824,6 +2863,8 @@
       
         
       
+        
+      
     
     
     
@@ -3437,6 +3478,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../guide/processi-pgagent-funzionali/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processi-pgagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
       
@@ -3461,10 +3530,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_22" >
         
           
-          <label class="md-nav__link" for="__nav_7_21" id="__nav_7_21_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_22" id="__nav_7_22_label" tabindex="0">
             
   
   
@@ -3482,8 +3551,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_21">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_22_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_22">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4778,6 +4847,45 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#7c-ciclo-stato-finestra-di-validita" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7c. Ciclo stato + finestra di validita`
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7c. Ciclo stato + finestra di validita`">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#framework-dbopsautomazione_chiusura_scadenze-post-26-04-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Framework dbops.automazione_chiusura_scadenze (post 26-04-2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#componenti-tabella-specifici-non-generalizzati-nel-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Componenti tabella-specifici (NON generalizzati nel framework)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#8-indici" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5586,6 +5694,71 @@ trgfn_config_stati_prevent_delete_if_used
 <p>Riferimento: <a href=".././dev/work-in-progress/migrazione-daterange/">migrazione-daterange.md</a> per analisi completa e decisioni architetturali.</p>
 </blockquote>
 <hr />
+<h3 id="7c-ciclo-stato-finestra-di-validita">7c. Ciclo stato + finestra di validita`<a class="headerlink" href="#7c-ciclo-stato-finestra-di-validita" title="Permanent link">&para;</a></h3>
+<p>Quando una tabella ha <strong>sia</strong> una colonna <code>stato</code> (ciclo vita gestionale: es. <code>BOZZA</code> / <code>ATTIVA</code> / <code>CHIUSA</code>) <strong>sia</strong> un intervallo <code>valido_dal</code>/<code>valido_al</code> (o <code>validita</code> daterange), valgono queste regole.</p>
+<p><strong>Principio fail-safe: le date comandano, lo stato accompagna.</strong></p>
+<ol>
+<li><strong>Applicabilita' operativa = date</strong>. Resolver, lookup di business, filtri di efficacia usano <strong>solo</strong> <code>validita @&gt; data_riferimento</code> (o equivalente su <code>valido_dal</code>/<code>valido_al</code>). <strong>Non</strong> filtrare per <code>stato</code> nella logica operativa: se il job di sync salta o un bug lascia lo stato incoerente, la logica basata su data resta corretta.</li>
+<li><strong><code>stato</code> = workflow gestionale</strong>. Transizioni governate dall'utente e vincolate da un guard trigger (<code>trgfn_&lt;tabella&gt;_guard_transizione_stato</code>, fase <code>_a10_</code>, <code>BEFORE UPDATE OF &lt;col_stato&gt;</code>). Lo stato serve a UI, audit, reportistica, dashboard — <strong>mai</strong> a decidere se una riga si applica operativamente.</li>
+<li><strong>Transizione verso lo stato terminale</strong>: la regola del guard puo' includere una <strong>precondizione temporale</strong> (<code>valido_al IS NOT NULL AND valido_al &lt; CURRENT_DATE</code>) per evitare incoerenze strutturali (stato "chiuso" con finestra ancora aperta). Stessa regola vale per l'utente (via API/service) e per il job di sync.</li>
+<li><strong>Sync stato -&gt; data</strong>: il framework parametrico <strong><code>dbops.fn_apply_chiusura_scadenze()</code></strong> + job pgAgent unico <strong><code>chiusura_scadenze_daily</code></strong> (00:05) esegue l'UPDATE massivo <code>stato = terminale</code> per le righe scadute (<code>valido_al &lt; CURRENT_DATE</code>) su tutte le tabelle configurate. L'UPDATE attraversa il guard trigger e lo soddisfa per costruzione. Vedi sotto "Framework dbops.automazione_chiusura_scadenze".</li>
+<li><strong>Niente trigger di sync <code>valido_al</code> -&gt; <code>stato</code></strong> e nessuna colonna generata: lo stato <strong>non e'</strong> derivato in tempo reale dalla data (es. l'utente puo' programmare <code>valido_al</code> futuro e lo stato resta ATTIVA finche' il job non scatta). La sincronizzazione e' asincrona e "cosmetica".</li>
+<li><strong>INSERT</strong>: non vincolare l'INSERT con la matrice transizioni (per permettere seed/import con stati diretti). Il guard scatta solo su UPDATE OF stato.</li>
+<li><strong>Semantica <code>valido_al</code></strong>: ultimo giorno <strong>incluso</strong> (convenzione <code>script.trgfn_set_validita</code>, bounds <code>[]</code> canonicalizzati a <code>[)</code>). Esempio: <code>valido_al = 2026-04-26</code> → la riga e' operativamente valida fino al 2026-04-26 23:59:59, scade dal 2026-04-27. Conseguenza: la query <code>valido_al &lt; CURRENT_DATE</code> chiude <strong>dal giorno successivo</strong> a <code>valido_al</code> — schedule 00:05 cattura al primo momento utile dopo il cambio data.</li>
+</ol>
+<h4 id="framework-dbopsautomazione_chiusura_scadenze-post-26-04-2026">Framework <code>dbops.automazione_chiusura_scadenze</code> (post 26-04-2026)<a class="headerlink" href="#framework-dbopsautomazione_chiusura_scadenze-post-26-04-2026" title="Permanent link">&para;</a></h4>
+<p>La logica di chiusura per scadenza e' centralizzata in un framework parametrico. Aggiungere una nuova tabella al pattern non richiede nuovo codice DB: basta una INSERT seed nella tabella di configurazione.</p>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Posizione</th>
+<th>Ruolo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tabella config</td>
+<td><code>dbops.automazione_chiusura_scadenze</code></td>
+<td>Una riga per tabella target (schema, nome, colonna stato, codici attivo/chiuso, etc.)</td>
+</tr>
+<tr>
+<td>Funzione motore</td>
+<td><code>dbops.fn_apply_chiusura_scadenze()</code></td>
+<td>SQL dinamico con pre-check + dispatch VARCHAR/FK + audit + JSONB risultato</td>
+</tr>
+<tr>
+<td>Job unico</td>
+<td><code>chiusura_scadenze_daily</code> (<code>85_pgagent/</code>)</td>
+<td>Schedule 00:05, esegue la fn</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tipologie supportate</strong> (colonna <code>tipo_stato</code>):</p>
+<ul>
+<li><strong>VARCHAR</strong>: <code>stato</code> e' colonna varchar diretta + CHECK constraint. Esempio <code>vendite.listini_versioni</code> con <code>stato IN ('BOZZA','ATTIVA','CHIUSA')</code>.</li>
+<li><strong>FK</strong>: <code>stato</code> e' FK a tabella catalogo, codici espressi come <code>codice_interno</code> (immutabile per <code>lock_columns</code>). Esempio <code>vendite.contratti.stato_doc_contratto_id</code> -&gt; <code>config.stati_doc_contratti</code>.</li>
+</ul>
+<p><strong>Esempio righe seed</strong> (<code>80_data/sql/dbops/automazione_chiusura_scadenze.csv</code>):</p>
+<div class="highlight"><pre><span></span><code>schema_tabella,nome_tabella,col_stato,tipo_stato,stato_attivo_codice,stato_chiuso_codice,fk_lookup_schema,fk_lookup_table
+vendite,listini_versioni,stato,VARCHAR,ATTIVA,CHIUSA,,
+vendite,contratti,stato_doc_contratto_id,FK,ATTIVO,CESSATO,config,stati_doc_contratti
+</code></pre></div>
+<h4 id="componenti-tabella-specifici-non-generalizzati-nel-framework">Componenti tabella-specifici (NON generalizzati nel framework)<a class="headerlink" href="#componenti-tabella-specifici-non-generalizzati-nel-framework" title="Permanent link">&para;</a></h4>
+<p>Restano sotto la responsabilita' del dominio:</p>
+<ul>
+<li>Trigger guard transizione (matrice transizioni ammesse, codici stato, messaggi errore tipati)</li>
+<li>Codice errore dedicato in <code>config.messaggi_errore</code> (es. <code>E_VERSIONE_STATO_TRANSIZIONE_INVALIDA</code>, <code>E_CONTRATTO_STATO_TRANSIZIONE_INVALIDA</code>)</li>
+<li>Documentazione manuale della tabella</li>
+</ul>
+<p>La generalizzazione del guard transizione e' rinviata: serviranno almeno tre casi reali con strutture transizione affini per giustificare l'astrazione (manifesto sviluppo concentrico §7).</p>
+<p><strong>Casi gia' applicati</strong>:</p>
+<ul>
+<li><code>vendite.listini_versioni</code> (VARCHAR, ciclo <code>BOZZA -&gt; ATTIVA -&gt; CHIUSA</code>)</li>
+<li><code>vendite.contratti</code> (FK, ciclo <code>DRAFT -&gt; ATTIVO -&gt; CESSATO</code>; <code>SOSPESO</code> esiste come codice ma fuori scope)</li>
+</ul>
+<p><strong>Riferimento</strong>: <a href="../dev/work-in-progress/automazione-chiusure-scadenze/">WIP automazione-chiusure-scadenze.md</a>.</p>
+<hr />
 <h3 id="8-indici">8. Indici<a class="headerlink" href="#8-indici" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Naming</strong>: <code>ix_&lt;table&gt;_&lt;column&gt;</code></li>
@@ -6184,7 +6357,7 @@ restrittiva, il bug e' evidente subito.</strong> Mai il contrario.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.63456bd9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.9f55f5b1.min.js"></script>
       
         <script src="../../assets/javascripts/mermaid.min.js"></script>
       
