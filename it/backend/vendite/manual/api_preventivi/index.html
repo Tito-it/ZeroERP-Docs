@@ -5568,11 +5568,13 @@ db-brief-offerta-righe-espanse.md (<code>docs/it/dev/work-done/db-brief-offerta-
 <li>View <code>ApiPreventivoRigheSmistabiliOrdine</code> (area <code>vendite</code>, sola lettura) →
   <code>preventivi_service.list_righe_smistabili_ordine</code> →
   <code>PreventiviRepository.list_righe_smistabili_ordine</code>.</li>
-<li><strong>Criterio</strong> (identico al predicato di <code>fn_preventivo_ha_residuo_ordine</code> / al
-  loop di <code>fn_push_preventivo_a_ordine</code>): natura <code>destinazione_tipo='ORDINE'</code>,
-  riga attiva, <strong>non ancora allocata</strong> a un ordine (<code>NOT EXISTS</code> su
-  <code>ordini_righe.preventivo_riga_id</code>). Le righe restituite sono <strong>esattamente</strong>
-  quelle che lo smistamento copierebbe → niente sorprese tra anteprima e push.</li>
+<li><strong>Criterio</strong>: legge dalla <strong>vista</strong> <code>vendite.vw_preventivi_righe_smistabili_ordine</code>
+  — la <strong>fonte unica</strong> del predicato (natura <code>destinazione_tipo='ORDINE'</code>, riga
+  attiva, <strong>non ancora allocata</strong> a un ordine), consumata anche da
+  <code>fn_preventivo_ha_residuo_ordine</code> e <code>fn_push_preventivo_a_ordine</code>
+  (consolidamento DB 2026-06-10). Le righe restituite sono quindi <strong>esattamente</strong>
+  quelle che lo smistamento copierebbe → niente sorprese tra anteprima e push, e
+  nessuna regola duplicata lato BE.</li>
 <li>Output <code>200</code>: <code>{ "data": [ { id, ordine, articolo_id, articolo_codice,
   articolo_descrizione, descrizione, qta_operativa, uom_operativa_id, uom_codice,
   prezzo_unitario, sconto_percentuale } ] }</code> (campi display via JOIN, no lookup
