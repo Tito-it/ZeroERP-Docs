@@ -5399,6 +5399,18 @@ transizione non ammessa → <code>E_ORDINE_TRANSIZIONE_NON_AMMESSA</code>. La co
 <p>Push del singolo ordine <code>CONFERMATO</code> via <code>fn_list_ordini_da_pushare(…, p_ordine_id)</code>
 + orchestratore (<code>pr_run_commesse_push_one</code>, sorgente <code>ORDINE_VENDITA</code>) →
 <code>attivita_fatturabili</code>. Guard: stato <code>CONFERMATO</code> + righe eleggibili.</p>
+<p><strong>Ponte emittibilità (2026-06-10)</strong>: a push <code>COMPLETATO</code>, nella stessa
+transazione, ogni commessa toccata viene resa <strong>emittibile</strong> — attività
+<code>BOZZA → APPROVATA</code> (<code>fn_approva_commessa_attivita</code>) + testata
+<code>→ PRONTA_FATTURAZIONE</code> (<code>fn_cambia_stato_commessa</code>, skip idempotente se già
+pronta da una sorgente precedente). Regola di modello: il documento pushato è
+già autorizzato (ordine <code>CONFERMATO</code>), quindi il push è esso stesso
+l'autorizzazione delle attività generate. Il ponte vive in
+<code>pr_run_commesse_push_one</code> e vale per ogni percorso (preventivi standalone,
+ordini, handler pratica; il batch <code>pr_run_commesse_push</code> lo applica
+best-effort per commessa con errori in <code>emittibilita_errors</code>).</p>
+<p>La response espone <code>commesse_ids</code> (commesse toccate dal push), oltre a
+<code>stato</code>/<code>push_log_id</code>/<code>handlers</code>/<code>righe_pushable</code>/<code>fatturazione_trigger</code>.</p>
 <h3 id="righe">Righe<a class="headerlink" href="#righe" title="Permanent link">&para;</a></h3>
 <table>
 <thead>

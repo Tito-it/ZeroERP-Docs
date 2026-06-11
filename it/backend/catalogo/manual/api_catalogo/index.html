@@ -6128,6 +6128,12 @@ il motivo via tooltip i18n (chiavi <code>catalogo.motivo_*</code>).</p>
 <td>Articolo utility</td>
 </tr>
 <tr>
+<td><code>natura_vendita_id</code></td>
+<td>int</td>
+<td>No</td>
+<td>Natura di vendita (FK <code>config.nature_vendita</code>): decide l'instradamento post-accettazione del modello split (ORDINE/COMMESSA/CONTRATTO). Se omesso → default DB <code>MERCE</code>. <strong>Mai null esplicito</strong> (colonna NOT NULL): risponde <code>E_CATALOGO_VALIDATION</code></td>
+</tr>
+<tr>
 <td><code>meta</code></td>
 <td>object</td>
 <td>No</td>
@@ -6167,6 +6173,12 @@ immutabilita' (Fase 5):</p>
   pilotare i <code>:disabled</code> invece di cablare regole.</li>
 <li><code>puo_gestire_bom: bool</code>, <code>motivo_non_gestibile_bom: string | null</code> —
   Fase 6: capability di gestione BoM (vedi §1.1).</li>
+<li>Natura di vendita (2026-06-10, da <code>vw_articoli_dettaglio</code>):
+  <code>natura_vendita_id</code>, <code>natura_vendita_codice_interno</code>,
+  <code>natura_vendita_descrizione</code>, <code>natura_vendita_destinazione_tipo</code>
+  (<code>ORDINE</code> / <code>COMMESSA</code> / <code>CONTRATTO</code>). Il FE inizializza il Select
+  "Natura di vendita" del drawer da <code>natura_vendita_id</code>; gli stessi campi
+  sono disponibili anche nelle righe della lista (§1.1).</li>
 </ul>
 <h3 id="14-aggiorna-articolo">1.4 Aggiorna articolo<a class="headerlink" href="#14-aggiorna-articolo" title="Permanent link">&para;</a></h3>
 <table>
@@ -6191,6 +6203,10 @@ immutabilita' (Fase 5):</p>
 <ul>
 <li><code>codice</code> e <code>uom_id</code> sono immutabili a livello API (vedi
   <code>non_editable_fields</code> nel detail).</li>
+<li><code>natura_vendita_id</code> e' <strong>mutabile</strong> (decisione 2026-06-10, opzione A):
+  cambiarla vale solo per le righe documento future — le righe esistenti
+  hanno lo snapshot di natura preso all'inserimento riga. Mai null
+  esplicito (NOT NULL a DB): <code>E_CATALOGO_VALIDATION</code>.</li>
 <li><code>attivo</code> non e' modificabile via PATCH (Fase 7): risponde
   <code>E_CATALOGO_VALIDATION</code> con detail "usa gli endpoint /disattiva/ o
   /riattiva/". La transizione di stato passa solo dagli endpoint

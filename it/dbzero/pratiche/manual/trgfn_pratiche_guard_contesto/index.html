@@ -4923,14 +4923,23 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Guard: valida la coerenza gerarchica del contesto anagrafico sulla pratica.
-La catena soggetto → ruolo → istanza deve essere coerente:</p>
+<p>Guard: valida la coerenza del contesto anagrafico sulla pratica nel <strong>modello a
+due rami</strong>, pendenti indipendentemente dal soggetto:</p>
+<div class="highlight"><pre><span></span><code>soggetto ──→ soggetto_ruolo      (pratiche su ruoli: cliente attivo, fornitore, …)
+        └──→ istanza_utility     (pratiche pre-contrattuali: nessun ruolo richiesto)
+</code></pre></div>
+<p>Regole:</p>
 <ul>
-<li>Non si puo' avere un'istanza senza ruolo</li>
-<li>Non si puo' avere un ruolo senza soggetto</li>
+<li>Un ruolo non può esistere senza soggetto</li>
+<li>Un'istanza non può esistere senza soggetto</li>
 <li>Il ruolo deve appartenere al soggetto indicato</li>
 <li>L'istanza deve appartenere al soggetto indicato</li>
 </ul>
+<p><strong>Istanza senza ruolo è ammessa</strong> (prospect puro): nel dominio utilities
+l'istanza nasce <em>prima</em> del contratto, in fase pre-contrattuale il soggetto non
+ha ancora il ruolo CLIENTE — che arriva a valle, con la nascita del billing
+account (<code>ClienteService</code> / <code>fn_get_or_create_soggetto_ruolo</code>). Imporre il ruolo
+all'aggancio dell'istanza sarebbe un ruolo CL prematuro.</p>
 <p>Tutti i campi sono opzionali: una pratica interna ha tutti NULL.</p>
 <hr />
 <h3 id="firma">Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
@@ -4950,13 +4959,13 @@ La catena soggetto → ruolo → istanza deve essere coerente:</p>
 <tbody>
 <tr>
 <td>1</td>
-<td>Istanza richiede ruolo</td>
-<td><code>istanza_utility_id NOT NULL AND soggetto_ruolo_id IS NULL</code></td>
+<td>Ruolo richiede soggetto</td>
+<td><code>soggetto_ruolo_id NOT NULL AND soggetto_id IS NULL</code></td>
 </tr>
 <tr>
 <td>2</td>
-<td>Ruolo richiede soggetto</td>
-<td><code>soggetto_ruolo_id NOT NULL AND soggetto_id IS NULL</code></td>
+<td>Istanza richiede soggetto</td>
+<td><code>istanza_utility_id NOT NULL AND soggetto_id IS NULL</code></td>
 </tr>
 <tr>
 <td>3</td>
@@ -4970,6 +4979,13 @@ La catena soggetto → ruolo → istanza deve essere coerente:</p>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Nota</strong> (dalla <code>20260611-01</code>): la vecchia regola «istanza richiede ruolo» è
+stata <strong>rimossa</strong>. L'istanza pende direttamente dal soggetto, non dal ruolo
+(<code>istanze_utilities.soggetto_id</code> è FK NOT NULL al soggetto). La regola 2
+(istanza → soggetto) è formalmente coperta anche dalla regola 4 quando
+<code>soggetto_id IS NULL</code>, ma è esplicitata per restituire un messaggio chiaro.</p>
+</blockquote>
 <hr />
 <h3 id="trigger-associato">Trigger associato<a class="headerlink" href="#trigger-associato" title="Permanent link">&para;</a></h3>
 <table>
@@ -5002,14 +5018,14 @@ La catena soggetto → ruolo → istanza deve essere coerente:</p>
 </thead>
 <tbody>
 <tr>
-<td><code>PRATICHE_ISTANZA_SENZA_RUOLO</code></td>
-<td>304</td>
-<td>istanza_utility_id richiede soggetto_ruolo_id</td>
-</tr>
-<tr>
 <td><code>PRATICHE_RUOLO_SENZA_SOGGETTO</code></td>
 <td>305</td>
 <td>soggetto_ruolo_id richiede soggetto_id</td>
+</tr>
+<tr>
+<td><code>PRATICHE_ISTANZA_SENZA_SOGGETTO</code></td>
+<td>308</td>
+<td>istanza_utility_id richiede soggetto_id</td>
 </tr>
 <tr>
 <td><code>PRATICHE_RUOLO_NON_COERENTE</code></td>
@@ -5023,6 +5039,10 @@ La catena soggetto → ruolo → istanza deve essere coerente:</p>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><code>PRATICHE_ISTANZA_SENZA_RUOLO</code> (304) è <strong>deprecato</strong> (non più sollevato dalla
+<code>20260611-01</code>): la riga resta in <code>config.messaggi_errore</code> come orfana.</p>
+</blockquote>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>

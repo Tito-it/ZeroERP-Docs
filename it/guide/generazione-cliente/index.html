@@ -5914,8 +5914,15 @@ Perche l'istanza nasce prima del contratto. In fase precontrattuale il soggetto 
 <p>La FK composita <code>(billing_account_id, istanza_utility_id)</code> su <code>clienti</code> garantisce inoltre che il billing account appartenga alla stessa istanza del cliente.</p>
 <h3 id="flusso-pre-contrattuale-vs-attivazione-diretta">Flusso pre-contrattuale vs attivazione diretta<a class="headerlink" href="#flusso-pre-contrattuale-vs-attivazione-diretta" title="Permanent link">&para;</a></h3>
 <p><strong>Pre-contrattuale</strong> (il contratto arriva dopo):</p>
-<div class="highlight"><pre><span></span><code>Soggetto → Istanza → Billing Account → \[pausa\] → Ruolo CLIENTE → Cliente
+<div class="highlight"><pre><span></span><code>Soggetto → Istanza → \[pausa, anche indefinita\] → Ruolo CLIENTE + Billing Account → Cliente
 </code></pre></div>
+<p>La pausa sta <strong>dopo l'istanza</strong>: e l'unica entita che puo esistere da sola in
+fase precontrattuale (richiede il solo soggetto). Il billing account NON puo
+precedere il ruolo CLIENTE: <code>billing_account</code> richiede <code>soggetto_ruolo_id</code>
+NOT NULL, quindi ruolo CL e BA nascono insieme (il ruolo via
+<code>fn_get_or_create_soggetto_ruolo</code>), solo quando si arriva a fatturare.
+Un'istanza puo legittimamente restare in pausa per sempre senza che il
+soggetto acquisisca mai il ruolo CLIENTE.</p>
 <p><strong>Attivazione diretta</strong> (il contratto c'e gia):</p>
 <div class="highlight"><pre><span></span><code>Soggetto + Ruolo CLIENTE → Istanza → Billing Account → Cliente
 </code></pre></div>

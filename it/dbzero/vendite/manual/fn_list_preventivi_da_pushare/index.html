@@ -4857,6 +4857,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#competenza-e-periodo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Competenza e periodo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#output-alto-livello" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4965,6 +4976,52 @@ passa anche <code>p_billing_account_id</code> di un BA diverso da quello del pre
 0 righe (comportamento atteso: i filtri sono tutti coerenti o il push non avviene).</p>
 <p><strong>Idempotenza:</strong> se il preventivo ha righe già in <code>commesse_attivita</code> con <code>stato_emissione = 'EMESSA'</code>,
 la funzione restituisce 0 righe — coerente con il NOT EXISTS del batch.</p>
+<hr />
+<h3 id="competenza-e-periodo">Competenza e periodo<a class="headerlink" href="#competenza-e-periodo" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Aggiornato:</strong> 2026-06-10 — migration <code>20260610-06</code></p>
+</blockquote>
+<p>I campi di competenza alimentano <code>commesse_attivita</code> (colonne <strong>NOT NULL</strong>) e
+sono derivati così:</p>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Derivazione</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>competenza_dal</code></td>
+<td><code>COALESCE(validita_dal, competenza_mese, data)</code></td>
+<td>mai NULL</td>
+</tr>
+<tr>
+<td><code>competenza_al</code></td>
+<td><code>GREATEST(competenza_dal, COALESCE(validita_al, validita_dal, competenza_mese, data))</code></td>
+<td>garantisce <code>dal ≤ al</code></td>
+</tr>
+<tr>
+<td><code>competenza_mese</code></td>
+<td><code>COALESCE(competenza_mese, date_trunc('month', COALESCE(validita_dal, data)))</code></td>
+<td>la <strong>policy</strong> <code>preventivi.competenza_mese</code> vince sul derivato</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong><code>competenza_dal/al</code></strong> = periodo attività (validità del preventivo o, in sua
+  mancanza, data documento). Un preventivo ACCETTATO <strong>senza validità</strong> è
+  legittimo: i fallback evitano il crash NOT NULL sul push.</li>
+<li><strong><code>competenza_mese</code></strong> = mese di fatturazione. Se la colonna di policy
+  <code>preventivi.competenza_mese</code> è valorizzata (accettazione DIFFERITA, o handler
+  pratica <code>vendita.push_preventivo</code>), è <strong>autorevole</strong>; altrimenti fallback al
+  mese derivato da validità/data (pregresso).</li>
+<li>Periodo e mese di fatturazione sono <strong>indipendenti</strong>: una riga DIFFERITA può
+  avere periodo a giugno e mese di fatturazione a settembre.</li>
+<li>Il filtro <code>p_competenza_mese</code> usa la <strong>stessa espressione</strong> di <code>competenza_mese</code>,
+  così lista e filtro restano coerenti.</li>
+</ul>
 <hr />
 <h3 id="output-alto-livello">📦 Output (alto livello)<a class="headerlink" href="#output-alto-livello" title="Permanent link">&para;</a></h3>
 <p>Restituisce per ogni riga candidata:
