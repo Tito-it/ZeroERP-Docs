@@ -4928,7 +4928,8 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Trigger function per la <strong>generazione automatica cross-pratica</strong>. Si attiva <strong>AFTER UPDATE OF stato_id</strong> su <code>pratiche.flussi</code>. Quando un flusso passa allo stato COMPLETATO, cerca le regole di generazione automatica e invoca <code>fn_genera_pratica_da_flusso</code> per ciascuna regola matching.</p>
+<p>Trigger function per la <strong>generazione automatica cross-pratica</strong>. Si attiva <strong>AFTER UPDATE OF stato_id</strong> su <code>pratiche.flussi</code>. Quando un flusso <strong>transita</strong> allo stato COMPLETATO, cerca le regole di generazione automatica e invoca <code>fn_genera_pratica_da_flusso</code> per ciascuna regola matching.</p>
+<p><strong>Idempotente</strong> (rev 2026-06-11): genera solo alla <strong>transizione di stato</strong> (<code>OLD.stato_id IS DISTINCT FROM NEW.stato_id</code>) — un UPDATE su un flusso gia' COMPLETATO (es. correzione <code>note_esito</code>) non rigenera nulla. Terza difesa: dedup in <code>fn_genera_pratica_da_flusso</code> + indice <code>uq_pratiche_flusso_origine_tipo</code>.</p>
 <hr />
 <h3 id="firma">Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">trgfn_flussi_generazione</span><span class="p">()</span>
@@ -4961,6 +4962,7 @@
 <hr />
 <h3 id="logica">Logica<a class="headerlink" href="#logica" title="Permanent link">&para;</a></h3>
 <ol>
+<li><strong>Guard transizione (idempotenza)</strong>: se <code>OLD.stato_id IS NOT DISTINCT FROM NEW.stato_id</code> → RETURN NEW (un UPDATE che non cambia stato non genera).</li>
 <li>Recupera <code>codice_interno</code> del nuovo stato da <code>config.stati_flussi_pratiche</code>.</li>
 <li>Se non e' <code>'COMPLETATO'</code> → RETURN NEW (nessuna azione).</li>
 <li>Se <code>template_flusso_id IS NULL</code> (flusso manuale) → RETURN NEW.</li>
@@ -4968,7 +4970,7 @@
 <li><code>template_flusso_origine_id = NEW.template_flusso_id</code></li>
 <li><code>auto = true</code> e <code>attivo = true</code></li>
 <li><code>esito_richiesto IS NULL</code> (qualsiasi esito) oppure <code>esito_richiesto = NEW.esito</code></li>
-<li>Per ogni regola trovata, invoca <code>pratiche.fn_genera_pratica_da_flusso(NEW.id, regola.id)</code>.</li>
+<li>Per ogni regola trovata, invoca <code>pratiche.fn_genera_pratica_da_flusso(NEW.id, regola.id)</code> (dedup interno alla fn).</li>
 </ol>
 <hr />
 <h3 id="trigger-associato">Trigger associato<a class="headerlink" href="#trigger-associato" title="Permanent link">&para;</a></h3>
@@ -4978,24 +4980,24 @@
 <th>Nome</th>
 <th>Fase</th>
 <th>Evento</th>
-<th>WHEN</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>trg_flussi_z90_generazione_upd</code></td>
 <td>AFTER</td>
-<td>UPDATE OF stato_id</td>
-<td><code>OLD.stato_id IS DISTINCT FROM NEW.stato_id</code></td>
+<td>UPDATE OF <code>stato_id</code></td>
 </tr>
 </tbody>
 </table>
+<p>Il check di transizione (<code>OLD IS DISTINCT FROM NEW</code>) e' <strong>interno alla funzione</strong>, non una clausola WHEN del trigger: copre anche gli UPDATE che riscrivono lo stesso <code>stato_id</code>.</p>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Il trigger scatta per qualsiasi cambio di <code>stato_id</code>, ma la function esce immediatamente se il nuovo stato non e' COMPLETATO — costo minimo per gli altri cambi stato.</li>
+<li>Prima della rev 2026-06-11 il trigger era <code>AFTER UPDATE</code> senza <code>OF</code> e senza check di transizione: ogni UPDATE su un flusso gia' COMPLETATO rigenerava una pratica figlia (bug di idempotenza, analisi-pratiche-workflow-v2 §7.B).</li>
 <li>Le regole con <code>auto = false</code> non vengono elaborate dal trigger: richiedono invocazione esplicita dal backend Django.</li>
 <li>Il filtro <code>esito_richiesto</code> permette di generare pratiche solo per specifici esiti del flusso (es. solo su esito positivo).</li>
+<li>Test: <code>db/pgtap/pratiche/test-generazione-cross-pratica.sql</code>.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

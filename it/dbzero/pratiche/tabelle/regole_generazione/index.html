@@ -4918,9 +4918,10 @@
 <hr />
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Al completamento di un flusso (stato → COMPLETATO), il trigger <code>trgfn_flussi_generazione</code> (DB-5) cerca regole matching con <code>auto = true</code> e genera le pratiche target.</li>
-<li>Per regole con <code>auto = false</code>, l'operatore puo' attivare la generazione manualmente via API.</li>
-<li>La pratica generata ha <code>flusso_origine_id</code> impostato al flusso che l'ha generata — tracciabilita' completa.</li>
+<li>Alla <strong>transizione</strong> di un flusso a COMPLETATO, il trigger <code>trgfn_flussi_generazione</code> cerca regole matching con <code>auto = true</code> e genera le pratiche target (idempotente dalla rev 2026-06-11: niente doppioni su UPDATE ripetuti).</li>
+<li>Per regole con <code>auto = false</code>, l'operatore puo' attivare la generazione manualmente via API — il dedup in <code>fn_genera_pratica_da_flusso</code> garantisce comunque <strong>un solo figlio per (flusso, tipo destinazione)</strong> (cintura: indice <code>uq_pratiche_flusso_origine_tipo</code>).</li>
+<li>La pratica generata porta la <strong>genealogia completa</strong>: <code>pratica_padre_id</code> (pratica sorgente) + <code>flusso_origine_id</code> (flusso generatore), ed eredita il <strong>contesto</strong> (<code>soggetto_ruolo_id</code>, <code>istanza_utility_id</code>) — ricade quindi nelle lenti D1.</li>
+<li>Se la regola dichiara <code>template_flusso_dest_id</code>, la figlia nasce con il <strong>flusso iniziale</strong> gia' creato in DA_ESEGUIRE.</li>
 </ul>
 <hr />
 <h3 id="colonne-specifiche">Colonne specifiche<a class="headerlink" href="#colonne-specifiche" title="Permanent link">&para;</a></h3>
@@ -4942,7 +4943,7 @@
 </tr>
 <tr>
 <td><code>template_flusso_dest_id</code></td>
-<td>Il flusso iniziale della pratica generata (nullable: NULL = nessun flusso auto).</td>
+<td>Il flusso iniziale della pratica generata (nullable: NULL = nessun flusso auto). Il template indicato deve essere <strong>senza prerequisiti</strong> (la figlia nasce vuota): altrimenti la generazione fallisce fail-fast.</td>
 </tr>
 <tr>
 <td><code>esito_richiesto</code></td>

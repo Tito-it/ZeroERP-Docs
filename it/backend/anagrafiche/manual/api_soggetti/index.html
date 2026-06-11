@@ -7067,7 +7067,9 @@ soggetto_ruolo_id)</code> in una selezione sola.</p>
 <span class="w">        </span><span class="nt">&quot;ragione_sociale_completa&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Azienda ConTutto&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;id_fiscale&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;01234567890&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;soggetto_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SOG-00042&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;n_istanze&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">        </span><span class="nt">&quot;n_istanze&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;istanza_unica_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">197</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;istanza_unica_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;IFO-0000051&quot;</span>
 <span class="w">      </span><span class="p">},</span>
 <span class="w">      </span><span class="p">{</span>
 <span class="w">        </span><span class="nt">&quot;soggetto_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;b2c3d4e5-...&quot;</span><span class="p">,</span>
@@ -7087,9 +7089,17 @@ soggetto_ruolo_id)</code> in una selezione sola.</p>
 </code></pre></div>
 <p>Note:</p>
 <ul>
-<li><code>n_istanze</code> = numero di <code>istanze_utilities</code> del soggetto: il FE lo usa per
-  decidere se proporre il campo "Istanza utility" (lookup
-  <code>/anagrafiche/istanze-utility/lookup/?soggetto_id=...</code>).</li>
+<li><code>n_istanze</code>: perimetro per riga — righe "senza ruolo" = tutte le istanze
+  del soggetto; righe con ruolo = SOLO le istanze legate a quel ruolo via
+  <code>clienti</code> (le forniture del cliente/BA; per i ruoli non-CL e' 0). Il FE lo
+  usa per decidere se proporre il campo "Istanza utility" (lookup
+  <code>/anagrafiche/istanze-utility/lookup/?soggetto_id=...&amp;soggetto_ruolo_id=...</code>,
+  filtrato con lo stesso perimetro).</li>
+<li><code>istanza_unica_id</code> / <code>istanza_unica_codice</code>: valorizzati SOLO se il
+  conteggio di cui sopra e' 1 — per il ruolo CL il FE auto-deriva l'istanza e
+  nasconde il picker (pattern preventivi "istanza da BA"); con piu' istanze
+  restano NULL e la scelta e' dell'operatore (combo ristretta alle forniture
+  del cliente).</li>
 <li>Scope emittente sul ruolo CL: stesso comportamento della lista ruoli (un
   operatore scoped vede il CL solo se il soggetto ha un cliente su un BA dei
   suoi emittenti). Le righe "senza ruolo" non sono scoped.</li>

@@ -4921,9 +4921,10 @@
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Ogni pratica ha uno o piu' flussi che ne compongono il workflow.</li>
-<li>I flussi con <code>template_flusso_id NOT NULL</code> sono istanze di template configurati; quelli con <code>NULL</code> sono step manuali.</li>
-<li>Al completamento (stato → COMPLETATO), l'<code>esito</code> viene registrato e puo' attivare la <strong>generazione cross-pratica</strong> (se esistono regole matching con <code>auto = true</code>).</li>
-<li>I <strong>prerequisiti</strong> (configurati in <code>template_flussi_prerequisiti</code>) sono verificati dal trigger guard BEFORE INSERT (DB-5).</li>
+<li>I flussi con <code>template_flusso_id NOT NULL</code> sono istanze di template configurati; quelli con <code>NULL</code> sono step manuali (bypassano i guard prerequisiti e ripetibilita').</li>
+<li>Al completamento (transizione stato → COMPLETATO), l'<code>esito</code> viene registrato e puo' attivare la <strong>generazione cross-pratica</strong> (se esistono regole matching con <code>auto = true</code>).</li>
+<li>I <strong>prerequisiti</strong> (configurati in <code>template_flussi_prerequisiti</code>, esito-aware) sono verificati dal trigger guard BEFORE INSERT: e' il meccanismo che esprime anche i <strong>bivi condizionali</strong> (D4).</li>
+<li>La <strong>ripetibilita'</strong> (<code>template_flussi.ripetibilita</code>, D3) e' verificata dal guard BEFORE INSERT <code>trg_flussi_a10_guard_ripetibilita_ins</code>: governa quante istanze dello stesso template possono nascere nella stessa pratica (l'ultima istanza = <code>MAX(id)</code>, escluse le ANNULLATO).</li>
 </ul>
 <hr />
 <h3 id="colonne-specifiche">Colonne specifiche<a class="headerlink" href="#colonne-specifiche" title="Permanent link">&para;</a></h3>

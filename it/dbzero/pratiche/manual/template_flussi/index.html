@@ -4920,9 +4920,11 @@
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Quando viene creata una pratica di un dato tipo, i flussi vengono istanziati dai template configurati.</li>
-<li>I template definiscono l'<strong>ordine</strong> (<code>sequenza</code>), l'<strong>obbligatorieta'</strong> e la <strong>direzione</strong> del flusso.</li>
+<li>I template definiscono l'<strong>ordine</strong> (<code>sequenza</code>), l'<strong>obbligatorieta'</strong>, la <strong>direzione</strong> e la <strong>ripetibilita'</strong> del flusso.</li>
 <li>I template con <code>handler_id NOT NULL</code> sono automatizzati; quelli con <code>handler_id NULL</code> sono manuali.</li>
 <li>I prerequisiti tra template sono definiti nella tabella <code>template_flussi_prerequisiti</code> (DAG).</li>
+<li>La regola di <strong>ripetibilita'</strong> (D3) governa quante istanze dello stesso template possono nascere nella stessa pratica: enforcement a DB nel guard <code>trg_flussi_a10_guard_ripetibilita_ins</code> (<a href="../../funzioni/fn_check_ripetibilita_flusso/">fn_check_ripetibilita_flusso</a>).</li>
+<li>L'<strong>obbligatorieta'</strong> vincola la chiusura della pratica (D4): un template <code>obbligatorio = true</code> non completato e ancora percorribile blocca la transizione a CHIUSA (<a href="../../funzioni/fn_check_chiusura_pratica/">fn_check_chiusura_pratica</a>). Il ramo morto di un bivio non blocca.</li>
 </ul>
 <hr />
 <h3 id="colonne-specifiche">Colonne specifiche<a class="headerlink" href="#colonne-specifiche" title="Permanent link">&para;</a></h3>
@@ -4940,11 +4942,15 @@
 </tr>
 <tr>
 <td><code>obbligatorio</code></td>
-<td>BOOLEAN DEFAULT false. Se true, il flusso deve essere completato per chiudere la pratica.</td>
+<td>BOOLEAN DEFAULT false. Se true, il flusso deve essere completato per chiudere la pratica — solo se ancora percorribile: il ramo morto di un bivio non blocca (guard <code>trg_pratiche_a10_guard_chiusura_flussi_upd</code>).</td>
 </tr>
 <tr>
 <td><code>direzione</code></td>
 <td>VARCHAR(10) CHECK (ENTRATA, USCITA, INTERNA) DEFAULT 'INTERNA'. Caratterizza il flusso rispetto all'esterno: ENTRATA = dall'esterno verso il gestionale, USCITA = dal gestionale verso l'esterno, INTERNA = operazione interna.</td>
+</tr>
+<tr>
+<td><code>ripetibilita</code></td>
+<td>VARCHAR(20) CHECK (MAI, SE_NON_POSITIVO, SEMPRE) DEFAULT 'SE_NON_POSITIVO'. Regola di ripetibilita' delle istanze nella stessa pratica: <code>MAI</code> = una sola istanza non annullata (es. CONFERMA); <code>SE_NON_POSITIVO</code> = nuova istanza solo se l'ultima e' COMPLETATO con esito diverso da POSITIVO (un'istanza ancora aperta blocca — es. APPUNTAMENTO andato male si rifa'); <code>SEMPRE</code> = libera (es. contatto telefonico).</td>
 </tr>
 <tr>
 <td><code>handler_params</code></td>
@@ -4957,6 +4963,7 @@
 <ul>
 <li><strong>UQ composito</strong>: <code>(tipo_prestazione_id, codice)</code> — codice univoco per tipo_prestazione.</li>
 <li><strong>CHECK direzione</strong>: solo valori ENTRATA, USCITA, INTERNA.</li>
+<li><strong>CHECK ripetibilita</strong>: solo valori MAI, SE_NON_POSITIVO, SEMPRE.</li>
 <li><strong>FK handler_id nullable</strong>: NULL = step manuale, NOT NULL = step automatizzato.</li>
 </ul>
 <hr />

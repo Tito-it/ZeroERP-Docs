@@ -4939,7 +4939,8 @@
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
 <p>La funzione <strong><code>pratiche.fn_genera_pratica_da_flusso</code></strong> e' il motore della <strong>generazione cross-pratica</strong>: crea una nuova pratica a partire da un flusso completato, secondo una regola configurata in <code>pratiche.regole_generazione</code>.</p>
-<p>La pratica generata eredita emittente, soggetto e priorita' dalla pratica sorgente, ma con il tipo_prestazione definito dalla regola di destinazione.</p>
+<p>La pratica generata eredita emittente, soggetto, <strong>contesto</strong> (<code>soggetto_ruolo_id</code>, <code>istanza_utility_id</code>) e priorita' dalla pratica sorgente, con il tipo_prestazione definito dalla regola di destinazione, e porta la <strong>genealogia completa</strong>: <code>pratica_padre_id</code> (la pratica sorgente) + <code>flusso_origine_id</code> (il flusso che l'ha generata).</p>
+<p>La funzione e' <strong>idempotente</strong> (rev 2026-06-11): per la stessa coppia (flusso, tipo destinazione) esiste al massimo una figlia; le chiamate successive ritornano l'id esistente senza crearne altre.</p>
 <hr />
 <h3 id="firma-della-funzione">Firma della funzione<a class="headerlink" href="#firma-della-funzione" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">fn_genera_pratica_da_flusso</span><span class="p">(</span>
@@ -4981,15 +4982,18 @@
 <ol>
 <li><strong>Validazione parametri</strong>: verifica che <code>p_flusso_id</code> e <code>p_regola_id</code> siano NOT NULL e &gt; 0.</li>
 <li><strong>Recupera dati flusso</strong>: legge <code>pratica_id</code> dal flusso indicato.</li>
-<li><strong>Recupera pratica sorgente</strong>: copia <code>emittente_fiscale_id</code>, <code>soggetto_id</code>, <code>priorita_id</code>.</li>
-<li><strong>Recupera regola</strong>: legge <code>tipo_prestazione_dest_id</code> dalla regola (deve essere attiva).</li>
+<li><strong>Recupera pratica sorgente</strong>: copia <code>emittente_fiscale_id</code>, <code>soggetto_id</code>, <code>soggetto_ruolo_id</code>, <code>istanza_utility_id</code>, <code>priorita_id</code> (fix-4: senza la propagazione del contesto le figlie cadrebbero fuori dalle lenti D1).</li>
+<li><strong>Recupera regola</strong>: legge <code>tipo_prestazione_dest_id</code> e <code>template_flusso_dest_id</code> dalla regola (deve essere attiva).</li>
+<li><strong>Idempotenza (fix-1)</strong>: se esiste gia' una pratica con <code>flusso_origine_id = p_flusso_id</code> e <code>tipo_prestazione_id</code> di destinazione, <strong>ritorna l'id esistente</strong> (copre trigger auto, API <code>/genera/</code> e doppi eventi).</li>
 <li><strong>Stato iniziale</strong>: cerca lo stato con <code>codice_interno = 'BOZZA'</code> in <code>config.stati_pratiche</code>.</li>
 <li><strong>Crea pratica target</strong>: INSERT in <code>pratiche.pratiche</code> con:</li>
 <li><code>tipo_prestazione_id</code> dalla regola</li>
-<li><code>emittente_fiscale_id</code>, <code>soggetto_id</code>, <code>priorita_id</code> dalla pratica sorgente</li>
+<li><code>emittente_fiscale_id</code>, <code>soggetto_id</code>, <code>soggetto_ruolo_id</code>, <code>istanza_utility_id</code>, <code>priorita_id</code> dalla sorgente</li>
 <li><code>stato_id</code> = BOZZA</li>
-<li><code>flusso_origine_id</code> = <code>p_flusso_id</code> (tracciabilita' cross-pratica)</li>
-<li><strong>Ritorna</strong> l'ID della nuova pratica.</li>
+<li><code>pratica_padre_id</code> = pratica sorgente (fix-2)</li>
+<li><code>flusso_origine_id</code> = <code>p_flusso_id</code></li>
+<li><strong>Flusso iniziale (fix-3)</strong>: se la regola dichiara <code>template_flusso_dest_id</code>, crea il primo flusso della figlia in <code>DA_ESEGUIRE</code> con la <code>sequenza</code> del template. Il template destinazione deve essere <strong>senza prerequisiti</strong> (la figlia nasce vuota): in caso contrario il guard prerequisiti fa fallire la generazione — fail-fast voluto, e' un errore di seed della regola.</li>
+<li><strong>Ritorna</strong> l'ID della pratica (nuova o esistente).</li>
 </ol>
 <hr />
 <h3 id="errori-sollevati">⚠️ Errori sollevati<a class="headerlink" href="#errori-sollevati" title="Permanent link">&para;</a></h3>
@@ -5002,42 +5006,40 @@
 </thead>
 <tbody>
 <tr>
-<td><code>E_GENERICO</code></td>
-<td><code>p_flusso_id</code> NULL o &lt;= 0</td>
+<td><code>E_PARAMETRO_INVALIDO</code></td>
+<td><code>p_flusso_id</code> o <code>p_regola_id</code> NULL o &lt;= 0</td>
 </tr>
 <tr>
-<td><code>E_GENERICO</code></td>
-<td><code>p_regola_id</code> NULL o &lt;= 0</td>
-</tr>
-<tr>
-<td><code>E_GENERICO</code></td>
+<td><code>E_VALORE_MANCANTE</code></td>
 <td>Flusso non trovato</td>
 </tr>
 <tr>
-<td><code>E_GENERICO</code></td>
+<td><code>E_CODICE</code></td>
 <td>Regola non trovata o non attiva</td>
 </tr>
 <tr>
-<td><code>E_GENERICO</code></td>
-<td>Stato BOZZA non configurato</td>
+<td><code>E_CODICE</code></td>
+<td>Stato BOZZA (pratiche) o DA_ESEGUIRE (flussi) non configurato</td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h3 id="catena-di-invocazione">Catena di invocazione<a class="headerlink" href="#catena-di-invocazione" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>UPDATE flussi SET stato_id = &lt;COMPLETATO&gt;
+<div class="highlight"><pre><span></span><code>UPDATE flussi SET stato_id = &lt;COMPLETATO&gt;   -- solo alla TRANSIZIONE di stato
   → trg_flussi_z90_generazione_upd (AFTER UPDATE OF stato_id)
     → trgfn_flussi_generazione()
-      → fn_genera_pratica_da_flusso(flusso_id, regola_id)
-        → INSERT INTO pratiche.pratiche (con flusso_origine_id)
+      → fn_genera_pratica_da_flusso(flusso_id, regola_id)   -- dedup interno
+        → INSERT INTO pratiche.pratiche (pratica_padre_id + flusso_origine_id + contesto)
+        → INSERT INTO pratiche.flussi (se template_flusso_dest_id)
 </code></pre></div>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
 <li>La funzione e' invocata automaticamente dal trigger <code>trgfn_flussi_generazione</code> per le regole con <code>auto = true</code>.</li>
-<li>Le regole con <code>auto = false</code> richiedono invocazione esplicita dal backend.</li>
-<li>Il filtro <code>esito_richiesto</code> nella regola permette di generare pratiche solo per esiti specifici del flusso.</li>
-<li><code>flusso_origine_id</code> sulla pratica target consente la <strong>tracciabilita' bidirezionale</strong>: dalla pratica risalire al flusso che l'ha generata.</li>
+<li>Le regole con <code>auto = false</code> richiedono invocazione esplicita dal backend — anche in quel caso il dedup garantisce un solo figlio per (flusso, tipo destinazione).</li>
+<li>Cintura strutturale: indice UNIQUE parziale <code>uq_pratiche_flusso_origine_tipo</code> su <code>pratiche.pratiche(flusso_origine_id, tipo_prestazione_id)</code> — il doppio figlio e' impossibile anche per scritture fuori dal motore. Resta legittimo che un flusso generi pratiche di tipi <strong>diversi</strong> (regole multiple).</li>
+<li><code>pratica_padre_id</code> + <code>flusso_origine_id</code> consentono la <strong>tracciabilita' bidirezionale</strong> completa: dalla figlia risalire a pratica e flusso che l'hanno generata.</li>
+<li>Test: <code>db/pgtap/pratiche/test-generazione-cross-pratica.sql</code>.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

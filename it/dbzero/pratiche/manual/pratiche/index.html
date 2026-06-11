@@ -4857,6 +4857,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#indici-notevoli" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Indici notevoli
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fk-principali" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4921,10 +4932,10 @@
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Ogni pratica ha un <strong>tipo_prestazione</strong> che ne determina i template flussi disponibili.</li>
-<li>Lo <strong>stato</strong> governa le transizioni del ciclo di vita (BOZZA → APERTA → CHIUSA).</li>
-<li>L'<strong>assegnazione</strong> (risorsa umana / unita' organizzativa) definisce chi lavora la pratica.</li>
-<li>La <strong>gerarchia</strong> (<code>pratica_padre_id</code>) consente sotto-pratiche.</li>
-<li>La <strong>tracciabilita' cross-pratica</strong> (<code>flusso_origine_id</code>) collega la pratica al flusso che l'ha generata.</li>
+<li>Lo <strong>stato</strong> governa le transizioni del ciclo di vita (BOZZA → APERTA → CHIUSA). La transizione a <strong>CHIUSA</strong> e' inoltre vincolata ai flussi obbligatori percorribili non completati (guard <code>trg_pratiche_a10_guard_chiusura_flussi_upd</code>, D4 — il ramo morto di un bivio non blocca).</li>
+<li>Il <strong>contesto anagrafico</strong> a due rami (<code>soggetto_id</code> → <code>soggetto_ruolo_id</code> <strong>oppure</strong> <code>soggetto_id</code> → <code>istanza_utility_id</code>) classifica la pratica nelle lenti canoniche D1: RUOLO / ISTANZA / SOGGETTO / INTERNA (tutti NULL). Lettura canonica: <a href="../../funzioni/fn_lista_pratiche_per_contesto/">fn_lista_pratiche_per_contesto</a>; coerenza garantita da <code>trgfn_pratiche_guard_contesto</code>.</li>
+<li>L'<strong>assegnazione</strong> (risorsa umana / unita' organizzativa) definisce chi lavora la pratica — ortogonale al contesto cliente (le pratiche interne sono "contesto vuoto + assegnazione", D2).</li>
+<li>La <strong>genealogia cross-pratica</strong> (<code>pratica_padre_id</code> + <code>flusso_origine_id</code>) collega la pratica generata alla pratica e al flusso che l'hanno generata — entrambe valorizzate da <code>fn_genera_pratica_da_flusso</code>.</li>
 <li>Ogni evento significativo viene registrato nel <strong>giornale</strong>.</li>
 </ul>
 <hr />
@@ -4943,31 +4954,55 @@
 </tr>
 <tr>
 <td><code>soggetto_id</code></td>
-<td>UUID nullable. FK a <code>anagrafiche.soggetti</code> — il soggetto interessato dalla pratica.</td>
+<td>UUID nullable. FK a <code>anagrafiche.soggetti</code> — il soggetto interessato dalla pratica. NULL = pratica interna.</td>
+</tr>
+<tr>
+<td><code>soggetto_ruolo_id</code></td>
+<td>BIGINT nullable. FK a <code>anagrafiche.soggetti_ruoli</code> — contesto ruolo (ramo 1). Richiede <code>soggetto_id</code> coerente (guard contesto).</td>
+</tr>
+<tr>
+<td><code>istanza_utility_id</code></td>
+<td>BIGINT nullable. FK a <code>anagrafiche.istanze_utilities</code> — contesto istanza/utility (ramo 2, indipendente dal ruolo: prospect puro ammesso). Richiede <code>soggetto_id</code> coerente.</td>
 </tr>
 <tr>
 <td><code>pratica_padre_id</code></td>
-<td>BIGINT nullable. Self-reference per gerarchia. ON DELETE SET NULL.</td>
+<td>BIGINT nullable. Self-reference per gerarchia/genealogia. Valorizzata da <code>fn_genera_pratica_da_flusso</code> per le pratiche generate (rev 2026-06-11). ON DELETE SET NULL.</td>
 </tr>
 <tr>
 <td><code>flusso_origine_id</code></td>
-<td>BIGINT nullable. FK a <code>pratiche.flussi</code> — tracciabilita' cross-pratica. Impostato dalla funzione <code>fn_genera_pratica_da_flusso</code> (DB-5). ON DELETE SET NULL.</td>
+<td>BIGINT nullable. FK a <code>pratiche.flussi</code> — il flusso che ha generato la pratica. Impostato da <code>fn_genera_pratica_da_flusso</code>. ON DELETE SET NULL.</td>
 </tr>
 <tr>
 <td><code>canale_origine_id</code></td>
 <td>INTEGER nullable. FK a <code>config.canali_pratiche</code> — da quale sorgente esterna e' arrivata la richiesta. NULL = creata internamente.</td>
 </tr>
 <tr>
-<td><code>solo_interna</code></td>
-<td>BOOLEAN DEFAULT false. Se true, la pratica non espone flussi su canali esterni.</td>
-</tr>
-<tr>
 <td><code>codice</code></td>
-<td>TEXT nullable. Codice pratica generato da trigger (DB-5).</td>
+<td>TEXT nullable. Codice pratica generato da trigger.</td>
 </tr>
 <tr>
 <td><code>data_scadenza</code></td>
 <td>DATE nullable. Scadenza prevista per la pratica.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="indici-notevoli">Indici notevoli<a class="headerlink" href="#indici-notevoli" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Indice</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uq_pratiche_flusso_origine_tipo</code></td>
+<td>UNIQUE parziale su <code>(flusso_origine_id, tipo_prestazione_id)</code> WHERE <code>flusso_origine_id IS NOT NULL</code> — anti doppio-figlio della generazione cross-pratica.</td>
+</tr>
+<tr>
+<td><code>ix_pratiche_soggetto_ruolo_id</code>, <code>ix_pratiche_istanza_utility_id</code></td>
+<td>Parziali (NOT NULL), via <code>dbops.fk_index_policy</code> — supporto alle lenti per contesto.</td>
 </tr>
 </tbody>
 </table>
