@@ -62,7 +62,8 @@
     <label class="md-overlay" for="__drawer" aria-label="Navigazione"></label>
     <div data-md-component="skip">
       
-        <a href="#__skip" class="md-skip">
+        
+        <a href="#documentazione-funzione-venditefn_preventivo_ha_residuo_ordine" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -4789,6 +4790,11 @@
                     
                     
                     
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
                   
                   <div class="md-sidebar__inner">
                     
@@ -4798,6 +4804,75 @@
   
   
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Indice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-funzione-venditefn_preventivo_ha_residuo_ordine" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        📘 Documentazione Funzione – <code>vendite.fn_preventivo_ha_residuo_ordine</code>
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Funzione – vendite.fn_preventivo_ha_residuo_ordine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🎯 Scopo Principale
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logica-di-funzionamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Logica di funzionamento
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#consumatori" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Consumatori
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#note-operative" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Note operative
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -4817,6 +4892,40 @@
 
   <h1 id="__skip">Fn preventivo ha residuo ordine</h1>
 
+<h2 id="documentazione-funzione-venditefn_preventivo_ha_residuo_ordine">📘 Documentazione Funzione – <code>vendite.fn_preventivo_ha_residuo_ordine</code><a class="headerlink" href="#documentazione-funzione-venditefn_preventivo_ha_residuo_ordine" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p><a href="../../manual/fn_preventivo_ha_residuo_commessa/">fn_preventivo_ha_residuo_commessa</a> (gemella, ramo servizi)
+<a href="../../manual/vw_preventivi_righe_smistabili_ordine/">vw_preventivi_righe_smistabili_ordine</a> (predicato unico)
+<a href=".././fn_push_preventivo_a_ordine/">fn_push_preventivo_a_ordine</a></p>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p><code>TRUE</code> se il preventivo ha righe natura <strong>ORDINE</strong> (merce) non ancora allocate
+a un ordine: il push ordine avrebbe effetto. E' la meta' "merce" della coppia
+simmetrica di capability del modello split-per-natura
+(brief-preventivi-ordini.md D6/D8).</p>
+<hr />
+<h3 id="logica-di-funzionamento">Logica di funzionamento<a class="headerlink" href="#logica-di-funzionamento" title="Permanent link">&para;</a></h3>
+<p><code>EXISTS</code> sulla vista predicato unico <code>vw_preventivi_righe_smistabili_ordine</code>
+(righe attive, natura <code>destinazione_tipo = 'ORDINE'</code>, non gia' allocate via
+<code>ordini_righe.preventivo_riga_id</code>). Nessun requisito di testata: l'ordine non
+richiede billing account (diversamente dalla gemella commessa).</p>
+<hr />
+<h3 id="consumatori">Consumatori<a class="headerlink" href="#consumatori" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>script.fn_available_actions_preventivo</code> — capability <code>can_genera_ordine</code>
+  (<code>ACCETTATO AND fn_preventivo_ha_residuo_ordine</code>).</li>
+<li>Gate <strong>EVASO</strong> lato BE (<code>preventivi_service.py</code>): il push commessa evade il
+  preventivo solo se non resta residuo merce.</li>
+</ul>
+<hr />
+<h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Non considera COMMESSA (gestita dalla gemella) ne' CONTRATTO (non ammesso
+  sul preventivo, MODALITA' A).</li>
+<li>Test: <code>db/pgtap/script/test-fn-available-actions-preventivo-genera-ordine-v1.sql</code>.</li>
+</ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

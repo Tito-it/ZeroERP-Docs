@@ -3273,6 +3273,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#8bis-genera-ordine-lalternativa-one-shot-al-contratto" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8.bis Genera ordine — l'alternativa one-shot al contratto
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.bis Genera ordine — l&#x27;alternativa one-shot al contratto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regole" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Regole
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-viene-copiato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cosa viene copiato
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#9-valuta" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5641,6 +5680,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#8bis-genera-ordine-lalternativa-one-shot-al-contratto" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8.bis Genera ordine — l'alternativa one-shot al contratto
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.bis Genera ordine — l&#x27;alternativa one-shot al contratto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regole" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Regole
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-viene-copiato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cosa viene copiato
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#9-valuta" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5848,10 +5926,13 @@
 
 <h1 id="guida-gestione-offerte-commerciali">Guida — Gestione Offerte commerciali<a class="headerlink" href="#guida-gestione-offerte-commerciali" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p><strong>Ultima revisione</strong>: 29 maggio 2026 — modello completo: eccezioni "delta del
+<p><strong>Ultima revisione</strong>: 8 giugno 2026 — modello completo: eccezioni "delta del
 listino" simmetriche ai contratti, componenti BoM (<code>offerte_commerciali_eccezioni_componenti</code>),
 stato <code>ANNULLATA</code> + <code>motivazione_rifiuto</code>, azioni data-driven via
-<code>fn_available_actions_offerta</code>, push a contratto idempotente, valuta da resolver.</p>
+<code>fn_available_actions_offerta</code>, push a contratto idempotente, valuta da resolver,
+<strong>generazione ordine da offerta ACCETTATA</strong> (azione <code>genera_ordine</code>) e <strong>mutua
+esclusività contratto/ordine</strong> (un'offerta accettata genera al massimo <em>uno</em> tra
+contratto e ordine, in modo permanente).</p>
 <p><strong>Destinatari</strong>: analisti funzionali, sviluppatori backend/frontend, DBA.</p>
 <p><strong>Vedi anche</strong> — schemi DB:</p>
 <ul>
@@ -5895,8 +5976,11 @@ e cosa diventa quando le accetta?"</em></p>
   esclusioni, articoli fuori listino) — esattamente come un contratto</li>
 <li>ha un <strong>ciclo di vita</strong> con stati da bozza a emessa, fino all'accettazione o al
   rifiuto, e supporta <strong>revisioni</strong></li>
-<li>quando <strong>accettata</strong>, viene <strong>spinta in un contratto</strong> (push a contratto): nasce
-  un contratto in DRAFT che eredita 1:1 le sue condizioni</li>
+<li>quando <strong>accettata</strong>, può prendere <strong>una</strong> di due strade alternative (mai
+  entrambe): essere <strong>spinta in un contratto</strong> (push a contratto) — nasce un
+  contratto in DRAFT che eredita 1:1 le condizioni, per la fornitura ricorrente —
+  oppure <strong>generare un ordine</strong> one-shot (azione <code>genera_ordine</code>), per una vendita
+  puntuale. Le due azioni sono <strong>mutuamente esclusive</strong>: vedi §1.1 e §8.bis</li>
 </ul>
 <p>Il numero documento è auto-generato (prefisso <code>OFC</code>, trigger
 <code>trgfn_offerte_commerciali_gen_codice</code>) e non modificabile.</p>
@@ -5906,6 +5990,15 @@ del contratto: formalizza la proposta di condizioni prima che il contratto esist
 Il legame è <strong>1:1</strong>: un'offerta accettata genera <strong>un solo</strong> contratto. Il legame
 è registrato sul contratto (colonna <code>contratti.offerta_id</code>, con vincolo di unicità),
 non sull'offerta — così la generazione è idempotente (vedi §8).</p>
+<blockquote>
+<p><strong>Contratto OPPURE ordine — mai entrambi (XOR).</strong> Da un'offerta ACCETTATA si può
+generare <em>o</em> un contratto (fornitura ricorrente) <em>o</em> un ordine di vendita
+one-shot, ma <strong>al massimo uno dei due</strong>. La semantica è "both-or-neither": finché
+l'offerta è vergine, entrambe le azioni (<code>push_contratto</code> e <code>genera_ordine</code>) sono
+disponibili; appena se ne usa una, <strong>entrambe spariscono in modo permanente</strong>
+(vale anche se il documento generato viene poi annullato). Generare tutti e due
+significherebbe fatturare due volte lo stesso oggetto. Vedi §8.bis.</p>
+</blockquote>
 <h3 id="12-offerta-commerciale-vs-preventivo">1.2 Offerta commerciale vs preventivo<a class="headerlink" href="#12-offerta-commerciale-vs-preventivo" title="Permanent link">&para;</a></h3>
 <p>Entrambi sono proposte al cliente, ma rispondono a esigenze diverse:</p>
 <table>
@@ -5930,7 +6023,7 @@ non sull'offerta — così la generazione è idempotente (vedi §8).</p>
 <tr>
 <td>Cosa genera l'accettazione</td>
 <td>Una <strong>commessa</strong> → fattura una tantum</td>
-<td>Un <strong>contratto</strong> in DRAFT → fornitura ricorrente</td>
+<td>Un <strong>contratto</strong> in DRAFT (ricorrente) <strong>oppure</strong> un <strong>ordine</strong> one-shot — XOR</td>
 </tr>
 <tr>
 <td>"Fotografia" congelata</td>
@@ -6210,8 +6303,10 @@ serve riapprovare ciò che era già stato autorizzato in fase di proposta.</p>
 <ul>
 <li>le <strong>transizioni manuali</strong> lette dalla configurazione
   (<code>config.stati_doc_offerte_transizioni</code>): <code>emetti</code>, <code>annulla</code>, <code>accetta</code>, <code>rifiuta</code></li>
-<li>due azioni <strong>speciali</strong>: <code>crea_revisione</code> (solo da EMESSA) e <code>push_contratto</code>
-  (solo da ACCETTATA e solo se il contratto non è già stato generato)</li>
+<li>tre azioni <strong>speciali</strong>: <code>crea_revisione</code> (solo da EMESSA), <code>push_contratto</code> e
+  <code>genera_ordine</code> (entrambe solo da ACCETTATA e <strong>mutuamente esclusive</strong>: ciascuna
+  è disponibile solo se dall'offerta non è stato ancora generato né un contratto né
+  un ordine — vedi §8.bis)</li>
 </ul>
 <p>Per ogni azione la funzione restituisce i metadati per l'interfaccia (chiave di
 dispatch, stato target, etichetta i18n, icona, se serve conferma, se serve una
@@ -6234,11 +6329,15 @@ motivazione) e una serie di flag di capability:</p>
 </tr>
 <tr>
 <td><code>can_push_contratto</code></td>
-<td>l'offerta è ACCETTATA <strong>e</strong> non esiste già un contratto generato</td>
+<td>l'offerta è ACCETTATA <strong>e</strong> non esiste già né un contratto né un ordine generati dall'offerta (XOR)</td>
 </tr>
 <tr>
-<td><code>can_push_contratto_reason</code></td>
-<td>(se il push non è possibile) il motivo, es. <code>OFFERTA_CONTRATTO_GIA_GENERATO</code></td>
+<td><code>can_genera_ordine</code></td>
+<td>l'offerta è ACCETTATA <strong>e</strong> non esiste già né un contratto né un ordine generati dall'offerta (XOR)</td>
+</tr>
+<tr>
+<td><code>can_push_contratto_reason</code> / <code>can_genera_ordine_reason</code> (+<code>_reason_key</code>)</td>
+<td>(se l'azione non è possibile) il motivo, es. <code>OFFERTA_CONTRATTO_GIA_GENERATO</code> o <code>OFFERTA_ORDINE_GIA_GENERATO</code></td>
 </tr>
 </tbody>
 </table>
@@ -6270,6 +6369,31 @@ che opera in transazione atomica.</p>
 </ul>
 <p>Il contratto nasce in <strong>DRAFT</strong>: il push non lo attiva. Da lì segue il proprio ciclo
 di vita (vedi <a href=".././gestione-contratti/">Gestione Contratti</a>).</p>
+<hr />
+<h2 id="8bis-genera-ordine-lalternativa-one-shot-al-contratto">8.bis Genera ordine — l'alternativa one-shot al contratto<a class="headerlink" href="#8bis-genera-ordine-lalternativa-one-shot-al-contratto" title="Permanent link">&para;</a></h2>
+<p>Quando l'offerta è in <strong>ACCETTATA</strong>, accanto al push a contratto è disponibile
+l'azione <strong>genera ordine</strong>: invece di avviare una fornitura ricorrente, trasforma
+l'offerta in un <strong>ordine di vendita</strong> one-shot (vendita puntuale).</p>
+<h3 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h3>
+<ol>
+<li>l'offerta deve essere in <strong>ACCETTATA</strong>;</li>
+<li>vale la <strong>mutua esclusività XOR</strong>: l'azione è disponibile solo se dall'offerta
+   non è ancora stato generato né un contratto né un ordine. La prima generazione
+   (contratto <em>o</em> ordine) disabilita <strong>permanentemente</strong> l'altra;</li>
+<li>la generazione ordine è <strong>idempotente 1:1</strong>: un secondo tentativo sulla stessa
+   offerta è rifiutato con <code>E_ORD_OFFERTA_GIA_CONVERTITA</code> (rete di sicurezza:
+   vincolo di unicità <code>uq_ordini_v_documento_origine_offerta</code>);</li>
+<li>se l'offerta ha già generato un contratto, la generazione ordine è bloccata con
+   <code>E_OFFERTA_CONTRATTO_GIA_GENERATO</code> (e, specularmente, il push a contratto su
+   un'offerta che ha già un ordine è bloccato con <code>E_OFFERTA_ORDINE_GIA_GENERATO</code>).</li>
+</ol>
+<h3 id="cosa-viene-copiato">Cosa viene copiato<a class="headerlink" href="#cosa-viene-copiato" title="Permanent link">&para;</a></h3>
+<p>L'ordine nasce in <strong>DRAFT</strong> ereditando le <strong>righe espanse</strong> dell'offerta (listino +
+variazione globale + eccezioni, con i componenti BoM), preservando i <strong>prezzi
+negoziati/override</strong>. Sull'ordine viene registrata l'origine
+(<code>documento_origine = ('OFFERTA', id)</code>). L'offerta resta <strong>ACCETTATA</strong>.</p>
+<p>Da lì l'ordine segue il proprio ciclo di vita (conferma, push a commessa); vedi
+<a href=".././gestione-ordini/">Gestione Ordini di vendita</a>.</p>
 <hr />
 <h2 id="9-valuta">9. Valuta<a class="headerlink" href="#9-valuta" title="Permanent link">&para;</a></h2>
 <p>La valuta dell'offerta (<code>valuta_id</code>) viene riempita di default dal trigger
@@ -6303,12 +6427,14 @@ gestore → valuta predefinita del gestore</em>. Se nessuna valuta è risolvibil
    │ACCETTATA│  │ RIFIUTATA │
    └───┬────┘  │(terminale)│
        │       └───────────┘
-       │ push a contratto (idempotente)
-       │
-   ┌───▼──────────────────┐
-   │  Contratto in DRAFT   │
-   │  (eredita condizioni) │
-   └───────────────────────┘
+       │  bivio XOR — una sola delle due (entrambe se non già usate, poi sparisce l&#39;altra)
+       ├──────────────────────────────┐
+       │ push a contratto              │ genera ordine
+       │                               │
+   ┌───▼──────────────────┐   ┌────────▼───────────────┐
+   │  Contratto in DRAFT   │   │  Ordine vendita DRAFT   │
+   │  (fornitura ricorrente)│   │  (vendita one-shot)     │
+   └───────────────────────┘   └─────────────────────────┘
 </code></pre></div>
 <hr />
 <h2 id="11-casi-duso-operativi">11. Casi d'uso operativi<a class="headerlink" href="#11-casi-duso-operativi" title="Permanent link">&para;</a></h2>
@@ -6380,7 +6506,15 @@ gestore → valuta predefinita del gestore</em>. Se nessuna valuta è risolvibil
 </tr>
 <tr>
 <td><code>E_OFFERTA_CONTRATTO_GIA_GENERATO</code></td>
-<td>Push a contratto quando il contratto è già stato generato (idempotenza)</td>
+<td>Push a contratto già generato (idempotenza) <strong>oppure</strong> tentativo di generare un ordine quando l'offerta ha già un contratto (mutua esclusività XOR)</td>
+</tr>
+<tr>
+<td><code>E_OFFERTA_ORDINE_GIA_GENERATO</code></td>
+<td>Push a contratto quando l'offerta ha già generato un ordine (mutua esclusività XOR)</td>
+</tr>
+<tr>
+<td><code>E_ORD_OFFERTA_GIA_CONVERTITA</code></td>
+<td>Secondo tentativo di generare un ordine dalla stessa offerta (univocità 1:1 offerta→ordine)</td>
 </tr>
 <tr>
 <td><code>E_DOC_COMPOSITO_BOM_VUOTA</code></td>
@@ -6434,6 +6568,14 @@ controlli equivalenti solo per dare messaggi parlanti prima del roundtrip.</p>
 <tr>
 <td><strong>Push a contratto</strong></td>
 <td>Generazione del contratto DRAFT dall'offerta ACCETTATA, idempotente, con copia 1:1 di eccezioni, componenti e utility</td>
+</tr>
+<tr>
+<td><strong>Genera ordine</strong></td>
+<td>Generazione di un ordine di vendita one-shot DRAFT dall'offerta ACCETTATA (righe espanse, prezzi negoziati), <strong>alternativa</strong> al push a contratto</td>
+</tr>
+<tr>
+<td><strong>XOR contratto/ordine</strong></td>
+<td>Da un'offerta ACCETTATA si genera al massimo <em>uno</em> tra contratto e ordine; la prima generazione disabilita l'altra in modo permanente</td>
 </tr>
 <tr>
 <td><strong>OVERRIDE / ESCLUSIONE / AGGIUNTA</strong></td>

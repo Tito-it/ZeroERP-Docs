@@ -4857,10 +4857,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#trigger-associato" class="md-nav__link">
+  <a href="#trigger-associati" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Trigger associato
+        Trigger associati
       </span>
     </span>
   </a>
@@ -4911,8 +4911,10 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Valorizza automaticamente <code>data_apertura</code> alla transizione BOZZA → APERTA.
-Immutabile: una volta valorizzata, non viene sovrascritta da transizioni successive.</p>
+<p>Valorizza automaticamente <code>data_apertura</code> quando la pratica entra in APERTA, sia
+per <strong>creazione diretta</strong> (INSERT con stato APERTA) sia per <strong>transizione</strong>
+BOZZA → APERTA su UPDATE. Immutabile: una volta valorizzata, non viene sovrascritta
+da transizioni successive (ne' da un valore esplicito gia' fornito all'INSERT).</p>
 <hr />
 <h3 id="firma">Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">trgfn_pratiche_set_data_apertura</span><span class="p">()</span>
@@ -4920,15 +4922,22 @@ Immutabile: una volta valorizzata, non viene sovrascritta da transizioni success
 </code></pre></div>
 <hr />
 <h3 id="logica-di-funzionamento">Logica di funzionamento<a class="headerlink" href="#logica-di-funzionamento" title="Permanent link">&para;</a></h3>
+<p>Lo stato APERTA viene risolto da <code>config.stati_pratiche.codice_interno</code> (mai hardcodato).</p>
+<p><strong>Ramo INSERT</strong> (creazione diretta):</p>
+<ol>
+<li>Se <code>stato_id</code> = APERTA e <code>data_apertura</code> non e' stata fornita → valorizza <code>data_apertura = CURRENT_DATE</code>.</li>
+<li>Se <code>data_apertura</code> e' gia' fornita dal chiamante → preserva il valore (immutabilita' anche all'INSERT).</li>
+<li>Per qualsiasi altro stato all'INSERT (es. BOZZA) → nessuna azione (<code>data_apertura</code> resta NULL).</li>
+</ol>
+<p><strong>Ramo UPDATE</strong> (transizione):</p>
 <ol>
 <li>Se <code>stato_id</code> non cambia → nessuna azione.</li>
 <li>Se <code>data_apertura</code> e' gia' valorizzata → preserva il valore originale (immutabilita').</li>
-<li>Risolve gli id degli stati BOZZA e APERTA da <code>config.stati_pratiche.codice_interno</code> (mai hardcodati).</li>
-<li>Se la transizione e' BOZZA → APERTA → valorizza <code>data_apertura = NOW()</code>.</li>
+<li>Se la transizione e' BOZZA → APERTA → valorizza <code>data_apertura = CURRENT_DATE</code>.</li>
 <li>Per qualsiasi altra transizione → nessuna azione.</li>
 </ol>
 <hr />
-<h3 id="trigger-associato">Trigger associato<a class="headerlink" href="#trigger-associato" title="Permanent link">&para;</a></h3>
+<h3 id="trigger-associati">Trigger associati<a class="headerlink" href="#trigger-associati" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -4940,6 +4949,12 @@ Immutabile: una volta valorizzata, non viene sovrascritta da transizioni success
 </thead>
 <tbody>
 <tr>
+<td><code>trg_pratiche_m50_set_data_apertura_ins</code></td>
+<td>BEFORE</td>
+<td>INSERT</td>
+<td><code>pratiche.pratiche</code></td>
+</tr>
+<tr>
 <td><code>trg_pratiche_m50_set_data_apertura_upd</code></td>
 <td>BEFORE</td>
 <td>UPDATE OF stato_id</td>
@@ -4947,7 +4962,7 @@ Immutabile: una volta valorizzata, non viene sovrascritta da transizioni success
 </tr>
 </tbody>
 </table>
-<p>La fase <code>_m50_</code> e' intermedia: dopo i guard <code>_a10_</code> (transizione ammessa), prima dei trigger finali <code>_z90_</code> (giornale).</p>
+<p>La fase <code>_m50_</code> e' intermedia: dopo i guard <code>_a10_</code> (transizione ammessa, solo su UPDATE), prima dei trigger finali <code>_z90_</code> (giornale).</p>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>

@@ -4925,6 +4925,7 @@
 <li>I prerequisiti tra template sono definiti nella tabella <code>template_flussi_prerequisiti</code> (DAG).</li>
 <li>La regola di <strong>ripetibilita'</strong> (D3) governa quante istanze dello stesso template possono nascere nella stessa pratica: enforcement a DB nel guard <code>trg_flussi_a10_guard_ripetibilita_ins</code> (<a href="../../funzioni/fn_check_ripetibilita_flusso/">fn_check_ripetibilita_flusso</a>).</li>
 <li>L'<strong>obbligatorieta'</strong> vincola la chiusura della pratica (D4): un template <code>obbligatorio = true</code> non completato e ancora percorribile blocca la transizione a CHIUSA (<a href="../../funzioni/fn_check_chiusura_pratica/">fn_check_chiusura_pratica</a>). Il ramo morto di un bivio non blocca.</li>
+<li>La <strong>chiusura guidata dal workflow</strong> (<code>chiude_pratica</code>): la pratica si chiude in automatico al completamento dei flussi, non con un'azione manuale. Se il tipo prestazione ha un template <code>chiude_pratica = true</code> (il "flusso di chiusura", max uno per tipo), la pratica passa a CHIUSA al completamento di quel flusso (<a href="../../funzioni/trgfn_flussi_autochiusura_pratica/">trgfn_flussi_autochiusura_pratica</a>); altrimenti, se il tipo ha almeno un obbligatorio, si auto-chiude quando non restano obbligatori bloccanti. Un tipo senza obbligatori e senza flusso di chiusura non ha un percorso di chiusura deterministico (non si chiude).</li>
 </ul>
 <hr />
 <h3 id="colonne-specifiche">Colonne specifiche<a class="headerlink" href="#colonne-specifiche" title="Permanent link">&para;</a></h3>
@@ -4943,6 +4944,10 @@
 <tr>
 <td><code>obbligatorio</code></td>
 <td>BOOLEAN DEFAULT false. Se true, il flusso deve essere completato per chiudere la pratica — solo se ancora percorribile: il ramo morto di un bivio non blocca (guard <code>trg_pratiche_a10_guard_chiusura_flussi_upd</code>).</td>
+</tr>
+<tr>
+<td><code>chiude_pratica</code></td>
+<td>BOOLEAN DEFAULT false. true = "flusso di chiusura": al suo completamento la pratica passa a CHIUSA (chiusura guidata dal workflow). Max uno per tipo prestazione (<code>uq_template_flussi_chiusura</code>) e implica <code>obbligatorio = true</code> (<code>chk_template_flussi_chiusura_obbligatorio</code>). Il suo completamento e' ammesso solo a percorso obbligatorio concluso (guard <code>trg_flussi_a10_guard_chiusura_prematura_upd</code>).</td>
 </tr>
 <tr>
 <td><code>direzione</code></td>

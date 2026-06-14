@@ -5103,10 +5103,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#14-stato-fatturazione" class="md-nav__link">
+  <a href="#14-smistamento-pannello-smistamento" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        14. Stato fatturazione
+        14. Smistamento (Pannello Smistamento)
       </span>
     </span>
   </a>
@@ -5530,8 +5530,8 @@ Smista a un <strong>ordine di vendita DRAFT</strong> <strong>solo le righe MERCE
   <code>ordini_service.crea_ordine_da_preventivo(preventivo_id, righe_ids)</code>, che a sua
   volta delega alla <strong>primitiva DB</strong> <code>vendite.fn_push_preventivo_a_ordine</code>.</li>
 <li><strong>Body JSON</strong> (opzionale): <code>{ "righe_ids": &#91;int, ...&#93; }</code> — sottoinsieme di
-  righe da smistare (smistamento selettivo). <strong>Assente</strong> = tutte le righe MERCE
-  residue.</li>
+  righe da smistare (smistamento selettivo). <strong>Assente/null</strong> = tutte le righe
+  MERCE residue; <strong>lista vuota</strong> = <code>E_PREV_VALIDAZIONE</code> (non degrada a "tutte").</li>
 <li><strong>Cosa fa la fn DB</strong> (non più orchestrazione Python):</li>
 <li>copia <strong>solo</strong> le righe natura <code>ORDINE</code> (i <strong>servizi una-tantum</strong> vanno a
     commessa via push commessa; il <strong>ricorrente</strong> è bloccato a monte, D9);</li>
@@ -5545,11 +5545,17 @@ Smista a un <strong>ordine di vendita DRAFT</strong> <strong>solo le righe MERCE
 <li>Output <code>200</code>: <code>{ "ordine_id": int, "numero": str,
   "documento_origine": {"tipo": "PREVENTIVO", "id": int} }</code>.
   (Il campo <code>righe_create</code> non è più ritornato: il conteggio vive a DB.)</li>
-<li>FE: azione <strong>data-driven</strong> «Genera ordine» su <code>PreventiviDrawer</code>, esposta dalla
-  capability <code>genera_ordine</code> di <code>script.fn_available_actions_preventivo</code> (visibile
-  solo con <strong>residuo merce</strong> non allocato), non più hardcoded su <code>ACCETTATO</code>.
-  L'azione apre il <strong><code>GeneraOrdineDialog</code></strong> (vedi §6d): l'operatore seleziona le
-  righe (preselezionate tutte) e la conferma invia <code>righe_ids</code>.</li>
+<li>FE: il ramo merce vive nel <strong>Pannello Smistamento</strong>
+  (<code>PreventiviSmistamentoPanel</code>, sostituisce il <code>GeneraOrdineDialog</code> dal
+  2026-06-12): l'operatore seleziona le righe residue (preselezionate tutte) e
+  «Smista selezionate» instrada per natura — le righe merce finiscono su questo
+  endpoint con <code>righe_ids</code>. La capability <code>genera_ordine</code> di
+  <code>script.fn_available_actions_preventivo</code> (gate su <strong>residuo merce</strong>) resta
+  esposta dal BE ma è filtrata dalla barra azioni del drawer.</li>
+<li><strong>Gate EVASO bi-ramo</strong> (§5b brief smistamento): dopo il push, se non resta
+  residuo su <strong>nessun</strong> ramo (<code>fn_preventivo_ha_residuo_ordine</code> +
+  <code>fn_preventivo_ha_residuo_commessa</code>), il service transita ACCETTATO→EVASO
+  (warning-tolerant al deploy parziale, come il gemello su push-commessa §13).</li>
 <li><strong>Percorso pratica</strong>: lo smistamento è orchestrato da <code>CONFERMA_VENDITA</code>
   (handler <code>vendita.push_preventivo</code>), che chiama la stessa primitiva passando
   <code>p_pratica_id</code> per l'aggancio <code>pratiche_sorgenti</code> (ordine <code>COLLEGATO</code>). Questo
@@ -5580,8 +5586,10 @@ db-brief-offerta-righe-espanse.md (<code>docs/it/dev/work-done/db-brief-offerta-
   prezzo_unitario, sconto_percentuale } ] }</code> (campi display via JOIN, no lookup
   client-side). Lista <strong>vuota</strong> se non resta merce da ordinare.</li>
 <li>Errori: <code>E_PREV_NOT_FOUND</code> (404) se il preventivo non esiste.</li>
-<li>FE: <code>GeneraOrdineDialog.vue</code> (checkbox multi-selezione, preseleziona tutte) →
-  conferma <code>POST /genera-ordine/ {righe_ids}</code> (§6c).</li>
+<li>FE: storicamente alimentava il <code>GeneraOrdineDialog</code>; dal 2026-06-12 il
+  pannello (<code>PreventiviSmistamentoPanel</code>) legge da <code>GET /smistamento/</code> (§14),
+  che copre <strong>entrambi</strong> i rami con lo stato per riga. L'endpoint resta per
+  usi mirati al solo ramo merce (stessa vista, stessa verità).</li>
 </ul>
 <hr />
 <h3 id="7-lista-righe">7. Lista righe<a class="headerlink" href="#7-lista-righe" title="Permanent link">&para;</a></h3>
@@ -5741,28 +5749,64 @@ db-brief-offerta-righe-espanse.md (<code>docs/it/dev/work-done/db-brief-offerta-
 <li>Metodo: <code>POST</code></li>
 <li>Path: <code>/api/v1/vendite/preventivi/{id}/push-commessa/</code></li>
 <li>Auth: <code>post_permission = "push_commessa_preventivi"</code>, <code>Idempotency-Key</code> obbligatoria</li>
+<li>Body JSON (opzionale): <code>{ "righe_ids": &#91;int, ...&#93; }</code> — sottoinsieme di righe
+  <strong>servizio</strong> da pushare (smistamento selettivo dal Pannello Smistamento,
+  brief-db-smistamento-preventivi.md (<code>docs/it/dev/work-done/brief-db-smistamento-preventivi.md</code>) C).
+  <strong>Assente/null</strong> = tutte le righe servizio eleggibili; <strong>lista vuota</strong> =
+  <code>E_PREV_VALIDAZIONE</code> (non degrada a "tutte" — stessa regola su
+  <code>/genera-ordine/</code>, helper <code>_parse_righe_ids</code>). Il filtro arriva alla fn DB
+  <code>fn_list_preventivi_da_pushare(p_righe_ids)</code> attraverso la catena
+  <code>push_a_commessa → pr_run_commesse_push_one → CommessaPushOrchestrator →
+  handler → CommesseRepository.fetch_pushable_rows</code> (5° parametro, supportato
+  dalla sola sorgente <code>PREVENTIVO</code> — whitelist <code>_SORGENTE_SUPPORTA_RIGHE_IDS</code>).</li>
 <li>Regole: ammesso solo in stato ACCETTATO, verifica righe eleggibili via <code>fn_list_preventivi_da_pushare</code></li>
-<li>Output <code>200</code>: <code>{ "data": { "righe_pushable": 3, "preventivo_id": 1 } }</code></li>
+<li><strong>Gate EVASO bi-ramo</strong> (D6 + brief smistamento §5b): a push <code>COMPLETATO</code>
+  transita ACCETTATO→EVASO <strong>solo</strong> se non resta residuo su <strong>nessun</strong> ramo
+  (<code>fn_preventivo_ha_residuo_ordine</code> <strong>e</strong> <code>fn_preventivo_ha_residuo_commessa</code>
+  entrambe false). Il check commessa non è ridondante: con <code>righe_ids</code>
+  COMPLETATO si riferisce al solo sottoinsieme. Lo <strong>stesso gate</strong> vive anche
+  sul ramo ordine (<code>ordini_service.crea_ordine_da_preventivo</code>) e nel handler
+  pratica <code>CONFERMA_VENDITA</code>.</li>
+<li>Output <code>200</code>: report orchestrator <code>{ stato, push_log_id, durata_ms, handlers,
+  commesse_ids, righe_pushable, fatturazione_immediata }</code></li>
 <li>Errori: <code>E_PREV_STATO_TRANSIZIONE</code> (409), <code>E_PREV_NESSUNA_RIGA</code> (400)</li>
-<li>TODO: orchestrazione completa push commessa (oggi solo discovery)</li>
 </ul>
 <hr />
-<h3 id="14-stato-fatturazione">14. Stato fatturazione<a class="headerlink" href="#14-stato-fatturazione" title="Permanent link">&para;</a></h3>
+<h3 id="14-smistamento-pannello-smistamento">14. Smistamento (Pannello Smistamento)<a class="headerlink" href="#14-smistamento-pannello-smistamento" title="Permanent link">&para;</a></h3>
+<p>Sostituisce il vecchio <code>GET /stato-fatturazione/</code> (viste DB rinominate e rifatte
+natura-aware il 2026-06-12: <code>vw_preventivi_smistamento</code> + <code>_righe</code>, le vecchie
+<code>vw_preventivi_stato_fatturazione*</code> sono droppate).</p>
 <ul>
 <li>Metodo: <code>GET</code></li>
-<li>Path: <code>/api/v1/vendite/preventivi/{id}/stato-fatturazione/</code></li>
-<li>Output <code>200</code>:
+<li>Path: <code>/api/v1/vendite/preventivi/{id}/smistamento/</code></li>
+<li>View <code>ApiPreventivoSmistamento</code> → <code>preventivi_service.smistamento</code> →
+  <code>PreventiviRepository.stato_smistamento</code> + <code>list_righe_smistamento</code></li>
+<li>Output <code>200</code> (<code>aggregato</code> è <strong>null</strong> per preventivo senza righe attive — la
+  vista GROUP BY non produce la riga e il BE non fabbrica fallback):</li>
+</ul>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;preventivo_uid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;righe_totali&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;righe_in_commessa&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;righe_emesse_af&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;righe_fatturate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="nt">&quot;aggregato&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;preventivo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;righe_totali&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;righe_merce&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;righe_servizi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;righe_a_ordine&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;righe_in_commessa&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;righe_emesse_af&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;righe_fatturate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;righe_residue&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;righe&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;riga_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;riga_descrizione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;articolo_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ART1&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;qta_operativa&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;uom_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PZ&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;natura_vendita_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MERCE&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;destinazione_tipo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ORDINE&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;stato_smistamento&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A_ORDINE&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;ordine_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;ordine_numero&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ORD-0007&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
-</code></pre></div></li>
-<li>Regole: query cross-schema (commesse_sorgenti → commesse_attivita → attivita_fatturabili), filtrata per sorgente_tipo PREVENTIVO_VENDITA</li>
+</code></pre></div>
+<ul>
+<li>Regole: <code>stato_smistamento</code> è la <strong>colonna autorevole</strong> per la UI
+  (<code>RESIDUA</code> / <code>A_ORDINE</code> / <code>IN_COMMESSA</code> / <code>EMESSA_AF</code> / <code>FATTURATA</code>); il
+  predicato <code>IN_COMMESSA</code> conta solo attività <code>stato_emissione='EMESSA'</code>
+  (allineato a capability e list-fn — fix della divergenza preesistente).
+  <code>righe_residue</code> alimenta il progress X/Y verso EVASO del pannello.</li>
+<li>Errori: <code>E_PREV_NOT_FOUND</code> (404)</li>
 </ul>
 <hr />
 <h3 id="15-genera-pratica">15. Genera pratica<a class="headerlink" href="#15-genera-pratica" title="Permanent link">&para;</a></h3>

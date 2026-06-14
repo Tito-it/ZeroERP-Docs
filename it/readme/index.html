@@ -5005,26 +5005,11 @@ L'obiettivo e<code>ridurre la complessita</code> superflua mantenendo rigore su 
 <hr />
 <h2 id="stato-progetto">Stato progetto<a class="headerlink" href="#stato-progetto" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p><strong>Sviluppo attivo — backend e frontend operativi su domini core, catalogo, vendite, anagrafiche, pratiche e documenti.</strong></p>
-<p>DB e API backend operativi su 14 schemi. Frontend Vue operativo su: layout applicativo,
-gestione soggetti (PF/PG/ENTE), gestione geografica (7 tab CRUD), pannello configurazione (67 tabelle),
-amministrazione software (operatori, profili reparto, permessi, audit log),
-gestione clienti/fornitori (drawer end-to-end con sotto-drawer),
-gestione pratiche v2 (dashboard, flussi, note, allegati, giornale),
-catalogo articoli (CRUD, UoM, BoM, note) <strong>completato e riallineato ai contratti API</strong>,
-listini vendita v3 <strong>completato</strong> (pricing completo, rettifica controllata, alert scadenze,
-variazione % massa, riallineamento/variazione prezzo commessa),
-preventivi rev2 <strong>completati</strong> (emittente fiscale persistito, istanza obbligatoria, revisioni, riepilogo IVA),
-contratti <strong>modello unificato</strong> (eccezioni delta-listino, snapshot versione listino all'attivazione, lock post-attivazione),
-offerte commerciali <strong>sviluppate DB+BE+FE</strong> (proposta di condizioni quadro → push 1:1 a contratto, componenti BoM, generazione documento con allegati),
-valuta su documenti vendite (offerte/contratti/preventivi),
-motore documentale parametrico <strong>completato tecnicamente e in test UI</strong> (modelli, asset, render PDF WeasyPrint,
-generazione/lista/download da preventivo),
-migrazione <code>daterange</code> nativo PostgreSQL <strong>completata</strong> (18 tabelle, trigger generico, ottimizzazione backend),
-impostazioni parametri di sistema con override personali ed emittente,
-integrazione AI (11 tool: pratiche, soggetti, clienti, articoli, operatori),
-autenticazione completa (email, token, reset pw, invito operatore).
-Conteggio test da rigenerare dopo chiusura test UI documenti. Non ancora rilasciato per produzione.</p>
+<p><strong>Sviluppo attivo — DB, backend e frontend operativi sui domini core, anagrafiche, catalogo, vendite (preventivi, offerte, contratti, ordini), pratiche e documenti. Non ancora rilasciato per produzione.</strong></p>
+<p>La fotografia dettagliata, lo stato per componente e la roadmap sono mantenuti in
+un'unica fonte: la <a href=".././mappa-concentrica/">Mappa Concentrica</a> (stato per anello +
+sezione Roadmap), con la storia datata nel suo
+<a href=".././dev/mappa-concentrica-changelog/">changelog</a>. Qui sotto solo uno snapshot.</p>
 </blockquote>
 <hr />
 <h2 id="indice">Indice<a class="headerlink" href="#indice" title="Permanent link">&para;</a></h2>
@@ -5153,94 +5138,23 @@ PostgreSQL (nucleo dominio: regole, workflow, audit)
 <p>Il modello e` pensato per supportare processi non lineari e gestione multi-reparto.</p>
 <hr />
 <h2 id="stato-dello-sviluppo">Stato dello Sviluppo<a class="headerlink" href="#stato-dello-sviluppo" title="Permanent link">&para;</a></h2>
-<p>Fotografia sintetica (29 maggio 2026):</p>
+<p>Snapshot (giugno 2026). Per il dettaglio per componente, lo stato per anello e la
+roadmap aggiornata fa fede la <a href=".././mappa-concentrica/">Mappa Concentrica</a>; la storia
+datata è nel suo <a href=".././dev/mappa-concentrica-changelog/">changelog</a>.</p>
 <ul>
-<li>Database core: operativo (14 schemi, 200+ tabelle, trigger, funzioni, viste, <strong>daterange nativo</strong>)</li>
-<li>API backend: operativo; conteggio test complessivo da rigenerare dopo la chiusura della suite UI documenti</li>
-<li>Motore pratiche: operativo (workflow, giornale, sospensioni, macchina a stati, note, allegati)</li>
-<li>Sistema permessi: operativo a 2 livelli</li>
-<li>Livello 1: area funzionale (TUTTO/LETTURA/BLOCCATO) — sidebar, route guard, CSS protect</li>
-<li>Livello 2: azioni processo (abilitata/negata) — prop <code>action</code> su componenti, backend 403</li>
-<li>Autenticazione: completa (JWT, email BB, token monouso, reset pw, invito, cambio pw obbligatorio)</li>
-<li>Parametri di sistema: lista impostazioni con override multi-scope</li>
-<li>Default → Emittente → Gruppo → Utente con risoluzione deterministica</li>
-<li>Drawer admin con selettore scope (Personale/Emittente), check <code>IsAdminZeroERP</code></li>
-<li>Fallback emittente "gestore di default" via <code>is_default = true</code></li>
-<li>Catalogo: <strong>completato e testato</strong></li>
-<li>Articoli CRUD con UoM operative, distinta base, note (19 endpoint, 49 test)</li>
-<li>Unita' di misura CRUD (backend + frontend)</li>
-<li>Documentazione consolidata in work-done/gestione-articoli.md (<code>docs/it/dev/work-done/gestione-articoli.md</code>)</li>
-<li>Refactor catalogo: <strong>completato</strong> (28 aprile 2026)</li>
-<li>Fasi 1-8 DB+BE+FE chiuse; lookup/defaults/capability spostati su contratti API/backend quando necessario</li>
-<li>Riferimento: analisi-refactor.frontend-catalogo.md (<code>docs/it/dev/work-done/analisi-refactor.frontend-catalogo.md</code>)</li>
-<li>Refactor amm-software: <strong>completato</strong> (29-30 aprile 2026)</li>
-<li>Operatori, permessi, emittenti fiscali, matrici e policy admin riallineati agli standard frontend/backend</li>
-<li>Riferimento: analisi-refactor.frontend-amm-software.md (<code>docs/it/dev/work-done/analisi-refactor.frontend-amm-software.md</code>)</li>
-<li>Listini vendita v3: <strong>completato</strong> (Sprint B-v3 chiuso)</li>
-<li>Versioni, righe prezzo, associazioni, test resolver, clone, auto-close (25 endpoint, 42 test listini)</li>
-<li>Variazione % massa su BOZZA con dry_run, alert scadenze con widget, rettifica controllata con lock FOR UPDATE</li>
-<li>Pricing commesse: riallineamento prezzo, variazione eccezionale, sblocco (3 endpoint, 9 test commesse)</li>
-<li>Trigger DB defense-in-depth <code>trgfn_listini_righe_guard_stato</code></li>
-<li>Documentazione: sviluppo-listini-v3.md (<code>docs/it/dev/work-in-progress/sviluppo-listini-v3.md</code>), API: <a href=".././backend/vendite/manual/api_listini/">api_listini.md</a>, <a href=".././backend/vendite/manual/api_commesse_pricing/">api_commesse_pricing.md</a></li>
-<li>Refactor vendite: <strong>completato</strong> (1 maggio 2026)</li>
-<li>DB+BE+FE chiusi; lookup, form-defaults, capability e azioni data-driven documentati</li>
-<li>Riferimento: analisi-refactor.frontend-vendite.md (<code>docs/it/dev/work-done/analisi-refactor.frontend-vendite.md</code>)</li>
-<li>Preventivi rev2: <strong>completato</strong> (2-3 maggio 2026)</li>
-<li><code>emittente_fiscale_id</code> persistito e immutabile, <code>istanza_utility_id</code> obbligatoria, guard coerenza utility/istanza</li>
-<li>Revisioni preventivo e riepilogo IVA chiusi end-to-end; generazione PDF agganciata al motore documentale in test UI</li>
-<li>Riferimento: risposta-db-brief-preventivi-rev2.md (<code>docs/it/dev/work-done/risposta-db-brief-preventivi-rev2.md</code>)</li>
-<li>Contratti — modello unificato: <strong>completato a DB, BE+FE in consolidamento</strong> (15-21 maggio 2026)</li>
-<li>Drop modalità A/B/C; eccezioni di riga <code>tipo_eccezione</code> (OVERRIDE/ESCLUSIONE/AGGIUNTA); snapshot <code>listino_versione_id</code> all'attivazione; lock post-attivazione; stato ANNULLATO con overlap parziale</li>
-<li>Componenti BoM su righe composite; gate prezzo L1/L2/L3</li>
-<li>Guida: <a href=".././guide/gestione-contratti/">gestione-contratti.md</a></li>
-<li>Offerte commerciali: <strong>sviluppate DB+BE+FE, in consolidamento</strong> (24-29 maggio 2026)</li>
-<li>Documento pre-contrattuale (proposta di condizioni quadro), simmetrico ai contratti: eccezioni delta-listino, componenti BoM, utility</li>
-<li>6 stati (BOZZA→EMESSA→ACCETTATA→push contratto; RIFIUTATA/ANNULLATA/SUPERATA), revisioni, azioni data-driven</li>
-<li><code>fn_push_offerta_a_contratto</code> idempotente (legame 1:1), generazione documento offerta con allegati, risoluzione prezzo come contratti</li>
-<li>Guida: <a href=".././guide/gestione-offerte-commerciali/">gestione-offerte-commerciali.md</a></li>
-<li>Valuta su documenti vendite: <strong>completato a DB</strong> (29 maggio 2026)</li>
-<li><code>valuta_id</code> su offerte/contratti/preventivi, default da resolver (catena billing account → gestore). Follow-up: resolver lato backend</li>
-<li>Motore documentale parametrico: <strong>completato tecnicamente, test UI in corso</strong> (4 maggio 2026)</li>
-<li>Schema <code>documenti</code>, modelli documenti, versioni, asset documentali, documenti generati e file persistenti</li>
-<li>Backend: render Jinja2 + WeasyPrint, storage parametrico, endpoint template/asset e endpoint preventivo <code>genera</code>/<code>anteprima</code>/<code>lista</code>/<code>download</code></li>
-<li>Frontend: Configurazione documenti, modelli, asset, pulsante "Genera PDF" nel drawer preventivo e lista documenti generati</li>
-<li>Riferimenti: sviluppo-documenti.md (<code>docs/it/dev/work-done/sviluppo-documenti.md</code>), sviluppo-documenti-test-ui.md (<code>docs/it/dev/work-done/sviluppo-documenti-test-ui.md</code>)</li>
-<li>Migrazione <code>daterange</code> + PG18 STORED generated: <strong>completata</strong></li>
-<li>Fase 0-3 (apr 2026): 19 tabelle migrate a <code>daterange</code>, <code>script.trgfn_set_validita()</code>, linee guida SQL §7b</li>
-<li>Fase PG18 (mag 2026): <code>validita</code> → <code>GENERATED ALWAYS STORED</code> su 20 tabelle; 3 tabelle con temporal UNIQUE (<code>WITHOUT OVERLAPS</code>); temporal FK <code>listini_righe_componenti → articoli_componenti</code>; <code>trgfn_set_validita</code> droppata</li>
-<li>Backend ottimizzato: <code>validita @&gt;</code> al posto dei doppi confronti <code>valido_dal</code>/<code>valido_al</code></li>
-<li>Piano PG18: piano-miglioramenti-db-pg18.md (<code>docs/it/dev/work-done/piano-miglioramenti-db-pg18.md</code>)</li>
-<li>✅ <strong>Regressione Step 2b risolta</strong> (2026-06-02): i 5 vincoli <code>ex_*_no_overlap</code> parziali, ricreati per errore come <code>CREATE INDEX</code> (non enforçanti), sono stati <strong>ripristinati a <code>EXCLUDE</code> reali</strong> e ora <strong>governati dal framework</strong> <code>dbops.automazione_overlap</code> (colonne <code>where_predicate</code>/<code>key_expressions</code> + runner notturno <code>automations_overlap</code> per l'auto-guarigione). Lato contratti aggiunto il <strong>DRAFT-scope</strong> (esclusività solo all'attivazione, colonna generata <code>partecipa_overlap_snapshot</code>). Dettagli: refactor-overlap.md (<code>docs/it/dev/work-done/refactor-overlap.md</code>) + refactor-overlap-v2.md (<code>docs/it/dev/work-done/refactor-overlap-v2.md</code>).</li>
-<li>Rettifiche prezzi (DB-L4): estratte in work-in-progress/sviluppo-rettifiche.md (<code>docs/it/dev/work-in-progress/sviluppo-rettifiche.md</code>), <strong>da implementare</strong></li>
-<li>Integrazione AI v1: operativa, <strong>11 tool</strong> registrati</li>
-<li>Pratiche (cerca, dettaglio, flussi)</li>
-<li>Anagrafica soggetti (cerca soggetti, dettaglio soggetto)</li>
-<li>Anagrafica clienti / billing account (cerca_billing_account — sinonimo "cliente" in italiano)</li>
-<li>Catalogo articoli (cerca_articoli)</li>
-<li>Operatori (cerca_operatori)</li>
-<li>System prompt con glossario di dominio italiano (cliente=BA, articolo=catalogo)</li>
-<li>Widget flottante, contesto documentale statico, multi-tool chaining, 61 test</li>
-<li>Frontend Vue: operativo su domini core, anagrafiche, catalogo, vendite, pratiche, documenti</li>
-<li>Layout applicativo (sidebar morfica, content tabs, split view, breadcrumb, ricerca universale)</li>
-<li>Amm. Software completa: operatori, profili reparto, permessi riepilogo, audit log, email<ul>
-<li>Drawer dedicato gestione permessi richiamabile dalla riga lista (<code>OperatorePermessiTab</code> riusabile)</li>
+<li><strong>Database core</strong>: operativo (14 schemi, 200+ tabelle, trigger/funzioni/viste, <code>daterange</code> nativo + PG18)</li>
+<li><strong>API backend</strong>: operativo sui domini core, anagrafiche, catalogo, vendite e pratiche</li>
+<li><strong>Motore pratiche</strong>: operativo e <strong>validato dal primo consumatore reale</strong> (pratica PREVENTIVI)</li>
+<li><strong>Vendite</strong>: preventivi, offerte commerciali, contratti (modello unificato) e ordini sviluppati DB+BE+FE</li>
+<li><strong>Permessi</strong>: operativi a 2 livelli (area funzionale + azioni di processo)</li>
+<li><strong>Autenticazione</strong>: completa (JWT, email, token monouso, reset/invito/cambio pw); RLS operatori attiva</li>
+<li><strong>Frontend Vue</strong>: operativo sui domini core, anagrafiche, catalogo, vendite, pratiche, documenti</li>
+<li><strong>Integrazione AI v1</strong>: operativa (11 tool, widget conversazionale, glossario IT)</li>
+<li><strong>In test UI / consolidamento</strong>: motore documentale, contratti/offerte BE+FE, suite UI documenti</li>
 </ul>
-</li>
-<li>Gestione soggetti: PF/PG/ENTE end-to-end, ruoli, contatti, indirizzi, CF validator IT</li>
-<li>Gestione geografica: 7 tab CRUD</li>
-<li>Gestione clienti/fornitori: drawer con sotto-drawer contatti/indirizzi/conti</li>
-<li>Gestione pratiche v2: dashboard, flussi, note, allegati, giornale</li>
-<li>Catalogo articoli: lista, drawer con 3 tab (UoM, BoM, note), <code>ArticoloLookup</code> BB cross-dominio</li>
-<li>Listini v3: lista, drawer con versioni/associazioni, sub-drawer righe, test resolver, dialog variazione %, widget alert scadenze, dialog programma chiusura</li>
-<li>Vendite preventivi: refactor data-driven, revisioni, riepilogo IVA e generazione PDF preventivo in test UI</li>
-<li>Configurazione documenti: modelli documenti e asset documentali con drawer/lista standard</li>
-<li>Impostazioni parametri: lista multi-scope con drawer override (<code>PARAMETER_SCOPE</code> come unica fonte di verita')</li>
-<li>Pannello configurazione: 67 tabelle CRUD generiche</li>
-<li>Logo brand: nuovo PNG ottimizzato 256x256 (frontend) + favicon PNG/ICO + master 512x512 in <code>docs/assets/images/</code></li>
-<li>Building block riutilizzabili: 25+ composable, 20+ componenti core, LookupSelect generico, CSS utility classes</li>
-<li>Documentazione: frontend-standards, catalogo-building-block (frontend + backend), mappa concentrica</li>
-</ul>
-<p><a href=".././mappa-concentrica/">Mappa</a></p>
+<blockquote>
+<p>Lavori in corso e previsti: vedi la <a href=".././mappa-concentrica/#roadmap">Roadmap nella Mappa Concentrica</a>.</p>
+</blockquote>
 <hr />
 <h2 id="installazione">Installazione<a class="headerlink" href="#installazione" title="Permanent link">&para;</a></h2>
 <p>ZeroERP non ha ancora un rilascio stabile per produzione.
@@ -5262,33 +5176,10 @@ Per setup ambiente di sviluppo, seguire:</p>
 </ul>
 <hr />
 <h2 id="roadmap">Roadmap<a class="headerlink" href="#roadmap" title="Permanent link">&para;</a></h2>
-<ol>
-<li>~~Consolidamento nucleo DB e motore pratiche~~ — fatto</li>
-<li>~~Espansione API dominio (anagrafiche, vendite, pratiche)~~ — fatto</li>
-<li>~~Frontend layout applicativo + building block~~ — fatto</li>
-<li>~~Gestione Soggetti (PF/PG/ENTE end-to-end)~~ — fatto, in test UI</li>
-<li>~~Gestione Geografica (7 tab CRUD)~~ — fatto</li>
-<li>~~Amm. Software (operatori, profili, permessi, audit)~~ — fatto</li>
-<li>~~Sistema permessi 2 livelli (area + azioni processo)~~ — fatto</li>
-<li>~~Gestione Clienti/Fornitori (CRUD, drawer, sotto-drawer)~~ — fatto, v2 pianificata</li>
-<li>~~Gestione Pratiche v2 (dashboard, flussi, note, allegati, giornale)~~ — fatto, in test UI</li>
-<li>~~Autenticazione completa (email, token, reset pw, invito)~~ — fatto, 2FA pianificato</li>
-<li>~~Integrazione AI v1 (11 tool, widget conversazionale, glossario IT)~~ — fatto, v2 in corso</li>
-<li>~~Catalogo articoli + UoM + BoM + note~~ — <strong>completato</strong> (work-done)</li>
-<li>~~Listini vendita v3 (pricing completo, rettifica, alert, variazione massa)~~ — <strong>completato</strong></li>
-<li>~~Migrazione <code>daterange</code> nativo PostgreSQL (18 tabelle, backend ottimizzato)~~ — <strong>completato</strong></li>
-<li>~~Parametri di sistema multi-scope (drawer admin con scope user/emittente)~~ — fatto</li>
-<li>~~Refactor catalogo / amm-software / vendite verso API metadata-driven~~ — fatto</li>
-<li>~~Preventivi rev2 (emittente persistito, istanza obbligatoria, revisioni, riepilogo IVA)~~ — fatto</li>
-<li>Motore documentale parametrico (modelli, asset, generazione PDF preventivo) — completato tecnicamente, test UI in corso</li>
-<li>~~Contratti modello unificato (eccezioni delta-listino, snapshot versione, lock post-attivazione)~~ — completato a DB, BE+FE in consolidamento</li>
-<li>~~Offerte commerciali (proposta condizioni quadro → push 1:1 a contratto, componenti BoM, documento + allegati)~~ — sviluppate DB+BE+FE, in consolidamento</li>
-<li>~~Valuta su documenti vendite (offerte/contratti/preventivi)~~ — completato a DB; resolver BE da fare</li>
-<li>Test UI reali su pratiche, clienti, fornitori, parametri e documenti — in corso</li>
-<li><strong>Rettifiche prezzi DB-L4</strong> (motore delta, canali manuale/automatico, audit) — pianificato in WIP dedicato</li>
-<li>Permessi v2 (livello oggetto) — pianificato</li>
-<li>Integrazione vendite/pratiche e moduli verticali</li>
-</ol>
+<p>La roadmap (lavori in corso, breve/medio/lungo termine) è mantenuta in un'unica fonte
+nella <a href=".././mappa-concentrica/#roadmap">Mappa Concentrica → Roadmap</a>. Lì le voci sono
+solo quelle aperte; la storia di ciò che è stato completato vive nel
+<a href=".././dev/mappa-concentrica-changelog/">changelog della mappa</a>.</p>
 <hr />
 <h2 id="documentazione">Documentazione<a class="headerlink" href="#documentazione" title="Permanent link">&para;</a></h2>
 <p>Documentazione tecnica principale:</p>

@@ -4857,6 +4857,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#push-per-sottoinsieme-righe-pannello-smistamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Push per sottoinsieme righe (Pannello Smistamento)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#competenza-e-periodo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4930,16 +4941,21 @@ per l’handler di acquisizione.</p>
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li>considera preventivi in stato documento <code>ACCETTATO</code>;</li>
-<li>considera solo preventivi con <code>stato_commessa = LIBERO</code>;</li>
-<li>include solo righe attive con quantità e prezzo validi;</li>
-<li>esclude segmenti già emessi in <code>commesse_attivita</code> (idempotenza batch);</li>
+<li>considera preventivi in stato documento <code>ACCETTATO</code>, con testata completa
+  (<code>billing_account_id</code> e <code>utility_id</code> NOT NULL);</li>
+<li><strong>predicato di riga dalla vista unica</strong>
+  <a href="../../manual/vw_preventivi_righe_smistabili_commessa/">vw_preventivi_righe_smistabili_commessa</a>
+  <em>(rev 2026-06-12)</em>: righe attive con quantità e prezzo validi, natura NULL
+  (pregresso → COMMESSA) o <code>destinazione_tipo='COMMESSA'</code>, non già EMESSE in
+  commessa (idempotenza). La merce (<code>ORDINE</code>) è esclusa: va su
+  <code>fn_push_preventivo_a_ordine</code>;</li>
 <li>costruisce <code>segment_key</code> deterministica (<code>PREV:{uid}:R:{riga_id}</code>);</li>
 <li>supporta filtri opzionali:</li>
 <li><code>p_competenza_mese</code></li>
 <li><code>p_billing_account_id</code></li>
 <li><code>p_limit</code></li>
 <li><code>p_preventivo_id</code> <em>(2026-05)</em> — vedi sezione dedicata</li>
+<li><code>p_righe_ids</code> <em>(2026-06-12)</em> — vedi sezione dedicata</li>
 </ul>
 <hr />
 <h3 id="push-singolo-preventivo-ui-driven">Push singolo preventivo (UI-driven)<a class="headerlink" href="#push-singolo-preventivo-ui-driven" title="Permanent link">&para;</a></h3>
@@ -4976,6 +4992,44 @@ passa anche <code>p_billing_account_id</code> di un BA diverso da quello del pre
 0 righe (comportamento atteso: i filtri sono tutti coerenti o il push non avviene).</p>
 <p><strong>Idempotenza:</strong> se il preventivo ha righe già in <code>commesse_attivita</code> con <code>stato_emissione = 'EMESSA'</code>,
 la funzione restituisce 0 righe — coerente con il NOT EXISTS del batch.</p>
+<hr />
+<h3 id="push-per-sottoinsieme-righe-pannello-smistamento">Push per sottoinsieme righe (Pannello Smistamento)<a class="headerlink" href="#push-per-sottoinsieme-righe-pannello-smistamento" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Aggiunto:</strong> 2026-06-12 — migration <code>20260612-06</code> (brief-db-smistamento-preventivi.md, C)</p>
+</blockquote>
+<p>Il parametro <code>p_righe_ids bigint&#91;&#93;</code> (default <code>NULL</code>) consente lo smistamento
+<strong>riga per riga</strong> dal Pannello Smistamento, simmetrico al ramo ordine
+(<code>fn_push_preventivo_a_ordine.p_righe_ids</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Valore</th>
+<th>Comportamento</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NULL</code></td>
+<td>Comportamento invariato (batch e push-tutto)</td>
+</tr>
+<tr>
+<td>valorizzato</td>
+<td>Filtro aggiuntivo <code>pr.id = ANY(p_righe_ids)</code>; <strong>richiede <code>p_preventivo_id</code></strong></td>
+</tr>
+<tr>
+<td>valorizzato senza <code>p_preventivo_id</code></td>
+<td>Guard: solleva <code>E_PUSH_RIGHE_IDS_SENZA_PREVENTIVO</code> (id 489)</td>
+</tr>
+</tbody>
+</table>
+<p>Le righe del sottoinsieme <strong>non eleggibili</strong> (già in commessa, natura ORDINE,
+non attive) sono <strong>skippate in silenzio</strong> — coerente con D5: il "tutte già
+allocate → errore semantico" resta a carico del BE con il count eleggibili.</p>
+<blockquote>
+<p>⚠️ <strong>Cambio firma 2026-06-12</strong>: la firma a 4 parametri è stata <strong>droppata</strong>
+(l'overload sarebbe ambiguo: tutti i parametri hanno DEFAULT). Le chiamate
+posizionali esistenti restano valide (nuovo parametro in coda con DEFAULT).</p>
+</blockquote>
 <hr />
 <h3 id="competenza-e-periodo">Competenza e periodo<a class="headerlink" href="#competenza-e-periodo" title="Permanent link">&para;</a></h3>
 <blockquote>

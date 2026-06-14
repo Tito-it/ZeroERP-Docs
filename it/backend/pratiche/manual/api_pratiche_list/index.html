@@ -4986,13 +4986,28 @@ BOZZA e inserisce la pratica in transazione atomica.</p>
 <li><code>stato</code> (string, opzionale) — codice_interno stato pratica (es. <code>BOZZA</code>, <code>APERTA</code>)</li>
 <li><code>tipo_prestazione_id</code> (int, opzionale) — filtro tipo prestazione</li>
 <li><code>soggetto_id</code> (string UUID, opzionale) — filtro UUID soggetto</li>
-<li><code>search</code> (string, opzionale) — ricerca ILIKE su codice, descrizione, ragione_sociale soggetto</li>
-<li><code>data_da</code> (string ISO date, opzionale) — filtro data inserimento da (&gt;=)</li>
-<li><code>data_a</code> (string ISO date, opzionale) — filtro data inserimento a (&lt;= fine giorno)</li>
-<li><code>limit</code> (int, opzionale) — righe per pagina, default <code>50</code>, max <code>200</code></li>
-<li><code>offset</code> (int, opzionale) — offset paginazione, default <code>0</code></li>
-<li><code>order_by</code> (string, opzionale) — colonna ordinamento, default <code>data_insert</code></li>
-<li><code>order_dir</code> (string, opzionale) — direzione (<code>asc</code>/<code>desc</code>), default <code>desc</code></li>
+<li>
+<p><strong>Lente di contesto canonica (D1, workflow v2)</strong> — al massimo UNA tra:</p>
+<ul>
+<li><code>soggetto_ruolo_id</code> (int, opzionale) — pratiche del ruolo soggetto</li>
+<li><code>istanza_utility_id</code> (int, opzionale) — pratiche dell'istanza utility</li>
+<li><code>solo_interne</code> (bool, opzionale) — solo pratiche interne (senza soggetto)</li>
+</ul>
+<p>La verità del filtro vive in <code>pratiche.fn_lista_pratiche_per_contesto</code>
+(semi-join sulla query display standard). Due o più lenti insieme →
+<code>400 PRATICHE_LISTA_CONTESTO_PARAMETRI_ESCLUSIVI</code> (catalogo DB id 484,
+validato fail-fast nel service + guard nella fn).
+  - <code>priorita_id</code> (int, opzionale) — filtro priorità pratica (fix 2026-06-12:
+prima inviato dalla dashboard ma ignorato dalla view)
+  - <code>risorsa_umana_id</code> (int, opzionale) — filtro operatore assegnato
+  - <code>search</code> (string, opzionale) — ricerca ILIKE su codice, descrizione, ragione_sociale soggetto
+  - <code>data_da</code> (string ISO date, opzionale) — filtro data inserimento da (&gt;=)
+  - <code>data_a</code> (string ISO date, opzionale) — filtro data inserimento a (&lt;= fine giorno)
+  - <code>limit</code> (int, opzionale) — righe per pagina, default <code>50</code>, max <code>200</code>
+  - <code>offset</code> (int, opzionale) — offset paginazione, default <code>0</code>
+  - <code>order_by</code> (string, opzionale) — colonna ordinamento, default <code>data_insert</code>
+  - <code>order_dir</code> (string, opzionale) — direzione (<code>asc</code>/<code>desc</code>), default <code>desc</code></p>
+</li>
 </ul>
 <h3 id="post-creazione-pratica">POST — Creazione pratica<a class="headerlink" href="#post-creazione-pratica" title="Permanent link">&para;</a></h3>
 <ul>

@@ -4985,11 +4985,11 @@
 <li><strong>Recupera pratica sorgente</strong>: copia <code>emittente_fiscale_id</code>, <code>soggetto_id</code>, <code>soggetto_ruolo_id</code>, <code>istanza_utility_id</code>, <code>priorita_id</code> (fix-4: senza la propagazione del contesto le figlie cadrebbero fuori dalle lenti D1).</li>
 <li><strong>Recupera regola</strong>: legge <code>tipo_prestazione_dest_id</code> e <code>template_flusso_dest_id</code> dalla regola (deve essere attiva).</li>
 <li><strong>Idempotenza (fix-1)</strong>: se esiste gia' una pratica con <code>flusso_origine_id = p_flusso_id</code> e <code>tipo_prestazione_id</code> di destinazione, <strong>ritorna l'id esistente</strong> (copre trigger auto, API <code>/genera/</code> e doppi eventi).</li>
-<li><strong>Stato iniziale</strong>: cerca lo stato con <code>codice_interno = 'BOZZA'</code> in <code>config.stati_pratiche</code>.</li>
+<li><strong>Stato iniziale</strong>: cerca lo stato con <code>codice_interno = 'APERTA'</code> in <code>config.stati_pratiche</code>. La figlia auto-generata e' un lavoro gia' avviato: nasce <strong>operativa</strong>, coerente con il modello "la pratica nasce APERTA" (<code>20260614-03</code>). La <code>data_apertura</code> viene valorizzata automaticamente dal trigger <code>trg_pratiche_m50_set_data_apertura_ins</code> all'INSERT.</li>
 <li><strong>Crea pratica target</strong>: INSERT in <code>pratiche.pratiche</code> con:</li>
 <li><code>tipo_prestazione_id</code> dalla regola</li>
 <li><code>emittente_fiscale_id</code>, <code>soggetto_id</code>, <code>soggetto_ruolo_id</code>, <code>istanza_utility_id</code>, <code>priorita_id</code> dalla sorgente</li>
-<li><code>stato_id</code> = BOZZA</li>
+<li><code>stato_id</code> = APERTA</li>
 <li><code>pratica_padre_id</code> = pratica sorgente (fix-2)</li>
 <li><code>flusso_origine_id</code> = <code>p_flusso_id</code></li>
 <li><strong>Flusso iniziale (fix-3)</strong>: se la regola dichiara <code>template_flusso_dest_id</code>, crea il primo flusso della figlia in <code>DA_ESEGUIRE</code> con la <code>sequenza</code> del template. Il template destinazione deve essere <strong>senza prerequisiti</strong> (la figlia nasce vuota): in caso contrario il guard prerequisiti fa fallire la generazione — fail-fast voluto, e' un errore di seed della regola.</li>
@@ -5019,7 +5019,7 @@
 </tr>
 <tr>
 <td><code>E_CODICE</code></td>
-<td>Stato BOZZA (pratiche) o DA_ESEGUIRE (flussi) non configurato</td>
+<td>Stato APERTA (pratiche) o DA_ESEGUIRE (flussi) non configurato</td>
 </tr>
 </tbody>
 </table>

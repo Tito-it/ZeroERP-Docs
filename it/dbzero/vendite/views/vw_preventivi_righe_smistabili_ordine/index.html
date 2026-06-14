@@ -62,7 +62,8 @@
     <label class="md-overlay" for="__drawer" aria-label="Navigazione"></label>
     <div data-md-component="skip">
       
-        <a href="#__skip" class="md-skip">
+        
+        <a href="#documentazione-concettuale-vista-venditevw_preventivi_righe_smistabili_ordine" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -4789,6 +4790,11 @@
                     
                     
                     
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
                   
                   <div class="md-sidebar__inner">
                     
@@ -4798,6 +4804,64 @@
   
   
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Indice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-concettuale-vista-venditevw_preventivi_righe_smistabili_ordine" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        📘 Documentazione Concettuale – Vista <code>vendite.vw_preventivi_righe_smistabili_ordine</code>
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Vista vendite.vw_preventivi_righe_smistabili_ordine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🎯 Scopo Principale
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#predicato-di-riga" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Predicato di riga
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#note-operative" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Note operative
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -4817,6 +4881,38 @@
 
   <h1 id="__skip">Vw preventivi righe smistabili ordine</h1>
 
+<h2 id="documentazione-concettuale-vista-venditevw_preventivi_righe_smistabili_ordine">📘 Documentazione Concettuale – Vista <code>vendite.vw_preventivi_righe_smistabili_ordine</code><a class="headerlink" href="#documentazione-concettuale-vista-venditevw_preventivi_righe_smistabili_ordine" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p><a href="../../manual/vw_preventivi_righe_smistabili_commessa/">vw_preventivi_righe_smistabili_commessa</a> (gemella, ramo servizi)
+<a href="../../funzioni/fn_preventivo_ha_residuo_ordine/">vendite.fn_preventivo_ha_residuo_ordine</a>
+<a href="../../funzioni/fn_push_preventivo_a_ordine/">vendite.fn_push_preventivo_a_ordine</a></p>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>Vista <strong>predicato unico</strong> del ramo ordine: le righe preventivo <strong>eleggibili</strong>
+allo smistamento merce→ordine. Capability (<code>fn_preventivo_ha_residuo_ordine</code>),
+push (<code>fn_push_preventivo_a_ordine</code>) e Pannello Smistamento leggono da qui la
+stessa verita' (brief-preventivi-ordini.md D8).</p>
+<hr />
+<h3 id="predicato-di-riga">Predicato di riga<a class="headerlink" href="#predicato-di-riga" title="Permanent link">&para;</a></h3>
+<p>Una riga e' eleggibile se:</p>
+<ul>
+<li>attiva (<code>COALESCE(attivo, true) IS TRUE</code>);</li>
+<li>natura di riga con <code>destinazione_tipo = 'ORDINE'</code> (merce — il JOIN interno
+  su <code>nature_vendita</code> esclude per costruzione le righe a natura NULL, che il
+  modello tratta come COMMESSA/pregresso);</li>
+<li>non gia' allocata a un ordine (<code>NOT EXISTS</code> su
+  <code>ordini_righe.preventivo_riga_id</code>) — idempotenza di riga, garantita anche
+  dal vincolo UNIQUE.</li>
+</ul>
+<hr />
+<h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>security_invoker = on</code> (policy RLS).</li>
+<li>I servizi (<code>COMMESSA</code>) sono esclusi: il loro predicato e'
+  <code>vw_preventivi_righe_smistabili_commessa</code>.</li>
+</ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

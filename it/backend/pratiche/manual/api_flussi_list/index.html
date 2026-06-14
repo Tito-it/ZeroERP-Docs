@@ -5023,6 +5023,11 @@
 <ul>
 <li><code>400</code>: <code>pratica_id</code> non valido (<code>E_INVALID_ID</code>), JSON non valido, prerequisiti non soddisfatti (errore DB)</li>
 <li><code>401</code>: JWT mancante o non valido</li>
+<li><code>409</code>: <strong>flusso non ripetibile</strong> (<code>PRATICHE_FLUSSO_NON_RIPETIBILE</code>, catalogo
+  DB id 483, workflow v2 D3): la regola <code>template_flussi.ripetibilita</code> vieta
+  una nuova istanza — <code>MAI</code> = esiste gia' un'istanza non annullata;
+  <code>SE_NON_POSITIVO</code> = l'ultima istanza (<code>MAX(id)</code>) e' ancora aperta oppure
+  chiusa con esito <code>POSITIVO</code>. <code>SEMPRE</code> non blocca mai.</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
@@ -5030,6 +5035,12 @@
 <li>POST: <code>pratica_id</code> deve essere &gt; 0.</li>
 <li>POST: lo stato iniziale <code>DA_ESEGUIRE</code> viene risolto da <code>config.stati_flussi_pratiche</code>.</li>
 <li>POST: se il flusso ha un <code>template_flusso_id</code>, il trigger DB <code>trgfn_flussi_guard_prerequisiti</code> verifica che tutti i prerequisiti del template siano soddisfatti; in caso contrario l'INSERT fallisce con errore DB.</li>
+<li>POST (2026-06-12, D3): il guard <code>trg_flussi_a10_guard_ripetibilita_ins</code>
+  applica la regola di ripetibilita' del template; il service traduce
+  l'errore DB nel codice parlante 483 via marker sul messaggio (vedi
+  <code>pratiche_service._KNOWN_DB_ERROR_MARKERS</code>). Il FE decide se proporre
+  "Ripeti" dal campo <code>ripetibile_adesso</code> del percorso (vedi
+  <a href="../api_percorso/">api_percorso</a>).</li>
 <li>POST: wrappato in <code>@transaction.atomic()</code>.</li>
 <li>Endpoint v1 richiede JWT.</li>
 </ul>

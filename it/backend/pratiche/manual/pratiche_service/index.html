@@ -4929,6 +4929,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Regole">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#workflow-v2-2026-06-12-analisi-pratiche-workflow-v2" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Workflow v2 (2026-06-12, analisi-pratiche-workflow-v2)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -5215,6 +5232,26 @@
 <li>Le funzioni sospensione verificano unicita' sospensione attiva prima dell'INSERT.</li>
 <li><code>verifica_flusso_pratica(repo, pratica_id, flusso_id)</code>: helper <strong>pubblico</strong> per ownership check flusso/pratica. Usato internamente dal service (sospensioni, flussi) e dalle views API (alias <code>_get_flusso_verificato</code>). Unica fonte di verita' per la verifica esistenza + appartenenza flusso.</li>
 </ul>
+<h3 id="workflow-v2-2026-06-12-analisi-pratiche-workflow-v2">Workflow v2 (2026-06-12, analisi-pratiche-workflow-v2)<a class="headerlink" href="#workflow-v2-2026-06-12-analisi-pratiche-workflow-v2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>cerca_pratiche</code>: lente di contesto canonica D1 — parametri
+  <code>soggetto_ruolo_id</code> / <code>istanza_utility_id</code> / <code>solo_interne</code> mutuamente
+  alternativi; due o piu' lenti → <code>ServiceError</code>
+  <code>PRATICHE_LISTA_CONTESTO_PARAMETRI_ESCLUSIVI</code> (catalogo DB id 484,
+  fail-fast in Python; la fn <code>fn_lista_pratiche_per_contesto</code> resta la
+  difesa in profondita'). Nuovi filtri <code>priorita_id</code> / <code>risorsa_umana_id</code>
+  (fix: prima inviati dalla dashboard ma ignorati).</li>
+<li>Traduzione errori guard DB via <code>_KNOWN_DB_ERROR_MARKERS</code> (substring sul
+  messaggio italiano, pattern di <code>lookup_service</code>): <code>crea_flusso</code> →
+  <code>PRATICHE_FLUSSO_NON_RIPETIBILE</code> (483, guard ripetibilita' D3);
+  <code>cambia_stato_pratica</code> → <code>PRATICHE_CHIUSURA_FLUSSI_OBBLIGATORI_MANCANTI</code>
+  (485, guard chiusura D4). ⚠ I marker reggono perche' il catalogo ha solo
+  righe <code>it</code> per questi codici: aggiungendo traduzioni vanno estesi
+  (degrado sicuro: fallback <code>E_DATABASE</code>).</li>
+<li><code>dispatch_handler</code>: <code>meta</code> e <code>handler_params</code> passano da
+  <code>coerce_jsonb_dict</code> (psycopg puo' restituire jsonb come <code>str</code>; senza
+  coerce la configurazione andrebbe persa in silenzio — bug 2026-06-11).</li>
+</ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>pratiche.pratiche</code> (CRUD via PraticheRepository)</li>
@@ -5230,6 +5267,8 @@
 <li><code>pratiche.competenze_flussi</code> (CRUD competenze via PraticheRepository)</li>
 <li><code>pratiche.fn_coda_lavoro_operatore</code> (coda lavoro operatore)</li>
 <li><code>pratiche.fn_prendi_in_carico_flusso</code> (presa in carico con FOR UPDATE)</li>
+<li><code>pratiche.fn_lista_pratiche_per_contesto</code> (lente contesto D1, semi-join in <code>list_pratiche</code>)</li>
+<li><code>pratiche.fn_check_ripetibilita_flusso</code> + <code>fn_check_chiusura_pratica</code> (percorso arricchito D3/D4)</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>

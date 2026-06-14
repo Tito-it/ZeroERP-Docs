@@ -5027,7 +5027,7 @@
 <hr />
 <h3 id="logica-di-funzionamento">Logica di funzionamento<a class="headerlink" href="#logica-di-funzionamento" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>CTE <code>flussi_base</code></strong>: singola scansione di tutti i flussi pendenti (DA_ESEGUIRE o IN_CORSO) dell'emittente.</li>
+<li><strong>CTE <code>flussi_base</code></strong>: singola scansione di tutti i flussi pendenti (DA_ESEGUIRE o IN_CORSO) dell'emittente, <strong>escluse le pratiche terminali</strong>. Una pratica e' terminale quando non ha alcuna transizione di stato in uscita attiva in <code>config.transizioni_stati_pratiche</code> (oggi <code>CHIUSA</code>/<code>ANNULLATA</code>): i suoi flussi sono congelati dal guard <code>trgfn_flussi_guard_pratica_terminale</code> e non sono lavoro da fare, quindi non compaiono in coda (stessa definizione di "terminale" del guard, nessun id/codice hardcodato).</li>
 <li><strong>CTE <code>classificati</code></strong>: ogni flusso viene classificato nel livello piu' alto applicabile via <code>CASE WHEN</code>.</li>
 <li><strong>SELECT finale</strong>: JOIN display fields (pratica, priorita', tipo prestazione, template, soggetto operatore) una sola volta sul risultato classificato. Filtra <code>WHERE livello IS NOT NULL</code> (esclude flussi non rilevanti per l'operatore).</li>
 </ol>

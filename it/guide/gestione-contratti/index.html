@@ -5926,12 +5926,16 @@
 
 <h1 id="guida-gestione-contratti-vendita">Guida — Gestione Contratti vendita<a class="headerlink" href="#guida-gestione-contratti-vendita" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p><strong>Ultima revisione</strong>: 21 maggio 2026 — stato ANNULLATO (DRAFT→ANNULLATO),
-constraint overlap parziale <code>ex_contratti_no_overlap</code> (EXCLUDE USING gist
-<code>WHERE NOT is_abortito_snapshot</code>), colonna <code>is_abortito_snapshot</code>.
-Revisione precedente: 15 maggio 2026 — modello unificato post-refactor
-(drop modalità A/B/C, <code>tipo_eccezione</code> su <code>contratti_righe</code>, snapshot
-<code>listino_versione_id</code> all'attivazione, lock post-attivazione).</p>
+<p><strong>Ultima revisione</strong>: 8 giugno 2026 — <strong>attivazione = emissione documentale</strong>
+(DRAFT→ATTIVO solo via endpoint <code>/emetti/</code>, che genera il PDF in transazione
+atomica), <strong>overlap che esclude anche i DRAFT</strong> (<code>ex_contratti_no_overlap</code> con
+<code>WHERE partecipa_overlap_snapshot</code>: l'esclusività scatta solo all'attivazione),
+<strong>mutua esclusività offerta → contratto/ordine</strong> e <strong>trasporto 1:1
+dell'approvazione prezzo</strong> dall'offerta al contratto.
+Revisioni precedenti: 21 maggio 2026 (stato ANNULLATO, overlap parziale);
+15 maggio 2026 (modello unificato: drop modalità A/B/C, <code>tipo_eccezione</code> su
+<code>contratti_righe</code>, snapshot <code>listino_versione_id</code> all'attivazione, lock
+post-attivazione).</p>
 <p><strong>Destinatari</strong>: analisti funzionali, sviluppatori backend/frontend, DBA.</p>
 <p><strong>Vedi anche</strong> — schemi DB:</p>
 <ul>
@@ -6061,6 +6065,9 @@ NOT NULL) qualifica esplicitamente il tipo:</p>
 <li>CHECK: <code>prezzo_unitario NOT NULL</code> se OVERRIDE o AGGIUNTA; NULL obbligatorio se ESCLUSIONE</li>
 <li>Guard: una AGGIUNTA è bloccata se l'articolo è già nel listino fissato al contratto
   (si deve usare OVERRIDE)</li>
+<li>Guard: una ESCLUSIONE è bloccata se l'articolo è un <strong>componente</strong> (figlio) di un
+  bundle del listino del contratto — l'esclusione va applicata al <strong>padre bundle</strong>,
+  non al singolo componente (<code>E_CONTRATTO_ESCLUSIONE_FIGLIO_BUNDLE_VIETATA</code>)</li>
 </ul>
 <p>Per gli <strong>articoli compositi</strong> (distinta base): una riga ESCLUSIONE <strong>non genera
 componenti</strong>. L'esclusione toglie l'articolo per intero, quindi non ha prezzo né
@@ -6139,13 +6146,25 @@ creare un nuovo contratto sulla stessa quadrupla senza conflitti.</p>
 <p>Non esiste revisione come nei preventivi: se le condizioni cambiano, si cessa il
 contratto corrente e se ne crea uno nuovo.</p>
 <h3 id="32-cosa-succede-alla-transizione-draft-attivo">3.2 Cosa succede alla transizione DRAFT → ATTIVO<a class="headerlink" href="#32-cosa-succede-alla-transizione-draft-attivo" title="Permanent link">&para;</a></h3>
-<p>Il trigger <code>trgfn_contratti_freeze_listino_versione</code> interviene BEFORE UPDATE
-sulla colonna <code>stato_doc_contratto_id</code>. In sequenza:</p>
+<blockquote>
+<p><strong>L'attivazione passa OBBLIGATORIAMENTE dall'emissione documentale.</strong> Non esiste
+più un semplice cambio-stato "Attiva": l'operatore usa l'azione <strong>Emetti</strong>
+(endpoint <code>POST /api/v1/vendite/contratti/&lt;id&gt;/emetti/</code>, dialog
+<code>ContrattoEmissioneDialog</code>), che in <strong>una transazione atomica</strong> esegue il cambio
+stato + il freeze della versione listino + la <strong>generazione del PDF</strong> (con
+eventuali allegati). Vale l'invariante "contratto ATTIVO ⇒ esiste un documento
+PDF". Un <code>cambia_stato</code> diretto verso ATTIVO è <strong>rifiutato</strong>.</p>
+</blockquote>
+<p>Durante l'attivazione, il trigger <code>trgfn_contratti_freeze_listino_versione</code>
+interviene BEFORE UPDATE sulla colonna <code>stato_doc_contratto_id</code>. In sequenza:</p>
 <ol>
-<li><strong>Guard negoziato puro senza righe</strong>: se <code>listino_id IS NULL</code> e non ci sono
-   righe AGGIUNTA (o OVERRIDE) in <code>contratti_righe</code>, solleva
-   <code>E_CONTRATTO_NEGOZIATO_PURO_SENZA_RIGHE</code> (451). Un contratto senza listino
-   e senza eccezioni non ha senso — non c'è nessun prezzo da applicare.</li>
+<li><strong>Generazione documento</strong> (atomica con i passi successivi): se il PDF non può
+   essere generato, l'intera transazione viene annullata e il contratto resta DRAFT.</li>
+<li><strong>Guard negoziato puro senza righe</strong>: se <code>listino_id IS NULL</code> e non esiste almeno
+   una riga <strong>AGGIUNTA con prezzo valorizzato</strong> in <code>contratti_righe</code>, solleva
+   <code>E_CONTRATTO_NEGOZIATO_PURO_SENZA_RIGHE</code> (451). Su un contratto senza listino
+   l'OVERRIDE non è applicabile (presuppone l'articolo presente nel listino):
+   l'unica via di valorizzazione è l'AGGIUNTA con prezzo.</li>
 <li><strong>Snapshot versione listino</strong>: se il contratto ha <code>listino_id</code> valorizzato,
    cerca la versione attiva alla data corrente e scrive <code>listino_versione_id</code>.
    Da quel momento la versione è <strong>congelata</strong> (§4.2 per le implicazioni runtime).</li>
@@ -6298,6 +6317,13 @@ variazione globale) passa per tre gate:</p>
   finché approvata o rifiutata. Il contratto non può essere attivato con
   approvazioni pendenti.</li>
 </ul>
+<blockquote>
+<p><strong>Approvazione ereditata dall'offerta.</strong> Se il contratto nasce da un'offerta
+commerciale (push offerta → contratto), lo <code>stato_approvazione_prezzo</code> e il
+collegamento alla pratica già presenti sull'offerta sono trasportati <strong>1:1</strong> su
+righe e componenti del contratto: un'approvazione L3 ottenuta in fase di offerta
+<strong>non</strong> va richiesta di nuovo sul contratto.</p>
+</blockquote>
 <hr />
 <h2 id="8-workflow-end-to-end">8. Workflow end-to-end<a class="headerlink" href="#8-workflow-end-to-end" title="Permanent link">&para;</a></h2>
 <h3 id="81-flusso-tipico">8.1 Flusso tipico<a class="headerlink" href="#81-flusso-tipico" title="Permanent link">&para;</a></h3>
@@ -6314,8 +6340,8 @@ variazione globale) passa per tre gate:</p>
    │ + eccezioni righe │                             └─────────────┘
    └────────┬──────────┘
             │
-            │ DRAFT→ATTIVO: trigger fissa listino_versione_id
-            │               blocca testata e righe
+            │ Emissione (/emetti/): genera PDF + fissa listino_versione_id
+            │               + blocca testata e righe (transazione atomica)
             │
    ┌────────▼──────────┐
    │      ATTIVO       │
@@ -6333,12 +6359,17 @@ variazione globale) passa per tre gate:</p>
 <h3 id="82-condizioni-di-attivazione">8.2 Condizioni di attivazione<a class="headerlink" href="#82-condizioni-di-attivazione" title="Permanent link">&para;</a></h3>
 <p>L'attivazione fallisce (oltre alle guard trigger) se:</p>
 <ul>
-<li>il contratto è in overlap temporale con un altro contratto <strong>non ANNULLATO</strong> per
-  la stessa quadrupla <code>(ba, istanza_utility, utility, ambito)</code> nel periodo
-  <code>(valido_dal, valido_al)</code> — constraint <code>ex_contratti_no_overlap</code> (EXCLUDE USING
-  gist parziale, <code>WHERE NOT is_abortito_snapshot</code>; i contratti ANNULLATO non
-  partecipano al check)</li>
-<li>il contratto è "negoziato puro" (senza listino) e non ha nessuna riga AGGIUNTA/OVERRIDE</li>
+<li>il contratto è in overlap temporale con un altro contratto <strong>vincolante</strong>
+  (ATTIVO/CESSATO, cioè <strong>non</strong> DRAFT e <strong>non</strong> ANNULLATO) per la stessa quadrupla
+  <code>(ba, istanza_utility, utility, ambito)</code> nel periodo <code>(valido_dal, valido_al)</code> —
+  constraint <code>ex_contratti_no_overlap</code> (EXCLUDE USING gist parziale,
+  <code>WHERE partecipa_overlap_snapshot</code>, colonna GENERATED = <code>NOT is_abortito AND NOT
+  is_draft</code>). I contratti <strong>DRAFT</strong> (oltre agli ANNULLATO) <strong>non</strong> partecipano al
+  vincolo: l'esclusività scatta <strong>solo all'attivazione</strong>, quindi due DRAFT
+  sovrapposti — e un DRAFT sovrapposto a un ATTIVO — sono ammessi (abilita la
+  preparazione delle bozze di successione)</li>
+<li>il contratto è "negoziato puro" (senza listino) e non ha <strong>almeno una riga
+  AGGIUNTA con prezzo valorizzato</strong></li>
 <li>ci sono approvazioni prezzo PENDING non risolte</li>
 </ul>
 <hr />
@@ -6349,9 +6380,11 @@ variazione globale) passa per tre gate:</p>
 <li>Sezione Pricing: seleziona il listino → inserisci variazione globale (es. <code>-5%</code>)</li>
 <li>Salva testata in DRAFT</li>
 <li>Sezione Righe: preview mostra tutti gli articoli del listino con sconto 5% applicato</li>
-<li>Nessuna eccezione necessaria → clicca "Attiva"</li>
-<li>Trigger fissa versione listino corrente — il cliente mantiene i prezzi della v5
-   anche quando viene pubblicata la v6</li>
+<li>Nessuna eccezione necessaria → clicca <strong>"Emetti"</strong> → si apre il dialog di
+   emissione (scelta template + eventuali allegati) → conferma: il sistema genera il
+   PDF e <strong>attiva</strong> il contratto nella stessa operazione</li>
+<li>L'emissione fissa la versione listino corrente — il cliente mantiene i prezzi
+   della v5 anche quando viene pubblicata la v6</li>
 </ol>
 <h3 id="92-cliente-vip-con-override-su-articoli-specifici">9.2 Cliente VIP con override su articoli specifici<a class="headerlink" href="#92-cliente-vip-con-override-su-articoli-specifici" title="Permanent link">&para;</a></h3>
 <ol>
@@ -6418,7 +6451,7 @@ vecchio quando <code>valido_dal</code> del nuovo coincide con la cessazione del 
 <td><code>E_CONTRATTO_NEGOZIATO_PURO_SENZA_RIGHE</code></td>
 <td>451</td>
 <td>422</td>
-<td>Attivazione contratto senza listino e senza righe AGGIUNTA/OVERRIDE</td>
+<td>Attivazione contratto senza listino e senza almeno una riga AGGIUNTA con prezzo valorizzato</td>
 </tr>
 <tr>
 <td><code>E_CONTRATTO_CAMPI_BLOCCATI_POST_ATTIVAZIONE</code></td>
@@ -6439,16 +6472,34 @@ vecchio quando <code>valido_dal</code> del nuovo coincide con la cessazione del 
 <td>Tentativo rimozione listino con OVERRIDE/ESCLUSIONE presenti</td>
 </tr>
 <tr>
+<td><code>E_CONTRATTO_ESCLUSIONE_FIGLIO_BUNDLE_VIETATA</code></td>
+<td>455</td>
+<td>422</td>
+<td>ESCLUSIONE su un articolo che è componente (figlio) di un bundle del listino — escludere il padre bundle</td>
+</tr>
+<tr>
+<td><code>E_CONTRATTO_LISTINO_SENZA_VERSIONE_ATTIVA</code></td>
+<td>—</td>
+<td>422</td>
+<td>Selezione/attivazione contratto con listino privo di versione ATTIVA (guard service <code>_guard_listino_ha_versione_attiva</code>)</td>
+</tr>
+<tr>
 <td><code>E_ARTICOLO_NON_NEGOZIATO_SU_CONTRATTO_C</code></td>
 <td>—</td>
 <td>422</td>
 <td>Contratto senza listino e nessuna eccezione per l'articolo</td>
 </tr>
 <tr>
-<td><code>E_LISTINO_VERSIONE_NON_ATTIVA</code></td>
-<td>448</td>
-<td>422</td>
-<td>Attivazione con listino che non ha versione attiva alla data corrente</td>
+<td><code>E_OFFERTA_ORDINE_GIA_GENERATO</code></td>
+<td>478</td>
+<td>409</td>
+<td>Push offerta → contratto quando l'offerta ha già generato un <strong>ordine</strong> (mutua esclusività XOR)</td>
+</tr>
+<tr>
+<td><code>E_OFFERTA_CONTRATTO_GIA_GENERATO</code></td>
+<td>—</td>
+<td>409</td>
+<td>Push offerta → contratto già generato (idempotenza)</td>
 </tr>
 <tr>
 <td><code>E_DOC_COMPOSITO_BOM_VUOTA</code></td>
@@ -6458,6 +6509,13 @@ vecchio quando <code>valido_dal</code> del nuovo coincide con la cessazione del 
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Nota.</strong> <code>E_LISTINO_VERSIONE_NON_ATTIVA</code> (id 448, HTTP 404) <strong>non</strong> è l'errore di
+attivazione contratto: è un errore di runtime del <strong>resolver di pricing</strong>
+(<code>fn_resolve_prezzo_listino_v2</code>), sollevato quando un listino determinato non ha
+una versione attiva alla data di riferimento. Per il contratto, l'errore corretto
+è <code>E_CONTRATTO_LISTINO_SENZA_VERSIONE_ATTIVA</code> (sopra).</p>
+</blockquote>
 <hr />
 <h2 id="11-pattern-e-principi-di-design">11. Pattern e principi di design<a class="headerlink" href="#11-pattern-e-principi-di-design" title="Permanent link">&para;</a></h2>
 <h3 id="111-il-contratto-come-delta-del-listino">11.1 Il contratto come delta del listino<a class="headerlink" href="#111-il-contratto-come-delta-del-listino" title="Permanent link">&para;</a></h3>
@@ -6603,6 +6661,15 @@ preventivo come offerta commerciale sarebbe una forzatura semantica.</p>
 <p>L'offerta è stata realizzata come <strong>entità separata</strong> <code>offerte_commerciali</code> con flusso
 <code>fn_push_offerta_a_contratto</code> (legame 1:1, idempotente): l'offerta accettata genera un
 contratto DRAFT che ne eredita 1:1 le condizioni. Il dettaglio è nella guida sopra.</p>
+<blockquote>
+<p><strong>Contratto OPPURE ordine — mai entrambi (XOR).</strong> Da un'offerta ACCETTATA si genera
+al massimo <em>uno</em> tra contratto (fornitura ricorrente) e ordine (vendita puntuale).
+Se l'offerta ha già generato un ordine, il push a contratto fallisce con
+<code>E_OFFERTA_ORDINE_GIA_GENERATO</code>; specularmente, la generazione di un ordine su
+un'offerta che ha già un contratto fallisce con <code>E_OFFERTA_CONTRATTO_GIA_GENERATO</code>.
+Resta valida l'idempotenza (un secondo push dello stesso contratto fallisce con
+<code>E_OFFERTA_CONTRATTO_GIA_GENERATO</code>).</p>
+</blockquote>
 <p><em>Per il dettaglio tecnico delle API REST, formati payload e codici errore vedi
 <a href="../../backend/vendite/manual/api_contratti/">API Contratti</a>. Le decisioni di modello
 del refactor sono recepite nelle sezioni precedenti e nella documentazione backend

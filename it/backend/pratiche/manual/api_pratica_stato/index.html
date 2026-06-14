@@ -4948,6 +4948,13 @@
 <li><code>400</code>: <code>nuovo_stato</code> vuoto (<code>E_PRATICA_VALIDATION</code>), <code>pratica_id</code> non valido (<code>E_INVALID_ID</code>)</li>
 <li><code>401</code>: JWT mancante o non valido</li>
 <li><code>404</code>: pratica non trovata (<code>E_PRATICA_NOT_FOUND</code>)</li>
+<li><code>409</code>: transizione non in matrice (<code>E_PRATICHE_TRANSIZIONE_NON_AMMESSA</code>);
+  <strong>chiusura bloccata</strong> (<code>PRATICHE_CHIUSURA_FLUSSI_OBBLIGATORI_MANCANTI</code>,
+  catalogo DB id 485, workflow v2 D4): la pratica sta andando a <code>CHIUSA</code> ma
+  esistono template flussi <code>obbligatorio=true</code> ancora <strong>percorribili</strong>
+  (prerequisiti soddisfatti) e mai completati. Il messaggio elenca i flussi
+  mancanti. I rami resi non percorribili dall'esito di un bivio (ramo morto)
+  <strong>non</strong> bloccano.</li>
 <li><code>500</code>: stato non trovato in <code>config.stati_pratiche</code> (<code>E_CONFIG_MANCANTE</code>)</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
@@ -4955,6 +4962,11 @@
 <li><code>pratica_id</code> deve essere &gt; 0.</li>
 <li><code>nuovo_stato</code> non puo' essere vuoto.</li>
 <li>Lo stato viene risolto da <code>config.stati_pratiche.codice_interno</code> a <code>id</code>; se non trovato → errore.</li>
+<li>Guard chiusura (2026-06-12, D4): la transizione a <code>CHIUSA</code> e' validata a DB
+  da <code>trg_pratiche_a10_guard_chiusura_flussi_upd</code> (su
+  <code>fn_check_chiusura_pratica</code>); il service traduce l'errore DB nel codice
+  parlante 485 via marker sul messaggio (vedi
+  <code>pratiche_service._KNOWN_DB_ERROR_MARKERS</code>).</li>
 <li>Wrappato in <code>@transaction.atomic()</code>.</li>
 <li>Permission: <code>cambia_stato_pratica</code> (area <code>pratiche</code>).</li>
 <li>Endpoint v1 richiede JWT.</li>
@@ -4963,6 +4975,8 @@
 <ul>
 <li><code>pratiche.pratiche</code> (UPDATE stato_id)</li>
 <li><code>config.stati_pratiche</code> (risoluzione codice_interno → id)</li>
+<li><code>pratiche.trgfn_pratiche_guard_chiusura_flussi</code> + <code>fn_check_chiusura_pratica</code>
+  (guard chiusura D4, workflow v2)</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>

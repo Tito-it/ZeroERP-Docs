@@ -4872,10 +4872,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#coppia-can_push_commessa_reason-can_push_commessa_reason_key" class="md-nav__link">
+  <a href="#coppie-can__reason-can__reason_key" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Coppia <code>can_push_commessa_reason</code> / <code>can_push_commessa_reason_key</code>
+        Coppie <code>can_*_reason</code> / <code>can_*_reason_key</code>
       </span>
     </span>
   </a>
@@ -5019,20 +5019,76 @@ di conseguenza.</p>
     ],
     &quot;can_edit_testata&quot;:             true,    // true solo in DRAFT
     &quot;can_edit_righe&quot;:               true,    // true solo in DRAFT
-    &quot;can_push_commessa&quot;:            false,   // true solo in ACCETTATO
+    &quot;can_push_commessa&quot;:            false,   // ACCETTATO + residuo servizi (rev 12-06-2026)
     &quot;can_push_commessa_reason&quot;:     &quot;PREVENTIVO_NON_ACCETTATO&quot;,         // reason code machine-readable; null se can_push=true
     &quot;can_push_commessa_reason_key&quot;: &quot;preventivi.push_commessa_reason.non_accettato&quot;, // chiave i18n associata; null se can_push=true
+    &quot;can_genera_ordine&quot;:            false,   // ACCETTATO + residuo merce (rev 09-06-2026)
+    &quot;can_genera_ordine_reason&quot;:     &quot;PREVENTIVO_NON_ACCETTATO&quot;,
+    &quot;can_genera_ordine_reason_key&quot;: &quot;preventivi.genera_ordine_reason.non_accettato&quot;,
     &quot;can_create_revisione&quot;:         false,   // true solo in EMESSO
     &quot;non_editable_fields&quot;:          \[&quot;utility_id&quot;\],  // sempre presente; vedi dettaglio sotto
     &quot;stato_codice&quot;:                 &quot;DRAFT&quot;  // codice_interno stato corrente
 }
 </code></pre></div>
-<h3 id="coppia-can_push_commessa_reason-can_push_commessa_reason_key">Coppia <code>can_push_commessa_reason</code> / <code>can_push_commessa_reason_key</code><a class="headerlink" href="#coppia-can_push_commessa_reason-can_push_commessa_reason_key" title="Permanent link">&para;</a></h3>
+<h3 id="coppie-can__reason-can__reason_key">Coppie <code>can_*_reason</code> / <code>can_*_reason_key</code><a class="headerlink" href="#coppie-can__reason-can__reason_key" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong><code>can_push_commessa_reason</code></strong> = reason code stabile machine-readable, usato in log e da BE per logica condizionale (es. <code>'PREVENTIVO_NON_ACCETTATO'</code>).</li>
-<li><strong><code>can_push_commessa_reason_key</code></strong> = chiave i18n pronta per <code>$t()</code> lato FE (es. <code>'preventivi.push_commessa_reason.non_accettato'</code>).</li>
+<li><strong><code>reason</code></strong> = reason code stabile machine-readable, usato in log e da BE per logica condizionale.</li>
+<li><strong><code>reason_key</code></strong> = chiave i18n pronta per <code>$t()</code> lato FE.</li>
 </ul>
-<p>Le due chiavi sono sempre coerenti (entrambe <code>null</code> quando <code>can_push_commessa=true</code>, entrambe valorizzate altrimenti). In Fase 3 saranno aggiunti nuovi reason cross-dominio (commesse già pushate, approvazioni pendenti); il BE usa il reason, il FE traduce via key.</p>
+<p>Le due chiavi sono sempre coerenti (entrambe <code>null</code> quando la capability è
+<code>true</code>, entrambe valorizzate altrimenti). Il BE usa il reason, il FE traduce
+via key.</p>
+<p><strong>Reason di <code>can_push_commessa</code></strong> (rev 12-06-2026, brief smistamento — ordine
+di verifica: stato → testata → righe, la reason racconta il primo ostacolo da
+rimuovere):</p>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Key</th>
+<th>Quando</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PREVENTIVO_NON_ACCETTATO</code></td>
+<td><code>preventivi.push_commessa_reason.non_accettato</code></td>
+<td>Fuori stato ACCETTATO</td>
+</tr>
+<tr>
+<td><code>PREVENTIVO_SENZA_BILLING_ACCOUNT</code></td>
+<td><code>preventivi.push_commessa_reason.senza_billing_account</code></td>
+<td>Testata incompleta (BA o utility NULL): il fix è compilarla, non "mancano righe"</td>
+</tr>
+<tr>
+<td><code>PREVENTIVO_NESSUNA_RIGA_COMMESSA</code></td>
+<td><code>preventivi.push_commessa_reason.nessuna_riga</code></td>
+<td>Nessun residuo servizi (nessuna riga o tutte già EMESSE)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reason di <code>can_genera_ordine</code></strong> (rev 09-06-2026):</p>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Key</th>
+<th>Quando</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PREVENTIVO_NON_ACCETTATO</code></td>
+<td><code>preventivi.genera_ordine_reason.non_accettato</code></td>
+<td>Fuori stato ACCETTATO</td>
+</tr>
+<tr>
+<td><code>PREVENTIVO_NESSUNA_RIGA_ORDINE</code></td>
+<td><code>preventivi.genera_ordine_reason.nessuna_riga</code></td>
+<td>Nessun residuo merce (nessuna riga o tutte già allocate)</td>
+</tr>
+</tbody>
+</table>
 <h3 id="dettaglio-non_editable_fields">Dettaglio <code>non_editable_fields</code><a class="headerlink" href="#dettaglio-non_editable_fields" title="Permanent link">&para;</a></h3>
 <p>Due famiglie di immutabilità:</p>
 <table>
@@ -5100,8 +5156,8 @@ di conseguenza.</p>
 </tr>
 <tr>
 <td><code>ACCETTATO</code></td>
-<td><code>push_commessa</code></td>
-<td>Hardcoded, gate solo stato in v1 (rev 28-05-2026)</td>
+<td><code>push_commessa</code> (se residuo servizi), <code>genera_ordine</code> (se residuo merce)</td>
+<td>Hardcoded, gate con residuo per ramo (rev 09/12-06-2026): su preventivo solo-merce appare solo <code>genera_ordine</code>, su solo-servizi solo <code>push_commessa</code></td>
 </tr>
 <tr>
 <td><code>ANNULLATO</code> / <code>RIFIUTATO</code> / <code>SCADUTO</code></td>
@@ -5130,19 +5186,23 @@ fatturazione, push commessa).</p>
 <li><strong>Azioni speciali hardcoded</strong> — aggiunte in coda a <code>v_actions</code> (pattern
    <code>fn_available_actions_offerta</code>, rev 28-05-2026):</li>
 <li><code>crea_revisione</code> se <code>v_stato_cod = 'EMESSO'</code>: <code>target_state null</code>, <code>icon pi pi-clone</code>.</li>
-<li><code>push_commessa</code> se <code>v_stato_cod = 'ACCETTATO'</code>: <code>target_state null</code>, <code>icon pi pi-arrow-right</code>.
+<li><code>push_commessa</code> se <code>v_can_push</code> (ACCETTATO + residuo servizi): <code>icon pi pi-arrow-right</code>.</li>
+<li><code>genera_ordine</code> se <code>v_can_ordine</code> (ACCETTATO + residuo merce): <code>icon pi pi-shopping-cart</code>.
    Il FE distingue queste azioni dal <code>key</code> e usa routing speciale nel drawer.</li>
-<li><strong>Capability derivate</strong> — calcolate da <code>v_stato_cod</code> con semplici confronti:</li>
+<li><strong>Capability derivate</strong>:</li>
 <li><code>can_edit_testata / can_edit_righe = (stato = 'DRAFT')</code></li>
-<li><code>can_push_commessa = (stato = 'ACCETTATO')</code></li>
+<li><code>can_push_commessa = (stato = 'ACCETTATO') AND vendite.fn_preventivo_ha_residuo_commessa(id)</code> <em>(rev 12-06-2026)</em></li>
+<li><code>can_genera_ordine = (stato = 'ACCETTATO') AND vendite.fn_preventivo_ha_residuo_ordine(id)</code> <em>(rev 09-06-2026)</em></li>
 <li><code>can_create_revisione = (stato = 'EMESSO')</code></li>
 <li><code>non_editable_fields</code>: costante ridotta in DRAFT, allargata altrove.</li>
 <li><strong>Build JSONB</strong> — <code>jsonb_build_object</code> con tutte le chiavi.</li>
 </ol>
 <blockquote>
-<p><strong>Nota Fase 3</strong> — <code>can_push_commessa</code> è derivato dallo stato soltanto.
-Il check cross-dominio (righe già in commessa con <code>stato_emissione=EMESSA</code>)
-è rinviato a Fase 3 e sarà aggiunto senza modificare il contratto API.</p>
+<p><strong>Nota</strong> — la "Fase 3" anticipata nelle revisioni precedenti è stata
+completata (rev 12-06-2026, brief-db-smistamento-preventivi.md): entrambe
+le capability di smistamento usano il check cross-dominio con residuo via
+le funzioni <code>fn_preventivo_ha_residuo_*</code> (predicato unico condiviso con le
+viste smistabili e il Pannello Smistamento), senza modifiche al contratto API.</p>
 </blockquote>
 <h2 id="dipendenze">Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h2>
 <table>
@@ -5157,7 +5217,7 @@ Il check cross-dominio (righe già in commessa con <code>stato_emissione=EMESSA<
 <tr>
 <td><code>vendite.preventivi</code></td>
 <td>tabella</td>
-<td>sorgente stato e ID</td>
+<td>sorgente stato, testata (BA/utility) e ID</td>
 </tr>
 <tr>
 <td><code>config.stati_doc_preventivi</code></td>
@@ -5168,6 +5228,16 @@ Il check cross-dominio (righe già in commessa con <code>stato_emissione=EMESSA<
 <td><code>config.transizioni_stati_preventivi</code></td>
 <td>tabella</td>
 <td>matrice transizioni + meta UI</td>
+</tr>
+<tr>
+<td><code>vendite.fn_preventivo_ha_residuo_commessa</code></td>
+<td>funzione</td>
+<td>gate <code>can_push_commessa</code> (rev 12-06-2026)</td>
+</tr>
+<tr>
+<td><code>vendite.fn_preventivo_ha_residuo_ordine</code></td>
+<td>funzione</td>
+<td>gate <code>can_genera_ordine</code> (rev 09-06-2026)</td>
 </tr>
 <tr>
 <td><code>20260430-60-update-transizioni-stati-preventivi-meta-ui-mctit</code></td>

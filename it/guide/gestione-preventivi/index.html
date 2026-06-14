@@ -3262,6 +3262,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#64-preventivo-congelato-da-pricing-pendente" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6.4 Preventivo congelato da pricing pendente
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3307,13 +3318,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-push-commessa-e-fatturazione-downstream" class="md-nav__link">
+  <a href="#8-smistamento-downstream-ordine-e-commessa" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        8. Push commessa e fatturazione downstream
+        8. Smistamento downstream (ordine e commessa)
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="8. Smistamento downstream (ordine e commessa)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quando-il-preventivo-diventa-evaso-gate-bi-ramo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Quando il preventivo diventa EVASO (gate bi-ramo)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -5696,6 +5724,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#64-preventivo-congelato-da-pricing-pendente" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6.4 Preventivo congelato da pricing pendente
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5741,13 +5780,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-push-commessa-e-fatturazione-downstream" class="md-nav__link">
+  <a href="#8-smistamento-downstream-ordine-e-commessa" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        8. Push commessa e fatturazione downstream
+        8. Smistamento downstream (ordine e commessa)
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="8. Smistamento downstream (ordine e commessa)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quando-il-preventivo-diventa-evaso-gate-bi-ramo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Quando il preventivo diventa EVASO (gate bi-ramo)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -5926,9 +5982,11 @@
 
 <h1 id="guida-gestione-preventivi-vendita">Guida — Gestione Preventivi vendita<a class="headerlink" href="#guida-gestione-preventivi-vendita" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p><strong>Ultima revisione</strong>: 15 maggio 2026 — modello revisione attiva derivata
-(post refactor <code>is_attiva</code> su <code>vw_preventivi</code> + copia componenti BoM in
-<code>fn_crea_revisione_preventivo</code>).</p>
+<p><strong>Ultima revisione</strong>: 12 giugno 2026 — modello revisione attiva derivata
+(<code>is_attiva</code> su <code>vw_preventivi</code> + copia componenti BoM in
+<code>fn_crea_revisione_preventivo</code>); <strong>split per natura</strong> all'accettazione (merce →
+ordine via smistamento riga-per-riga, servizio una tantum → commessa), <strong>stato
+terminale EVASO</strong> con gate bi-ramo, <strong>annullamento manuale solo da DRAFT</strong>.</p>
 <p><strong>Destinatari</strong>: analisti funzionali, sviluppatori backend/frontend, DBA.</p>
 <p><strong>Vedi anche</strong> — schemi DB:</p>
 <ul>
@@ -5986,15 +6044,26 @@ se accettasse questa configurazione di articoli oggi?"</em></p>
 <ul>
 <li><strong>chi</strong> (<code>billing_account_id</code>, <code>istanza_utility_id</code>)</li>
 <li><strong>per cosa</strong> (<code>utility_id</code>)</li>
-<li><strong>quando</strong> (<code>data</code> di emissione, <code>validita_dal</code>/<code>validita_al</code> dell'offerta,
-  <code>competenza_mese</code> per la fatturazione downstream)</li>
+<li><strong>quando</strong> (<code>data</code> di emissione, <code>validita_dal</code>/<code>validita_al</code> dell'offerta)</li>
 <li><strong>chi emette</strong> (<code>emittente_fiscale_id</code>)</li>
-<li><strong>come fattura</strong> (<code>fatturazione_immediata</code>, <code>valuta_id</code>, <code>termine_pagamento_id</code>)</li>
+<li><strong>come fattura</strong> (<code>valuta_id</code>, <code>termine_pagamento_id</code>)</li>
 <li><strong>stato</strong> corrente (<code>stato_doc_preventivo_id</code>)</li>
 <li><strong>revisione</strong> (<code>numero</code> + <code>rev</code>, l'attivazione è derivata — vedi §4)</li>
 <li><strong>totali</strong> (<code>totale_imponibile</code>, <code>totale_iva</code>, <code>totale_documento</code>) ricalcolati
   da trigger sulle righe</li>
 </ul>
+<blockquote>
+<p><strong><code>istanza_utility_id</code> è obbligatoria</strong>: se non viene passata, il sistema la
+deriva automaticamente dal billing account; la coerenza utility/istanza è
+validata (errore <code>E_PREV_UTILITY_ISTANZA_INCOERENTE</code>). Anche
+<code>emittente_fiscale_id</code>, se assente, è valorizzato di default dal trigger DB
+sull'utente corrente.</p>
+<p><strong><code>fatturazione_immediata</code> e <code>competenza_mese</code> non sono campi della bozza</strong> ma
+<strong>dati di processo</strong> richiesti al momento dell'<strong>accettazione</strong> (EMESSO →
+ACCETTATO), tramite un dialog dedicato: <code>fatturazione_immediata</code> è obbligatoria;
+<code>competenza_mese</code> è obbligatoria solo se la fatturazione <strong>non</strong> è immediata (se
+immediata, la competenza è forzata al primo del mese corrente).</p>
+</blockquote>
 <p>I totali non si scrivono dall'API: sono il riassunto delle righe e vengono
 mantenuti coerenti dal database.</p>
 <h3 id="22-righe-preventivi_righe">2.2 Righe <code>preventivi_righe</code><a class="headerlink" href="#22-righe-preventivi_righe" title="Permanent link">&para;</a></h3>
@@ -6104,8 +6173,13 @@ ammesse da <code>config.transizioni_stati_preventivi</code>:</p>
 </tr>
 <tr>
 <td><code>ACCETTATO</code></td>
-<td>Cliente ha accettato — pronto per push commessa</td>
+<td>Cliente ha accettato — pronto per lo smistamento downstream</td>
 <td>No</td>
+</tr>
+<tr>
+<td><code>EVASO</code></td>
+<td>Tutte le righe smistate a ordine/commessa senza residuo</td>
+<td>No (terminale operativo positivo)</td>
 </tr>
 <tr>
 <td><code>RIFIUTATO</code></td>
@@ -6126,20 +6200,32 @@ ammesse da <code>config.transizioni_stati_preventivi</code>:</p>
 </table>
 <p>Le transizioni manuali permesse:</p>
 <div class="highlight"><pre><span></span><code>DRAFT      → EMESSO     (emetti)
+DRAFT      → ANNULLATO  (annulla)
 EMESSO     → ACCETTATO  (accetta)
 EMESSO     → RIFIUTATO  (rifiuta)
-EMESSO     → ANNULLATO  (annulla)
 </code></pre></div>
-<p><code>EMESSO → SCADUTO</code> è automatica (job notturno quando supera <code>validita_al</code>).</p>
+<blockquote>
+<p><strong>L'annullamento manuale è ammesso solo da DRAFT</strong> (le transizioni
+<code>EMESSO → ANNULLATO</code> e <code>ACCETTATO → ANNULLATO</code> sono state disattivate il
+22 maggio 2026). Un preventivo EMESSO si <strong>rifiuta</strong> (è il "no" del cliente) o
+<strong>scade</strong>; uno ACCETTATO ha già avviato il downstream.</p>
+</blockquote>
+<p><code>EMESSO → SCADUTO</code> è automatica (job notturno quando supera <code>validita_al</code>).
+<code>ACCETTATO → EVASO</code> è automatica: la scatena il backend dopo lo smistamento, quando
+non resta residuo su <strong>nessun</strong> ramo (vedi §8); non c'è un pulsante. <code>EVASO</code> è
+terminale.</p>
 <p>Le azioni disponibili in ogni momento sono esposte dal backend tramite
 <a href="../../dbzero/script/funzioni/fn_available_actions_preventivo/"><code>fn_available_actions_preventivo</code></a>
 e arrivano al frontend come array <code>available_actions</code>. Le capability derivate
-(<code>can_edit_testata</code>, <code>can_edit_righe</code>, <code>can_push_commessa</code>, <code>can_create_revisione</code>)
-governano la disabilitazione dei pulsanti.</p>
+(<code>can_edit_testata</code>, <code>can_edit_righe</code>, <code>can_push_commessa</code>, <code>can_genera_ordine</code>,
+<code>can_create_revisione</code>) governano la disabilitazione dei pulsanti. In stato
+ACCETTATO compaiono <strong>due</strong> azioni distinte e simmetriche: <code>push_commessa</code> (se
+restano righe-servizio da smistare) e <code>genera_ordine</code> (se restano righe-merce da
+smistare) — vedi §8.</p>
 <h3 id="32-stati-terminali-e-stato-abortito">3.2 Stati terminali e stato "abortito"<a class="headerlink" href="#32-stati-terminali-e-stato-abortito" title="Permanent link">&para;</a></h3>
 <p><code>config.stati_doc_preventivi</code> ha un campo <code>is_abortito</code> che marca lo stato
 <strong>ANNULLATO</strong> come "rinuncia". Tutti gli altri stati terminali (RIFIUTATO,
-SCADUTO, ACCETTATO) sono conclusioni del documento ma <strong>non rinunce</strong>: il
+SCADUTO, ACCETTATO, EVASO) sono conclusioni del documento ma <strong>non rinunce</strong>: il
 numero ha trovato un esito definitivo.</p>
 <p>Questa distinzione è importante per la logica revisione (§4): solo gli stati
 abortiti permettono al predecessore di "riprendere vita".</p>
@@ -6286,6 +6372,23 @@ e <a href=".././gestione-pratiche/">gestione pratiche</a> per il workflow comple
 applicato, contratto/promo riferiti, eventuale override manuale. Questo
 snapshot sopravvive a future modifiche del listino e permette di ricostruire
 "perché in quel momento il prezzo era X".</p>
+<h3 id="64-preventivo-congelato-da-pricing-pendente">6.4 Preventivo congelato da pricing pendente<a class="headerlink" href="#64-preventivo-congelato-da-pricing-pendente" title="Permanent link">&para;</a></h3>
+<p>Quando una o più righe (o componenti BoM) sono in stato di approvazione <strong>PENDING</strong>
+o <strong>REJECTED</strong> (gate L3, §6.2), l'intero preventivo è <strong>congelato</strong> a livello
+documento, non solo la singola riga:</p>
+<ul>
+<li>il backend <strong>svuota le azioni disponibili</strong> e mette la testata in <strong>sola lettura</strong>
+  (<code>can_edit_testata = false</code>): il frontend disabilita i pulsanti di avanzamento
+  (Emetti / Accetta) e l'editing della testata;</li>
+<li>con sole righe <strong>REJECTED</strong> l'editing delle righe resta abilitato
+  (<code>can_edit_righe = true</code>), per permettere all'operatore di correggere o eliminare
+  la riga rifiutata (riportando il prezzo a un valore accettabile il flag si resetta
+  e il preventivo torna lavorabile);</li>
+<li>con almeno una riga <strong>PENDING</strong> anche l'editing riga è bloccato, in attesa
+  dell'esito.</li>
+</ul>
+<p>A ulteriore difesa, il tentativo di passare ad ACCETTATO con righe/componenti
+PENDING è rifiutato dal trigger DB con <code>E_PREVENTIVO_RIGHE_PRICING_PENDENTI</code>.</p>
 <hr />
 <h2 id="7-workflow-end-to-end">7. Workflow end-to-end<a class="headerlink" href="#7-workflow-end-to-end" title="Permanent link">&para;</a></h2>
 <h3 id="71-flusso-tipico">7.1 Flusso tipico<a class="headerlink" href="#71-flusso-tipico" title="Permanent link">&para;</a></h3>
@@ -6308,38 +6411,75 @@ snapshot sopravvive a future modifiche del listino e permette di ricostruire
    │ Cliente vede      │    │  in documenti       │
    └────┬────┬──────┬──┘    └─────────────────────┘
         │    │      │
-   ┌────▼─┐ ┌▼──┐ ┌─▼─────────┐ ┌─────────┐
-   │ACCETT│ │RIF│ │  ANNULLATO│ │ SCADUTO │
-   └────┬─┘ └───┘ └─────┬─────┘ └─────────┘
-        │               │
-        │               │ (job notturno)
-        │
-   ┌────▼──────────────────┐
-   │   Push commessa       │
-   │ (transizione          │
-   │  EVASO automatica)    │
-   └───────────────────────┘
+        │    │      └──────────── (job notturno) ──▶ ┌─────────┐
+        │    │                                       │ SCADUTO │
+        │    │ rifiuta                               └─────────┘
+        │    └──▶ ┌─────┐
+        │         │ RIF │      (DRAFT → ANNULLATO: annulla solo da bozza)
+        │ accetta └─────┘
+   ┌────▼──────────────┐
+   │     ACCETTATO     │  smistamento per natura (due rami, selettivi)
+   └───┬───────────┬───┘
+       │ merce     │ servizio una tantum
+       │ genera    │ push
+       │ ordine    │ commessa
+   ┌───▼─────┐ ┌───▼──────┐
+   │ ORDINE  │ │ COMMESSA │
+   │ (DRAFT) │ │          │
+   └────┬────┘ └────┬─────┘
+        └─────┬─────┘
+              │ quando NON resta residuo su NESSUN ramo
+        ┌─────▼─────┐
+        │   EVASO   │  (terminale operativo positivo)
+        └───────────┘
 </code></pre></div>
 <h3 id="72-revisione-deviazione-dal-flusso">7.2 Revisione (deviazione dal flusso)<a class="headerlink" href="#72-revisione-deviazione-dal-flusso" title="Permanent link">&para;</a></h3>
 <p>Da EMESSO l'operatore può creare una nuova rev DRAFT, modificare e ri-emettere.
 Il numero documento resta lo stesso, il contatore <code>rev</code> incrementa.</p>
 <p>Una rev annullata torna a far valere il predecessore (vedi §4.3).</p>
 <hr />
-<h2 id="8-push-commessa-e-fatturazione-downstream">8. Push commessa e fatturazione downstream<a class="headerlink" href="#8-push-commessa-e-fatturazione-downstream" title="Permanent link">&para;</a></h2>
-<p>Quando un preventivo arriva in stato <strong>ACCETTATO</strong>, l'operatore può eseguire
-l'azione <strong>push commessa</strong>. Il sistema:</p>
-<ol>
-<li>crea (o riusa) una commessa nel dominio <code>vendite.commesse</code></li>
-<li>trasforma le righe del preventivo in attività commessa</li>
-<li><strong>espande</strong> i compositi: ogni riga padre composita produce N attività
-   commessa (una per ogni figlio attivo)</li>
-<li>transiziona il preventivo a <strong>EVASO</strong> (terminale operativo positivo)</li>
-</ol>
-<p>Da lì in poi la pipeline fatturazione opera sulle commesse e produce le
-fatture. Vedi <a href=".././fatturazione/">fatturazione end-to-end</a> per il processo
-downstream.</p>
-<p>Importante: dopo il push commessa il preventivo è <strong>congelato</strong>. Modifiche
-agli articoli vanno fatte sulle commesse, non più sul preventivo.</p>
+<h2 id="8-smistamento-downstream-ordine-e-commessa">8. Smistamento downstream (ordine e commessa)<a class="headerlink" href="#8-smistamento-downstream-ordine-e-commessa" title="Permanent link">&para;</a></h2>
+<p>Quando un preventivo arriva in stato <strong>ACCETTATO</strong>, le sue righe vengono <strong>smistate
+per natura</strong> (vedi §2.2): la <strong>merce</strong> va a un <strong>ordine di vendita</strong>, i <strong>servizi
+una tantum</strong> vanno a <strong>commessa</strong>. Non c'è quindi un unico "push commessa" per tutte
+le righe, ma <strong>due azioni distinte</strong>, entrambe disponibili dal <em>Pannello
+Smistamento</em> e governate dalle capability sullo stato e sul residuo righe:</p>
+<ul>
+<li><strong>Genera ordine</strong> (<code>can_genera_ordine</code>): smista le righe <strong>merce</strong> (natura con
+  destinazione <code>ORDINE</code>) verso un nuovo <strong>ordine</strong> in DRAFT, tramite
+  <code>fn_push_preventivo_a_ordine</code>. Lo smistamento è <strong>selettivo</strong> (si scelgono le
+  righe) e <strong>idempotente a livello di riga</strong>: ogni riga merce è smistabile una sola
+  volta. Dallo stesso preventivo possono nascere più ordini (consegne parziali).</li>
+<li><strong>Push commessa</strong> (<code>can_push_commessa</code>): smista <strong>solo</strong> le righe <strong>servizio una
+  tantum</strong> (destinazione <code>COMMESSA</code>) verso una commessa, applicando la politica di
+  fatturazione (immediata/differita). Anche questo smistamento può essere selettivo.</li>
+</ul>
+<p>Ogni riga-servizio eleggibile produce <strong>una</strong> attività commessa (idempotente sul
+re-push). <strong>Non</strong> c'è espansione dei compositi in più attività: una riga padre
+composita genera una sola attività; la distinta BoM resta sul preventivo ai fini di
+prezzo/anteprima, non viene esplosa in commessa.</p>
+<blockquote>
+<p><strong>Le righe ricorrenti non passano di qui</strong>: sono bloccate già all'inserimento
+(§2.2) e si gestiscono dall'offerta commerciale → contratto.</p>
+</blockquote>
+<h3 id="quando-il-preventivo-diventa-evaso-gate-bi-ramo">Quando il preventivo diventa EVASO (gate bi-ramo)<a class="headerlink" href="#quando-il-preventivo-diventa-evaso-gate-bi-ramo" title="Permanent link">&para;</a></h3>
+<p>Il preventivo transita a <strong>EVASO</strong> <strong>solo</strong> quando non resta residuo da smistare su
+<strong>nessun</strong> ramo: né righe-merce non ancora portate a ordine, né righe-servizio non
+ancora in commessa. Poiché il push commessa smista solo i servizi, un preventivo che
+contiene anche righe-merce non ancora ordinate <strong>resta ACCETTATO</strong> finché anche quel
+ramo è completato. In altre parole: <em>EVASO significa "tutte le righe smistate", non
+"push commessa eseguito"</em>. La verifica usa
+<code>fn_preventivo_ha_residuo_ordine</code> e <code>fn_preventivo_ha_residuo_commessa</code>.</p>
+<blockquote>
+<p><strong>Percorso pratica.</strong> Quando lo smistamento avviene nel contesto di una pratica,
+l'orchestratore <code>CONFERMA_VENDITA</code> (handler <code>vendita.push_preventivo</code>) esegue
+entrambi i rami in un'unica transazione.</p>
+</blockquote>
+<p>Da lì in poi la pipeline fatturazione opera sulle commesse/ordini a valle e produce
+le fatture. Vedi <a href=".././fatturazione/">fatturazione end-to-end</a> e
+<a href=".././gestione-ordini/">Gestione Ordini di vendita</a>.</p>
+<p>Importante: dopo lo smistamento le righe già portate a valle sono <strong>congelate</strong>.
+Le modifiche vanno fatte sull'ordine o sulla commessa, non più sul preventivo.</p>
 <hr />
 <h2 id="9-casi-duso-operativi">9. Casi d'uso operativi<a class="headerlink" href="#9-casi-duso-operativi" title="Permanent link">&para;</a></h2>
 <h3 id="91-cliente-chiede-una-modifica-al-preventivo-gia-inviato">9.1 Cliente chiede una modifica al preventivo già inviato<a class="headerlink" href="#91-cliente-chiede-una-modifica-al-preventivo-gia-inviato" title="Permanent link">&para;</a></h3>
@@ -6351,7 +6491,9 @@ agli articoli vanno fatte sulle commesse, non più sul preventivo.</p>
 </ol>
 <h3 id="92-loperatore-ha-sbagliato-la-revisione">9.2 L'operatore ha sbagliato la revisione<a class="headerlink" href="#92-loperatore-ha-sbagliato-la-revisione" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Sulla rev N+1 (DRAFT o EMESSO) clicca <strong>Annulla</strong></li>
+<li>Sulla rev N+1 <strong>in DRAFT</strong> clicca <strong>Annulla</strong> (l'annullamento manuale è ammesso
+   solo da DRAFT; se la rev N+1 è già EMESSO va prima rifiutata/fatta scadere, oppure
+   si crea un'ulteriore revisione)</li>
 <li>Stato → ANNULLATO</li>
 <li>La rev N (precedente) torna automaticamente "attiva" — l'operatore può
    accettarla, rifiutarla, oppure creare un'altra revisione</li>
@@ -6384,6 +6526,10 @@ il fallback per costruzione.</p>
 <p>L'annullamento è terminale. Per ripartire serve un nuovo preventivo (nuovo
 numero PRV). Non c'è "ripristino" da ANNULLATO. La logica è: la sequenza
 PRV-0042 è morta, ne emetti un'altra (PRV-0043).</p>
+<p>Va ricordato che l'annullamento manuale è disponibile <strong>solo da DRAFT</strong>: da EMESSO
+in poi non esiste un "Annulla", la chiusura semantica passa dal <strong>rifiuto</strong> o dalla
+<strong>scadenza</strong>. L'eliminazione fisica (hard-delete) è possibile solo su una <strong>bozza
+priva di righe e pratiche</strong>; una bozza con righe non si cancella, si annulla.</p>
 <hr />
 <h2 id="10-errori-principali">10. Errori principali<a class="headerlink" href="#10-errori-principali" title="Permanent link">&para;</a></h2>
 <p>Codici lanciati dal dominio preventivi (registrati in <code>error_policies</code>):</p>
@@ -6456,6 +6602,64 @@ PRV-0042 è morta, ne emetti un'altra (PRV-0043).</p>
 <td>400</td>
 <td>Modalità C: articolo non in contratto</td>
 </tr>
+<tr>
+<td><code>E_PREV_UTILITY_ISTANZA_INCOERENTE</code></td>
+<td>400</td>
+<td>Creazione: utility non coerente con l'istanza selezionata</td>
+</tr>
+<tr>
+<td><code>E_PREVENTIVO_RIGHE_PRICING_PENDENTI</code></td>
+<td>400</td>
+<td>Accettazione con righe/componenti in approvazione PENDING (§6.4)</td>
+</tr>
+<tr>
+<td><code>E_VENDITA_RIGA_RICORRENTE_USA_OFFERTA</code></td>
+<td>400</td>
+<td>Riga con natura ricorrente (destinazione CONTRATTO): usa l'offerta commerciale (§2.2)</td>
+</tr>
+</tbody>
+</table>
+<p>Codici dello <strong>smistamento / orchestratore <code>CONFERMA_VENDITA</code></strong> (vedi §8 e
+<a href="../../backend/vendite/manual/api_preventivi/">API Preventivi</a>):</p>
+<table>
+<thead>
+<tr>
+<th>Codice</th>
+<th>HTTP</th>
+<th>Quando</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>E_VENDITA_PREVENTIVO_PUSH_STATO_NON_AMMESSO</code></td>
+<td>409</td>
+<td>Smistamento a ordine da un preventivo non ACCETTATO</td>
+</tr>
+<tr>
+<td><code>E_VENDITA_PREVENTIVO_NESSUNA_RIGA_ORDINE</code></td>
+<td>422</td>
+<td>Smistamento a ordine senza righe-merce residue (tutte già allocate o nessuna di natura merce)</td>
+</tr>
+<tr>
+<td><code>E_VENDITA_PREVENTIVO_NON_ACCETTATO</code></td>
+<td>400</td>
+<td><code>CONFERMA_VENDITA</code>: il preventivo non è ACCETTATO</td>
+</tr>
+<tr>
+<td><code>E_VENDITA_PREVENTIVO_GIA_PUSHATO</code></td>
+<td>400</td>
+<td><code>CONFERMA_VENDITA</code>: niente da smistare ma ordine/commessa già esistenti</td>
+</tr>
+<tr>
+<td><code>E_VENDITA_PARAM_MODALITA_FATTURAZIONE_INVALIDA</code></td>
+<td>400</td>
+<td><code>CONFERMA_VENDITA</code>: modalità di fatturazione non valida (≠ IMMEDIATA/DIFFERITA)</td>
+</tr>
+<tr>
+<td><code>E_VENDITA_COMPETENZA_RICHIESTA</code></td>
+<td>400</td>
+<td><code>CONFERMA_VENDITA</code>: modalità DIFFERITA senza competenza</td>
+</tr>
 </tbody>
 </table>
 <p>Per il dettaglio dei codici pricing e degli errori L1/L2/L3 vedi
@@ -6501,7 +6705,7 @@ simmetria del pattern a 3 livelli (struttura, listino, documento).</p>
 <tbody>
 <tr>
 <td><strong>Preventivo</strong></td>
-<td>Offerta commerciale verso un cliente, ciclo di vita DRAFT → EMESSO → ACCETTATO/RIFIUTATO/ANNULLATO/SCADUTO</td>
+<td>Offerta commerciale verso un cliente, ciclo di vita DRAFT → EMESSO → ACCETTATO → EVASO (oppure RIFIUTATO/ANNULLATO/SCADUTO)</td>
 </tr>
 <tr>
 <td><strong>Revisione</strong></td>
@@ -6529,7 +6733,15 @@ simmetria del pattern a 3 livelli (struttura, listino, documento).</p>
 </tr>
 <tr>
 <td><strong>Push commessa</strong></td>
-<td>Trasferimento del preventivo ACCETTATO in commessa per innescare la fatturazione</td>
+<td>Smistamento delle sole righe-servizio una tantum del preventivo ACCETTATO in commessa, per innescare la fatturazione</td>
+</tr>
+<tr>
+<td><strong>Genera ordine</strong></td>
+<td>Smistamento delle righe-merce del preventivo ACCETTATO verso un ordine di vendita (riga-per-riga, 1:N)</td>
+</tr>
+<tr>
+<td><strong>EVASO</strong></td>
+<td>Stato terminale positivo: tutte le righe smistate (ordine + commessa), nessun residuo. Gate bi-ramo</td>
 </tr>
 <tr>
 <td><strong>Snapshot</strong></td>
