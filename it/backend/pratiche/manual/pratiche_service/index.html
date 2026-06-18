@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5016,7 +5047,7 @@
 <td><code>crea_pratica(...)</code></td>
 <td>emittente_fiscale_id, tipo_prestazione_id, priorita_id, ...</td>
 <td><code>int</code> (pratica_id)</td>
-<td>Crea pratica con stato BOZZA</td>
+<td>Crea pratica con stato APERTA (la pratica nasce aperta)</td>
 </tr>
 <tr>
 <td><code>aggiorna_pratica(pratica_id, data)</code></td>
@@ -5057,21 +5088,21 @@
 <tbody>
 <tr>
 <td><code>crea_flusso(...)</code></td>
-<td>pratica_id, template_flusso_id?, ...</td>
+<td>pratica_id, template_flusso_id (<strong>obbligatorio</strong>, &gt; 0), ...</td>
 <td><code>int</code> (flusso_id)</td>
 <td>Crea flusso con stato DA_ESEGUIRE</td>
 </tr>
 <tr>
-<td><code>avvia_flusso(flusso_id)</code></td>
+<td><code>avvia_flusso(flusso_id, user?)</code></td>
 <td>flusso_id</td>
-<td><code>None</code></td>
-<td>Transizione → IN_CORSO</td>
+<td><code>dict \| None</code></td>
+<td>Transizione → IN_CORSO (+ dispatch handler IN_CORSO; auto-completa se handler ok)</td>
 </tr>
 <tr>
-<td><code>completa_flusso(flusso_id, esito, note_esito?)</code></td>
+<td><code>completa_flusso(flusso_id, esito, note_esito?, user?)</code></td>
 <td>flusso_id, esito</td>
 <td><code>None</code></td>
-<td>Transizione → COMPLETATO</td>
+<td>Transizione → COMPLETATO (+ dispatch handler evento COMPLETATO)</td>
 </tr>
 <tr>
 <td><code>cambia_stato_flusso(flusso_id, nuovo_stato, ...)</code></td>
@@ -5197,10 +5228,16 @@
 <td>Canali abilitati per template</td>
 </tr>
 <tr>
-<td><code>dispatch_handler(flusso_id)</code></td>
+<td><code>dispatch_handler(flusso_id, user?)</code></td>
 <td>flusso_id</td>
 <td><code>dict \| None</code></td>
-<td>Invoca handler Python se configurato</td>
+<td>Invoca l'handler IN_CORSO del template (<code>template_flussi.handler_id</code>) se configurato</td>
+</tr>
+<tr>
+<td><code>dispatch_handler_eventi(flusso_id, evento, esito?, user?)</code></td>
+<td>flusso_id, evento</td>
+<td><code>None</code></td>
+<td>Esegue gli handler legati all'evento (<code>template_flussi_handler_eventi</code>), esito-aware, in ordine di sequenza. Binding senza impl registrata → <code>E_HANDLER_NON_REGISTRATO</code></td>
 </tr>
 <tr>
 <td><code>verifica_flusso_pratica(repo, pratica_id, flusso_id)</code></td>
@@ -5228,6 +5265,7 @@
 <li>Validazione con <code>ErrorManager.require</code> + <code>assert</code> per type safety.</li>
 <li>Esiti flusso ammessi: <code>POSITIVO</code>, <code>NEGATIVO</code>, <code>PARZIALE</code>, <code>NON_APPLICABILE</code>.</li>
 <li><code>dispatch_handler</code>: import inline di <code>handler_registry.get_handler</code> per evitare import circolari; ritorna <code>None</code> se il flusso non ha template, non ha handler_key, o l'handler non e' registrato.</li>
+<li><code>dispatch_handler_eventi</code> (2026-06-15): preambolo condiviso con <code>dispatch_handler</code> via <code>_flusso_per_dispatch</code> (fetch + guard + check template). Diversamente da <code>dispatch_handler</code>, un binding seedato senza impl registrata e' fail-fast (<code>E_HANDLER_NON_REGISTRATO</code>): non si completa un flusso saltando l'azione di dominio promessa. Eseguito nella transazione del completamento (atomicita' cambio stato + azione dominio). Chiamato da <code>completa_flusso</code> e dall'auto-completamento di <code>avvia_flusso</code>.</li>
 <li><code>assegna_pratica</code>: noop se nessun campo di assegnazione fornito.</li>
 <li>Le funzioni sospensione verificano unicita' sospensione attiva prima dell'INSERT.</li>
 <li><code>verifica_flusso_pratica(repo, pratica_id, flusso_id)</code>: helper <strong>pubblico</strong> per ownership check flusso/pratica. Usato internamente dal service (sospensioni, flussi) e dalle views API (alias <code>_get_flusso_verificato</code>). Unica fonte di verita' per la verifica esistenza + appartenenza flusso.</li>
@@ -5260,6 +5298,7 @@
 <li><code>config.stati_pratiche</code> (risoluzione stato pratica)</li>
 <li><code>config.stati_flussi_pratiche</code> (risoluzione stato flusso)</li>
 <li><code>pratiche.handler_flussi</code> (lookup handler_key)</li>
+<li><code>pratiche.template_flussi_handler_eventi</code> (binding handler per evento COMPLETATO, esito-aware)</li>
 <li><code>pratiche.fn_check_prerequisiti_flusso</code> (verifica prerequisiti)</li>
 <li><code>pratiche.template_flussi_canali</code> + <code>config.canali_pratiche</code> (canali)</li>
 <li><code>pratiche.sospensioni</code> (CRUD sospensioni via PraticheRepository)</li>

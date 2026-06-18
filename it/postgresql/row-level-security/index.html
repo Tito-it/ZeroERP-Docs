@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5347,6 +5378,21 @@ Dentro una policy RLS "mono-scope" e' preferibile leggere solo il GUC direttamen
 <span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span><span class="w">   </span><span class="n">ENABLE</span><span class="w"> </span><span class="k">ROW</span><span class="w"> </span><span class="k">LEVEL</span><span class="w"> </span><span class="k">SECURITY</span><span class="p">;</span>
 <span class="c1">-- FORCE NON necessario: nessun owner fa DML applicativo a runtime.</span>
 </code></pre></div>
+<p><strong>Processi headless applicativi → ruoli batch <code>BYPASSRLS</code> per-job.</strong> Oltre agli owner
+e ai ruoli di migrazione (che bypassano per natura), i processi headless del backend
+(management command, cron) che devono operare su <strong>tutti</strong> gli emittenti — senza
+un'identita' operatore via GUC — usano un ruolo <code>BYPASSRLS</code> <strong>dedicato per singolo job</strong>,
+non <code>zeroerp_app</code> ne' <code>postgres</code>/<code>titodb</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Canale di sistema headless, uno per job (oggi: batch di fatturazione)</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="n">zeroerp_batch_fatturazione</span><span class="w"> </span><span class="n">BYPASSRLS</span><span class="p">;</span><span class="w">   </span><span class="c1">-- salta SOLO l&#39;isolamento per-emittente</span>
+<span class="c1">-- ...ma DML concesso SOLO sul perimetro del job: il least-privilege si fa coi GRANT,</span>
+<span class="c1">--    non con la RLS (vendite.ordini, fuori perimetro, resta non scrivibile -&gt; fail-loud).</span>
+</code></pre></div>
+<p><code>BYPASSRLS</code> salta l'isolamento per-emittente, <strong>non</strong> i trigger/constraint di business
+(che restano attivi). Lo scoping del danno (scrittura cross-tenant) si ottiene coi
+<strong>GRANT DML</strong> limitati al perimetro. Regola: un nuovo job → un nuovo ruolo scoped, mai
+allargare l'esistente. Modello, provisioning, verifica e pgTAP:
+<a href="../../dev/backend/provisioning-db-roles/">provisioning-db-roles › Ruoli batch per-job</a>.</p>
 <p>Il parametro di sessione <code>row_security</code> (default <code>on</code>) permette a superuser o owner
 di forzare il comportamento: <code>SET row_security = off</code> causa errore se una query
 incontra una policy (utile per debug, <strong>mai</strong> in produzione).</p>

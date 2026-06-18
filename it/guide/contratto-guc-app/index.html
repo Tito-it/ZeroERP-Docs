@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5284,6 +5315,15 @@ sicuro ma richiede essere dentro una transazione).</p>
 registrazione), i GUC <strong>non vengono settati</strong>. Il DB vede valori vuoti,
 <code>fn_current_identita_context()</code> restituisce NULL-tuple, le policy RLS
 fail-closed.</p>
+<p><strong>Processi di sistema headless (canale batch).</strong> I management command / cron che
+operano via un ruolo <code>zeroerp_batch_&lt;job&gt;</code> (<code>BYPASSRLS</code> — vedi
+<a href="../../dev/backend/provisioning-db-roles/">provisioning-db-roles</a>) <strong>non settano i GUC
+d'identita'</strong> (<code>current_identita_id</code> / <code>ruolo_applicativo</code> / <code>soggetto_ruolo_id</code>):
+non hanno una veste applicativa e la RLS e' bypassata <strong>a livello di ruolo</strong>, non via
+GUC. Possono settare il solo <code>app.jwt_user</code> (es. <code>BATCH_FATTURAZIONE</code>) per dare un
+attore riconoscibile ai trigger audit. Questo canale e' riservato ai processi headless:
+<strong>mai</strong> usarlo per servire richieste web (guard fail-open statico+runtime, vedi
+<code>dev/work-in-progress/brief-db-contesto-sistema-batch-fatturazione-rls.md</code> §5.6).</p>
 <hr />
 <h2 id="4-chi-legge-cosa">4. Chi legge cosa<a class="headerlink" href="#4-chi-legge-cosa" title="Permanent link">&para;</a></h2>
 <h3 id="41-policy-rls">4.1 Policy RLS<a class="headerlink" href="#41-policy-rls" title="Permanent link">&para;</a></h3>

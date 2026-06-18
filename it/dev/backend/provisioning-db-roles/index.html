@@ -381,6 +381,8 @@
       
         
       
+        
+      
     
     
     
@@ -2492,6 +2494,8 @@
       
         
       
+        
+      
     
     
     
@@ -2976,6 +2980,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3296,10 +3327,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3316,8 +3347,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4290,6 +4321,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#ruoli-batch-per-job-zeroerp_batch_job-canale-di-sistema-headless" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ruoli batch per-job <code>zeroerp_batch_&lt;job&gt;</code> (canale di sistema headless)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5118,6 +5160,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#ruoli-batch-per-job-zeroerp_batch_job-canale-di-sistema-headless" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ruoli batch per-job <code>zeroerp_batch_&lt;job&gt;</code> (canale di sistema headless)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5291,6 +5344,48 @@ operare fuori dal perimetro RLS applicativo.</p>
 <li>manutenzione/amministrazione DB.</li>
 </ul>
 <p>Non deve essere configurato come <code>DB_USER</code> del backend.</p>
+<h3 id="ruoli-batch-per-job-zeroerp_batch_job-canale-di-sistema-headless">Ruoli batch per-job <code>zeroerp_batch_&lt;job&gt;</code> (canale di sistema headless)<a class="headerlink" href="#ruoli-batch-per-job-zeroerp_batch_job-canale-di-sistema-headless" title="Permanent link">&para;</a></h3>
+<p>I processi headless applicativi (management command, cron, job) che operano su
+tabelle protette da RLS <strong>senza</strong> un'identita' operatore usano un ruolo dedicato
+<strong>per singolo job</strong> — non <code>zeroerp_app</code>, non <code>postgres</code>/<code>titodb</code>.</p>
+<p>Modello (vedi
+<code>dev/work-in-progress/brief-db-contesto-sistema-batch-fatturazione-rls.md</code>):</p>
+<ul>
+<li><code>BYPASSRLS</code> — bypassa l'isolamento per-emittente (semantica corretta per un
+  processo di sistema che opera su <strong>tutti</strong> gli emittenti); trigger e constraint
+  di business restano comunque attivi;</li>
+<li><code>LOGIN</code>, <code>NOSUPERUSER NOCREATEDB NOCREATEROLE</code>;</li>
+<li><strong>SELECT + EXECUTE ampi</strong> sugli schemi applicativi (letture cross-tenant a basso
+  rischio; enumerare i lookup sarebbe fragile);</li>
+<li><strong>DML (INSERT/UPDATE/DELETE) SOLO sul perimetro di scrittura del job</strong>: il vettore
+  di danno di un ruolo <code>BYPASSRLS</code> e' la scrittura cross-tenant → va limitata. Una
+  tabella fuori perimetro fallisce <strong>rumorosamente</strong> (<code>permission denied</code>), non in
+  silenzio;</li>
+<li><strong>NO membership di <code>zeroerp_app</code></strong> (darebbe read+write su tutto): grant espliciti;</li>
+<li>usato via un <strong>alias Django dedicato</strong> (<code>DATABASES&#91;'system_&lt;job&gt;'&#93;</code>), <strong>mai</strong> come
+  <code>DB_USER</code> del web.</li>
+</ul>
+<blockquote>
+<p><strong>Regola per-job</strong>: un nuovo processo di sistema → <strong>nuovo ruolo scoped</strong>
+(<code>zeroerp_batch_&lt;job&gt;</code>), mai allargare i grant di un ruolo esistente. Alla comparsa
+del 2° job rivalutare "per-job vs ruolo condiviso-ma-scoped".</p>
+</blockquote>
+<p>Ruolo esistente: <strong><code>zeroerp_batch_fatturazione</code></strong> (batch di fatturazione).</p>
+<ul>
+<li>Provisioning (admin DB): <code>scripts/sql/provision_db_role_batch_fatturazione.sql</code></li>
+<li>Verifica postura: <code>scripts/sql/check_db_role_batch_fatturazione.sql</code></li>
+<li>CI: step psql-as-<code>postgres</code> in <code>.github/workflows/ci.yaml</code> ("Provision ruolo batch
+  fatturazione") che riusa lo stesso script</li>
+<li>pgTAP: <code>db/pgtap/rls/test-role-batch-fatturazione-postura.sql</code></li>
+</ul>
+<blockquote>
+<p><strong><code>BYPASSRLS</code> richiede superuser.</strong> Il provisioning di questi ruoli (creazione +
+attributo <code>BYPASSRLS</code>) va eseguito <strong>come superuser</strong> (<code>postgres</code>): lo script admin e
+lo step CI girano come <code>postgres</code>. <strong>Non</strong> metterlo in un changeset Liquibase del flusso
+ordinario: lì la connessione e' <code>zeroerp_app</code>/<code>titodb</code> (non-superuser) e l'<code>ALTER ROLE
+... BYPASSRLS</code> fallisce. I soli GRANT (senza attributi di ruolo) sarebbero invece
+eseguibili dall'owner degli oggetti.</p>
+</blockquote>
 <h2 id="come-runtime-e-identita-si-incontrano">Come runtime e identita' si incontrano<a class="headerlink" href="#come-runtime-e-identita-si-incontrano" title="Permanent link">&para;</a></h2>
 <p>Il backend apre la connessione come <code>zeroerp_app</code>, poi <code>JwtAuditAuthentication</code>
 popola i GUC che rappresentano la veste applicativa della richiesta:</p>
@@ -5345,13 +5440,15 @@ dalla whitelist applicativa generale.</p>
 comportamento RLS. Controllare anche:</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">rolname</span><span class="p">,</span><span class="w"> </span><span class="n">rolcanlogin</span><span class="p">,</span><span class="w"> </span><span class="n">rolbypassrls</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">pg_roles</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">rolname</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;zeroerp_app&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;titodb&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;postgres&#39;</span><span class="p">);</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">rolname</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;zeroerp_app&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;titodb&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;postgres&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;zeroerp_batch_fatturazione&#39;</span><span class="p">);</span>
 </code></pre></div>
 <p>Atteso:</p>
 <ul>
 <li><code>zeroerp_app</code>: <code>rolcanlogin = true</code>, <code>rolbypassrls = false</code></li>
 <li><code>titodb</code>: ruolo tecnico di migrazione</li>
 <li><code>postgres</code>: superuser / ruolo esente</li>
+<li><code>zeroerp_batch_fatturazione</code>: <code>rolcanlogin = true</code>, <code>rolbypassrls = **true**</code> (ruolo
+  batch per-job; postura completa via <code>scripts/sql/check_db_role_batch_fatturazione.sql</code>)</li>
 </ul>
 <p>Controllare inoltre che la RLS sia davvero attiva sulle tabelle del lotto:</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span>

@@ -381,6 +381,8 @@
       
         
       
+        
+      
     
     
     
@@ -2492,6 +2494,8 @@
       
         
       
+        
+      
     
     
     
@@ -2976,6 +2980,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3296,10 +3327,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3316,8 +3347,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6521,9 +6552,9 @@ esclusivi grazie al <code>UNIQUE (token_hash)</code>.</p>
 <td>Wrapper <code>vendite.fn_resolve_prezzo_listino_v2(uuid,bigint,date,bigint,integer,bigint,integer)</code>. Resolver a 3 stadi (promo → contratto → categoria). Ritorna 1 riga con prezzo + metadati snapshot.</td>
 </tr>
 <tr>
-<td><code>PricingRepository.resolve_prezzo_composito</code></td>
-<td><code>pricing_repository.py</code></td>
-<td>Wrapper <code>vendite.fn_resolve_prezzo_composito(...)</code>. BoM ibrido A/B1/B2: ritorna N righe (CASO A) o 1 riga (B1/B2) secondo esposizione in fattura dei componenti.</td>
+<td>~~<code>PricingRepository.resolve_prezzo_composito</code>~~</td>
+<td>—</td>
+<td><strong>RIMOSSO (cleanup 2026-05-14)</strong>: <code>fn_resolve_prezzo_composito</code> non esiste più. L'espansione compositi usa ora il <strong>path snapshot</strong> (<code>BoMComponentExpander</code> + <code>componenti_loader</code> su <code>&lt;sorgente&gt;_righe_componenti</code>), non un resolver dedicato.</td>
 </tr>
 <tr>
 <td><code>PricingService.resolve_prezzo</code></td>
@@ -6531,9 +6562,9 @@ esclusivi grazie al <code>UNIQUE (token_hash)</code>.</p>
 <td>Facade <code>fn_resolve_prezzo_listino_v2</code>: valida input (UUID, int &gt; 0, date), delega al repo, traduce <code>DatabaseError</code> P0001 in <code>ServiceError</code> con codice preservato quando MESSAGE matcha un marker noto (<code>E_PREZZO_LISTINO_NON_TROVATO</code>, <code>E_CATEGORIA_LISTINO_NON_MAPPATA</code>, <code>E_PREZZO_LISTINO_RIGA_NON_TROVATA</code>, <code>E_ARTICOLO_NON_NEGOZIATO_SU_CONTRATTO_C</code>). Fallback <code>E_VENDITE_PRICING_FAILED</code>. <code>emittente_soggetto_ruolo_id</code> deve essere gia' risolto dal caller (derivato dal JWT).</td>
 </tr>
 <tr>
-<td><code>PricingService.resolve_prezzo_composito</code></td>
-<td><code>pricing_service.py</code></td>
-<td>Facade <code>fn_resolve_prezzo_composito</code>: stessa policy di validazione e traduzione errori. Caller tipico: pipeline di espansione attivita' commessa (F2-BE-12).</td>
+<td>~~<code>PricingService.resolve_prezzo_composito</code>~~</td>
+<td>—</td>
+<td><strong>RIMOSSO (cleanup 2026-05-14)</strong> insieme a <code>fn_resolve_prezzo_composito</code>. L'espansione compositi nel push è ora basata sullo snapshot negoziato (vedi <code>BoMComponentExpander</code> / <code>_componenti_repo_factory</code>).</td>
 </tr>
 <tr>
 <td><code>PromoArticoliRepository</code></td>
@@ -6563,7 +6594,7 @@ esclusivi grazie al <code>UNIQUE (token_hash)</code>.</p>
 <tr>
 <td><code>CatalogoBomRepository.COMPONENTE_WRITE_COLUMNS.esposto_in_fattura</code></td>
 <td><code>catalogo_bom_repository.py</code></td>
-<td>Flag bool (DDL default <code>false</code>) che decide la modalita' A/B1/B2 del <code>fn_resolve_prezzo_composito</code> (§8 v5): se almeno un componente ha <code>esposto_in_fattura=true</code>, il resolver emette N righe (una per componente) e la pipeline di creazione attivita' espande in <code>commesse_attivita</code>.</td>
+<td>Flag bool (DDL default <code>false</code>). <strong>Modello unificato 2026-05-13</strong>: NON è più gate di espansione — tutti i componenti attivi vengono espansi in <code>commesse_attivita</code>; <code>esposto_in_fattura</code> decide solo la <strong>presentazione</strong> in fattura (padre con totale vs figli come righe descrittive), a valle nella generazione <code>fatture_righe</code>. Letto dal <code>componenti_loader</code> (JOIN runtime su <code>articoli_componenti</code>).</td>
 </tr>
 <tr>
 <td><code>PricingResolveView</code></td>
@@ -6628,7 +6659,37 @@ esclusivi grazie al <code>UNIQUE (token_hash)</code>.</p>
 <tr>
 <td><code>BoMComponentExpander</code></td>
 <td><code>commesse_source_handlers.py</code></td>
-<td><strong>F2-BE-12 / sviluppo-listini-v5 §14.4.</strong> Single-point per l'espansione BoM v5 nella pipeline commesse. Una <code>PushableRow</code> di articolo composito (CASO A: almeno un componente esposto in fattura) viene espansa in N <code>PushableRow</code> (una per componente obbligatorio attivo). CASO B (1 riga padre): pass-through. Pre-filtri: <code>articolo_id</code>/<code>uom_id</code>/<code>utility_id</code> None → pass-through. Detect <code>is_composito</code> via callable iniettabile (default: query lean su <code>catalogo.articoli</code>). Cache per-istanza su <code>is_composito</code> (1 lookup/articolo) e su risultato resolver (chiave <code>(articolo, BA, utility, data, emittente)</code> → 1 round-trip per chiave nel ciclo <code>_process_rows</code>). Costruisce ogni componente con: <code>articolo_id</code>/<code>uom_id</code>/<code>prezzo_snapshot</code> dal resolver, <code>quantita = padre × coeff_qta</code> no rounding (DEC-3), <code>segment_key</code> suffix <code>#CMP:{componente_id}</code> (DEC-2), <code>meta</code> arricchito con <code>esposto_in_fattura</code>+<code>componente_di</code>+<code>coeff_qta</code> (DEC-6), tutti gli altri campi (<code>tipo_doc_fiscale_id</code>, <code>valuta_id</code>, <code>billing_account_id</code>, <code>utility_id</code>, <code>sorgente_uid</code>, <code>emittente_soggetto_ruolo_id</code>, <code>competenza_*</code>, <code>fatturazione_immediata</code>) ereditati dal padre (DEC-5). Iniettabile in <code>BaseSourceHandler(repo, bom_expander=...)</code>; default applicato a tutti i 5 handler (preventivi/ordini/contratti/ddt). <code>HandlerConsumi</code> mantiene il proprio override <code>_expand_rows</code> (fan-out consumi ortogonale alla BoM). <strong>Dipendenza DB</strong>: richiede <code>coeff_qta</code> nel return di <code>fn_resolve_prezzo_composito</code> (DB-3 in lavorazione team DB).</td>
+<td><strong>F2-BE-12 / sviluppo-listini-v5 §14.4 (modello snapshot, cleanup 2026-05-14).</strong> Single-point per l'espansione BoM nella pipeline commesse. Una <code>PushableRow</code> di articolo composito viene espansa in N <code>PushableRow</code> leggendo i <strong>componenti negoziati pre-popolati</strong> della riga sorgente via <code>componenti_loader</code> (path snapshot <strong>unico</strong>; il vecchio path <code>fn_resolve_prezzo_composito</code> è stato <strong>rimosso</strong>). Pre-filtri pass-through: <code>articolo_id</code>/<code>uom_id</code>/<code>utility_id</code>/<code>quantita</code> None o qta 0; <code>is_composito</code> falso; loader assente o <code>riga_sorgente_id</code> None o snapshot vuoto. Detect <code>is_composito</code> via callable iniettabile (default: query lean su <code>catalogo.articoli</code> + cache modulo-level TTL). Per componente: <code>componente_id</code>/<code>uom_operativa_id</code>/<code>prezzo_unitario</code>/<code>coeff_qta_snapshot</code> dallo snapshot, <code>quantita = padre × coeff_qta</code> no rounding (DEC-3), <code>segment_key</code> suffix <code>#CMP:{componente_id}</code> (DEC-2), <code>meta</code> arricchito (<code>esposto_in_fattura</code>+<code>componente_di</code>+<code>coeff_qta</code>+<code>origine_prezzo</code>, DEC-6), resto ereditato dal padre (DEC-5). Iniettabile via <code>BaseSourceHandler(repo, bom_expander=...)</code>; il <strong>default</strong> per i 4 handler documento è costruito dal <code>_componenti_repo_factory</code> della sottoclasse (vedi sotto). <code>HandlerConsumi</code> mantiene l'override <code>_expand_rows</code> (consumi ortogonali alla BoM).</td>
+</tr>
+<tr>
+<td><code>BaseSourceHandler._componenti_repo_factory</code></td>
+<td><code>commesse_source_handlers.py</code></td>
+<td><strong>Estratto 2026-06-15 (regola del 2).</strong> <code>@staticmethod</code> per sottoclasse che ritorna il repository dei componenti negoziati (<code>ComponentiRepositoryMixin.list_componenti_riga</code> su <code>&lt;sorgente&gt;_righe_componenti</code>). <code>BaseSourceHandler.__init__</code> costruisce il default <code>BoMComponentExpander(componenti_loader=repo.list_componenti_riga)</code> da questa factory → il <strong>fan-out compositi vale per tutte le sorgenti documento</strong> (preventivi/ordini/contratti/DDT) con lo stesso modello, senza duplicare l'<code>__init__</code>. <code>None</code> (default base, es. <code>HandlerConsumi</code>) = nessun loader (pass-through / override). Import locale nella factory per evitare cicli.</td>
+</tr>
+<tr>
+<td><code>DdtRepository</code></td>
+<td><code>ddt_repository.py</code></td>
+<td>Repository DDT vendita minimale (<code>ComponentiRepositoryMixin</code>, <code>vendite.ddt_righe_componenti</code>/<code>riga_ddt_id</code>): oggi serve solo al push per il fan-out compositi DDT, simmetrico a preventivi/ordini/contratti.</td>
+</tr>
+<tr>
+<td><code>BaseSourceHandler._resolve_pricing_audit</code></td>
+<td><code>commesse_source_handlers.py</code></td>
+<td><strong>F2-BE-12 (wiring 2026-06-15).</strong> Popola, per riga del push, le 8 colonne snapshot audit pricing v5 su <code>commesse_attivita</code> via <code>PricingService.resolve_prezzo</code> (<code>fn_resolve_prezzo_listino_v2</code>). <strong>NON</strong> sovrascrive <code>prezzo_snapshot</code> (negoziato, autoritativo): solo audit diagnostico. Best-effort (savepoint isolato + catch → audit NULL, push non si blocca), cache per-run su <code>(articolo,uom,BA,utility,emittente,data,padre)</code>. Whitelist <code>origine_prezzo</code> contro il CHECK DB (<code>_ORIGINE_PREZZO_AMMESSE</code>): valore resolver fuori set (es. <code>LISTINO_BUNDLE</code>) → NULL. Per i componenti BoM l'<code>origine_prezzo</code> da <code>meta</code> (negoziato) prevale. La propagazione ad <code>attivita_fatturabili</code> è a carico della pull <code>fn_emit_attivita_fatturabili_da_commessa</code> (changeset <code>20260616-01</code>).</td>
+</tr>
+<tr>
+<td><code>BaseSourceHandler._pre_commessa_hook</code></td>
+<td><code>commesse_source_handlers.py</code></td>
+<td><strong>Scaffolding §6 (2026-06-15).</strong> Hook per riga <code>PushableRow → PushableRow</code>, chiamato in <code>_process_rows</code> prima di espansione/creazione commessa. Default identity (no-op). Punto d'innesto per una futura FASE DI LAVORAZIONE; override per sottoclasse, contratto puro senza side-effect.</td>
+</tr>
+<tr>
+<td><code>CommesseRepository.get_capabilities</code></td>
+<td><code>commesse_repository.py</code></td>
+<td><strong>Azioni di stato commessa (2026-06-16).</strong> Wrapper <code>call_jsonb_fn("script.fn_available_actions_commessa", id)</code>: ritorna il blob capability (<code>available_actions</code> con UI hints, <code>can_change_state</code>, <code>can_edit_righe</code>, <code>is_emittibile</code>, <code>stato_codice</code>). <code>{}</code> se commessa inesistente. Pattern gemello di <code>OrdiniRepository.get_capabilities</code>. Esposto in <code>fn_get_commessa_stato</code> (chiave <code>capabilities</code>); dal 2026-06-16 il suo <code>stato_codice</code> alimenta anche <code>stato_codice_interno</code> (de-dup: rimosso il round-trip dedicato <code>get_commessa_stato_codice</code>, che resta usato solo da <code>_rendi_commessa_emittibile</code>).</td>
+</tr>
+<tr>
+<td><code>commesse_service.cambia_stato_commessa</code></td>
+<td><code>commesse_service.py</code></td>
+<td><strong>Azione di stato utente (2026-06-16).</strong> <code>(commessa_id, nuovo_stato, user)</code>: difesa applicativa data-driven — la transizione è ammessa solo se <code>nuovo_stato</code> ∈ <code>available_actions</code> (transizioni <code>manuale=true</code>), così le transizioni <strong>automatiche</strong> (ponte push/emittibilità) non sono forzabili via API anche se valide a matrice; delega l'UPDATE + precondizioni a <code>fn_cambia_stato_commessa</code> (guard DB). Errori <code>E_COMMESSA_VALIDATION</code>/<code>E_COMMESSA_NOT_FOUND</code>/<code>E_COMMESSA_AZIONE_NON_AMMESSA</code> (409). Esposto da <code>POST /api/v1/vendite/commesse/&lt;id&gt;/stato/</code> (<code>ApiCommessaStato.post</code>).</td>
 </tr>
 </tbody>
 </table>
@@ -6644,8 +6705,8 @@ esclusivi grazie al <code>UNIQUE (token_hash)</code>.</p>
 <tbody>
 <tr>
 <td><code>commesse_attivita</code> (snapshot audit)</td>
-<td><strong>Done</strong> (F2-BE-11)</td>
-<td>Il DB <code>fn_upsert_commessa_attivita</code> popola gia' le 8 colonne snapshot</td>
+<td><strong>Done end-to-end</strong> (F2-BE-11/12, 2026-06-16)</td>
+<td><code>fn_upsert_commessa_attivita</code> accetta le 8 colonne; il <strong>push le popola</strong> via <code>BaseSourceHandler._resolve_pricing_audit</code> (<code>PricingService</code>); la <strong>pull</strong> <code>fn_emit_attivita_fatturabili_da_commessa</code> le propaga su <code>attivita_fatturabili</code> (changeset <code>20260616-01</code>)</td>
 </tr>
 <tr>
 <td><code>preventivi_service.calcola_prezzo_riga</code></td>
@@ -6659,8 +6720,8 @@ esclusivi grazie al <code>UNIQUE (token_hash)</code>.</p>
 </tr>
 <tr>
 <td><code>pipeline fatturazione compositi</code> (F2-BE-12)</td>
-<td><strong>BE done 22-04</strong></td>
-<td><code>BoMComponentExpander</code> integrato in <code>BaseSourceHandler._expand_rows</code> per i 5 handler; attesa DB-3 (<code>coeff_qta</code> nel return resolver) per esecuzione reale. Vedi sviluppo-listini-v5 §14.4</td>
+<td><strong>Done</strong> (2026-06-15)</td>
+<td>Path snapshot: <code>BoMComponentExpander</code> + <code>_componenti_repo_factory</code> per tutte le sorgenti documento (preventivi/ordini/contratti/DDT); legge i componenti negoziati <code>&lt;sorgente&gt;_righe_componenti</code> (nessuna dipendenza da resolver composito). Consumi utility = decomposizione tariffaria <strong>rimandata</strong> (2026-06-16). Vedi sviluppo-listini-v5 §14.4 + analisi-commesse §4.3 #3</td>
 </tr>
 <tr>
 <td>Endpoint diagnostico <code>/pricing/resolve/</code></td>

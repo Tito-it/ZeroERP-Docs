@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4860,6 +4891,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#post-azione-di-stato-utente" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        POST — Azione di stato utente
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#regole" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4901,13 +4943,22 @@
 
 <h1 id="api-commessa_stato-django">API commessa_stato (Django)<a class="headerlink" href="#api-commessa_stato-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Esporre via HTTP lo stato e i contatori aggregati di una singola commessa,
-per dashboard e monitoraggio avanzamento.</p>
+<p>Sulla risorsa <code>stato</code> di una commessa:</p>
+<ul>
+<li><strong>GET</strong> — stato, contatori aggregati e <strong>capability</strong> (azioni di stato ammesse), per
+  dashboard e monitoraggio avanzamento;</li>
+<li><strong>POST</strong> — applica un'<strong>azione di stato utente</strong> (chiudi / riapri / annulla).</li>
+</ul>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Endpoint applicativo che invoca il servizio Python <code>fn_get_commessa_stato</code>
-(<code>apps.vendite.services.commesse_service</code>), il quale legge i contatori da
-<code>CommesseRepository.get_commessa_stato()</code>.</p>
-<p>View: <code>ApiCommessaStato</code> <code>ApiCommessaStato</code> (<code>apps.vendite.api.views</code>).</p>
+<ul>
+<li>GET → servizio Python <code>fn_get_commessa_stato</code> (<code>apps.vendite.services.commesse_service</code>):
+  contatori da <code>CommesseRepository.get_commessa_stato()</code> + capability da
+  <code>CommesseRepository.get_capabilities()</code> (<code>script.fn_available_actions_commessa</code>).</li>
+<li>POST → servizio <code>cambia_stato_commessa</code>: difesa applicativa (azione ammessa solo se in
+  <code>capabilities.available_actions</code>) + <code>CommesseRepository.cambia_stato_commessa()</code>
+  (<code>vendite.fn_cambia_stato_commessa</code>, guard di matrice a DB).</li>
+</ul>
+<p>View: <code>ApiCommessaStato</code> (<code>apps.vendite.api.views</code>) — <code>def get</code> + <code>def post</code> sulla stessa URL.</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Metodo: <code>GET</code></li>
@@ -4924,34 +4975,122 @@ per dashboard e monitoraggio avanzamento.</p>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;commessa_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;stato_codice_interno&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PRONTA_FATTURAZIONE&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;stato_commessa_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;stato_commessa&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PRONTA_FATTURAZIONE&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;chiude_commessa&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;emittibile&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;modificabile&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;policy_fatturazione&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;DA_DOCUMENTO&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;fatturazione_immediata&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;priorita_operativa&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;billing_account_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1001</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;emittente_soggetto_ruolo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">555</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;total_attivita&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;total_approvate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;total_emesse&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
+<span class="w">    </span><span class="nt">&quot;total_non_approvate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;total_emesse&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;total_non_emesse&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;total_prezzo_da_riallineare&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;last_update&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-06-15T10:00:00&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;capabilities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;available_actions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;chiudi&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;target_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CHIUSA&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;vendite.commesse.azione_chiudi&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;severity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;success&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;icon&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pi pi-lock&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;requires_confirm&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;outlined&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;annulla&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;target_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ANNULLATA&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;vendite.commesse.azione_annulla&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;severity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;danger&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;icon&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pi pi-times&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;requires_confirm&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;outlined&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;can_change_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;can_edit_righe&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;is_emittibile&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;stato_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PRONTA_FATTURAZIONE&quot;</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p><code>stato_codice_interno</code> (2026-06-10): codice stato della testata
-(<code>vendite.stati_commessa.codice_interno</code>) — permette a FE/smoke di verificare
-l'esito del ponte di emittibilità post-push senza una seconda chiamata.</p>
+<p>Campi (2026-06-15): l'endpoint ora propaga <strong>tutto</strong> ciò che <code>fn_get_commessa_stato</code>
+espone, non più i soli 3 contatori. In dettaglio:</p>
+<ul>
+<li><code>stato_codice_interno</code> (2026-06-10): codice stato interno della testata
+  (<code>vendite.stati_commessa.codice_interno</code>) — verifica l'esito del ponte di
+  emittibilità post-push senza una seconda chiamata. <strong>Dal 2026-06-16 è derivato dal
+  blob <code>capabilities.stato_codice</code></strong> (stessa fonte <code>codice_interno</code>), evitando un
+  round-trip DB dedicato; valore invariato.</li>
+<li><strong>Stato + governance</strong> (da <code>vendite.stati_commessa</code>): <code>stato_commessa_id</code>,
+  <code>stato_commessa</code> (= <code>codice</code>, etichetta di stato), flag <code>chiude_commessa</code> /
+  <code>emittibile</code> / <code>modificabile</code>.<blockquote>
+<p>Nota: <code>stato_commessa</code> (<code>codice</code>) e <code>stato_codice_interno</code> (<code>codice_interno</code>) sono
+due <strong>colonne distinte</strong> di <code>stati_commessa</code> (oggi con lo stesso valore nel seed, ma
+separate per design: display vs chiave interna stabile) — non sono un duplicato.</p>
+</blockquote>
+</li>
+<li><strong>Config testata</strong>: <code>policy_fatturazione</code>, <code>fatturazione_immediata</code>,
+  <code>priorita_operativa</code>, <code>billing_account_id</code>, <code>utility_id</code>,
+  <code>emittente_soggetto_ruolo_id</code>.</li>
+<li><strong>Contatori righe</strong> <code>commesse_attivita</code>: <code>total_attivita</code>,
+  <code>total_approvate</code> / <code>total_non_approvate</code>, <code>total_emesse</code> / <code>total_non_emesse</code>,
+  <code>total_prezzo_da_riallineare</code>.</li>
+<li><code>last_update</code> (ISO 8601, nullable): max tra update testata e ultima riga.</li>
+<li><code>capabilities</code> (2026-06-16): blob data-driven da <code>script.fn_available_actions_commessa</code>
+  (pattern gemello di ordini/preventivi/offerte/contratti):</li>
+<li><code>available_actions</code>: array delle <strong>azioni di stato utente</strong> ammesse dallo stato
+    corrente (transizioni <code>meta.manuale=true</code> della matrice), ognuna con <code>key</code>
+    (<code>chiudi</code>/<code>riapri</code>/<code>annulla</code>), <code>target_state</code> (codice stato destinazione),
+    <code>label_key</code> (i18n), <code>severity</code>, <code>icon</code>, <code>requires_confirm</code>, <code>outlined</code> — pensate per
+    renderizzare i pulsanti FE senza logica cablata. Array vuoto negli stati terminali;</li>
+<li><code>can_change_state</code> (bool), <code>can_edit_righe</code> (= <code>modificabile</code>),
+    <code>is_emittibile</code> (= <code>emittibile</code>), <code>stato_codice</code>.</li>
+</ul>
+<p>I campi nullable possono valere <code>null</code> (es. <code>priorita_operativa</code>, <code>last_update</code>).</p>
 <ul>
 <li><code>400</code>: <code>commessa_id</code> non valido (<code>E_COMMESSA_VALIDATION</code>)</li>
 <li><code>404</code>: commessa non trovata (<code>E_COMMESSA_NOT_FOUND</code>)</li>
 </ul>
+<hr />
+<h2 id="post-azione-di-stato-utente">POST — Azione di stato utente<a class="headerlink" href="#post-azione-di-stato-utente" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Metodo: <code>POST</code></li>
+<li>Path: <code>/api/v1/vendite/commesse/&lt;commessa_id&gt;/stato/</code></li>
+<li>Header: <code>Authorization: Bearer &lt;token&gt;</code> + <strong><code>Idempotency-Key</code> obbligatoria</strong></li>
+<li>Body JSON:</li>
+<li><code>nuovo_stato</code> (string) — <strong>codice stato di destinazione</strong> (<code>target_state</code> preso da una
+    delle <code>capabilities.available_actions</code>, es. <code>CHIUSA</code> / <code>IN_ESECUZIONE</code> / <code>ANNULLATA</code>).</li>
+</ul>
+<p>Output <code>200</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;commessa_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;stato_da&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PRONTA_FATTURAZIONE&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;stato_a&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CHIUSA&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>Errori:</p>
+<ul>
+<li><code>400</code> <code>E_COMMESSA_VALIDATION</code> — <code>commessa_id</code> ≤ 0 o <code>nuovo_stato</code> mancante;</li>
+<li><code>404</code> <code>E_COMMESSA_NOT_FOUND</code> — commessa inesistente;</li>
+<li><code>409</code> <code>E_COMMESSA_AZIONE_NON_AMMESSA</code> — <code>nuovo_stato</code> non è tra le azioni utente ammesse
+  (difesa applicativa: respinge anche le transizioni <strong>automatiche</strong> — ponte
+  push/emittibilità — che il guard DB accetterebbe);</li>
+<li><code>472</code> <code>E_COMMESSA_STATO_TRANSIZIONE_INVALIDA</code> / <code>473</code> <code>E_COMMESSA_NESSUNA_RIGA_APPROVATA</code>
+  — sollevati dal guard DB se la coppia non è in matrice / precondizione non soddisfatta.</li>
+</ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Endpoint read-only, nessuna <code>Idempotency-Key</code> richiesta.</li>
+<li><strong>GET</strong> read-only, nessuna <code>Idempotency-Key</code>. <strong>POST</strong> write, <code>Idempotency-Key</code> obbligatoria.</li>
 <li>Endpoint v1 richiede JWT.</li>
 <li><code>commessa_id</code> deve essere &gt; 0, altrimenti errore di validazione.</li>
-<li>I contatori (<code>total_attivita</code>, <code>total_approvate</code>, <code>total_emesse</code>) sono calcolati
-  nel DB in un unico round-trip.</li>
-<li>Implementa il pattern standard <code>success_response</code> / <code>exception_to_error_response</code>.</li>
+<li>GET: stato, flag di governance e contatori calcolati nel DB in un round-trip
+  (<code>fn_get_commessa_stato</code>) + capability da <code>fn_available_actions_commessa</code>.</li>
+<li>POST: la transizione effettiva e le precondizioni di matrice restano a
+  <code>fn_cambia_stato_commessa</code> (guard DB); il service aggiunge la difesa applicativa
+  "azione tra le available_actions" (impedisce di forzare via API le transizioni
+  automatiche, che il guard DB non distingue dal flag <code>manuale</code>).</li>
+<li>Implementa il pattern standard <code>handle_post_json</code> (POST) / <code>success_response</code> (GET).</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>vendite.fn_get_commessa_stato</code> (funzione DB che calcola i contatori)</li>
-<li><code>vendite.commesse</code> (tabella principale)</li>
-<li><code>vendite.commesse_attivita</code> (per aggregazioni)</li>
+<li><code>vendite.fn_get_commessa_stato</code> (stato + contatori)</li>
+<li><code>script.fn_available_actions_commessa</code> (capability / azioni di stato)</li>
+<li><code>vendite.fn_cambia_stato_commessa</code> (transizione sanzionata, guard di matrice)</li>
+<li><code>vendite.commesse</code>, <code>vendite.commesse_attivita</code>, <code>vendite.transizioni_stati_commessa</code>,
+  <code>vendite.stati_commessa</code></li>
 </ul>
 
 

@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4846,6 +4877,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#colonne-discriminanti-origine-e-meta" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Colonne discriminanti <code>origine</code> e <code>meta</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#percorsi-di-scrittura" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Percorsi di scrittura
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#considerazioni-di-progettazione" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4899,13 +4952,21 @@
 <p><a href="../../job_definitions/">maintenance.job_definitions</a> <em>(ipotetico riferimento a definizione job)</em></p>
 <p>Approfondimento funzioni/procedure:</p>
 <p><a href="../../funzioni/fn_run_and_log/">maintenance.fn_run_and_log</a>
+<a href="../../../script/funzioni/fn_job_run_start/">script.fn_job_run_start</a>
+<a href="../../../script/funzioni/fn_job_run_end/">script.fn_job_run_end</a>
 <a href="../../funzioni/proc_apply_storicizza_defaults_job/">maintenance.proc_apply_storicizza_defaults_job</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 07-01-26)
+<p>(latest review 18-06-2026)
 La tabella <code>maintenance.job_run_log</code> memorizza i log di esecuzione dei job schedulati o lanciati manualmente all’interno del sistema Zero ERP.
 Ogni riga rappresenta una singola esecuzione di un job, includendo informazioni di stato, tempi di inizio/fine, eventuali errori e dettagli di esecuzione.</p>
+<p>È la tabella <strong>generica</strong> "un record per esecuzione di job" per <strong>qualsiasi</strong> processo
+schedulato: job <strong>pgAgent</strong> (lato DB) <em>e</em> <strong>job headless cron/command</strong> (management
+command Django via systemd, es. <code>run_fatturazione_batch</code>). La colonna <strong><code>origine</code></strong>
+distingue la sorgente del lancio; la colonna <strong><code>meta</code></strong> porta un riepilogo <em>generico</em> del
+run. Il dettaglio di dominio NON vive qui (es. la fatturazione lo tiene in <code>vendite.*</code>,
+correlato via <code>run_uuid</code>).</p>
 <hr />
 <h3 id="vincoli-e-relazioni">Vincoli e Relazioni<a class="headerlink" href="#vincoli-e-relazioni" title="Permanent link">&para;</a></h3>
 <ul>
@@ -4919,10 +4980,30 @@ Ogni riga rappresenta una singola esecuzione di un job, includendo informazioni 
 <li>Utilizzata da funzioni di logging automatico (<code>maintenance.fn_run_and_log</code>).</li>
 </ul>
 <hr />
+<h3 id="colonne-discriminanti-origine-e-meta">Colonne discriminanti <code>origine</code> e <code>meta</code><a class="headerlink" href="#colonne-discriminanti-origine-e-meta" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>origine</code></strong> (<code>varchar(16)</code> NOT NULL, default <code>'PGAGENT'</code>, CHECK
+  <code>chk_job_run_log_origine</code>): come è stato lanciato il run.</li>
+<li><code>PGAGENT</code> — job DB pgAgent (default; backfill dei record storici, semantica identica a prima).</li>
+<li><code>CRON</code> — management command schedulato (systemd/cron), es. <code>run_fatturazione_batch</code>.</li>
+<li><code>COMMAND</code> — lancio manuale di un command.</li>
+<li><strong><code>meta</code></strong> (<code>jsonb</code> NOT NULL, default <code>'{}'</code>): riepilogo <strong>generico</strong> del run (es. conteggi
+  per esito). <strong>Mai</strong> dettaglio di dominio (resta nei domini, correlato via <code>run_uuid</code>).</li>
+</ul>
+<h3 id="percorsi-di-scrittura">Percorsi di scrittura<a class="headerlink" href="#percorsi-di-scrittura" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>pgAgent</strong> → <a href="../../funzioni/fn_run_and_log/"><code>maintenance.fn_run_and_log</code></a>
+  (avvolge un blocco SQL). Invariata.</li>
+<li><strong>Job headless (cron/command)</strong> → <a href="../../../script/funzioni/fn_job_run_start/"><code>script.fn_job_run_start</code></a></li>
+<li><a href="../../../script/funzioni/fn_job_run_end/"><code>script.fn_job_run_end</code></a>: spezzano start/end
+  attorno a un corpo job <strong>Python</strong>. <code>SECURITY DEFINER</code> (i ruoli batch headless non hanno
+  DML diretto sulla tabella, solo <code>EXECUTE</code>). Advisory lock di sessione opzionale per
+  anti-overlap fra run dello stesso job (per <code>lock_key</code>).</li>
+</ul>
 <h3 id="considerazioni-di-progettazione">Considerazioni di Progettazione<a class="headerlink" href="#considerazioni-di-progettazione" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Permette la <strong>tracciabilità completa</strong> delle esecuzioni, con dettagli utili per debug e audit.</li>
-<li>Il campo <code>run_uuid</code> consente di correlare log multipli appartenenti alla stessa sessione o esecuzione.</li>
+<li>Il campo <code>run_uuid</code> consente di correlare log multipli appartenenti alla stessa sessione o esecuzione — e di <strong>agganciare i record di dominio</strong> del run (es. <code>vendite.*</code> per la fatturazione).</li>
 <li>La colonna <code>agent_host</code> è utile per identificare l’host sorgente in scenari multi-server o distribuiti.</li>
 </ul>
 <hr />

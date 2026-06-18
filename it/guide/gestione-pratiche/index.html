@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2494,6 +2496,8 @@
       
         
       
+        
+      
     
     
     
@@ -3011,6 +3015,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Su <code>pratiche.pratiche</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#su-pratichetemplate_flussi" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Su <code>pratiche.template_flussi</code>
       </span>
     </span>
   </a>
@@ -3808,6 +3823,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../fatturazione/" class="md-nav__link">
         
   
@@ -4131,10 +4173,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="">
             
   
   
@@ -4151,8 +4193,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6069,6 +6111,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#su-pratichetemplate_flussi" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Su <code>pratiche.template_flussi</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#su-praticheflussi" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6575,6 +6628,8 @@ pratiche -------------------- note_pratiche
 <li><strong>handler_id</strong>: NULL = step manuale, NOT NULL = step automatizzato (Django dispatch)</li>
 <li><strong>handler_params</strong>: JSONB con parametri operativi per l'handler (es. invio_sms_conferma)</li>
 <li><strong>obbligatorio</strong>: se il flusso e' richiesto per completare la pratica</li>
+<li><strong>modalita_esito</strong>: come si registra l'esito dello step — <code>MANUALE</code> (default: l'operatore avvia, poi sceglie l'esito a mano), <code>AUTOMATICO</code> (lo step si avvia e si chiude da solo con un esito predefinito, senza scelta umana), <code>CONTESTUALE</code> (l'operatore avvia e conferma l'esito in un'unica azione, con un valore gia' pre-impostato e modificabile)</li>
+<li><strong>esito_default</strong>: l'esito predefinito applicato (AUTOMATICO) o pre-selezionato (CONTESTUALE). Obbligatorio quando <code>modalita_esito</code> non e' <code>MANUALE</code>. <code>AUTOMATICO</code> e' ammesso <strong>solo</strong> per gli step a direzione INTERNA: un esito automatico su uno step ENTRATA/USCITA equivarrebbe a fabbricare la risposta di una controparte esterna</li>
 </ul>
 <h3 id="3-i-prerequisiti-il-grafo-del-workflow">3. I prerequisiti: il grafo del workflow<a class="headerlink" href="#3-i-prerequisiti-il-grafo-del-workflow" title="Permanent link">&para;</a></h3>
 <p>La tabella <a href="../../dbzero/pratiche/tabelle/template_flussi_prerequisiti/"><code>template_flussi_prerequisiti</code></a> definisce le dipendenze tra flussi:</p>
@@ -6688,7 +6743,7 @@ pratiche -------------------- note_pratiche
 <li><a href="../../dbzero/config/tabelle/transizioni_stati_pratiche/"><code>config.transizioni_stati_pratiche</code></a> — definisce le coppie (stato_da, stato_a) ammesse per le pratiche</li>
 <li><a href="../../dbzero/config/tabelle/transizioni_stati_flussi_pratiche/"><code>config.transizioni_stati_flussi_pratiche</code></a> — definisce le coppie (stato_da, stato_a) ammesse per i flussi</li>
 </ul>
-<p>Un trigger BEFORE UPDATE su <code>pratiche.pratiche</code> e su <code>pratiche.flussi</code> verifica che la transizione richiesta sia presente nella tabella di configurazione. Se non lo e', il trigger rifiuta l'operazione con un errore esplicito (<code>E_PRATICHE_TRANSIZIONE_NON_AMMESSA</code> o <code>E_FLUSSI_TRANSIZIONE_NON_AMMESSA</code>).</p>
+<p>Un trigger BEFORE UPDATE su <code>pratiche.pratiche</code> e su <code>pratiche.flussi</code> verifica che la transizione richiesta sia presente nella tabella di configurazione. Se non lo e', il trigger rifiuta l'operazione con un errore esplicito (<code>PRATICHE_TRANSIZIONE_NON_AMMESSA</code> o <code>FLUSSI_TRANSIZIONE_NON_AMMESSA</code>).</p>
 <p><strong>Transizioni ammesse per le pratiche:</strong></p>
 <div class="highlight"><pre><span></span><code>BOZZA       → APERTA, ANNULLATA
 APERTA      → SOSPESA, CHIUSA, ANNULLATA
@@ -6727,6 +6782,18 @@ ERRORE      → IN_CORSO (retry), ANNULLATO (abbandono)
 <li>Da APERTA puo' essere <strong>SOSPESA</strong>, <strong>CHIUSA</strong> o <strong>ANNULLATA</strong></li>
 <li>Da SOSPESA puo' tornare <strong>APERTA</strong></li>
 </ul>
+<blockquote>
+<p><strong>Chiusura guidata dal workflow.</strong> La transizione a <strong>CHIUSA</strong> non e' un'azione
+manuale dell'operatore: la pratica si auto-chiude (trigger
+<code>trgfn_flussi_autochiusura_pratica</code>) al completamento dei flussi. Per i tipi
+prestazione che hanno un <strong>flusso di chiusura</strong> dedicato, la chiusura scatta al
+completamento di quel flusso; altrimenti scatta quando non restano flussi
+obbligatori bloccanti. Il flag che marca il flusso di chiusura e'
+<a href="../../dbzero/pratiche/tabelle/template_flussi/"><code>template_flussi.chiude_pratica</code></a>
+(al massimo un template di chiusura per tipo prestazione — indice unico
+parziale <code>uq_template_flussi_chiusura</code>), configurabile dal <strong>pannello di
+configurazione</strong> (<code>pratiche.template_flussi</code>).</p>
+</blockquote>
 <h3 id="flusso">Flusso<a class="headerlink" href="#flusso" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>DA_ESEGUIRE --&gt; IN_CORSO --&gt; COMPLETATO (con esito)
     |   ^          |
@@ -6752,6 +6819,20 @@ ERRORE      → IN_CORSO (retry), ANNULLATO (abbandono)
 <li>Da DA_ESEGUIRE puo' essere <strong>ANNULLATO</strong> direttamente</li>
 <li>Al completamento con <code>auto = true</code>, il trigger DB puo' generare automaticamente nuove pratiche</li>
 </ul>
+<blockquote>
+<p><strong>Modalita' di registrazione dell'esito</strong> (configurate sul template, vedi §2). Per
+impostazione predefinita (<code>MANUALE</code>) avvio ed esito restano due momenti distinti. Un
+template <code>AUTOMATICO</code> collassa i due momenti senza intervento umano (lo step si chiude
+da solo con <code>esito_default</code>), ammesso <strong>solo</strong> per gli step INTERNA. Un template
+<code>CONTESTUALE</code> li collassa mantenendo la conferma umana dell'esito (un solo Salva, valore
+pre-impostato), senza vincolo di direzione. In tutti i casi l'esito al COMPLETATO resta
+<strong>obbligatorio</strong>: la rete di sicurezza <code>trgfn_flussi_guard_esito_completato</code> e'
+invariata, e il percorso resta <code>DA_ESEGUIRE -&gt; IN_CORSO -&gt; COMPLETATO</code> (nessuna
+transizione diretta <code>DA_ESEGUIRE -&gt; COMPLETATO</code>). La logica applicativa (azione unica
+"Avvia e completa") arriva col lavoro BE/FE; il DB fornisce le colonne e le invarianti.</p>
+</blockquote>
+<!-- -->
+
 <blockquote>
 <p><strong>Nota</strong>: la macchina a stati e' implementata come <strong>rigida</strong> nel DB tramite la tabella <code>config.transizioni_stati_pratiche</code> / <code>config.transizioni_stati_flussi_pratiche</code> e trigger di validazione. Le transizioni non ammesse vengono rifiutate dal DB. La sospensione temporanea (con data di riattivazione e job pgAgent) e' implementata: il flusso SOSPESO torna al suo stato precedente alla riattivazione manuale o automatica.</p>
 </blockquote>
@@ -7197,6 +7278,25 @@ Giornale registra:
 <td><a href="../../dbzero/pratiche/funzioni/trgfn_pratiche_giornale_priorita/"><code>trgfn_pratiche_giornale_priorita</code></a></td>
 <td>AFTER UPDATE OF priorita_id</td>
 <td>Registra PRIORITA_CAMBIATA</td>
+</tr>
+</tbody>
+</table>
+<h4 id="su-pratichetemplate_flussi">Su <code>pratiche.template_flussi</code><a class="headerlink" href="#su-pratichetemplate_flussi" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Funzione</th>
+<th>Evento</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>trg_template_flussi_a10_guard_modalita_esito_ins_upd</code></td>
+<td><a href="../../dbzero/pratiche/funzioni/trgfn_template_flussi_guard_modalita_esito/"><code>trgfn_template_flussi_guard_modalita_esito</code></a></td>
+<td>BEFORE INSERT OR UPDATE OF modalita_esito/esito_default/direzione</td>
+<td>Guard parlante: <code>esito_default</code> obbligatorio se <code>modalita_esito</code> non e' MANUALE (errore <code>TEMPLATE_FLUSSO_ESITO_DEFAULT_OBBLIGATORIO</code>); <code>AUTOMATICO</code> ammesso solo su direzione INTERNA (errore <code>TEMPLATE_FLUSSO_AUTOMATICO_SOLO_INTERNA</code>)</td>
 </tr>
 </tbody>
 </table>

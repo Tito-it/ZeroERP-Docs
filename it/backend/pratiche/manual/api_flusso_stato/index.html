@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4944,6 +4975,15 @@ esito <code>POSITIVO</code> — tutto in <strong>una sola transazione</strong> (
 COMPLETATO). Su eccezione dell'handler l'intera transizione rolla (il flusso
 torna <code>DA_ESEGUIRE</code>, ri-eseguibile) e l'errore parlante propaga. Per i flussi
 senza handler, l'avvio porta solo a <code>IN_CORSO</code> (completamento manuale).</p>
+<p><strong>Azioni di dominio al completamento (data-driven, 2026-06-15)</strong>: al passaggio a
+<code>COMPLETATO</code>, <code>completa_flusso</code> esegue gli handler server-side legati all'evento
+in <code>pratiche.template_flussi_handler_eventi</code> (esito-aware: scattano solo se
+<code>esito_richiesto</code> combacia con l'esito effettivo, <code>NULL</code> = qualsiasi), nella
+<strong>stessa transazione</strong> del cambio stato. Esempio seedato: il flusso
+<code>APPROVAZIONE_CLIENTE</code> di una pratica PREVENTIVI, completato <code>POSITIVO</code>, esegue
+l'handler <code>vendita.accetta_preventivo</code> che porta il preventivo ROOT collegato ad
+<code>ACCETTATO</code>. Sostituisce il vecchio endpoint dedicato M2: la FE chiama il
+completamento <strong>generico</strong> e il motore esegue l'azione di dominio.</p>
 <p>La generazione automatica cross-pratica al completamento e' gestita dal trigger DB <code>trgfn_flussi_generazione</code>.</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
@@ -4963,6 +5003,10 @@ senza handler, l'avvio porta solo a <code>IN_CORSO</code> (completamento manuale
 <li><code>400</code>: ownership mismatch (<code>E_FLUSSO_OWNERSHIP</code>), esito non valido (<code>E_FLUSSO_VALIDATION</code>), stato vuoto (<code>E_FLUSSO_VALIDATION</code>)</li>
 <li><code>401</code>: JWT mancante o non valido</li>
 <li><code>404</code>: flusso non trovato (<code>E_FLUSSO_NOT_FOUND</code>)</li>
+<li><code>409</code>: <strong>pratica terminale</strong> (<code>PRATICHE_TERMINALE_FLUSSO_NON_MODIFICABILE</code>, catalogo DB id 491): transizione/modifica di un flusso di una pratica <code>CHIUSA</code>/<code>ANNULLATA</code>. Guard <code>trg_flussi_a10_guard_pratica_terminale_ins_upd</code>.</li>
+<li><code>409</code>: <strong>chiusura prematura</strong> (<code>PRATICHE_CHIUSURA_FLUSSO_PREMATURO</code>, catalogo DB id 492): il flusso "di chiusura" (<code>template_flussi.chiude_pratica</code>) non puo' essere completato finche' restano altri obbligatori bloccanti. Guard <code>trg_flussi_a10_guard_chiusura_prematura_upd</code>.</li>
+<li><code>409</code>: <strong>transizione non ammessa</strong> (<code>FLUSSI_TRANSIZIONE_NON_AMMESSA</code>, catalogo DB id 302): la coppia <code>(stato_da, stato_a)</code> non e' in <code>config.transizioni_stati_flussi_pratiche</code> (attiva). Guard <code>trgfn_flussi_guard_transizione</code>.</li>
+<li><code>409</code>: <strong>esito obbligatorio</strong> (<code>FLUSSI_ESITO_OBBLIGATORIO</code>, catalogo DB id 477): passaggio a <code>COMPLETATO</code> senza <code>esito</code> (raggiungibile solo via <code>cambia_stato_flusso</code>; <code>completa_flusso</code> valida l'esito a monte con <code>E_FLUSSO_VALIDATION</code>). Guard <code>trgfn_flussi_guard_esito_completato</code>.</li>
 <li><code>500</code>: stato non trovato in config (<code>E_CONFIG_MANCANTE</code>)</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
@@ -4973,6 +5017,8 @@ senza handler, l'avvio porta solo a <code>IN_CORSO</code> (completamento manuale
 <li>Per qualsiasi altro stato, il servizio delega a <code>cambia_stato_flusso</code> con validazione stato non vuoto.</li>
 <li>Tutte le transizioni sono wrappate in <code>@transaction.atomic()</code>.</li>
 <li>Al completamento con esito, il trigger DB <code>trgfn_flussi_generazione</code> verifica le regole di generazione automatica (<code>auto = true</code>) e crea nuove pratiche se applicabile.</li>
+<li><strong>Chiusura workflow-driven</strong> (2026-06-14): al completamento di un flusso il trigger <code>trgfn_flussi_autochiusura_pratica</code> puo' auto-chiudere la pratica padre (<code>APERTA → CHIUSA</code>, solo da <code>APERTA</code>). Modello misto: tipo prestazione <strong>con</strong> flusso di chiusura (<code>template_flussi.chiude_pratica</code>) → chiude al completamento di quel flusso; <strong>senza</strong> → chiude quando non restano obbligatori bloccanti (<code>fn_check_pratica_chiudibile</code>). Non esiste piu' un'azione manuale "Chiudi" lato FE.</li>
+<li>Il service traduce gli errori dei guard di cui sopra nei codici parlanti 491/492 via marker (<code>pratiche_service._KNOWN_DB_ERROR_MARKERS</code>).</li>
 <li>Permission: <code>cambia_stato_flusso</code> (area <code>pratiche</code>).</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
@@ -4980,11 +5026,22 @@ senza handler, l'avvio porta solo a <code>IN_CORSO</code> (completamento manuale
 <li><code>pratiche.flussi</code> (UPDATE stato_id, esito, note_esito)</li>
 <li><code>config.stati_flussi_pratiche</code> (risoluzione codice_interno → id)</li>
 <li><code>pratiche.trgfn_flussi_generazione</code> (trigger su UPDATE per generazione automatica)</li>
+<li><code>pratiche.trgfn_flussi_autochiusura_pratica</code> (trigger su UPDATE→COMPLETATO: auto-chiusura pratica)</li>
+<li><code>pratiche.trgfn_flussi_guard_pratica_terminale</code> / <code>trgfn_flussi_guard_chiusura_prematura</code> (guard)</li>
+<li><code>pratiche.template_flussi_handler_eventi</code> + <code>pratiche.handler_flussi</code> (binding handler per evento <code>COMPLETATO</code>, esito-aware, letti dal dispatch al completamento)</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
 <li>La risoluzione stato avviene esplicitamente prima dell'UPDATE per evitare SET NULL su colonna NOT NULL.</li>
 <li>La generazione automatica cross-pratica e' completamente lato DB; il backend non ha logica di generazione automatica.</li>
+<li>(15 giugno 2026) Azioni di dominio al completamento <strong>data-driven</strong>: <code>completa_flusso</code>
+  (e l'auto-completamento di <code>avvia_flusso</code>) eseguono gli handler legati all'evento
+  <code>COMPLETATO</code> da <code>template_flussi_handler_eventi</code> (esito-aware), nella stessa
+  transazione. <code>completa_flusso</code> riceve l'utente acting (<code>user</code>) inoltrato agli
+  handler. Rimosso l'endpoint dedicato M2 (<code>approvazione-flusso/</code>): l'accettazione
+  del preventivo e' ora l'handler <code>vendita.accetta_preventivo</code> su <code>APPROVAZIONE_CLIENTE</code>
+  COMPLETATO+POSITIVO. Binding senza handler registrato → <code>E_HANDLER_NON_REGISTRATO</code> (fail-fast).</li>
+<li>(14 giugno 2026) Chiusura guidata dal workflow: auto-chiusura al completamento dei flussi (lato DB), rimossa l'azione manuale "Chiudi" dal FE. Aggiunti i codici parlanti 491 (pratica terminale) e 492 (chiusura prematura del flusso di chiusura), mappati via marker; <code>avvia/completa/cambia_stato_flusso</code> ora wrappano i <code>DatabaseError</code> in <code>_raise_known_db_error</code>.</li>
 </ul>
 
 

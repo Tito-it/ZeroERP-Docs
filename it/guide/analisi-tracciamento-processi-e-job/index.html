@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4950,15 +4981,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-job-schedulati-pgagent-e-maintenance" class="md-nav__link">
+  <a href="#3-job-schedulati-pgagent-e-job-headless-croncommand" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. Job schedulati: pgAgent e maintenance
+        3. Job schedulati: pgAgent e job headless (cron/command)
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. Job schedulati: pgAgent e maintenance">
+    <nav class="md-nav" aria-label="3. Job schedulati: pgAgent e job headless (cron&#x2f;command)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -4977,6 +5008,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         <code>maintenance.fn_run_and_log</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scriptfn_job_run_start-scriptfn_job_run_end-job-headless" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>script.fn_job_run_start</code> / <code>script.fn_job_run_end</code> (job headless)
       </span>
     </span>
   </a>
@@ -5136,7 +5178,7 @@ in Zero ERP: cosa esiste, come e organizzato, e come si estende a nuovi domini.<
 <p>Il sistema di tracciamento e organizzato su <strong>tre livelli</strong>, ciascuno con un ruolo preciso:</p>
 <ul>
 <li><strong>Audit log</strong> (<code>dbops.audit_log</code>) — traccia le operazioni generiche: automazioni, deploy, processi batch. E il livello trasversale, usato da qualsiasi componente</li>
-<li><strong>Job run log</strong> (<code>maintenance.job_run_log</code>) — traccia le esecuzioni dei job schedulati via pgAgent. Un record per ogni esecuzione con esito, durata e dettaglio errori</li>
+<li><strong>Job run log</strong> (<code>maintenance.job_run_log</code>) — traccia le esecuzioni dei <strong>job schedulati</strong>: pgAgent (lato DB) <em>e</em> job headless cron/command (management command Django, es. <code>run_fatturazione_batch</code>). Un record per ogni esecuzione con <code>origine</code>, esito, durata, dettaglio errori e <code>meta</code></li>
 <li><strong>Task registry e task runs</strong> (<code>dbops</code> + <code>vendite</code>) — traccia l'esecuzione dei task all'interno delle pipeline applicative, con stato, tentativi e policy di resume</li>
 </ul>
 <p>Questi tre livelli non si sostituiscono: si affiancano. Un job pgAgent puo produrre record sia in <code>job_run_log</code> (per il job schedulato) sia in <code>audit_log</code> (per le automazioni che esegue), e un errore grave viene catturato anche in <code>error_log</code>.</p>
@@ -5167,7 +5209,7 @@ in Zero ERP: cosa esiste, come e organizzato, e come si estende a nuovi domini.<
 </ul>
 <p><strong>Job schedulati:</strong></p>
 <ul>
-<li><a href="../../dbzero/maintenance/tabelle/job_run_log/">maintenance.job_run_log</a> — log esecuzioni pgAgent</li>
+<li><a href="../../dbzero/maintenance/tabelle/job_run_log/">maintenance.job_run_log</a> — log esecuzioni job schedulati (pgAgent + cron/command)</li>
 </ul>
 <hr />
 <h2 id="il-modello-in-sintesi">Il modello in sintesi<a class="headerlink" href="#il-modello-in-sintesi" title="Permanent link">&para;</a></h2>
@@ -5196,7 +5238,7 @@ vendite (dominio specifico)
 maintenance (job schedulati)
     │
     └── job_run_log
-            un record per esecuzione pgAgent: jobname, ok, rows_affected
+            un record per esecuzione (pgAgent / cron / command): jobname, origine, ok, meta
 </code></pre></div>
 <hr />
 <h2 id="componenti-del-modello">Componenti del modello<a class="headerlink" href="#componenti-del-modello" title="Permanent link">&para;</a></h2>
@@ -5497,10 +5539,11 @@ maintenance (job schedulati)
 <p>Documentazione dettagliata: <a href="../../dbzero/vendite/tabelle/fatturazione_lotti_task_runs/">vendite.fatturazione_lotti_task_runs</a></p>
 </blockquote>
 <hr />
-<h3 id="3-job-schedulati-pgagent-e-maintenance">3. Job schedulati: pgAgent e maintenance<a class="headerlink" href="#3-job-schedulati-pgagent-e-maintenance" title="Permanent link">&para;</a></h3>
+<h3 id="3-job-schedulati-pgagent-e-job-headless-croncommand">3. Job schedulati: pgAgent e job headless (cron/command)<a class="headerlink" href="#3-job-schedulati-pgagent-e-job-headless-croncommand" title="Permanent link">&para;</a></h3>
 <p>I job schedulati via pgAgent sono processi periodici gestiti dallo scheduler PostgreSQL: pulizia log, applicazione indici FK, storicizzazione, aggiornamento audit. Ogni job ha il proprio wrapper nel schema <code>maintenance</code> e registra le esecuzioni in <code>job_run_log</code>.</p>
+<p><code>job_run_log</code> è però <strong>generica</strong>: oltre a pgAgent accoglie anche i <strong>job headless cron/command</strong> (management command Django via systemd, es. <code>run_fatturazione_batch</code>). La colonna <code>origine</code> (<code>PGAGENT</code> / <code>CRON</code> / <code>COMMAND</code>) distingue la sorgente; la colonna <code>meta</code> (jsonb) porta un riepilogo <em>generico</em> del run. Il dettaglio di dominio resta nei rispettivi schemi (es. <code>vendite.*</code> per la fatturazione), correlato via <code>run_uuid</code>.</p>
 <h4 id="maintenancejob_run_log"><code>maintenance.job_run_log</code><a class="headerlink" href="#maintenancejob_run_log" title="Permanent link">&para;</a></h4>
-<p>Un record per ogni esecuzione di un job schedulato. La struttura e piatta e semplice: nome del job, step, esito, errore, righe coinvolte.</p>
+<p>Un record per ogni esecuzione di un job schedulato. La struttura e piatta e semplice: nome del job, step, origine, esito, errore, righe coinvolte, meta.</p>
 <p>Da un punto di vista tecnico:</p>
 <table>
 <thead>
@@ -5569,7 +5612,17 @@ maintenance (job schedulati)
 <tr>
 <td><code>run_uuid</code></td>
 <td>UUID</td>
-<td>Correlatore di sessione (default: <code>uuidv7()</code>)</td>
+<td>Correlatore di sessione (default: <code>uuidv7()</code>); aggancia i record di dominio del run</td>
+</tr>
+<tr>
+<td><code>origine</code></td>
+<td>VARCHAR(16)</td>
+<td><code>PGAGENT</code> (default) / <code>CRON</code> / <code>COMMAND</code> — CHECK <code>chk_job_run_log_origine</code></td>
+</tr>
+<tr>
+<td><code>meta</code></td>
+<td>JSONB</td>
+<td>Riepilogo <strong>generico</strong> del run (es. conteggi per esito); default <code>{}</code></td>
 </tr>
 </tbody>
 </table>
@@ -5584,6 +5637,13 @@ maintenance (job schedulati)
 <li>Cattura errori con SQLSTATE e contesto</li>
 </ul>
 <p>Ogni job schedulato ha una procedura dedicata (es. <code>proc_automations_storico_job</code>, <code>proc_automations_cleanup_job</code>) che internamente usa <code>fn_run_and_log</code> per la parte di logging.</p>
+<h4 id="scriptfn_job_run_start-scriptfn_job_run_end-job-headless"><code>script.fn_job_run_start</code> / <code>script.fn_job_run_end</code> (job headless)<a class="headerlink" href="#scriptfn_job_run_start-scriptfn_job_run_end-job-headless" title="Permanent link">&para;</a></h4>
+<p><code>fn_run_and_log</code> avvolge un blocco <strong>SQL</strong> e non è adatta a un corpo job in <strong>Python</strong> (management command). Per i job headless cron/command si usano due funzioni che spezzano start/end attorno al corpo applicativo:</p>
+<ul>
+<li><a href="../../dbzero/script/funzioni/fn_job_run_start/"><code>script.fn_job_run_start(jobname, origine, stepname, lock_key, agent_host)</code></a> → <code>(id, run_uuid, acquired)</code>: apre la riga; advisory lock di sessione opzionale per <code>lock_key</code> (anti-overlap fra run dello stesso job, cross-connessione). Se il lock è occupato ritorna <code>acquired=false</code> con riga <em>skip</em> già loggata.</li>
+<li><a href="../../dbzero/script/funzioni/fn_job_run_end/"><code>script.fn_job_run_end(id, ok, message, rows, error_code, error_detail, meta, lock_key)</code></a>: chiude la riga e rilascia il lock.</li>
+</ul>
+<p>Entrambe sono <code>SECURITY DEFINER</code> (i ruoli batch headless <code>zeroerp_batch_&lt;job&gt;</code> hanno solo <code>EXECUTE</code>, <strong>nessun DML diretto</strong> su <code>job_run_log</code>) con <code>search_path</code> fisso e <code>EXECUTE</code> revocato da PUBLIC. Lato BE le avvolge il context manager <code>registered_job</code> (vedi <code>apps/core/services/job_run.py</code>).</p>
 <hr />
 <h2 id="flusso-tipico-pipeline-fatturazione">Flusso tipico: pipeline fatturazione<a class="headerlink" href="#flusso-tipico-pipeline-fatturazione" title="Permanent link">&para;</a></h2>
 <p>Per concretizzare come i tre livelli interagiscono, questo e il flusso di una pipeline di fatturazione:</p>

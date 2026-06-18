@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2578,6 +2580,8 @@
       
         
       
+        
+      
     
     
     
@@ -3062,6 +3066,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3382,10 +3413,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3402,8 +3433,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4963,6 +4994,7 @@
 <ul>
 <li><a href="tabelle/allegati_flussi/">allegati_flussi</a> — La tabella <code>pratiche.allegati_flussi</code> gestisce i <strong>file allegati</strong> a un flusso specifico. Struttura identica a <code>allegati_pratiche</code> ma collegata al singolo step di workflow anziche' alla pratica.</li>
 <li><a href="tabelle/allegati_pratiche/">allegati_pratiche</a> — La tabella <code>pratiche.allegati_pratiche</code> gestisce i <strong>file allegati</strong> a una pratica. Gli allegati sono <strong>immutabili</strong>: non vengono modificati ma versionati tramite <code>allegato_padre_id</code>.</li>
+<li><a href="tabelle/azioni_ui/">azioni_ui</a> — La tabella <code>pratiche.azioni_ui</code> e' il <strong>catalogo delle attivita' UI lanciabili dal flusso di pratica</strong>. E' lo <strong>specchio lato frontend</strong> del registry handler (<code>pratiche.handler_flussi</code>):</li>
 <li><a href="tabelle/calcoli_tempo/">calcoli_tempo</a> — Tabella di calcolo persistente: misura il tempo impiegato per transitare dal completamento di <code>flusso_da</code> al completamento di <code>flusso_a</code>. Alimentata automaticamente dal trigger <code>trgfn_flussi_calcolo_tempo_completamento</code> a due fasi (avvio + chiusura).</li>
 <li><a href="tabelle/competenze_flussi/">competenze_flussi</a> — Matrice delle competenze: definisce per ogni tipo di flusso (template) e reparto (unita' organizzativa), quali operatori (risorse umane) sono abilitati a eseguire quel tipo di flusso.</li>
 <li><a href="tabelle/flussi/">flussi</a> — La tabella <code>pratiche.flussi</code> contiene le <strong>istanze operative dei flussi</strong> di una pratica. Ogni flusso e' uno step del workflow, creato da un template (opzionale) o manualmente, con stato, esito e assegnazione propri.</li>
@@ -4977,6 +5009,7 @@
 <li><a href="tabelle/sospensioni/">sospensioni</a> — Registra i periodi di fermo di una pratica o di un singolo flusso. Ogni riga e' un intervallo aperto (<code>data_fine NULL</code> = sospensione ancora attiva).</li>
 <li><a href="tabelle/template_flussi/">template_flussi</a> — La tabella <code>pratiche.template_flussi</code> definisce i <strong>template degli step di workflow</strong> per ciascun tipo_prestazione. Ogni template descrive un flusso tipo: sequenza di esecuzione, obbligatorieta', direzione, handler automatico opzionale e parametri di configurazione.</li>
 <li><a href="tabelle/template_flussi_canali/">template_flussi_canali</a> — La tabella <code>pratiche.template_flussi_canali</code> e' la <strong>relazione M:N</strong> tra template flussi e canali di visibilita'. Definisce su quali interfacce esterne un flusso e' esposto (es. portale clienti, app tecnica).</li>
+<li><a href="tabelle/template_flussi_handler_eventi/">template_flussi_handler_eventi</a> — La tabella <code>pratiche.template_flussi_handler_eventi</code> è il <strong>legame data-driven</strong> tra un template di flusso e gli <strong>handler</strong> da eseguire al verificarsi di un <strong>evento</strong> di flusso, <strong>esito-aware</strong>. Generalizza il dispatch handler oltre il solo avvio:</li>
 <li><a href="tabelle/template_flussi_prerequisiti/">template_flussi_prerequisiti</a> — La tabella <code>pratiche.template_flussi_prerequisiti</code> definisce il <strong>grafo diretto aciclico (DAG) dei prerequisiti</strong> tra template flussi. Un flusso puo' essere creato solo se tutti i suoi prerequisiti sono stati completati.</li>
 <li><a href="tabelle/tipi_prestazione/">tipi_prestazione</a> — La tabella <code>pratiche.tipi_prestazione</code> definisce il <strong>catalogo dei tipi di pratica</strong> gestibili dal sistema. Ogni pratica ha un <code>tipo_prestazione_id</code> che ne determina la natura e il workflow applicabile.</li>
 </ul>
@@ -5021,12 +5054,14 @@
 <li><a href="funzioni/trgfn_pratiche_guard_contesto/">trgfn_pratiche_guard_contesto</a> — Guard: valida la coerenza del contesto anagrafico sulla pratica nel <strong>modello a due rami</strong>, pendenti indipendentemente dal soggetto:</li>
 <li><a href="funzioni/trgfn_pratiche_guard_transizione/">trgfn_pratiche_guard_transizione</a> — Trigger function guard che <strong>blocca transizioni di stato non ammesse</strong> per le pratiche. Consulta la matrice <code>config.transizioni_stati_pratiche</code> (solo righe con <code>attivo = true</code>) e solleva eccezione se la transizione non e' configurata.</li>
 <li><a href="funzioni/trgfn_pratiche_set_data_apertura/">trgfn_pratiche_set_data_apertura</a> — Valorizza automaticamente <code>data_apertura</code> quando la pratica entra in APERTA, sia per <strong>creazione diretta</strong> (INSERT con stato APERTA) sia per <strong>transizione</strong> BOZZA → APERTA su UPDATE. Immutabile: una volta valorizzata, non viene sovrascritta da transizioni successive (ne' da un valore esplicito gia' fornito all'INSERT).</li>
+<li><a href="funzioni/trgfn_pratiche_sorgenti_guard_coerenza_flusso/">trgfn_pratiche_sorgenti_guard_coerenza_flusso</a> — In <code>pratiche.pratiche_sorgenti</code> la colonna <code>flusso_id</code> <strong>àncora il link ROOT al flusso d'origine</strong> del documento (preventivo aperto da un'attività UI di flusso), non a tutta la pratica — vedi <em>brief-db-aggancio-documento-flusso</em>. Il flusso indicato deve appartenere alla <strong>stessa pratica</strong> del link.</li>
 <li><a href="funzioni/trgfn_sospensioni_giornale_ins/">trgfn_sospensioni_giornale_ins</a></li>
 <li><a href="funzioni/trgfn_sospensioni_giornale_riattivazione/">trgfn_sospensioni_giornale_riattivazione</a></li>
 <li><a href="funzioni/trgfn_sospensioni_guard_coerenza_flusso/">trgfn_sospensioni_guard_coerenza_flusso</a> — Guard: verifica che <code>flusso_id</code> appartenga alla stessa <code>pratica_id</code> della sospensione. Se <code>flusso_id IS NULL</code> (sospensione pratica intera), nessun controllo.</li>
 <li><a href="funzioni/trgfn_sospensioni_propaga/">trgfn_sospensioni_propaga</a> — Propaga la sospensione a livello pratica ai flussi attivi. AFTER INSERT su <code>pratiche.sospensioni</code>: se <code>flusso_id IS NULL</code>, tutti i flussi con stato DA_ESEGUIRE o IN_CORSO passano a SOSPESO.</li>
 <li><a href="funzioni/trgfn_sospensioni_riattiva/">trgfn_sospensioni_riattiva</a> — Ripristina gli stati precedenti alla riattivazione. AFTER UPDATE OF <code>data_fine</code> su <code>pratiche.sospensioni</code>: quando la sospensione viene chiusa (data_fine passa da NULL a valorizzata), ripristina lo stato precedente dei flussi (dal giornale) e riporta la pratica ad APERTA.</li>
 <li><a href="funzioni/trgfn_sospensioni_set_periodo/">trgfn_sospensioni_set_periodo</a></li>
+<li><a href="funzioni/trgfn_template_flussi_guard_modalita_esito/">trgfn_template_flussi_guard_modalita_esito</a></li>
 </ul>
 <h2 id="views">🔍 Views<a class="headerlink" href="#views" title="Permanent link">&para;</a></h2>
 

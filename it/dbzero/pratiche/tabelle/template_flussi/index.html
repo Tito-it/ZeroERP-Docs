@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4909,6 +4940,8 @@
 <p>Approfondimento tabelle:</p>
 <p><a href=".././tipi_prestazione/">pratiche.tipi_prestazione</a>
 <a href=".././handler_flussi/">pratiche.handler_flussi</a>
+<a href=".././azioni_ui/">pratiche.azioni_ui</a>
+<a href=".././template_flussi_handler_eventi/">pratiche.template_flussi_handler_eventi</a>
 <a href=".././template_flussi_prerequisiti/">pratiche.template_flussi_prerequisiti</a>
 <a href=".././template_flussi_canali/">pratiche.template_flussi_canali</a>
 <a href=".././flussi/">pratiche.flussi</a></p>
@@ -4922,6 +4955,7 @@
 <li>Quando viene creata una pratica di un dato tipo, i flussi vengono istanziati dai template configurati.</li>
 <li>I template definiscono l'<strong>ordine</strong> (<code>sequenza</code>), l'<strong>obbligatorieta'</strong>, la <strong>direzione</strong> e la <strong>ripetibilita'</strong> del flusso.</li>
 <li>I template con <code>handler_id NOT NULL</code> sono automatizzati; quelli con <code>handler_id NULL</code> sono manuali.</li>
+<li>I template con <code>azione_ui_id NOT NULL</code> <strong>offrono un'attivita' UI interattiva</strong> nel flusso (es. aprire il drawer di un preventivo dentro la pratica): la chiave e' risolta dal registry frontend (<a href=".././azioni_ui/">azioni_ui</a>). Concern ortogonale all'handler: <code>handler_id</code> automatizza lato server, <code>azione_ui_id</code> lancia un'attivita' interattiva lato client; un template puo' avere l'uno, l'altro, entrambi o nessuno.</li>
 <li>I prerequisiti tra template sono definiti nella tabella <code>template_flussi_prerequisiti</code> (DAG).</li>
 <li>La regola di <strong>ripetibilita'</strong> (D3) governa quante istanze dello stesso template possono nascere nella stessa pratica: enforcement a DB nel guard <code>trg_flussi_a10_guard_ripetibilita_ins</code> (<a href="../../funzioni/fn_check_ripetibilita_flusso/">fn_check_ripetibilita_flusso</a>).</li>
 <li>L'<strong>obbligatorieta'</strong> vincola la chiusura della pratica (D4): un template <code>obbligatorio = true</code> non completato e ancora percorribile blocca la transizione a CHIUSA (<a href="../../funzioni/fn_check_chiusura_pratica/">fn_check_chiusura_pratica</a>). Il ramo morto di un bivio non blocca.</li>
@@ -4961,6 +4995,10 @@
 <td><code>handler_params</code></td>
 <td>JSONB DEFAULT '{}'. Parametri operativi passati all'handler Django in fase di esecuzione (es. <code>{"stampa_foglio": true, "invio_sms_conferma": true}</code>). Distinto da <code>meta</code> che contiene metadati generici.</td>
 </tr>
+<tr>
+<td><code>azione_ui_id</code></td>
+<td>INTEGER nullable, FK → <a href=".././azioni_ui/"><code>pratiche.azioni_ui</code></a>. NULL = nessuna attivita' interattiva offerta dal flusso. NOT NULL = il frontend offre il lancio dell'attivita' dichiarata (es. APRI_PREVENTIVO). Specchio FE di <code>handler_id</code>.</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -4970,6 +5008,7 @@
 <li><strong>CHECK direzione</strong>: solo valori ENTRATA, USCITA, INTERNA.</li>
 <li><strong>CHECK ripetibilita</strong>: solo valori MAI, SE_NON_POSITIVO, SEMPRE.</li>
 <li><strong>FK handler_id nullable</strong>: NULL = step manuale, NOT NULL = step automatizzato.</li>
+<li><strong>FK azione_ui_id nullable</strong> (<code>fk_template_flussi_azione_ui</code>): NULL = nessuna attivita' UI, NOT NULL = attivita' interattiva offerta dal flusso. Indice FK non creato (tabella di configurazione minuscola): registrato in <code>dbops.fk_index_policy</code> con <code>consentito = false</code>.</li>
 </ul>
 <hr />
 <h3 id="convenzioni">Convenzioni<a class="headerlink" href="#convenzioni" title="Permanent link">&para;</a></h3>

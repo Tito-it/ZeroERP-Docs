@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4849,6 +4880,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#macchina-di-transizioni-data-driven-2026-06-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Macchina di transizioni (data-driven, 2026-06-08)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4949,10 +4991,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#flusso-tipo-backend-handler-pull_commessa" class="md-nav__link">
+  <a href="#flusso-tipo-backend-step-pull_attivita_da_commessa" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Flusso tipo — Backend handler PULL_COMMESSA
+        Flusso tipo — Backend step <code>pull_attivita_da_commessa</code>
       </span>
     </span>
   </a>
@@ -5005,10 +5047,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#espansione-compositi-bom-v5-sprint-f2-be-12" class="md-nav__link">
+  <a href="#espansione-compositi-bom-v5-modello-snapshot" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Espansione compositi BoM v5 (Sprint F2-BE-12)
+        Espansione compositi BoM v5 (modello snapshot)
       </span>
     </span>
   </a>
@@ -5085,10 +5127,13 @@
 <h1 id="guida-tecnica-api-commesse-db-layer">Guida Tecnica – API Commesse (DB layer)<a class="headerlink" href="#guida-tecnica-api-commesse-db-layer" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p>Destinatari: sviluppatori backend e database di Zero ERP</p>
-<p><strong>Ultima revisione</strong>: 23 aprile 2026 — sezione "Lifecycle prezzo" allineata
-al modello pricing v5 (resolver <code>fn_resolve_prezzo_listino_v2</code> a 3 stadi,
-snapshot 8 colonne audit Sprint F2-BE-11, espansione BoM compositi
-Sprint F2-BE-12, workflow L3 approvazione Sprint E).</p>
+<p><strong>Ultima revisione</strong>: 16 giugno 2026 — allineata allo stato reale: macchina di
+transizioni data-driven (2026-06-08), ruolo sorgente auto <code>ROOT</code>/<code>COLLEGATO</code>,
+nomi step pipeline reali (<code>pull_attivita_da_commessa</code>, …), espansione BoM dal
+<strong>modello snapshot</strong> <code>*_righe_componenti</code> per tutte le sorgenti documento (rimosso
+<code>fn_resolve_prezzo_composito</code>), snapshot 8 colonne audit popolato dal push e propagato
+all'emissione (2026-06-16), consumi utility rimandati. Storico: pricing v5 (resolver
+<code>fn_resolve_prezzo_listino_v2</code> a 3 stadi, F2-BE-11/12, workflow L3 Sprint E).</p>
 <p>👀 <strong>Vedi anche</strong></p>
 <ul>
 <li>Gestione commesse v2 (architettura interna di lavoro)</li>
@@ -5184,6 +5229,30 @@ consumi) transita per la commessa — nessun bypass diretto verso</code>attivita
 <li><strong>emittibile</strong>: consente il pull verso AF (<code>fn_list_commesse_emittibili</code>)</li>
 <li><strong>chiude_commessa</strong>: impedisce riuso da <code>fn_get_or_create_commessa</code></li>
 </ul>
+<h3 id="macchina-di-transizioni-data-driven-2026-06-08">Macchina di transizioni (data-driven, 2026-06-08)<a class="headerlink" href="#macchina-di-transizioni-data-driven-2026-06-08" title="Permanent link">&para;</a></h3>
+<p>Lo stato della testata vive <strong>solo</strong> nella FK <code>stato_commessa_id</code> (nessuna colonna
+<code>stato</code> testuale — rimossa). Ogni cambio stato è validato contro una matrice:</p>
+<ul>
+<li>matrice <a href="../../dbzero/vendite/tabelle/transizioni_stati_commessa/"><code>vendite.transizioni_stati_commessa</code></a>
+  (coppie <code>(stato_da, stato_a)</code> ammesse + <code>meta.manuale</code>);</li>
+<li>trigger <code>trgfn_commesse_guard_transizione</code> (BEFORE UPDATE OF <code>stato_commessa_id</code>):
+  se <code>(OLD, NEW)</code> non è in matrice → <code>E_COMMESSA_STATO_TRANSIZIONE_INVALIDA</code> (472); per
+  <code>→ PRONTA_FATTURAZIONE</code> richiede ≥1 riga APPROVATA+NON_EMESSA, altrimenti
+  <code>E_COMMESSA_NESSUNA_RIGA_APPROVATA</code> (473);</li>
+<li>entrypoint sottile <code>fn_cambia_stato_commessa(p_commessa_id, p_nuovo_stato, p_user)</code>:
+  risolve codice→id e fa l'UPDATE, delegando la validazione al trigger.</li>
+</ul>
+<p>Transizioni attualmente in matrice: <code>BOZZA→{APERTA,PRONTA,ANNULLATA}</code>,
+<code>APERTA→{IN_ESECUZIONE,PRONTA,ANNULLATA}</code>, <code>IN_ESECUZIONE→{PRONTA,ANNULLATA}</code>,
+<code>PRONTA→{IN_ESECUZIONE,CHIUSA,ANNULLATA}</code>. Il flag <code>meta.manuale</code> distingue le
+transizioni <em>automatiche</em> (push/ponte emittibilità) da quelle <em>utente</em>; il guard non lo
+filtra (valida solo l'ammissibilità della coppia). L'esposizione delle <strong>azioni di stato
+utente</strong> (chiudi/riapri/annulla) + <code>fn_available_actions_commessa</code> è pianificata (analisi
+§4.3 #4 / §8 #7).</p>
+<blockquote>
+<p>Le righe (<code>commesse_attivita</code>) hanno due assi indipendenti: <code>stato_approvazione</code>
+(BOZZA→APPROVATA) e <code>stato_emissione</code> (NON_EMESSA→EMESSA).</p>
+</blockquote>
 <hr />
 <h2 id="api-funzioni-db">API — Funzioni DB<a class="headerlink" href="#api-funzioni-db" title="Permanent link">&para;</a></h2>
 <h3 id="1-fn_get_or_create_commessa">1. <code>fn_get_or_create_commessa</code><a class="headerlink" href="#1-fn_get_or_create_commessa" title="Permanent link">&para;</a></h3>
@@ -5609,7 +5678,7 @@ consumi) transita per la commessa — nessun bypass diretto verso</code>attivita
 <tbody>
 <tr>
 <td><a href="../../dbzero/vendite/funzioni/fn_link_commessa_sorgente/"><code>fn_link_commessa_sorgente</code></a></td>
-<td>Collega una sorgente (ROOT/CONTRIBUENTE) alla commessa</td>
+<td>Collega una sorgente alla commessa. <strong>Ruolo auto-deciso a DB</strong> <code>ROOT</code>/<code>COLLEGATO</code> (dal 2026-06-09; superato il vecchio modello mono-ROOT, non più "CONTRIBUENTE")</td>
 </tr>
 <tr>
 <td><a href="../../dbzero/vendite/funzioni/fn_log_commessa_push_run/"><code>fn_log_commessa_push_run</code></a></td>
@@ -5617,32 +5686,47 @@ consumi) transita per la commessa — nessun bypass diretto verso</code>attivita
 </tr>
 <tr>
 <td><a href="../../dbzero/vendite/funzioni/fn_resolve_commessa_prezzi/"><code>fn_resolve_commessa_prezzi</code></a></td>
-<td>Riallinea prezzi da listino sulle righe attivita`</td>
+<td><strong>Diagnostica su lotto</strong> (NON riallinea le righe commessa): proietta/verifica i prezzi risolti per le attività di un lotto. Il riallineo prezzo riga è invece N5/N7 via le azioni prezzo commessa</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="flusso-tipo-backend-handler-pull_commessa">Flusso tipo — Backend handler PULL_COMMESSA<a class="headerlink" href="#flusso-tipo-backend-handler-pull_commessa" title="Permanent link">&para;</a></h2>
-<p>Lo step <code>PULL_COMMESSA</code> (ordine 5) della pipeline <code>attivita_fatturabili_pipeline</code>
-esegue:</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># 1. Discovery commesse pronte</span>
+<h2 id="flusso-tipo-backend-step-pull_attivita_da_commessa">Flusso tipo — Backend step <code>pull_attivita_da_commessa</code><a class="headerlink" href="#flusso-tipo-backend-step-pull_attivita_da_commessa" title="Permanent link">&para;</a></h2>
+<p>Lo step pipeline <code>pull_attivita_da_commessa</code> (handler in
+<a href="../../dev/backend/catalogo-building-block-backend/"><code>pipeline_step_executor.py</code></a>) esegue il
+ponte commessa → <code>attivita_fatturabili</code>. Il perimetro (competenza/emittente/utility,
+e <code>fatturazione_immediata</code>) arriva dal contesto del lotto (<code>LottoContext</code>), non
+cablato nell'handler:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Discovery commesse emittibili (filtrate per la corsia del lotto)</span>
 <span class="n">rows</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">call_fn</span><span class="p">(</span><span class="s2">&quot;vendite.fn_list_commesse_emittibili&quot;</span><span class="p">,</span>
     <span class="n">p_competenza_mese</span><span class="o">=</span><span class="n">competenza_mese</span><span class="p">,</span>
-    <span class="n">p_emittente_soggetto_ruolo_id</span><span class="o">=</span><span class="n">emittente_id</span>
+    <span class="n">p_emittente_soggetto_ruolo_id</span><span class="o">=</span><span class="n">emittente_id</span><span class="p">,</span>
+    <span class="n">p_fatturazione_immediata</span><span class="o">=</span><span class="n">fatturazione_immediata</span><span class="p">,</span>  <span class="c1"># True (immediata) / False (differita) / None</span>
 <span class="p">)</span>
 
-<span class="c1"># 2. Per ogni commessa, pull verso AF</span>
+<span class="c1"># 2. Per ogni commessa, pull verso AF (idempotente, solo righe APPROVATE)</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">call_fn</span><span class="p">(</span><span class="s2">&quot;vendite.fn_emit_attivita_fatturabili_da_commessa&quot;</span><span class="p">,</span>
         <span class="n">p_commessa_id</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">commessa_id</span><span class="p">,</span>
-        <span class="n">p_lotto_attivita_id</span><span class="o">=</span><span class="n">lotto_id</span><span class="p">,</span>
-        <span class="n">p_only_approved</span><span class="o">=</span><span class="kc">True</span>
+        <span class="n">p_only_approved</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">p_dry_run</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Commessa </span><span class="si">{</span><span class="n">row</span><span class="o">.</span><span class="n">commessa_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">inserted_rows</span><span class="si">}</span><span class="s2"> ins, &quot;</span>
              <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">updated_rows</span><span class="si">}</span><span class="s2"> upd&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p><strong>Catena pipeline completa</strong>:</p>
-<div class="highlight"><pre><span></span><code>PULL_COMMESSA (ordine 5)  --&gt;  RACCOLTA_INPUT (ordine 10)  --&gt;  NORMALIZZAZIONE (ordine 20)
+<blockquote>
+<p><strong>Nota</strong>: <code>fn_emit_attivita_fatturabili_da_commessa</code> NON ha più il parametro
+<code>p_lotto_attivita_id</code> (sottosistema lotto rimosso, deprecato 20260227-16); la firma
+reale è <code>(p_commessa_id, p_only_approved, p_dry_run)</code>. Dal 2026-06-16 la fn propaga
+anche le 8 colonne snapshot audit pricing v5 da <code>commesse_attivita</code> ad
+<code>attivita_fatturabili</code>.</p>
+</blockquote>
+<p><strong>Catena pipeline reale</strong> (ordine dato dal seed <code>fn_list_fatturazione_pipeline_steps</code>,
+orchestrata in Python da <code>LottoPipelineRunner</code>; i vecchi nomi
+<code>PULL_COMMESSA/RACCOLTA_INPUT/NORMALIZZAZIONE</code> <strong>non esistono</strong>):</p>
+<div class="highlight"><pre><span></span><code>pull_attivita_da_commessa --&gt; select_attivita --&gt; generate_fatture_righe
+  --&gt; ricalcola_iva_lotto --&gt; genera_fondi/applica_fondi
+  --&gt; prepare_sdi_payload_lotto --&gt; numera_fatture --&gt; close_lotto
 </code></pre></div>
 <hr />
 <h2 id="flusso-tipo-push-sorgente-commessa">Flusso tipo — Push sorgente -&gt; commessa<a class="headerlink" href="#flusso-tipo-push-sorgente-commessa" title="Permanent link">&para;</a></h2>
@@ -5788,30 +5872,43 @@ modifiche successive a listini/contratti/promo.</p>
 </tr>
 </tbody>
 </table>
-<p>Popolazione: <code>fn_upsert_commessa_attivita</code> riceve tutti gli 8 campi dal
-chiamante (Python <code>CommessaAttivitaInput</code>) che li ricava dal resolver v5
-o dal flusso L1 override.</p>
-<h3 id="espansione-compositi-bom-v5-sprint-f2-be-12">Espansione compositi BoM v5 (Sprint F2-BE-12)<a class="headerlink" href="#espansione-compositi-bom-v5-sprint-f2-be-12" title="Permanent link">&para;</a></h3>
-<p>Quando una sorgente (preventivo/ordine/...) contiene un articolo composito
-(<code>catalogo.articoli.is_composito = true</code>) con almeno un componente
-<code>esposto_in_fattura = true</code>, la pipeline push <strong>espande</strong> la riga padre
-in N righe <code>commesse_attivita</code>, una per ogni componente attivo della BoM.</p>
-<p>Logica orchestrata da <code>BoMComponentExpander</code> in
+<p>Popolazione (aggiornata 2026-06): <code>fn_upsert_commessa_attivita</code> riceve gli 8 campi dal
+chiamante Python (<code>CommessaAttivitaInput</code>). Al <strong>push</strong> li valorizza
+<code>BaseSourceHandler._resolve_pricing_audit</code> via <code>PricingService.resolve_prezzo</code>
+(<code>fn_resolve_prezzo_listino_v2</code>), <strong>senza sovrascrivere <code>prezzo_snapshot</code></strong> (negoziato,
+autoritativo): l'audit è diagnostico. Best-effort (errore resolver → audit NULL, push non
+si blocca), <code>origine_prezzo</code> filtrato contro il CHECK (valore fuori set → NULL). Per i
+componenti BoM l'<code>origine_prezzo</code> negoziato (in <code>meta</code>) prevale. Dal 2026-06-16 la pull
+<code>fn_emit_attivita_fatturabili_da_commessa</code> propaga gli 8 campi anche su
+<code>attivita_fatturabili</code> (audit completo fino all'emissione).</p>
+<h3 id="espansione-compositi-bom-v5-modello-snapshot">Espansione compositi BoM v5 (modello snapshot)<a class="headerlink" href="#espansione-compositi-bom-v5-modello-snapshot" title="Permanent link">&para;</a></h3>
+<p>Quando una sorgente contiene un articolo composito
+(<code>catalogo.articoli.is_composito = true</code>), la pipeline push <strong>espande sempre</strong> la riga
+padre in N righe <code>commesse_attivita</code>, una per ogni componente <strong>attivo</strong> della BoM —
+<code>esposto_in_fattura</code> <strong>non è gate di espansione</strong> (modello unificato 2026-05-13): è solo
+un flag di <strong>presentazione</strong> in fattura (vedi sotto). Vale per <strong>tutte le sorgenti
+documento</strong> (preventivi, ordini, contratti, DDT) tramite lo stesso modello.</p>
+<p>Logica orchestrata da <code>BoMComponentExpander</code> + <code>_componenti_repo_factory</code> in
 <code>apps/vendite/services/commesse_source_handlers.py</code>:</p>
 <ul>
 <li>1 riga sorgente composito → N righe <code>commesse_attivita</code></li>
+<li>i componenti sono letti <strong>dallo snapshot negoziato</strong> della riga sorgente
+  (<code>&lt;sorgente&gt;_righe_componenti</code> via <code>ComponentiRepositoryMixin.list_componenti_riga</code>);
+  il vecchio <code>fn_resolve_prezzo_composito</code> è stato <strong>rimosso</strong> (cleanup 2026-05-14)</li>
 <li><code>articolo_id</code> = <code>componente_id</code></li>
 <li><code>quantita</code> = <code>quantita_padre × coeff_qta</code> (no rounding sotto-componenti)</li>
-<li><code>prezzo_snapshot</code> = prezzo risolto del singolo componente (resolver dedicato)</li>
+<li><code>prezzo_snapshot</code> = <code>prezzo_unitario</code> negoziato del componente (dallo snapshot)</li>
 <li><code>segment_key</code> = <code>{padre_segment_key}#CMP:{componente_id}</code> (idempotente per re-run)</li>
-<li><code>meta</code> arricchito con <code>componente_di</code>, <code>esposto_in_fattura</code>, <code>coeff_qta</code></li>
-<li>Tutti gli altri campi (BA, utility, competenza, sorgente_uid, tipo_doc_fiscale) ereditati pari pari dal padre</li>
+<li><code>meta</code> arricchito con <code>componente_di</code>, <code>esposto_in_fattura</code>, <code>coeff_qta</code>, <code>origine_prezzo</code></li>
+<li>Tutti gli altri campi (BA, utility, competenza, sorgente_uid, tipo_doc_fiscale) ereditati dal padre</li>
 </ul>
-<p>Componenti <strong>non esposti</strong>: anch'essi tracciati in <code>commesse_attivita</code> per
-audit completo, ma <code>meta.esposto_in_fattura=false</code>. La pipeline fatturazione
-filtra queste righe per emettere solo gli esposti in fattura.</p>
-<p><strong>Caso semplice (non composito o senza componenti esposti)</strong>: pass-through,
+<p>Componenti <strong>non esposti</strong> (<code>esposto_in_fattura=false</code>): comunque tracciati in
+<code>commesse_attivita</code>; il flag determina solo la <strong>presentazione</strong> a valle (padre con
+totale vs figli come righe descrittive), gestita nella generazione <code>fatture_righe</code>.</p>
+<p><strong>Caso semplice (non composito, o senza loader/snapshot)</strong>: pass-through,
 1 riga sorgente → 1 riga <code>commesse_attivita</code>.</p>
+<p><strong>Consumi utility (gas/energia/acqua/…)</strong>: la decomposizione tariffaria è <strong>rimandata</strong>
+(decisione 2026-06-16); un consumo entra in commessa come <strong>riga singola</strong> (nessun fan-out).</p>
 <p><strong>BoM immutabile</strong>: la struttura BoM non puo' essere modificata in place
 dopo essere stata pushata. Pattern admin: chiudi riga + duplica nuova
 versione (vedi <a href=".././gestione-listini/#53-immutabilita-della-bom-pattern-chiudi-nuova-versione">gestione-listini §5.3</a>).

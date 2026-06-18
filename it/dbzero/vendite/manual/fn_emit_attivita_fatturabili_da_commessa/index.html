@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4883,7 +4914,7 @@
 
 <h2 id="documentazione-concettuale-funzione-venditefn_emit_attivita_fatturabili_da_commessa">📘 Documentazione Concettuale – Funzione <code>vendite.fn_emit_attivita_fatturabili_da_commessa</code><a class="headerlink" href="#documentazione-concettuale-funzione-venditefn_emit_attivita_fatturabili_da_commessa" title="Permanent link">&para;</a></h2>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 24-02-2026)
+<p>(latest review 16-06-2026)
 Esegue il pull da <code>commesse_attivita</code> verso <code>attivita_fatturabili</code> (step 0 pipeline attività fatturabili).</p>
 <hr />
 <h3 id="regole-applicate">Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
@@ -4896,6 +4927,17 @@ Esegue il pull da <code>commesse_attivita</code> verso <code>attivita_fatturabil
 <li>Idempotenza gestita tramite chiave sorgente (<code>COMMESSA + segment_key-hash</code>).</li>
 <li>Se trova una riga AF gia` fatturata, blocca l'aggiornamento con errore.</li>
 <li>Propaga <code>commessa_id</code>, <code>commessa_attivita_id</code> e <code>prezzo_bloccato</code>.</li>
+<li>Propaga lo <strong>snapshot audit pricing v5</strong> (8 colonne) 1:1 da <code>commesse_attivita</code>:
+  <code>prezzo_base_snapshot</code>, <code>origine_prezzo</code>, <code>tipo_variazione_applicata</code>,
+  <code>valore_variazione_applicata</code>, <code>promo_id</code>, <code>contratto_id</code>,
+  <code>categoria_cliente_id_snapshot</code>, <code>classe_utenza_id_snapshot</code>.
+  CHECK ed FK sono speculari tra le due tabelle, quindi il trasporto è diretto
+  (la promo non è disattivabile finché referenziata dalla commessa, vedi guard
+  <code>trgfn_prevent_deactivate_if_children</code>). Così l'audit di derivazione del prezzo
+  raggiunge il livello di emissione, non solo <code>commesse_attivita</code>.</li>
+<li>Nel ramo UPDATE (resume di una riga AF non ancora fatturata) le 8 colonne audit
+  vengono <strong>rinfrescate</strong> dalla riga commessa, coerentemente con <code>prezzo_unitario</code>/
+  <code>prezzo_snapshot</code> (lo snapshot di emissione resta allineato finché non è fatturato).</li>
 <li>Aggiorna <code>commesse_attivita.stato_emissione = 'EMESSA'</code> per le righe emesse.</li>
 </ul>
 <hr />

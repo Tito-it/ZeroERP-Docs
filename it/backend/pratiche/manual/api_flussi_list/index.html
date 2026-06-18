@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4984,7 +5015,10 @@
 <li>Path canonico: <code>/api/v1/pratiche/&lt;pratica_id&gt;/flussi/</code></li>
 <li>Header: <code>Content-Type: application/json</code>, <code>Authorization: Bearer &lt;access_token&gt;</code></li>
 <li>Body:</li>
-<li><code>template_flusso_id</code> (int, opzionale) — template flusso configurato</li>
+<li><code>template_flusso_id</code> (int, <strong>obbligatorio</strong>, &gt; 0) — template flusso del
+    percorso. Ogni flusso e' template-driven (workflow v2): il vecchio "flusso
+    generico" senza template e' stato rimosso. Assente/non valido →
+    <code>E_FLUSSO_VALIDATION</code> (400).</li>
 <li><code>risorsa_umana_id</code> (int, opzionale) — risorsa umana assegnata</li>
 <li><code>unita_organizzativa_id</code> (int, opzionale) — unita' organizzativa</li>
 <li><code>sequenza</code> (int, opzionale, default <code>0</code>) — ordine esecuzione nel workflow</li>
@@ -5000,11 +5034,15 @@
 <span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;pratica_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;template_flusso_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;template_flusso_codice&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PREVENTIVAZIONE&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;template_azione_ui_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;APRI_PREVENTIVO&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;stato_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;sequenza&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;esito&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;data_scadenza&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">        </span><span class="nt">&quot;pratica_istanza_utility_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;pratica_billing_account_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;data_insert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-03-04T10:00:00+00:00&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;user_insert&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;zeroerp&quot;</span>
 <span class="w">      </span><span class="p">}</span>
@@ -5021,26 +5059,48 @@
 <span class="p">}</span>
 </code></pre></div>
 <ul>
-<li><code>400</code>: <code>pratica_id</code> non valido (<code>E_INVALID_ID</code>), JSON non valido, prerequisiti non soddisfatti (errore DB)</li>
+<li><code>400</code>: <code>pratica_id</code> non valido (<code>E_INVALID_ID</code>), JSON non valido</li>
+<li><code>409</code>: <strong>prerequisiti non soddisfatti</strong> (<code>PRATICHE_PREREQUISITI_NON_SODDISFATTI</code>,
+  catalogo DB id 300): il flusso non e' ancora eseguibile, mancano i prerequisiti
+  del template. Guard <code>trgfn_flussi_guard_prerequisiti</code>; messaggio parlante con
+  l'elenco dei template mancanti.</li>
 <li><code>401</code>: JWT mancante o non valido</li>
 <li><code>409</code>: <strong>flusso non ripetibile</strong> (<code>PRATICHE_FLUSSO_NON_RIPETIBILE</code>, catalogo
   DB id 483, workflow v2 D3): la regola <code>template_flussi.ripetibilita</code> vieta
   una nuova istanza — <code>MAI</code> = esiste gia' un'istanza non annullata;
   <code>SE_NON_POSITIVO</code> = l'ultima istanza (<code>MAX(id)</code>) e' ancora aperta oppure
   chiusa con esito <code>POSITIVO</code>. <code>SEMPRE</code> non blocca mai.</li>
+<li><code>409</code>: <strong>pratica terminale</strong> (<code>PRATICHE_TERMINALE_NUOVO_FLUSSO_BLOCCATO</code>,
+  catalogo DB id 490): non si possono creare flussi su una pratica in stato
+  terminale (<code>CHIUSA</code>/<code>ANNULLATA</code>). Guard <code>trg_flussi_a10_guard_pratica_terminale_ins_upd</code>.</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li>GET: ordinamento <code>sequenza ASC, id ASC</code>.</li>
+<li>GET (2026-06-15): ogni riga espone, oltre ai display fields, il contesto
+  data-driven per la UI: <code>template_azione_ui_key</code> (catalogo <code>pratiche.azioni_ui</code> —
+  attività/drawer di dominio apribile dal flusso; <code>null</code> se nessuna) e il contesto
+  cliente della pratica <code>pratica_istanza_utility_id</code> + <code>pratica_billing_account_id</code>
+  (BA derivato via <code>script.fn_get_billing_account_by_istanza</code>, <code>null</code> se prospect).
+  Alimentano l'apertura del documento dal flusso (eredità+lock cliente/istanza).</li>
 <li>POST: <code>pratica_id</code> deve essere &gt; 0.</li>
+<li>POST (2026-06-14): <code>template_flusso_id</code> e' <strong>obbligatorio</strong> (&gt; 0) — guard
+  fail-fast <code>E_FLUSSO_VALIDATION</code> nel service. Chiude il path morto del vecchio
+  "flusso generico" senza template (rimosso dal FE). I read-path
+  (<code>verifica_prerequisiti</code>, <code>canali</code>) restano tolleranti ai flussi legacy con
+  <code>template_flusso_id</code> NULL eventualmente ancora presenti a DB.</li>
 <li>POST: lo stato iniziale <code>DA_ESEGUIRE</code> viene risolto da <code>config.stati_flussi_pratiche</code>.</li>
-<li>POST: se il flusso ha un <code>template_flusso_id</code>, il trigger DB <code>trgfn_flussi_guard_prerequisiti</code> verifica che tutti i prerequisiti del template siano soddisfatti; in caso contrario l'INSERT fallisce con errore DB.</li>
+<li>POST: il trigger DB <code>trgfn_flussi_guard_prerequisiti</code> verifica che tutti i prerequisiti del template siano soddisfatti; in caso contrario l'INSERT fallisce e il service traduce l'errore nel codice parlante <code>PRATICHE_PREREQUISITI_NON_SODDISFATTI</code> (id 300, HTTP 409) via marker.</li>
 <li>POST (2026-06-12, D3): il guard <code>trg_flussi_a10_guard_ripetibilita_ins</code>
   applica la regola di ripetibilita' del template; il service traduce
   l'errore DB nel codice parlante 483 via marker sul messaggio (vedi
   <code>pratiche_service._KNOWN_DB_ERROR_MARKERS</code>). Il FE decide se proporre
   "Ripeti" dal campo <code>ripetibile_adesso</code> del percorso (vedi
   <a href="../api_percorso/">api_percorso</a>).</li>
+<li>POST (2026-06-14): il guard <code>trg_flussi_a10_guard_pratica_terminale_ins_upd</code>
+  blocca la creazione di flussi su pratica terminale (<code>CHIUSA</code>/<code>ANNULLATA</code>); il
+  service traduce l'errore nel codice parlante <code>PRATICHE_TERMINALE_NUOVO_FLUSSO_BLOCCATO</code>
+  (id 490) via marker.</li>
 <li>POST: wrappato in <code>@transaction.atomic()</code>.</li>
 <li>Endpoint v1 richiede JWT.</li>
 </ul>
@@ -5053,7 +5113,10 @@
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
 <li>La validazione prerequisiti e' interamente lato DB (trigger fail-fast).</li>
-<li>Il flusso senza template_flusso_id non ha prerequisiti e viene sempre creato.</li>
+<li>(2026-06-14) <code>template_flusso_id</code> reso obbligatorio in creazione: non esistono
+  piu' flussi "generici" senza template via API. La colonna <code>pratiche.flussi.template_flusso_id</code>
+  resta NULLABLE a DB per i record legacy; vedi il brief di pulizia dati
+  <code>brief-db-pratiche-flussi-generici-legacy.md</code> (cleanup + eventuale NOT NULL).</li>
 </ul>
 
 

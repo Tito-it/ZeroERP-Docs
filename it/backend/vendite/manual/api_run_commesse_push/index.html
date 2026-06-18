@@ -377,6 +377,8 @@
       
         
       
+        
+      
     
     
     
@@ -2486,6 +2488,8 @@
       
         
       
+        
+      
     
     
     
@@ -2970,6 +2974,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-ordini/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ordini
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3290,10 +3321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_28" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
         
           
-          <label class="md-nav__link" for="__nav_7_28" id="__nav_7_28_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
             
   
   
@@ -3310,8 +3341,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_28_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_28">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_29">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4871,6 +4902,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#comportamento-snapshot-pricing-v5-fan-out-compositi-2026-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Comportamento snapshot pricing v5 + fan-out compositi (2026-06)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#dipendenze-db" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4957,6 +4999,41 @@ con gli handler sorgente attivi (letti dinamicamente da <code>config.sorgenti</c
 <li>La lista delle sorgenti processabili è dinamica: attivazione/disattivazione gestita in <code>config.sorgenti</code> senza deploy backend.</li>
 <li>Il risultato per handler include contatori <code>created</code>, <code>updated</code>, <code>skipped</code> e lista <code>errors</code>.</li>
 </ul>
+<h2 id="comportamento-snapshot-pricing-v5-fan-out-compositi-2026-06">Comportamento snapshot pricing v5 + fan-out compositi (2026-06)<a class="headerlink" href="#comportamento-snapshot-pricing-v5-fan-out-compositi-2026-06" title="Permanent link">&para;</a></h2>
+<p>Il push, oltre a creare commessa e righe, arricchisce e materializza:</p>
+<ul>
+<li><strong>Snapshot audit pricing v5</strong> — per ogni riga il push popola su <code>commesse_attivita</code>
+  8 colonne di <strong>derivazione del prezzo</strong> (<code>prezzo_base_snapshot</code>, <code>origine_prezzo</code>,
+  <code>tipo_variazione_applicata</code>, <code>valore_variazione_applicata</code>, <code>promo_id</code>, <code>contratto_id</code>,
+  <code>categoria_cliente_id_snapshot</code>, <code>classe_utenza_id_snapshot</code>), ricostruite via
+  <code>PricingService.resolve_prezzo</code> (<code>fn_resolve_prezzo_listino_v2</code>). Caratteristiche:</li>
+<li><strong><code>prezzo_snapshot</code> (prezzo negoziato) resta autoritativo</strong>: NON viene sovrascritto;
+    l'audit è puramente diagnostico (ricostruzione della derivazione alla data di
+    competenza, può divergere da un prezzo negoziato manualmente);</li>
+<li><strong>best-effort</strong>: input insufficienti (es. consumi senza articolo/uom) o errore
+    resolver → audit a <code>NULL</code>, il push NON si blocca;</li>
+<li><strong>whitelist <code>origine_prezzo</code></strong>: un valore fuori dal CHECK DB (es. resolver
+    <code>LISTINO_BUNDLE</code>) viene normalizzato a <code>NULL</code> invece di far fallire l'upsert;</li>
+<li>per i <strong>componenti BoM</strong> l'<code>origine_prezzo</code> già negoziato (in <code>meta</code>) prevale sulla
+    ricostruzione del resolver;</li>
+<li><strong>propagazione a valle</strong>: la pull <code>fn_emit_attivita_fatturabili_da_commessa</code>
+    (changeset DB <code>20260616-01</code>) copia le 8 colonne 1:1 su <code>attivita_fatturabili</code>, quindi
+    l'audit è completo fino al livello di emissione.</li>
+<li><strong>Fan-out compositi (modello unico)</strong> — un articolo composito entra in commessa come
+  N righe componente, leggendo i componenti negoziati dalla rispettiva tabella
+  <code>*_righe_componenti</code>. Vale ora per <strong>tutte</strong> le sorgenti documento (preventivi,
+  ordini, contratti, DDT) tramite lo stesso <code>BoMComponentExpander</code> + loader snapshot.</li>
+<li><strong>Consumi utility (gas/energia/acqua/…)</strong>: la decomposizione tariffaria
+  (energia/trasporto/oneri/…) è <strong>rimandata</strong> (decisione 2026-06-16); un consumo entra
+  in commessa come <strong>riga singola</strong> (nessun fan-out).</li>
+<li><strong>Punto d'innesto fasi di lavorazione</strong>: <code>BaseSourceHandler._pre_commessa_hook(row)</code>
+  (default identity) è il gancio dove una futura fase di lavorazione precederebbe la
+  creazione commessa; oggi nessun effetto.</li>
+</ul>
+<blockquote>
+<p>Nessuna modifica al <strong>contratto HTTP</strong> (input/output invariati): cambia solo il
+contenuto materializzato a valle.</p>
+</blockquote>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>vendite.fn_list_preventivi_da_pushare</code></li>
@@ -4965,9 +5042,12 @@ con gli handler sorgente attivi (letti dinamicamente da <code>config.sorgenti</c
 <li><code>vendite.fn_list_ddt_da_pushare</code></li>
 <li><code>vendite.fn_list_consumi_da_pushare</code></li>
 <li><code>vendite.fn_get_or_create_commessa</code></li>
-<li><code>vendite.fn_upsert_commessa_attivita</code></li>
+<li><code>vendite.fn_upsert_commessa_attivita</code> (riceve le 8 colonne snapshot audit)</li>
+<li><code>vendite.fn_resolve_prezzo_listino_v2</code> (via <code>PricingService</code>, per l'audit snapshot v5)</li>
 <li><code>vendite.commesse_push_log</code> (log esecuzione)</li>
 <li>Advisory lock: <code>pg_try_advisory_lock(hashtext('commesse_push_orchestrator'))</code></li>
+<li>A valle (pull, non chiamata dal push): <code>vendite.fn_emit_attivita_fatturabili_da_commessa</code>
+  propaga le 8 colonne audit su <code>attivita_fatturabili</code> (changeset <code>20260616-01</code>).</li>
 </ul>
 
 
