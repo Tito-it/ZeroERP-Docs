@@ -379,6 +379,8 @@
       
         
       
+        
+      
     
     
     
@@ -2490,6 +2492,8 @@
       
         
       
+        
+      
     
     
     
@@ -2550,6 +2554,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3321,10 +3352,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
             
   
   
@@ -3341,8 +3372,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5312,7 +5343,7 @@
 <p>Documento vivo. Aggiornare ad ogni milestone significativa.</p>
 <p>Riferimento metodologico: <a href="../sviluppo-concentrico/">sviluppo-concentrico.md</a></p>
 </blockquote>
-<p><em>Ultimo aggiornamento: 11 giugno 2026 — Anello 3 (vendite): </em><em>ordini di vendita</em><em> sviluppati end-to-end DB+BE+FE (CRUD, conferma, stato EVASO, stampa PDF, conversione preventivo/offerta→ordine, univocita' offerta→contratto XOR ordine); </em><em>pratica PREVENTIVI</em><em> eseguita end-to-end come primo consumatore reale del motore <code>pratiche</code> (handler <code>CONFERMA_VENDITA</code>, split per natura merce→ordine / servizi→commessa, smistamento riga-per-riga, commesse multi-sorgente) → Anello 2 <code>pratiche</code> passa a </em><em>validata con primo consumatore</em><em>; workflow pratiche v2 (ripetibilita', bivi condizionali, lenti contesto, guard chiusura). Vedi analisi-pratiche-workflow-v2.md (<code>docs/it/dev/work-done/analisi-pratiche-workflow-v2.md</code>) e analisi-ordini-vendita.md (<code>docs/it/dev/work-in-progress/analisi-ordini-vendita.md</code>).</em></p>
+<p><em>Ultimo aggiornamento: 20 giugno 2026 — Anello 3 (vendite): </em><em>batch fatturazione automatico end-to-end operativo</em><em> — driver CRON <code>run-until-done</code>, discovery a corsie <code>(emittente, tipo_doc_fiscale, utility)</code>, </em><em>sync dello stato fattura per-step</em><em> <code>1→2→8</code>, run headless in <code>job_run_log</code>; hardening commesse→fatturazione (normalize + </em><em>guard <code>tipo_doc</code> emittibile</em><em>, snapshot pricing v5 nel push, azioni stato commessa, pull agganciata agli step). Anello 2 (pratiche, workflow v2): </em><em>assegnazione flusso a operatore/reparto</em><em> (policy reparto-first) + </em><em>coda lavoro operatore</em><em> (pannello "Le mie attività"), </em><em>esito configurabile flussi</em><em> (MANUALE/AUTOMATICO/CONTESTUALE), aggancio documento↔flusso, audit utente reale. Dettaglio datato e completo nel <a href="../dev/mappa-concentrica-changelog/">changelog della mappa</a>.</em></p>
 <blockquote>
 <p><em>Aggiornamenti precedenti: vedi <a href="../dev/mappa-concentrica-changelog/">changelog della mappa</a>.</em></p>
 </blockquote>
@@ -5671,7 +5702,7 @@
 <h3 id="posizionamento-schema-ui">Posizionamento schema <code>ui</code><a class="headerlink" href="#posizionamento-schema-ui" title="Permanent link">&para;</a></h3>
 <p><code>ui</code> e' il terzo schema di Anello 1 con natura cross-dominio, accanto a <code>config</code> e <code>amm-software</code>. Ospita esclusivamente <strong>metadato di presentazione</strong>: non contiene logica di business, non ha dipendenze da Anello 2 o 3, dipende solo da <code>config.profili_accesso</code> e <code>anagrafiche.emittenti_fiscali</code> (Anello 1) e <code>django.auth_user</code> (Anello 0).</p>
 <p>E' classificato <strong>di servizio</strong> all'interno di Anello 1: il suo end-to-end richiedeva almeno un consumatore reale (prima lista migrata a <code>&lt;ListaConfigurabile&gt;</code>). Questo è avvenuto: le liste clienti e fornitori usano il componente configurabile, quindi il nucleo è stato <strong>validato su casi reali</strong> e si considera operativo. La lezione metodologica del caso pratiche (non completare prima della validazione su un caso reale) è stata rispettata.</p>
-<p>Riferimento architetturale: <code>docs/it/dev/work-in-progress/sviluppo-personalizzazioni-liste.md</code>. Sviluppi differiti: <code>docs/it/dev/work-in-progress/sviluppo-personalizzazioni-liste_def.md</code>.</p>
+<p>Riferimento architetturale: <code>docs/it/dev/work-done/sviluppo-personalizzazioni-liste.md</code>. Sviluppi differiti: <code>docs/it/dev/work-in-progress/sviluppo-personalizzazioni-liste_def.md</code>.</p>
 <h3 id="stabilita_1">Stabilita'<a class="headerlink" href="#stabilita_1" title="Permanent link">&para;</a></h3>
 <p>Stabile. Cresce per aggiunta di nuove tabelle config (es. <code>config.canali_pratiche</code> aggiunta per pratiche) senza rompere quanto esistente.</p>
 <hr />
@@ -5698,7 +5729,7 @@
 <td>Operativo</td>
 <td>Operativo</td>
 <td>Operativo</td>
-<td>Workflow engine, giornale, generazione cross-pratica, handler dispatch, sospensioni, calcoli tempo, macchina a stati, note, allegati</td>
+<td>Workflow engine, giornale, generazione cross-pratica, handler dispatch, sospensioni, calcoli tempo, macchina a stati, note, allegati; <strong>assegnazione flusso operatore/reparto + coda lavoro</strong> (pannello "Le mie attività"), <strong>esito configurabile flussi</strong>, <strong>aggancio documento↔flusso</strong>, <strong>audit utente reale</strong></td>
 </tr>
 <tr>
 <td><code>documenti</code></td>
@@ -5714,7 +5745,9 @@
 <ul>
 <li><strong>Pratiche</strong>: contenitore tracciabile per qualsiasi processo (onboarding cliente, gestione ordine, assistenza tecnica)</li>
 <li><strong>Flussi</strong>: step operativi con prerequisiti, esiti, scadenze, assegnazione risorse</li>
-<li><strong>Giornale di bordo</strong>: audit trail immutabile, append-only, con correlazione <code>tx_id</code></li>
+<li><strong>Assegnazione e coda lavoro operatore</strong>: flusso assegnabile a operatore/reparto (policy reparto-first), coda a 4 livelli (<code>fn_coda_lavoro_operatore</code>: ASSEGNATO/COMPETENZA/REPARTO/LIBERO), presa in carico (<code>fn_prendi_in_carico_flusso</code>); consumer FE pannello "Le mie attività"</li>
+<li><strong>Esito configurabile dei flussi</strong>: MANUALE / AUTOMATICO / CONTESTUALE con <code>esito_default</code></li>
+<li><strong>Giornale di bordo</strong>: audit trail immutabile, append-only, con correlazione <code>tx_id</code> e <strong>utente reale</strong> (<code>user_update</code>/<code>data_update</code>)</li>
 <li><strong>Generazione cross-pratica</strong>: un flusso completato puo' generare automaticamente nuove pratiche</li>
 <li><strong>Handler dispatch</strong>: mapping <code>handler_key</code> → classe Python per automazione step</li>
 <li><strong>Canali</strong>: visibilita' dei flussi su sorgenti esterne (WEB_CLIENTI, APP_TECNICA, PORTALE_FORNITORI)</li>
@@ -5877,7 +5910,7 @@
 <td>App Django</td>
 <td>Operativo</td>
 <td>Operativo</td>
-<td>Ciclo attivo: preventivi rev2, offerte, contratti, <strong>ordini operativi</strong>, DDT, fatture, pipeline fatturazione, lotti, commesse multi-sorgente, <strong>listini v3</strong>, <strong>pratica PREVENTIVI</strong> (primo consumatore del motore <code>pratiche</code>), generazione PDF preventivo via <code>documenti</code> in test UI</td>
+<td>Ciclo attivo: preventivi rev2, offerte, contratti, <strong>ordini operativi</strong>, DDT, fatture, pipeline fatturazione (<strong>batch automatico a corsie + sync stato fattura per-step</strong>), lotti, commesse multi-sorgente, <strong>listini v3</strong>, <strong>pratica PREVENTIVI</strong> (primo consumatore del motore <code>pratiche</code>), generazione PDF preventivo via <code>documenti</code> in test UI</td>
 </tr>
 <tr>
 <td><code>acquisti</code></td>
@@ -5947,11 +5980,11 @@ acquisti ─────► stesse dipendenze di vendite
 <tbody>
 <tr>
 <td>Pipeline fatturazione</td>
-<td>Operativo</td>
+<td>Operativo — <strong>batch automatico end-to-end</strong> (driver CRON <code>run-until-done</code>, discovery a corsie <code>(emittente, tipo_doc, utility)</code>, <strong>sync stato fattura per-step <code>1→2→8</code></strong>, run headless in <code>job_run_log</code>) (giugno 2026)</td>
 </tr>
 <tr>
 <td>Lotti massivi/giornalieri</td>
-<td>Operativo</td>
+<td>Operativo — stato documentale fattura allineato per-step (giornaliero unificato a <code>1→2→8</code>)</td>
 </tr>
 <tr>
 <td>Registry task DB multi-dominio</td>
@@ -5975,7 +6008,11 @@ acquisti ─────► stesse dipendenze di vendite
 </tr>
 <tr>
 <td>Commesse (push, orchestrator, handlers)</td>
-<td>Operativo — multi-sorgente (1 ROOT + N COLLEGATO), push idempotente</td>
+<td>Operativo — multi-sorgente (1 ROOT + N COLLEGATO), push idempotente, snapshot pricing v5 nel push, capability azioni stato, pull→<code>attivita_fatturabili</code> agganciata agli step DRAFT</td>
+</tr>
+<tr>
+<td>Guard <code>tipo_doc_fiscale</code> emittibile</td>
+<td>Operativo — normalize all'upsert (default da <code>config.sorgenti</code>) + guard di riga <code>APPROVATA+NON_EMESSA ⇒ tipo_doc NOT NULL</code> (cod. 497) + CHECK backstop: niente "fatturato perso in silenzio" (giugno 2026)</td>
 </tr>
 <tr>
 <td>Ordini di vendita</td>
@@ -6189,7 +6226,7 @@ contabilita      usa     usa       -        -     (futuro)      -           -
 <p>La mappa deve riflettere la realta', non le intenzioni. Aggiornare solo quando qualcosa cambia concretamente.</p>
 </blockquote>
 <hr />
-<p><em>Mappa Concentrica — ZeroERP (11 giugno 2026)</em></p>
+<p><em>Mappa Concentrica — ZeroERP (20 giugno 2026)</em></p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

@@ -379,6 +379,8 @@
       
         
       
+        
+      
     
     
     
@@ -2490,6 +2492,8 @@
       
         
       
+        
+      
     
     
     
@@ -2550,6 +2554,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3321,10 +3352,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
             
   
   
@@ -3341,8 +3372,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4982,7 +5013,7 @@
 
 <h1 id="api-coda_lavoro-django">API coda_lavoro (Django)<a class="headerlink" href="#api-coda_lavoro-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Esporre via HTTP la coda di lavoro dell'operatore autenticato, organizzata su tre livelli di priorita': flussi assegnati, flussi per competenza, flussi del reparto.</p>
+<p>Esporre via HTTP la coda di lavoro dell'operatore autenticato, organizzata su quattro livelli di priorita': flussi assegnati, flussi per competenza, flussi del reparto, flussi liberi.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <p>Endpoint di sola lettura che alimenta la sidebar della dashboard pratiche. Risolve automaticamente l'operatore dall'utente JWT autenticato tramite la tabella bridge <code>anagrafiche.risorse_umane_auth_user</code>, con cache per-request per evitare query ripetute. Delega alla funzione DB <code>pratiche.fn_coda_lavoro_operatore</code> che classifica i flussi in un singolo passaggio (CTE + CASE WHEN).</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
@@ -5034,17 +5065,26 @@
 </tr>
 <tr>
 <td><code>COMPETENZA</code></td>
-<td>Flussi non assegnati, operatore ha competenza attiva</td>
+<td>Flussi non assegnati, operatore ha competenza attiva per il template (casi A/D)</td>
 <td>DA_ESEGUIRE</td>
 </tr>
 <tr>
 <td><code>REPARTO</code></td>
-<td>Flussi del reparto dell'operatore (visibilita')</td>
-<td>DA_ESEGUIRE, IN_CORSO</td>
+<td>Flussi instradati al reparto <strong>anagrafico</strong> dell'operatore (<code>risorse_umane.unita_organizzativa_id</code>), senza skill-lock attivo (caso B)</td>
+<td>DA_ESEGUIRE</td>
+</tr>
+<tr>
+<td><code>LIBERO</code></td>
+<td>Flussi senza reparto né skill-lock, mostrati all'operatore della <strong>pratica</strong> (caso C)</td>
+<td>DA_ESEGUIRE</td>
 </tr>
 </tbody>
 </table>
-<p>Ogni flusso appare in un solo livello (quello piu' alto applicabile). Il campo <code>risorsa_assegnata</code> e' valorizzato solo per livello REPARTO (mostra chi ha il flusso).</p>
+<p>Ogni flusso appare in un solo livello (quello piu' alto applicabile: <code>ASSEGNATO</code> &gt;
+<code>COMPETENZA</code> &gt; <code>REPARTO</code> &gt; <code>LIBERO</code>). I livelli COMPETENZA/REPARTO/LIBERO sono <strong>prendibili
+in carico</strong> dall'operatore (coerente con la policy di
+<a href="../api_prendi_in_carico/">api_prendi_in_carico</a>). Il campo <code>risorsa_assegnata</code> è sempre
+<code>null</code> (i livelli mostrati sono auto-assegnato o non assegnati).</p>
 <h3 id="errori">Errori<a class="headerlink" href="#errori" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>400</code>: <code>emittente_fiscale_id</code> mancante o non valido (<code>E_PRATICA_VALIDATION</code>)</li>
@@ -5074,6 +5114,8 @@
 <li>Funzione DB creata in migration <code>20260329-14-create-fn-coda-lavoro-operatore-mctit.yaml</code>.</li>
 <li>Helper <code>get_risorsa_umana_id</code> in <code>apps/core/api/endpoint_helpers.py</code> con cache per-request.</li>
 <li>(14 giugno 2026) <code>20260614-02</code>: la funzione esclude i flussi delle pratiche terminali.</li>
+<li>(18 giugno 2026) <code>20260618-06</code>: allineamento policy reparto-first — livello REPARTO sul
+  reparto <strong>anagrafico</strong> (non più i reparti-da-competenza) + nuovo livello <code>LIBERO</code> (caso C).</li>
 </ul>
 
 

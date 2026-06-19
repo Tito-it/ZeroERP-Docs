@@ -379,6 +379,8 @@
       
         
       
+        
+      
     
     
     
@@ -2490,6 +2492,8 @@
       
         
       
+        
+      
     
     
     
@@ -2550,6 +2554,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3321,10 +3352,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
             
   
   
@@ -3341,8 +3372,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4916,6 +4947,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#normalize-tipo_doc_fiscale_id-rev-2026-06-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Normalize <code>tipo_doc_fiscale_id</code> (rev 2026-06-19)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5163,6 +5205,17 @@
 </table>
 <h4 id="opzionali-con-default-dopo-lo-snapshot">Opzionali (con DEFAULT, dopo lo snapshot)<a class="headerlink" href="#opzionali-con-default-dopo-lo-snapshot" title="Permanent link">&para;</a></h4>
 <p><code>p_qta_operativa</code>, <code>p_uom_operativa_id</code>, <code>p_factor_to_base</code> (default 1), <code>p_posticipa_al</code>, <code>p_tipo_doc_fiscale_id</code>, <code>p_valuta_id</code>, <code>p_area_geografica_id</code>, <code>p_listino_versione_id</code>, <code>p_prezzo_bloccato</code> (default false), <code>p_pricing_mode</code> (default <code>FIXED</code>), <code>p_prezzo_da_riallineare</code> (default false), <code>p_stato_approvazione</code> (default <code>BOZZA</code>), <code>p_stato_emissione</code> (default <code>NON_EMESSA</code>), <code>p_sorgente_tipo_id</code>, <code>p_sorgente_uid</code>, <code>p_tipo_movimento</code> (default <code>NORMALE</code>), <code>p_tipo_consumo</code> (default <code>CONGUAGLIO</code>), <code>p_meta</code> (default <code>'{}'::jsonb</code>).</p>
+<blockquote>
+<p>La firma usa <code>%TYPE</code> su ogni parametro che riflette una colonna di <code>commesse_attivita</code> (più <code>p_tipo_movimento</code>/<code>p_tipo_consumo</code> <code>varchar(32)</code>, salvati in <code>meta</code>).</p>
+</blockquote>
+<hr />
+<h3 id="normalize-tipo_doc_fiscale_id-rev-2026-06-19">Normalize <code>tipo_doc_fiscale_id</code> (rev 2026-06-19)<a class="headerlink" href="#normalize-tipo_doc_fiscale_id-rev-2026-06-19" title="Permanent link">&para;</a></h3>
+<p>Il <code>tipo_doc_fiscale</code> <strong>non si deriva da una regola di business</strong> (semantica aperta, configurabile per azienda — vedi <code>brief-db-guard-tipo-doc-attivita</code>). La funzione applica solo un <strong>default opzionale</strong>:</p>
+<ul>
+<li>se <code>p_tipo_doc_fiscale_id</code> è valorizzato → ha <strong>priorità</strong> (usato così com'è);</li>
+<li>se è <code>NULL</code> e <code>p_sorgente_tipo_id</code> è valorizzato → risolve il default da <code>config.sorgenti.tipo_doc_fiscale_id</code> (single source of truth, <strong>dentro</strong> la funzione);</li>
+<li>se anche la sorgente non ha default → resta <code>NULL</code>. La valorizzazione <strong>non è imposta qui</strong>: l'obbligo scatta solo sullo stato emittibile, via il guard <code>trg_commesse_attivita_a10_guard_tipo_doc_emittibile</code> (codice <code>E_COMMESSA_ATTIVITA_TIPO_DOC_OBBLIGATORIO</code>, 497).</li>
+</ul>
 <hr />
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">RETURNS</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="p">(</span>
@@ -5191,7 +5244,9 @@
 <hr />
 <h3 id="regole-update-on-conflict">Regole UPDATE (ON CONFLICT)<a class="headerlink" href="#regole-update-on-conflict" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Tutte le colonne <strong>sovrascritte</strong> da EXCLUDED tranne <code>meta</code>: il <code>meta</code> esistente viene <strong>mergeato</strong> con quello in input (<code>COALESCE(meta, '{}') || COALESCE(EXCLUDED.meta, '{}')</code>). Chi usa <code>tipo_movimento</code>/<code>tipo_consumo</code> in meta li vede aggiornati.</li>
+<li>Tutte le colonne <strong>sovrascritte</strong> da EXCLUDED tranne <code>meta</code> e <code>tipo_doc_fiscale_id</code>:</li>
+<li><code>meta</code> esistente <strong>mergeato</strong> con l'input (<code>COALESCE(meta, '{}') || COALESCE(EXCLUDED.meta, '{}')</code>). Chi usa <code>tipo_movimento</code>/<code>tipo_consumo</code> in meta li vede aggiornati.</li>
+<li><code>tipo_doc_fiscale_id</code> <strong>no-regressione</strong> (rev 2026-06-19): <code>COALESCE(EXCLUDED.tipo_doc_fiscale_id, commesse_attivita.tipo_doc_fiscale_id)</code>. Un re-push con valore in arrivo <code>NULL</code> <strong>non azzera</strong> un tipo_doc già risolto; un cambio a un valore non-NULL resta consentito.</li>
 <li>Snapshot pricing v5: <strong>sovrascrive sempre</strong> (rappresenta lo snapshot del calcolo corrente; se il resolver è stato rieseguito, il nuovo risultato vince).</li>
 <li>Guard: se la riga esistente ha <code>stato_emissione ≠ NON_EMESSA</code>, update bloccato con <code>E_COMMESSA_ATTIVITA_GIA_EMESSA</code>.</li>
 </ul>
@@ -5227,9 +5282,9 @@
 <hr />
 <h3 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Tabelle: <code>vendite.commesse_attivita</code>, <code>vendite.commesse</code>, <code>vendite.stati_commessa</code>.</li>
+<li>Tabelle: <code>vendite.commesse_attivita</code>, <code>vendite.commesse</code>, <code>vendite.stati_commessa</code>, <code>config.sorgenti</code> (lookup default <code>tipo_doc_fiscale_id</code>).</li>
 <li>Funzioni: <code>script.fn_log_and_raise_error</code>.</li>
-<li>Trigger/CHECK DB: <code>chk_commesse_attivita_origine_prezzo</code>, <code>chk_commesse_attivita_tipo_variazione_applicata</code> garantiscono i domini enum anche se il guard applicativo è bypassato.</li>
+<li>Trigger/CHECK DB: <code>chk_commesse_attivita_origine_prezzo</code>, <code>chk_commesse_attivita_tipo_variazione_applicata</code> garantiscono i domini enum anche se il guard applicativo è bypassato; <code>trg_commesse_attivita_a10_guard_tipo_doc_emittibile</code> + <code>chk_commesse_attivita_tipo_doc_emittibile</code> impongono <code>tipo_doc_fiscale_id NOT NULL</code> sullo stato emittibile (APPROVATA+NON_EMESSA).</li>
 </ul>
 <hr />
 <h3 id="esempio-duso-con-snapshot-pricing-v5">Esempio d'uso (con snapshot pricing v5)<a class="headerlink" href="#esempio-duso-con-snapshot-pricing-v5" title="Permanent link">&para;</a></h3>

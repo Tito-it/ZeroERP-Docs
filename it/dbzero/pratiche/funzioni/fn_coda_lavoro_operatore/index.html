@@ -379,6 +379,8 @@
       
         
       
+        
+      
     
     
     
@@ -2490,6 +2492,8 @@
       
         
       
+        
+      
     
     
     
@@ -2550,6 +2554,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3321,10 +3352,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
             
   
   
@@ -3341,8 +3372,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4977,7 +5008,10 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Restituisce la coda di lavoro di un operatore in tre livelli di priorita', mutuamente esclusivi. Ogni flusso appare in un solo livello (quello piu' alto applicabile).</p>
+<p>Restituisce la coda di lavoro di un operatore in <strong>quattro</strong> livelli di priorita', mutuamente esclusivi. Ogni flusso appare in un solo livello (quello piu' alto applicabile).</p>
+<blockquote>
+<p><strong>Rev 2026-06-18</strong> (brief-db-assegnazione-flusso): allineata alla policy reparto-first di <code>fn_prendi_in_carico_flusso</code>. Il livello REPARTO usa ora il reparto <strong>anagrafico</strong> (<code>risorse_umane.unita_organizzativa_id</code>), non piu' i reparti-da-competenza, ed e' limitato ai flussi senza skill-lock (caso B). Aggiunto il livello <strong>LIBERO</strong> (caso C) per non lasciare invisibili i flussi liberi.</p>
+</blockquote>
 <hr />
 <h3 id="firma-della-funzione">Firma della funzione<a class="headerlink" href="#firma-della-funzione" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">fn_coda_lavoro_operatore</span><span class="p">(</span>
@@ -5020,37 +5054,51 @@
 </table>
 <hr />
 <h3 id="livelli-della-coda-mutuamente-esclusivi">Livelli della coda (mutuamente esclusivi)<a class="headerlink" href="#livelli-della-coda-mutuamente-esclusivi" title="Permanent link">&para;</a></h3>
+<p>Tutti i livelli "prendibili" (COMPETENZA/REPARTO/LIBERO) richiedono il flusso <strong>non assegnato</strong> e in stato <strong>DA_ESEGUIRE</strong>. La mappatura ai casi della policy (vedi <code>fn_prendi_in_carico_flusso</code>) e' diretta.</p>
 <table>
 <thead>
 <tr>
 <th>Livello</th>
 <th>Criterio</th>
-<th>Descrizione</th>
+<th>Caso policy</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>ASSEGNATO</strong></td>
 <td><code>flussi.risorsa_umana_id = p_risorsa_umana_id</code></td>
-<td>Flussi DA_ESEGUIRE o IN_CORSO assegnati direttamente all'operatore</td>
+<td>— (assegnato direttamente; DA_ESEGUIRE o IN_CORSO)</td>
 </tr>
 <tr>
 <td><strong>COMPETENZA</strong></td>
-<td><code>flussi.risorsa_umana_id IS NULL</code> + stato DA_ESEGUIRE + competenza attiva</td>
-<td>Flussi non assegnati che l'operatore puo' prendere in carico</td>
+<td>non assegnato + DA_ESEGUIRE + operatore <strong>competente</strong> per il template</td>
+<td>A / D</td>
 </tr>
 <tr>
 <td><strong>REPARTO</strong></td>
-<td><code>flussi.unita_organizzativa_id</code> nei reparti dell'operatore</td>
-<td>Flussi del reparto per visibilita' (esclusi quelli gia' nei livelli precedenti)</td>
+<td>non assegnato + DA_ESEGUIRE + <code>flussi.unita_organizzativa_id</code> = reparto <strong>anagrafico</strong> dell'operatore + <strong>nessuno skill-lock</strong> attivo sul template</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>LIBERO</strong></td>
+<td>non assegnato + DA_ESEGUIRE + niente reparto + niente skill-lock + <strong>la pratica e' assegnata all'operatore</strong> (<code>pratiche.risorsa_umana_id</code>)</td>
+<td>C</td>
 </tr>
 </tbody>
 </table>
-<p>La priorita' tra livelli e' gestita da un <code>CASE WHEN</code>: un flusso assegnato all'operatore appare sempre come ASSEGNATO, mai come COMPETENZA o REPARTO.</p>
+<p>La priorita' tra livelli e' gestita da un <code>CASE WHEN</code>: un flusso assegnato appare sempre come ASSEGNATO; uno skill-locked appare come COMPETENZA solo ai competenti (mai come REPARTO/LIBERO); un flusso senza skill-lock cade in REPARTO (se ha reparto) o LIBERO.</p>
+<blockquote>
+<p><strong>Caso C → LIBERO all'operatore della pratica</strong> (decisione 2026-06-18): un flusso libero non viene mostrato a tutti (rumore), ma a chi e' assegnata la pratica padre, cosi' resta scopribile senza invadere le code altrui.</p>
+</blockquote>
+<!-- -->
+
+<blockquote>
+<p><strong><code>competenze_flussi.unita_organizzativa_id</code> non e' piu' usata</strong> da questa funzione: il reparto e' quello anagrafico dell'operatore, la competenza e' su <code>(template, operatore)</code>.</p>
+</blockquote>
 <hr />
 <h3 id="ordinamento">Ordinamento<a class="headerlink" href="#ordinamento" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Livello (ASSEGNATO → COMPETENZA → REPARTO)</li>
+<li>Livello (ASSEGNATO → COMPETENZA → REPARTO → LIBERO)</li>
 <li>Priorita' pratica (DESC)</li>
 <li>Data scadenza (NULLS LAST)</li>
 <li>Sequenza flusso</li>
@@ -5058,16 +5106,18 @@
 <hr />
 <h3 id="logica-di-funzionamento">Logica di funzionamento<a class="headerlink" href="#logica-di-funzionamento" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>CTE <code>flussi_base</code></strong>: singola scansione di tutti i flussi pendenti (DA_ESEGUIRE o IN_CORSO) dell'emittente, <strong>escluse le pratiche terminali</strong>. Una pratica e' terminale quando non ha alcuna transizione di stato in uscita attiva in <code>config.transizioni_stati_pratiche</code> (oggi <code>CHIUSA</code>/<code>ANNULLATA</code>): i suoi flussi sono congelati dal guard <code>trgfn_flussi_guard_pratica_terminale</code> e non sono lavoro da fare, quindi non compaiono in coda (stessa definizione di "terminale" del guard, nessun id/codice hardcodato).</li>
-<li><strong>CTE <code>classificati</code></strong>: ogni flusso viene classificato nel livello piu' alto applicabile via <code>CASE WHEN</code>.</li>
-<li><strong>SELECT finale</strong>: JOIN display fields (pratica, priorita', tipo prestazione, template, soggetto operatore) una sola volta sul risultato classificato. Filtra <code>WHERE livello IS NOT NULL</code> (esclude flussi non rilevanti per l'operatore).</li>
+<li><strong>CTE <code>flussi_base</code></strong>: singola scansione di tutti i flussi pendenti (DA_ESEGUIRE o IN_CORSO) dell'emittente, <strong>escluse le pratiche terminali</strong>. Una pratica e' terminale quando non ha alcuna transizione di stato in uscita attiva in <code>config.transizioni_stati_pratiche</code> (oggi <code>CHIUSA</code>/<code>ANNULLATA</code>): i suoi flussi sono congelati dal guard <code>trgfn_flussi_guard_pratica_terminale</code> e non sono lavoro da fare, quindi non compaiono in coda (stessa definizione di "terminale" del guard, nessun id/codice hardcodato). Porta anche <code>pratiche.risorsa_umana_id</code> (per il livello LIBERO).</li>
+<li><strong>CTE <code>operatore</code></strong>: risolve il reparto <strong>anagrafico</strong> dell'operatore (<code>risorse_umane.unita_organizzativa_id</code>), usato dal livello REPARTO.</li>
+<li><strong>CTE <code>competenze_op</code></strong>: i template per cui l'operatore ha competenza attiva (livello COMPETENZA).</li>
+<li><strong>CTE <code>classificati</code></strong>: ogni flusso viene classificato nel livello piu' alto applicabile via <code>CASE WHEN</code> (ASSEGNATO → COMPETENZA → REPARTO → LIBERO); lo skill-lock per-template e' valutato con <code>EXISTS(competenze_flussi attiva per il template)</code>.</li>
+<li><strong>SELECT finale</strong>: JOIN display fields (pratica, priorita', tipo prestazione, template) una sola volta sul risultato classificato. Filtra <code>WHERE livello IS NOT NULL</code> (esclude flussi non rilevanti per l'operatore).</li>
 </ol>
 <hr />
 <h3 id="esempi-di-utilizzo">Esempi di utilizzo<a class="headerlink" href="#esempi-di-utilizzo" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Coda completa dell&#39;operatore 42 per emittente 1</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">fn_coda_lavoro_operatore</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 
-<span class="c1">-- Solo flussi da prendere in carico</span>
+<span class="c1">-- Solo flussi da prendere in carico (per skill)</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">fn_coda_lavoro_operatore</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">livello</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;COMPETENZA&#39;</span><span class="p">;</span>
 
@@ -5081,7 +5131,8 @@
 <ul>
 <li>Funzione <code>STABLE</code>: non modifica dati.</li>
 <li>Per volumi elevati (migliaia di flussi pendenti), valutare un indice parziale su <code>pratiche.flussi (stato_id)</code> per gli stati DA_ESEGUIRE/IN_CORSO.</li>
-<li>Il campo <code>risorsa_assegnata</code> e' popolato solo per il livello REPARTO (mostra chi ha il flusso); per ASSEGNATO e COMPETENZA e' NULL.</li>
+<li>Il campo <code>risorsa_assegnata</code> e' ora sempre <code>NULL</code>: i livelli mostrati sono auto-assegnato (ASSEGNATO) o non assegnati (COMPETENZA/REPARTO/LIBERO), quindi non c'e' un "altro" assegnatario da mostrare.</li>
+<li>Allineata a <code>fn_prendi_in_carico_flusso</code>: cio' che appare come COMPETENZA/REPARTO/LIBERO e' effettivamente prendibile dall'operatore secondo la stessa policy.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

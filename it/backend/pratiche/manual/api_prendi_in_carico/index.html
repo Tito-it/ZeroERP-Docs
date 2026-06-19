@@ -379,6 +379,8 @@
       
         
       
+        
+      
     
     
     
@@ -2490,6 +2492,8 @@
       
         
       
+        
+      
     
     
     
@@ -2550,6 +2554,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3321,10 +3352,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
             
   
   
@@ -3341,8 +3372,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4866,6 +4897,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Contesto">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#policy-di-eligibilita-reparto-first-dal-2026-06-18" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Policy di eligibilità (reparto-first, dal 2026-06-18)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4984,8 +5032,45 @@
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Esporre via HTTP la presa in carico di un flusso DA_ESEGUIRE da parte dell'operatore autenticato.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Endpoint di scrittura che delega alla funzione DB <code>pratiche.fn_prendi_in_carico_flusso</code>. La funzione DB gestisce atomicamente: lock della riga (FOR UPDATE), verifica stato, verifica competenza, assegnazione. Protegge da race condition (due operatori che tentano la presa in carico contemporanea).</p>
+<p>Endpoint di scrittura che delega alla funzione DB <code>pratiche.fn_prendi_in_carico_flusso</code>. La funzione DB gestisce atomicamente: lock della riga (FOR UPDATE), verifica stato, verifica <strong>eligibilità</strong> (policy reparto-first), assegnazione. Protegge da race condition (due operatori che tentano la presa in carico contemporanea).</p>
 <p>L'operatore e' determinato automaticamente dal JWT autenticato.</p>
+<h3 id="policy-di-eligibilita-reparto-first-dal-2026-06-18">Policy di eligibilità (reparto-first, dal 2026-06-18)<a class="headerlink" href="#policy-di-eligibilita-reparto-first-dal-2026-06-18" title="Permanent link">&para;</a></h3>
+<p>La competenza <strong>non è più sempre obbligatoria</strong>. Per un flusso <code>DA_ESEGUIRE</code> non assegnato,
+l'operatore <code>O</code> è eligibile secondo 4 casi (sia <strong>skill-lock</strong> = esiste almeno una competenza
+<strong>attiva</strong> in <code>pratiche.competenze_flussi</code> per il <code>template_flusso_id</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>Flusso</th>
+<th>Eligibile se</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A — reparto + skill</td>
+<td>reparto valorizzato, skill-lock presente</td>
+<td>competenza attiva (altrimenti <code>FLUSSI_COMPETENZA_MANCANTE</code>)</td>
+</tr>
+<tr>
+<td>B — reparto, no skill</td>
+<td>reparto valorizzato, skill-lock assente</td>
+<td>appartiene al reparto <strong>anagrafico</strong> (<code>risorse_umane.unita_organizzativa_id</code>); altrimenti <code>FLUSSI_PRESA_NON_ELIGIBILE</code></td>
+</tr>
+<tr>
+<td>C — niente configurato</td>
+<td>reparto NULL, skill-lock assente</td>
+<td><strong>presa libera</strong> (chiunque)</td>
+</tr>
+<tr>
+<td>D — skill senza reparto</td>
+<td>reparto NULL, skill-lock presente</td>
+<td>competenza attiva (altrimenti <code>FLUSSI_COMPETENZA_MANCANTE</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>La competenza è quindi un <strong>lucchetto-skill opzionale</strong>: vale solo quando configurata per
+quel template; altrimenti decide l'appartenenza al reparto (o la presa libera).</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Metodo: <code>POST</code></li>
@@ -5005,31 +5090,43 @@
 <li><code>400</code>: Operatore non associato a una risorsa umana (<code>E_PRATICA_VALIDATION</code>)</li>
 <li><code>400</code>: Flusso non in stato DA_ESEGUIRE (<code>FLUSSI_PRESA_CARICO_STATO_ERRATO</code>)</li>
 <li><code>400</code>: Flusso gia' assegnato ad altro operatore (<code>FLUSSI_GIA_ASSEGNATO</code>)</li>
-<li><code>400</code>: Operatore non abilitato per il tipo di flusso (<code>FLUSSI_COMPETENZA_MANCANTE</code>)</li>
+<li><code>409</code>: Operatore non abilitato per il tipo di flusso — casi A/D (<code>FLUSSI_COMPETENZA_MANCANTE</code>)</li>
+<li><code>409</code>: Presa non consentita, operatore fuori dal reparto instradato — caso B (<code>FLUSSI_PRESA_NON_ELIGIBILE</code>)</li>
 <li><code>400</code>: Flusso non trovato (<code>E_VALORE_MANCANTE</code>)</li>
 <li><code>401</code>: JWT mancante o non valido</li>
 </ul>
+<blockquote>
+<p>Nota: gli errori del DB (<code>fn_log_and_raise_error</code>) sono tradotti in <code>ServiceError</code> dal
+service <code>pratiche_service.prendi_in_carico</code> via marker substring sul messaggio
+(<code>"non abilitato per il flusso"</code> → competenza, <code>"non consentita del flusso"</code> → eligibilità).</p>
+</blockquote>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Il flusso deve essere in stato DA_ESEGUIRE.</li>
 <li>Il flusso non deve essere gia' assegnato ad altro operatore.</li>
-<li>L'operatore deve avere competenza attiva per il <code>template_flusso_id</code> del flusso (tabella <code>pratiche.competenze_flussi</code>).</li>
-<li>Se il flusso non ha <code>template_flusso_id</code> (flusso manuale), la verifica competenza e' saltata.</li>
+<li>Eligibilità <strong>reparto-first</strong> (4 casi A/B/C/D, vedi sopra): la competenza è un
+  lucchetto-skill opzionale, non più sempre obbligatoria.</li>
+<li>Se il flusso non ha <code>template_flusso_id</code> (flusso manuale), non c'è skill-lock → vale il
+  reparto (caso B) o la presa libera (caso C).</li>
 <li>Se il flusso e' gia' assegnato allo stesso operatore, ritorna <code>assegnato: false</code> (noop).</li>
 <li>La funzione DB usa <code>SELECT ... FOR UPDATE</code> per evitare race condition.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>pratiche.fn_prendi_in_carico_flusso(flusso_id, risorsa_umana_id)</code> — funzione PL/pgSQL con FOR UPDATE</li>
-<li><code>pratiche.competenze_flussi</code> — verifica competenza operatore</li>
-<li><code>pratiche.flussi</code> — UPDATE risorsa_umana_id</li>
+<li><code>pratiche.competenze_flussi</code> — lucchetto-skill (eligibilità casi A/D)</li>
+<li><code>anagrafiche.risorse_umane</code> — reparto anagrafico dell'operatore (eligibilità caso B)</li>
+<li><code>pratiche.flussi</code> — <code>unita_organizzativa_id</code> (instradamento) + UPDATE <code>risorsa_umana_id</code></li>
 <li><code>config.stati_flussi_pratiche</code> — risoluzione stato DA_ESEGUIRE</li>
 <li><code>anagrafiche.risorse_umane_auth_user</code> — bridge utente → risorsa umana</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Funzione DB creata in migration <code>20260329-15</code> e fix race condition in <code>20260329-16</code>.</li>
-<li>Messaggi errore in <code>config.messaggi_errore.csv</code> (id 320-322).</li>
+<li>(18 giugno 2026) <code>20260618-05</code>: policy eligibilità reparto-first (competenza condizionale,
+  reparto anagrafico per il caso B, presa libera per il caso C).</li>
+<li>Messaggi errore in <code>config.messaggi_errore.csv</code> (id 320-322; <code>FLUSSI_PRESA_NON_ELIGIBILE</code>
+  id 496). Codici registrati in <code>apps/core/services/error_policies.py</code> (409).</li>
 </ul>
 
 

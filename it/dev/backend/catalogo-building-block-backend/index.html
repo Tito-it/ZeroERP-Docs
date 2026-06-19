@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2496,6 +2498,8 @@
       
         
       
+        
+      
     
     
     
@@ -2556,6 +2560,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3327,10 +3358,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
             
   
   
@@ -3347,8 +3378,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4222,6 +4253,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Services (<code>apps/core/services/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#processi-headless-canale-di-sistema-rls-registrazione-run-appscoreservices" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Processi headless: canale di sistema RLS + registrazione run (<code>apps/core/services/</code>)
       </span>
     </span>
   </a>
@@ -5188,6 +5230,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#processi-headless-canale-di-sistema-rls-registrazione-run-appscoreservices" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Processi headless: canale di sistema RLS + registrazione run (<code>apps/core/services/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#note-partizionate-building-block-cross-dominio-appscore" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5939,6 +5992,35 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><code>map_integrity_error</code></td>
 <td><code>payload_helpers.py</code></td>
 <td>Traduce <code>IntegrityError</code> in <code>ServiceError</code> via mappe <code>unique_constraints</code>/<code>fk_constraints</code> (frammento nome vincolo DB -&gt; <code>(error_code, message)</code>). Match case-insensitive. Fallback configurabile con <code>fallback_code</code>/<code>fallback_message</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="processi-headless-canale-di-sistema-rls-registrazione-run-appscoreservices">Processi headless: canale di sistema RLS + registrazione run (<code>apps/core/services/</code>)<a class="headerlink" href="#processi-headless-canale-di-sistema-rls-registrazione-run-appscoreservices" title="Permanent link">&para;</a></h2>
+<p>Building block per i processi <strong>headless</strong> (management command / cron / systemd) che operano fuori dal ciclo richiesta web. Due concern ortogonali: (1) attraversare la RLS operatori come <strong>processo di sistema</strong> (RLS Path A, brief <code>work-done/brief-db-contesto-sistema-batch-fatturazione-rls.md</code>); (2) <strong>registrare</strong> ogni run in <code>maintenance.job_run_log</code> (brief <code>work-done/brief-design-job-run-registrazione.md</code>). Generici e riusabili da qualsiasi futuro job — nessun accoppiamento di dominio. Primo consumer: <code>run_fatturazione_batch</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>system_process_context</code></td>
+<td><code>system_context.py</code></td>
+<td>Gateway dei processi headless sotto RLS (Path A). Context manager <code>(*, alias, actor)</code>: per la durata del blocco ripunta la connessione <code>default</code> alle credenziali dell'alias DB di sistema (es. <code>system_fatturazione</code> → ruolo BYPASSRLS <code>zeroerp_batch_fatturazione</code>), così l'intera catena repo/<code>transaction.atomic</code> esistente gira come ruolo di sistema <strong>senza modifiche</strong>; ripristina le credenziali web e chiude in uscita. <strong>Fail-loud</strong>: solleva se il ruolo del canale non ha BYPASSRLS (no batch in default-deny silenzioso). Setta <code>app.jwt_user=actor</code> per l'audit (NON <code>app.ruolo_applicativo</code>: la RLS è bypassata dal ruolo). ⚠️ USO ESCLUSIVO ai command/cron — mai in un ciclo richiesta web (difese: guard runtime <code>JwtAuditMiddleware</code> + check statico whitelist <code>test_system_context_usage_whitelist</code>).</td>
+</tr>
+<tr>
+<td><code>connection_role_bypasses_rls</code></td>
+<td><code>system_context.py</code></td>
+<td>Helper <code>(alias='default') -&gt; bool</code>: legge <code>rolbypassrls</code> del ruolo della connessione. Usato dal gateway (sanity fail-loud sul canale) e dal middleware web (guard fail-open: la connessione richiesta non deve mai essere BYPASSRLS → 500 <code>E_DB_ROLE_UNSAFE</code>).</td>
+</tr>
+<tr>
+<td><code>registered_job</code> / <code>JobRunHandle</code></td>
+<td><code>job_run.py</code></td>
+<td>Registrazione <strong>run-level</strong> dei job headless in <code>maintenance.job_run_log</code> via <code>script.fn_job_run_start</code>/<code>fn_job_run_end</code> (SECURITY DEFINER → al ruolo batch basta <code>EXECUTE</code>). Context manager <code>registered_job(job_name, *, origine=ORIGINE_CRON, stepname=None, lock_key=None, agent_host=None)</code> → <code>JobRunHandle</code> (<code>.acquired</code>, <code>.run_uuid</code>, <code>.set_meta/.set_message/.set_rows_affected</code>). Apre la riga all'ingresso (advisory-lock anti-overlap se <code>lock_key</code>; <code>acquired=False</code> su lock occupato = riga <em>skip</em> già loggata, il caller salta il corpo), la chiude all'uscita con esito/<code>meta</code> (ok=False + <code>error_*</code> su eccezione, poi rilancia). Chiusura <strong>best-effort</strong> (un fallimento DB nel <code>finally</code> non maschera l'errore primario del job). DEVE girare sulla stessa connessione del corpo → per il batch fatturazione <strong>dentro</strong> <code>system_process_context</code>. Costanti <code>ORIGINE_PGAGENT</code>/<code>ORIGINE_CRON</code>/<code>ORIGINE_COMMAND</code> (mirror del CHECK <code>chk_job_run_log_origine</code>).</td>
 </tr>
 </tbody>
 </table>

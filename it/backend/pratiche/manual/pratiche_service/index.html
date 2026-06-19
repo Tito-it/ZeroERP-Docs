@@ -379,6 +379,8 @@
       
         
       
+        
+      
     
     
     
@@ -2490,6 +2492,8 @@
       
         
       
+        
+      
     
     
     
@@ -2550,6 +2554,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3321,10 +3352,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
             
   
   
@@ -3341,8 +3372,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5096,19 +5127,31 @@
 <td><code>avvia_flusso(flusso_id, user?)</code></td>
 <td>flusso_id</td>
 <td><code>dict \| None</code></td>
-<td>Transizione → IN_CORSO (+ dispatch handler IN_CORSO; auto-completa se handler ok)</td>
+<td>Transizione → IN_CORSO (+ dispatch handler; auto-completa con <code>esito_default</code> se handler ok <strong>o</strong> <code>modalita_esito = AUTOMATICO</code>)</td>
+</tr>
+<tr>
+<td><code>avvia_e_completa_flusso(flusso_id, esito, note_esito?, user?)</code></td>
+<td>flusso_id, esito</td>
+<td><code>None</code></td>
+<td><strong>CONTESTUALE</strong> (2026-06-17): DA_ESEGUIRE → IN_CORSO → COMPLETATO in una transazione; riusa <code>completa_flusso</code>. NON esegue l'handler di avvio (esito deciso dall'operatore)</td>
 </tr>
 <tr>
 <td><code>completa_flusso(flusso_id, esito, note_esito?, user?)</code></td>
 <td>flusso_id, esito</td>
 <td><code>None</code></td>
-<td>Transizione → COMPLETATO (+ dispatch handler evento COMPLETATO)</td>
+<td>Transizione → COMPLETATO (+ dispatch handler evento COMPLETATO). Esito validato da <code>_require_esito_valido</code> (<code>ESITI_FLUSSO_AMMESSI</code>)</td>
 </tr>
 <tr>
 <td><code>cambia_stato_flusso(flusso_id, nuovo_stato, ...)</code></td>
 <td>flusso_id, codice_interno, esito?, note_esito?</td>
 <td><code>None</code></td>
 <td>Transizione generica</td>
+</tr>
+<tr>
+<td><code>assegna_flusso(flusso_id, *, risorsa_umana_id?, unita_organizzativa_id?, set_risorsa?, set_unita?)</code></td>
+<td>flusso_id + flag <code>set_*</code></td>
+<td><code>None</code></td>
+<td>Assegna lo step a operatore/reparto (flag <code>set_*</code> = chiave presente; <code>None</code> = de-assegna). Trigger giornale <code>FLUSSO_ASSEGNAZIONE_CAMBIATA</code>. Vedi <a href="../api_flusso_assegnazione/">api_flusso_assegnazione</a></td>
 </tr>
 </tbody>
 </table>
@@ -5176,13 +5219,19 @@
 <td><code>get_coda_lavoro(risorsa_umana_id, emittente_fiscale_id)</code></td>
 <td>risorsa_umana_id, emittente_fiscale_id</td>
 <td><code>list&#91;CodaLavoroRow&#93;</code></td>
-<td>Coda lavoro operatore su 3 livelli</td>
+<td>Coda lavoro operatore su 4 livelli (ASSEGNATO/COMPETENZA/REPARTO/LIBERO)</td>
 </tr>
 <tr>
 <td><code>prendi_in_carico(flusso_id, risorsa_umana_id)</code></td>
 <td>flusso_id, risorsa_umana_id</td>
 <td><code>bool</code></td>
-<td>Assegna flusso DA_ESEGUIRE all'operatore</td>
+<td>Presa in carico flusso DA_ESEGUIRE (eligibilità reparto-first; traduce gli errori DB <code>FLUSSI_COMPETENZA_MANCANTE</code>/<code>FLUSSI_PRESA_NON_ELIGIBILE</code>)</td>
+</tr>
+<tr>
+<td><code>list_operatori_reparto(unita_organizzativa_id)</code></td>
+<td>unita_organizzativa_id</td>
+<td><code>list&#91;dict&#93;</code></td>
+<td>Operatori attivi del reparto (picker assegnazione). Vedi <a href="../api_operatori_reparto/">api_operatori_reparto</a></td>
 </tr>
 <tr>
 <td><code>get_competenze_flussi()</code></td>
@@ -5314,6 +5363,7 @@
 <li>Le funzioni inline <code>_resolve_stato_pratica</code>, <code>_resolve_stato_flusso</code>, <code>_get_handler_key</code> sono state migrate nel <code>PraticheRepository</code> come metodi di istanza.</li>
 <li><code>cambia_stato_flusso</code> e' stata aggiunta per gestire transizioni generiche (SOSPESO, ANNULLATO) senza passare dalla view con logica inline.</li>
 <li>v2.2 (1 aprile 2026): <code>_verifica_flusso_pratica</code> rinominata <code>verifica_flusso_pratica</code> (pubblica). La funzione duplicata in <code>views.py</code> e' stata sostituita con alias al service. Repository allineato ai building block core (<code>row_to_dict</code>/<code>rows_to_list</code>, <code>ErrorManager.require</code> su tutti i fetchone). <code>pratica_select_sql()</code>/<code>pratica_joins_sql()</code> esposti come classmethod pubblici per uso cross-repository.</li>
+<li>(17 giugno 2026) <strong>Esito configurabile</strong> (<code>template_flussi.modalita_esito</code>/<code>esito_default</code>): nuovo <code>avvia_e_completa_flusso</code> (CONTESTUALE, riusa <code>completa_flusso</code>); <code>avvia_flusso</code> auto-completa con <code>esito_default</code> (fallback <code>_ESITO_AUTO_FALLBACK = POSITIVO</code>) anche per <code>AUTOMATICO</code>; validazione esito estratta in <code>_require_esito_valido</code>/<code>ESITI_FLUSSO_AMMESSI</code> (de-duplica la tupla tra completa/avvia_e_completa); query leggera <code>PraticheRepository.get_flusso_esito_config</code> per il path di avvio; proiezione <code>get_flusso</code> arricchita con <code>template_modalita_esito</code>/<code>template_esito_default</code>. Vedi <a href="../api_flusso_stato/">api_flusso_stato</a> e i brief <code>brief-design-esito-configurabile-flussi</code> / <code>brief-db-esito-configurabile-flussi</code>.</li>
 </ul>
 
 

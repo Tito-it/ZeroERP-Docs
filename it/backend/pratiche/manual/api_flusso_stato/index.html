@@ -379,6 +379,8 @@
       
         
       
+        
+      
     
     
     
@@ -2490,6 +2492,8 @@
       
         
       
+        
+      
     
     
     
@@ -2550,6 +2554,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3321,10 +3352,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
             
   
   
@@ -3341,8 +3372,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4962,19 +4993,45 @@
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Esporre via HTTP le transizioni di stato di un flusso: avvio (IN_CORSO), completamento (COMPLETATO con esito) e transizioni generiche (SOSPESO, ANNULLATO, ecc.).</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Endpoint di scrittura con ownership check. Smista la richiesta in base al valore di <code>nuovo_stato</code>:</p>
+<p>Endpoint di scrittura con ownership check. Smista la richiesta in base al valore di <code>nuovo_stato</code> <strong>e allo stato corrente</strong> del flusso:</p>
 <ul>
 <li><code>IN_CORSO</code> → <code>pratiche_service.avvia_flusso</code> (passa l'utente acting)</li>
-<li><code>COMPLETATO</code> → <code>pratiche_service.completa_flusso</code> (con esito obbligatorio)</li>
+<li><code>COMPLETATO</code> da stato <code>DA_ESEGUIRE</code> → <code>pratiche_service.avvia_e_completa_flusso</code>
+  (avvio + esito in un'unica azione: modalita CONTESTUALE, vedi sotto)</li>
+<li><code>COMPLETATO</code> da stato <code>IN_CORSO</code> → <code>pratiche_service.completa_flusso</code> (con esito obbligatorio)</li>
 <li>Altro → <code>pratiche_service.cambia_stato_flusso</code> (transizione generica)</li>
+</ul>
+<p><strong>Modalita esito (config <code>template_flussi</code>, 2026-06-17)</strong>: lo step-template porta
+<code>modalita_esito</code> (<code>MANUALE</code> | <code>AUTOMATICO</code> | <code>CONTESTUALE</code>) + <code>esito_default</code>
+(dominio di <code>flussi.esito</code>), che governano come si ottiene l'esito:</p>
+<ul>
+<li><strong>MANUALE</strong> (default, comportamento storico): avvio → poi completamento con esito
+  scelto dall'operatore.</li>
+<li><strong>AUTOMATICO</strong>: <code>avvia_flusso</code> auto-completa con <code>esito_default</code> senza scelta umana
+  (un'unica azione "Avvia e completa"). Ammesso <strong>solo</strong> su <code>direzione = 'INTERNA'</code>
+  (guard DB <code>trgfn_template_flussi_guard_modalita_esito</code>, Inv2).</li>
+<li><strong>CONTESTUALE</strong>: la FE invia direttamente <code>nuovo_stato = COMPLETATO</code> da <code>DA_ESEGUIRE</code>;
+  l'endpoint instrada ad <code>avvia_e_completa_flusso</code>, che porta <code>DA_ESEGUIRE → IN_CORSO →
+  COMPLETATO</code> con l'esito confermato dall'operatore (<code>esito_default</code> pre-selezionato),
+  in <strong>una sola transazione</strong> (la matrice transizioni non ha la 1→3 diretta: si passa
+  sempre da <code>IN_CORSO</code>).</li>
 </ul>
 <p><strong>Dispatch handler all'avvio</strong>: se il flusso ha un <code>template_flusso_id</code> il cui
 template ha un <code>handler_id</code> (tabella <code>pratiche.handler_flussi</code>), <code>avvia_flusso</code>
 esegue l'handler (<code>dispatch_handler</code>) e, su successo, <strong>completa</strong> il flusso con
-esito <code>POSITIVO</code> — tutto in <strong>una sola transazione</strong> (IN_CORSO + execute +
-COMPLETATO). Su eccezione dell'handler l'intera transizione rolla (il flusso
-torna <code>DA_ESEGUIRE</code>, ri-eseguibile) e l'errore parlante propaga. Per i flussi
-senza handler, l'avvio porta solo a <code>IN_CORSO</code> (completamento manuale).</p>
+esito <code>esito_default</code> (fallback <code>POSITIVO</code> per i template con handler ma senza
+<code>esito_default</code>, retro-compatibile col vecchio comportamento) — tutto in <strong>una sola
+transazione</strong> (IN_CORSO + execute + COMPLETATO). L'auto-completamento scatta anche
+quando <code>modalita_esito = AUTOMATICO</code> (anche <strong>senza</strong> handler). Su eccezione
+dell'handler l'intera transizione rolla (il flusso torna <code>DA_ESEGUIRE</code>,
+ri-eseguibile) e l'errore parlante propaga. Per i flussi MANUALE senza handler,
+l'avvio porta solo a <code>IN_CORSO</code> (completamento manuale).</p>
+<blockquote>
+<p><code>avvia_e_completa_flusso</code> (CONTESTUALE) <strong>non</strong> esegue l'handler di avvio: e' la
+modalita "esito deciso dall'operatore". Riusa <code>completa_flusso</code> per il
+completamento, quindi le azioni di dominio su evento <code>COMPLETATO</code>
+(<code>template_flussi_handler_eventi</code>, esito-aware) scattano comunque con l'esito scelto.</p>
+</blockquote>
 <p><strong>Azioni di dominio al completamento (data-driven, 2026-06-15)</strong>: al passaggio a
 <code>COMPLETATO</code>, <code>completa_flusso</code> esegue gli handler server-side legati all'evento
 in <code>pratiche.template_flussi_handler_eventi</code> (esito-aware: scattano solo se
@@ -5011,9 +5068,10 @@ completamento <strong>generico</strong> e il motore esegue l'azione di dominio.<
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Ownership check prima di qualsiasi operazione.</li>
-<li>Se <code>nuovo_stato = COMPLETATO</code>, <code>esito</code> e' obbligatorio e deve essere uno tra: <code>POSITIVO</code>, <code>NEGATIVO</code>, <code>PARZIALE</code>, <code>NON_APPLICABILE</code>.</li>
-<li>Se <code>nuovo_stato = IN_CORSO</code>, il servizio transiziona a <code>IN_CORSO</code> e, se il flusso ha un handler, lo esegue e completa il flusso (vedi Contesto). L'utente acting è passato all'handler (<code>p_user</code> delle fn DB).</li>
+<li>Ownership check prima di qualsiasi operazione; lo stato corrente del flusso (letto dal <code>get_flusso</code> di verifica) instrada il completamento (CONTESTUALE da <code>DA_ESEGUIRE</code> vs completamento da <code>IN_CORSO</code>).</li>
+<li>Se <code>nuovo_stato = COMPLETATO</code>, <code>esito</code> e' obbligatorio e deve essere uno tra: <code>POSITIVO</code>, <code>NEGATIVO</code>, <code>PARZIALE</code>, <code>NON_APPLICABILE</code> (validazione centralizzata in <code>pratiche_service._require_esito_valido</code>, costante <code>ESITI_FLUSSO_AMMESSI</code>).</li>
+<li>Se <code>nuovo_stato = COMPLETATO</code> e lo stato corrente è <code>DA_ESEGUIRE</code> (modalita CONTESTUALE), il servizio esegue <code>avvia_e_completa_flusso</code> (avvio + esito atomico); altrimenti <code>completa_flusso</code> da <code>IN_CORSO</code>.</li>
+<li>Se <code>nuovo_stato = IN_CORSO</code>, il servizio transiziona a <code>IN_CORSO</code> e, se il flusso ha un handler <strong>o</strong> <code>modalita_esito = AUTOMATICO</code>, lo completa con <code>esito_default</code> (vedi Contesto). L'utente acting è passato all'handler (<code>p_user</code> delle fn DB).</li>
 <li>Per qualsiasi altro stato, il servizio delega a <code>cambia_stato_flusso</code> con validazione stato non vuoto.</li>
 <li>Tutte le transizioni sono wrappate in <code>@transaction.atomic()</code>.</li>
 <li>Al completamento con esito, il trigger DB <code>trgfn_flussi_generazione</code> verifica le regole di generazione automatica (<code>auto = true</code>) e crea nuove pratiche se applicabile.</li>
@@ -5032,6 +5090,18 @@ completamento <strong>generico</strong> e il motore esegue l'azione di dominio.<
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
+<li>(17 giugno 2026) <strong>Esito configurabile sullo step</strong> (colonne <code>template_flussi.modalita_esito</code>
+  e <code>esito_default</code>, migration <code>20260617-01</code>/<code>-02</code>): <code>avvia_flusso</code> auto-completa con
+  <code>esito_default</code> quando l'handler ritorna un risultato <strong>oppure</strong> <code>modalita_esito =
+  AUTOMATICO</code>; nuovo <code>avvia_e_completa_flusso</code> per la modalita CONTESTUALE (instradato
+  dall'endpoint quando <code>COMPLETATO</code> arriva da <code>DA_ESEGUIRE</code>). Proiezione <code>get_flusso</code>
+  arricchita con <code>template_modalita_esito</code>/<code>template_esito_default</code> (consumati dal
+  <code>FlussoDrawer</code> FE); query leggera <code>PraticheRepository.get_flusso_esito_config</code> per il
+  path di avvio. Validazione esito centralizzata (<code>_require_esito_valido</code> /
+  <code>ESITI_FLUSSO_AMMESSI</code>). Le invarianti di coerenza del template (esito_default
+  obbligatorio se non MANUALE; AUTOMATICO solo INTERNA) sono enforce-ate a config-time
+  dal guard DB <code>trgfn_template_flussi_guard_modalita_esito</code> (codici 494/495), <strong>non</strong> da
+  questo endpoint.</li>
 <li>La risoluzione stato avviene esplicitamente prima dell'UPDATE per evitare SET NULL su colonna NOT NULL.</li>
 <li>La generazione automatica cross-pratica e' completamente lato DB; il backend non ha logica di generazione automatica.</li>
 <li>(15 giugno 2026) Azioni di dominio al completamento <strong>data-driven</strong>: <code>completa_flusso</code>

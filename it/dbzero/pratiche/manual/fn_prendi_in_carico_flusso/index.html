@@ -379,6 +379,8 @@
       
         
       
+        
+      
     
     
     
@@ -2490,6 +2492,8 @@
       
         
       
+        
+      
     
     
     
@@ -2550,6 +2554,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3321,10 +3352,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
             
   
   
@@ -3341,8 +3372,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4910,6 +4941,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#policy-di-eligibilita-reparto-first-competenza-opzionale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Policy di eligibilita' (reparto-first + competenza opzionale)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#gestione-concorrenza" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4976,7 +5018,10 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Assegna un flusso DA_ESEGUIRE all'operatore corrente, verificando che abbia competenza attiva. Operazione atomica con lock pessimistico (<code>FOR UPDATE</code>) per evitare race condition.</p>
+<p>Assegna un flusso DA_ESEGUIRE all'operatore corrente applicando la <strong>policy di eligibilita' reparto-first + competenza opzionale</strong> (vedi sotto). Operazione atomica con lock pessimistico (<code>FOR UPDATE</code>) per evitare race condition.</p>
+<blockquote>
+<p><strong>Rev 2026-06-18</strong> (brief-db-assegnazione-flusso): la competenza passa da <strong>obbligatoria</strong> a <strong>condizionale</strong>. Prima ogni flusso template-based richiedeva competenza; ora la competenza e' un lucchetto <strong>opzionale</strong> che governa solo dove la matrice e' configurata; altrove governa l'appartenenza al reparto o la presa libera.</p>
+</blockquote>
 <hr />
 <h3 id="firma-della-funzione">Firma della funzione<a class="headerlink" href="#firma-della-funzione" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">fn_prendi_in_carico_flusso</span><span class="p">(</span>
@@ -5032,7 +5077,7 @@
 </tr>
 <tr>
 <td>RAISE</td>
-<td>Errore se il flusso non esiste, stato errato, gia' assegnato ad altro, o competenza mancante</td>
+<td>Errore se il flusso non esiste, stato errato, gia' assegnato ad altro, o <strong>non eligibile</strong> per la policy (competenza o reparto)</td>
 </tr>
 </tbody>
 </table>
@@ -5074,11 +5119,59 @@
 </tr>
 <tr>
 <td>6</td>
-<td>L'operatore deve avere competenza attiva (solo flussi template-based)</td>
-<td><code>FLUSSI_COMPETENZA_MANCANTE</code> (322)</td>
+<td><strong>Eligibilita'</strong> (policy reparto-first, vedi sotto)</td>
+<td><code>FLUSSI_COMPETENZA_MANCANTE</code> (322) <strong>oppure</strong> <code>FLUSSI_PRESA_NON_ELIGIBILE</code> (496)</td>
 </tr>
 </tbody>
 </table>
+<hr />
+<h3 id="policy-di-eligibilita-reparto-first-competenza-opzionale">Policy di eligibilita' (reparto-first + competenza opzionale)<a class="headerlink" href="#policy-di-eligibilita-reparto-first-competenza-opzionale" title="Permanent link">&para;</a></h3>
+<p>Per un flusso <code>F</code> (DA_ESEGUIRE, non assegnato) e un operatore <code>O</code> si definiscono:</p>
+<ul>
+<li><strong>skill-lock</strong> = esiste almeno una competenza <strong>attiva</strong> (<code>competenze_flussi</code>) per <code>F.template_flusso_id</code> → la matrice e' configurata per quel tipo di step;</li>
+<li><strong>competente</strong> = esiste competenza <strong>attiva</strong> <code>(template = F.template, operatore = O)</code>;</li>
+<li><strong>nel-reparto</strong> = <code>F.unita_organizzativa_id IS NOT NULL</code> <strong>e</strong> coincide col reparto <strong>anagrafico</strong> dell'operatore (<code>anagrafiche.risorse_umane.unita_organizzativa_id</code>).</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>Condizione su F</th>
+<th>Eligibile se</th>
+<th>Errore se non eligibile</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A — reparto + skill</strong></td>
+<td>reparto valorizzato, skill-lock presente</td>
+<td><code>competente</code></td>
+<td><code>FLUSSI_COMPETENZA_MANCANTE</code></td>
+</tr>
+<tr>
+<td><strong>B — reparto, no skill</strong></td>
+<td>reparto valorizzato, skill-lock assente</td>
+<td><code>nel-reparto</code></td>
+<td><code>FLUSSI_PRESA_NON_ELIGIBILE</code></td>
+</tr>
+<tr>
+<td><strong>C — niente configurato</strong></td>
+<td>reparto NULL, skill-lock assente</td>
+<td><strong>libero</strong> (chiunque)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>D — skill senza reparto</strong></td>
+<td>reparto NULL, skill-lock presente</td>
+<td><code>competente</code></td>
+<td><code>FLUSSI_COMPETENZA_MANCANTE</code></td>
+</tr>
+</tbody>
+</table>
+<p>In pratica: la competenza e' un lucchetto <strong>opzionale</strong>; quando per il template non esiste competenza, governa l'appartenenza al reparto (o la presa libera se nemmeno il reparto e' impostato).</p>
+<blockquote>
+<p><strong>skill-lock = competenza ATTIVA</strong> (non "qualsiasi riga"): se tutte le competenze del template sono disattivate, lo step <strong>non</strong> e' skill-gated → evita flussi bloccati e non prendibili da nessuno. Coerente con <code>fn_coda_lavoro_operatore</code>.</p>
+</blockquote>
 <hr />
 <h3 id="gestione-concorrenza">Gestione concorrenza<a class="headerlink" href="#gestione-concorrenza" title="Permanent link">&para;</a></h3>
 <p>La funzione usa <code>SELECT ... FOR UPDATE</code> sulla riga del flusso per evitare race condition:
@@ -5096,8 +5189,10 @@ il secondo attende il rilascio del lock e poi fallira' con <code>FLUSSI_GIA_ASSE
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Da invocare sempre tramite il service Python (<code>pratiche_service</code>), che gestisce l'envelope di errore per la UI.</li>
-<li>Per flussi manuali (senza <code>template_flusso_id</code>), la verifica competenza viene saltata.</li>
+<li>Per flussi manuali (senza <code>template_flusso_id</code>) non c'e' skill-lock: governano reparto (caso B) o presa libera (caso C).</li>
+<li>La presa in carico esegue <code>UPDATE risorsa_umana_id</code> → fa scattare il giornale <code>FLUSSO_ASSEGNAZIONE_CAMBIATA</code> (trigger <code>trgfn_flussi_giornale_assegnazione</code>): anche l'auto-presa e' tracciata.</li>
 <li>Dopo l'UPDATE, verifica che esattamente 1 riga sia stata aggiornata (<code>GET DIAGNOSTICS</code>).</li>
+<li>Allineata a <code>fn_coda_lavoro_operatore</code>: i casi A/D emergono come livello COMPETENZA, il B come REPARTO, il C come LIBERO.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

@@ -385,6 +385,8 @@
       
         
       
+        
+      
     
     
     
@@ -2498,6 +2500,8 @@
       
         
       
+        
+      
     
     
     
@@ -2559,6 +2563,33 @@
     
   
   Gestione pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestione-pratiche-configurazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche — Configurazione e opzioni
 
     
   </span>
@@ -3408,6 +3439,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#stato-documentale-della-fattura-segue-lo-step-invariante" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Stato documentale della fattura: segue lo step (invariante)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rollback-di-step-fatturazione_pipelinerollback" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -3934,10 +3976,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_29" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
         
           
-          <label class="md-nav__link" for="__nav_7_29" id="__nav_7_29_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="">
             
   
   
@@ -3954,8 +3996,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_29_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_29">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_30">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5799,6 +5841,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#stato-documentale-della-fattura-segue-lo-step-invariante" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Stato documentale della fattura: segue lo step (invariante)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rollback-di-step-fatturazione_pipelinerollback" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6414,6 +6467,27 @@ step del lotto (tipicamente DRAFT), gestito da <code>PipelineStepExecutor</code>
 <li>DEFINITIVA: numerazione documento.</li>
 <li>INVIATA: preparazione/invio su canale esterno (es. SDI).</li>
 </ol>
+<h3 id="stato-documentale-della-fattura-segue-lo-step-invariante">Stato documentale della fattura: segue lo step (invariante)<a class="headerlink" href="#stato-documentale-della-fattura-segue-lo-step-invariante" title="Permanent link">&para;</a></h3>
+<p>Lotto <strong>e</strong> fatture condividono <code>config.stati_doc_fiscale</code> ma con <strong>macchine a stati
+distinte</strong> (<code>config.stati_doc_fiscale_transizioni</code>, colonne <code>solo_lotto</code> / <code>solo_fattura</code>).
+Lo stato della <strong>fattura</strong> segue lo <code>stato_doc_fiscale_id</code> dello <strong>step</strong> di pipeline: a ogni
+avanzamento di step le fatture del lotto vengono allineate (<code>fn_sync_lotto_fatture_stato</code>).</p>
+<p><strong>Invariante (imposto dalla matrice + <code>trgfn_fatture_guard_stato</code>)</strong>: la fattura deve passare
+per <strong>EMESSA(2) prima di DEFINITIVA(8)</strong> — <code>1→2→8</code>, <strong>mai</strong> <code>1→8</code>. Semantica: non si assegna
+un numero fiscale (DEFINITIVA) a una fattura di cui non si è certificata l'IVA (EMESSA).</p>
+<ul>
+<li><strong>MASSIVO</strong>: la fattura fa <code>1→2→8→3</code>. Lo step EMESSA calcola l'IVA (rifacibile: ha rollback
+  <code>reset_lotto_draft</code>), poi DEFINITIVA numera.</li>
+<li><strong>GIORNALIERO</strong>: stessa sequenza <code>1→2→8→3</code> a livello sia di lotto sia di fattura. L'IVA è già
+  calcolata alla nascita del documento, quindi lo step EMESSA giornaliero non ha task
+  (<code>processi=&#91;&#93;</code>): serve solo a portare lotto e fattura a EMESSA prima della numerazione,
+  garantendo lo stesso invariante.</li>
+</ul>
+<blockquote>
+<p>Rollback: ammesso solo da stati <strong>pre-fiscali</strong> (DRAFT/EMESSA). <code>fn_reset_lotto_draft</code>
+<strong>cancella</strong> le fatture pre-fiscali del lotto (non numerate); le fiscali (DEFINITIVA in poi)
+sono rifiutate.</p>
+</blockquote>
 <h3 id="rollback-di-step-fatturazione_pipelinerollback">Rollback di step (<code>fatturazione_pipeline.rollback</code>)<a class="headerlink" href="#rollback-di-step-fatturazione_pipelinerollback" title="Permanent link">&para;</a></h3>
 <p>Ogni riga di <code>fatturazione_pipeline</code> ha due array JSONB paralleli:</p>
 <ul>
