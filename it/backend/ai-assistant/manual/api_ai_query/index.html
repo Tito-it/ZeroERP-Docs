@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.45">
+      <meta name="generator" content="zensical-0.0.46">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.fba56155.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.19d3147f.min.css">
       
       
 
@@ -320,6 +320,8 @@
   
     
       
+      
+        
       
         
       
@@ -2494,6 +2496,8 @@
       
         
       
+        
+      
     
     
     
@@ -3032,6 +3036,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-commesse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione commesse
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3352,10 +3383,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
         
           
-          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
             
   
   
@@ -3372,8 +3403,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_30">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_31">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5117,10 +5148,13 @@
 <ul>
 <li>Il messaggio non puo' essere vuoto ne' superare 2000 caratteri.</li>
 <li>Il catalogo strumenti e' filtrato per permessi dell'utente autenticato: se l'operatore non ha accesso all'area <code>pratiche</code>, il tool <code>cerca_pratiche</code> non e' disponibile.</li>
+<li><strong>Permessi ri-verificati a execution-time</strong> (difesa in profondità, non solo all'offer-time): quando l'LLM invoca un tool, il service ri-controlla che l'utente possa usarlo (predicato unico <code>is_tool_allowed_for_user</code>) <strong>prima</strong> di preview/execute, e di nuovo alla conferma <code>__confirm__</code>. Chiude il TOCTOU (permesso revocato tra preview e conferma) e un tool_call per un tool fuori scope (injection/errore modello). I service chiamati dai tool non rifanno il check area-level (vive nel layer view, non attraversato dall'AI): il backstop è qui.</li>
+<li><strong>Granularità come la UI</strong> (area + azione fine): un tool può dichiarare <code>required_action</code> (codename azione di processo) speculare al <code>&lt;action&gt;_permission</code> dell'endpoint corrispondente. È verificato via <code>PermissionResolver.check_azione</code>. Es.: <code>cambia_stato_pratica</code> richiede l'azione <code>cambia_stato_pratica</code> come l'endpoint <code>ApiPraticaStato</code>.</li>
 <li>Il loop tool_call ha un limite di 5 iterazioni. Al superamento restituisce risposta parziale con <code>has_more: true</code>.</li>
 <li>La conversazione in-memory ha un TTL di 15 minuti (configurabile via <code>AI_CONVERSATION_TTL</code>). Dopo la scadenza, il <code>conversation_id</code> non e' piu' valido e viene creata una nuova conversazione.</li>
-<li>Il system prompt non contiene mai dati dal database — solo vocabolario e regole operative. I dati arrivano come <code>tool_result</code> e sono trattati dall'LLM come dati, non istruzioni (protezione prompt injection).</li>
-<li>Ogni interazione viene loggata in <code>dbops.ai_query_log</code> con <code>request_id</code>, strumenti chiamati, token consumati e durata. Il logging e' best-effort: un errore di log non blocca la risposta.</li>
+<li><strong>Conferme di scrittura durabili in cache</strong> (<code>django.core.cache</code> → Redis in prod): le conferme pendenti sopravvivono tra i worker gunicorn, con TTL nativo di 5 minuti. Chiave per scope <code>(conversazione, owner_user_id, owner_identita_id)</code>: una conferma per conversazione (un nuovo preview sovrascrive) e isolamento sicurezza nella chiave (un altro owner non vede/annulla la conferma altrui).</li>
+<li>Il system prompt non contiene mai dati dal database — solo vocabolario e regole operative; i dati arrivano come <code>tool_result</code>. ⚠️ Questo è <strong>igiene</strong> (riduce injection diretta e invenzioni), <strong>non</strong> una protezione contro la prompt injection: per il modello <code>tool_result</code> e system prompt sono lo stesso flusso. La difesa vera è il <em>blast radius</em> — permessi + RLS + conferma sulle scritture (vedi <a href="../../../../guide/integrazione-ai/">guida AI §4</a>).</li>
+<li>Ogni interazione viene loggata in <code>dbops.ai_query_log</code> con <code>request_id</code>, strumenti chiamati, token consumati e durata. Il logging delle <strong>letture</strong> è best-effort (un errore non blocca la risposta); per le <strong>scritture confermate</strong> è <strong>affidabile</strong> (<code>reliable=True</code>): se l'audit fallisce viene emesso un <strong>alert ERROR</strong> (l'audit è anche il sistema di rilevamento anomalie). Retention via framework <code>dbops</code> cleanup (<code>cleanup_at</code>, regola <code>*all</code> 30gg default).</li>
 <li>L'endpoint richiede <code>area_funzionale = ai_assistant</code> nel sistema permessi (<code>ZeroERPPermission</code>).</li>
 <li>Guard <code>AI_ENABLED</code>: se <code>false</code>, l'endpoint restituisce <code>501</code> senza tentare alcuna operazione.</li>
 </ul>
@@ -5134,7 +5168,8 @@
 <ul>
 <li>L'endpoint e' disponibile solo se <code>AI_ENABLED=True</code> in settings (l'app <code>ai_assistant</code> non viene caricata altrimenti).</li>
 <li>Il provider AI e' configurabile via <code>AI_PROVIDER</code> (anthropic, mistral, mock).</li>
-<li>Le conversazioni sono in-memory (non persistite in DB). In futuro, se necessario, migrazione a Redis.</li>
+<li>Le <strong>conferme pendenti</strong> sono in <strong>cache</strong> (<code>django.core.cache</code> → Redis in prod, LocMemCache in CI/test): durano tra i worker gunicorn, TTL 5 minuti.</li>
+<li>Le <strong>conversazioni</strong> sono ancora <strong>in-memory per processo</strong> (non condivise tra worker gunicorn): un follow-up che colpisce un altro worker non ne ricostruisce il contesto. Migrazione alla cache (stesso meccanismo delle conferme) consigliata come follow-up — vedi analisi-sicurezza-aggiornata.md (<code>docs/it/dev/work-done/analisi-sicurezza-aggiornata.md</code>).</li>
 </ul>
 
 
@@ -5187,10 +5222,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6e5f0216.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.ee611ef6.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

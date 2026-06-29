@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.45">
+      <meta name="generator" content="zensical-0.0.46">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.fba56155.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.19d3147f.min.css">
       
       
 
@@ -320,6 +320,8 @@
   
     
       
+      
+        
       
         
       
@@ -2494,6 +2496,8 @@
       
         
       
+        
+      
     
     
     
@@ -3032,6 +3036,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-commesse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione commesse
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3352,10 +3383,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
         
           
-          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
             
   
   
@@ -3372,8 +3403,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_30">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_31">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4991,9 +5022,10 @@
 
 <h1 id="api-pratica_sospendi-django">API pratica_sospendi (Django)<a class="headerlink" href="#api-pratica_sospendi-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Esporre via HTTP la sospensione di una pratica con motivo obbligatorio e data di riattivazione opzionale.</p>
+<p>Esporre via HTTP la sospensione di una pratica con motivo obbligatorio, data/ora di sospensione opzionale (anche retroattiva) e data di riattivazione prevista opzionale.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <p>Endpoint di scrittura che delega a <code>pratiche_service.sospendi_pratica</code>. Il servizio verifica che non esista gia' una sospensione attiva sulla pratica, cambia lo stato a SOSPESA e inserisce il record in <code>pratiche.sospensioni</code>. I trigger DB propagano la sospensione ai flussi attivi e registrano nel giornale.</p>
+<p><code>data_inizio</code> consente di registrare a posteriori una sospensione realmente avvenuta in un momento passato. Se assente, il DB usa <code>NOW()</code>. La difesa sulle date e' a DB (DB-first): l'EXCLUDE <code>ex_sospensioni_no_overlap</code> rifiuta i periodi sovrapposti sullo stesso scope (pratica intera o singolo flusso), il guard <code>trg_sospensioni_a10_guard_data_non_futura</code> rifiuta le date nel futuro (tolleranza 2 minuti).</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Metodo: <code>POST</code></li>
@@ -5001,7 +5033,8 @@
 <li>Header: <code>Content-Type: application/json</code>, <code>Authorization: Bearer &lt;access_token&gt;</code></li>
 <li>Body:</li>
 <li><code>motivo</code> (string, <strong>obbligatorio</strong>) — motivazione della sospensione</li>
-<li><code>data_riattivazione_prevista</code> (string, opzionale) — data ISO <code>YYYY-MM-DD</code> di riattivazione automatica prevista</li>
+<li><code>data_inizio</code> (string, opzionale) — data/ora ISO 8601 timestamptz (es. <code>2026-06-20T09:30:00Z</code>) della sospensione effettiva, anche retroattiva. Default DB <code>NOW()</code> se assente/nulla</li>
+<li><code>data_riattivazione_prevista</code> (string, opzionale) — data ISO <code>YYYY-MM-DD</code> di riattivazione automatica prevista (puo' essere nel futuro)</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <h3 id="200">200:<a class="headerlink" href="#200" title="Permanent link">&para;</a></h3>
@@ -5010,22 +5043,28 @@
 <ul>
 <li><code>400</code>: motivo vuoto (<code>E_PRATICA_VALIDATION</code>), pratica gia' sospesa (<code>E_PRATICA_VALIDATION</code>), <code>pratica_id</code> non valido (<code>E_INVALID_ID</code>)</li>
 <li><code>401</code>: JWT mancante o non valido</li>
-<li><code>409</code>: transizione di stato non ammessa (<code>PRATICHE_TRANSIZIONE_NON_AMMESSA</code>)</li>
+<li><code>409</code>: sospensione con periodo sovrapposto sullo stesso scope (<code>E_SOSPENSIONE_OVERLAP</code>); transizione di stato non ammessa (<code>PRATICHE_TRANSIZIONE_NON_AMMESSA</code>)</li>
+<li><code>422</code>: <code>data_inizio</code> nel futuro (<code>E_SOSPENSIONE_DATA_FUTURA</code>)</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>pratica_id</code> deve essere &gt; 0.</li>
 <li><code>motivo</code> non puo' essere vuoto o solo spazi.</li>
 <li>Non puo' esistere una sospensione attiva (data_fine IS NULL) sulla stessa pratica.</li>
+<li><code>data_inizio</code> non puo' essere nel futuro (guard DB a10, tolleranza 2 min); se assente il DB usa <code>NOW()</code>.</li>
+<li>Il periodo della sospensione non puo' sovrapporsi ad altre sospensioni dello stesso scope (EXCLUDE DB). Pratica e flusso sono assi indipendenti: una sospensione di pratica e una di flusso possono coesistere.</li>
 <li>Il trigger DB valida la transizione di stato verso SOSPESA.</li>
 <li>Il trigger DB propaga la sospensione ai flussi con stato IN_CORSO.</li>
-<li>Wrappato in <code>@transaction.atomic()</code>.</li>
+<li>Wrappato in <code>@transaction.atomic()</code>: errore DB → rollback completo (incluso il cambio stato).</li>
+<li>Mapping errori: <code>IntegrityError</code> su <code>ex_sospensioni_no_overlap</code> → <code>E_SOSPENSIONE_OVERLAP</code> (via <code>map_integrity_error</code>); <code>DatabaseError</code> del guard a10 → <code>E_SOSPENSIONE_DATA_FUTURA</code> (via marker <code>_KNOWN_DB_ERROR_MARKERS</code>).</li>
 <li>Permission: <code>sospendi_pratica</code> (area <code>pratiche</code>).</li>
 <li>Endpoint v1 richiede JWT.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>pratiche.sospensioni</code> (INSERT sospensione)</li>
+<li><code>pratiche.sospensioni</code> (INSERT sospensione; <code>data_inizio = COALESCE(%s::timestamptz, NOW())</code>)</li>
+<li>vincolo <code>ex_sospensioni_no_overlap</code> (EXCLUDE GiST, framework <code>dbops.automazione_overlap</code>)</li>
+<li>trigger <code>trg_sospensioni_a10_guard_data_non_futura</code> (guard data non futura)</li>
 <li><code>pratiche.pratiche</code> (UPDATE stato_id → SOSPESA)</li>
 <li><code>pratiche.flussi</code> (propagazione sospensione via trigger)</li>
 <li><code>pratiche.giornale</code> (INSERT automatico via trigger)</li>
@@ -5033,7 +5072,8 @@
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
 <li>La validazione motivo e' centralizzata nel service (non nella view).</li>
-<li>La propagazione ai flussi e' gestita interamente dal trigger DB <code>trgfn_sospensioni_after_insert</code>.</li>
+<li>La propagazione ai flussi e' gestita interamente dai trigger DB <code>z90</code> (<code>trgfn_sospensioni_propaga</code>, <code>trgfn_sospensioni_giornale_ins</code>).</li>
+<li>Parametro <code>data_inizio</code> aggiunto 2026-06-26 (UI gestione sospensioni con data/ora manuale). Prima la <code>data_inizio</code> era sempre <code>NOW()</code> hardcoded nel repository; ora e' parametrizzata con default <code>NOW()</code> (retro-compatibile).</li>
 </ul>
 
 
@@ -5086,10 +5126,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6e5f0216.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.ee611ef6.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

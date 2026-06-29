@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.45">
+      <meta name="generator" content="zensical-0.0.46">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.fba56155.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.19d3147f.min.css">
       
       
 
@@ -320,6 +320,8 @@
   
     
       
+      
+        
       
         
       
@@ -2494,6 +2496,8 @@
       
         
       
+        
+      
     
     
     
@@ -3032,6 +3036,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-commesse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione commesse
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3352,10 +3383,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
         
           
-          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
             
   
   
@@ -3372,8 +3403,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_30">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_31">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5119,7 +5150,7 @@ Configurare <strong>regole di automazione</strong> per generare/applicare trigge
 <h3 id="interazione-con-le-altre-tabelle">Interazione con le altre tabelle<a class="headerlink" href="#interazione-con-le-altre-tabelle" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>automation_overrides_cols</code></strong> → risolve nomi di colonne non standard: <code>ATTIVO_COL</code>, <code>AUDIT_TS</code>, <code>AUDIT_USER</code>, <code>STORICO_FK</code>.</li>
-<li><strong><code>automation_fk_exclusions</code></strong> → esclude specifiche coppie <em>parent/child</em> dalla regola <code>ATTIVO</code>.</li>
+<li><strong><code>automation_fk_exclusions</code></strong> → <em>(storicamente)</em> escludeva specifiche coppie <em>parent/child</em> dalla regola <code>ATTIVO</code>. ⚠️ <strong>Filtro attualmente NON applicato</strong>: disattivato deliberatamente in <code>20260113-01</code> (commento "non più utilizzato") e non re-introdotto nel rewrite <code>20260408-06</code>. La tabella esiste ma è <strong>inerte</strong>: <code>fn_run_automations_attivo</code> non la consulta. (Riabilitarlo è possibile ma richiede di re-inserire il filtro <code>NOT EXISTS</code> nel cursor FK — vedi <code>brief-db-deprecabilita-catalogo-vs-istanze.md</code>.)</li>
 <li><strong><code>automation_cleanup_exclusions</code></strong> → esclude tabelle dal cleanup (rule_type CLEANUP_*).</li>
 </ul>
 <hr />
@@ -5128,7 +5159,7 @@ Configurare <strong>regole di automazione</strong> per generare/applicare trigge
 <li>Scopo schemi: da <code>p_schemas</code> o tabella <code>dbops.automation_scope</code> (se presente), altrimenti tutti gli schemi <em>user</em> escluso <code>storico</code>.</li>
 <li>Per <strong>TX_ID / AUDIT_UPDATE / STORICO</strong>: loop per tabelle che matchano la regola (schema + table/pattern), valutano pre‑requisiti (colonne, storico presente), costruiscono nome via template, verificano esistenza secondo <code>existence_strategy</code>, <strong>creano il trigger</strong> se mancante (o <strong>DRYRUN</strong> se <code>p_dry_run=true</code>).</li>
 <li>
-<p>Per <strong>ATTIVO</strong>: loop su <strong>tutte</strong> le FK nell'ambito (indipendentemente da <code>confdeltype</code>), filtra con <code>automation_fk_exclusions</code>, risolve colonne <code>attivo</code> su parent/child via overrides, poi applica:</p>
+<p>Per <strong>ATTIVO</strong>: loop su <strong>tutte</strong> le FK nell'ambito (indipendentemente da <code>confdeltype</code>), risolve colonne <code>attivo</code> su parent/child via overrides, poi applica (NB: il filtro <code>automation_fk_exclusions</code> <strong>non è più applicato</strong>, vedi sopra):</p>
 </li>
 <li>
 <p><strong>BLOCK</strong> sul padre: impedisce <code>attivo=true -&gt; false</code> se esistono figli <strong>attivi</strong> (o figli in generale se la colonna <code>attivo</code> sul figlio non esiste).</p>
@@ -5242,10 +5273,10 @@ Configurare <strong>regole di automazione</strong> per generare/applicare trigge
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6e5f0216.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.ee611ef6.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

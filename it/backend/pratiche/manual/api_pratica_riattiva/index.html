@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.45">
+      <meta name="generator" content="zensical-0.0.46">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.fba56155.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.19d3147f.min.css">
       
       
 
@@ -320,6 +320,8 @@
   
     
       
+      
+        
       
         
       
@@ -2494,6 +2496,8 @@
       
         
       
+        
+      
     
     
     
@@ -3032,6 +3036,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-commesse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione commesse
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3352,10 +3383,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
         
           
-          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
             
   
   
@@ -3372,8 +3403,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_30">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_31">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4991,15 +5022,17 @@
 
 <h1 id="api-pratica_riattiva-django">API pratica_riattiva (Django)<a class="headerlink" href="#api-pratica_riattiva-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Esporre via HTTP la riattivazione di una pratica sospesa.</p>
+<p>Esporre via HTTP la riattivazione di una pratica sospesa, con data/ora di riattivazione opzionale (anche retroattiva).</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>Endpoint di scrittura che delega a <code>pratiche_service.riattiva_pratica</code>. Il servizio cerca la sospensione attiva (data_fine IS NULL, flusso_id IS NULL), cambia lo stato pratica ad APERTA e chiude la sospensione impostando data_fine = NOW(). Il trigger DB ripristina gli stati dei flussi sospesi e registra nel giornale.</p>
+<p>Endpoint di scrittura che delega a <code>pratiche_service.riattiva_pratica</code>. Il servizio cerca la sospensione attiva (data_fine IS NULL, flusso_id IS NULL), cambia lo stato pratica ad APERTA e chiude la sospensione impostando <code>data_fine</code>. Il trigger DB ripristina gli stati dei flussi sospesi e registra nel giornale.</p>
+<p><code>data_fine</code> consente di registrare a posteriori il momento effettivo di riattivazione. Se assente, il DB usa <code>NOW()</code>. La difesa sulle date e' a DB: il CHECK <code>chk_sospensioni_data_fine</code> impone <code>data_fine &gt; data_inizio</code>, il guard <code>a10</code> rifiuta le date nel futuro (tolleranza 2 minuti).</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Metodo: <code>POST</code></li>
 <li>Path canonico: <code>/api/v1/pratiche/&lt;pratica_id&gt;/riattiva/</code></li>
 <li>Header: <code>Content-Type: application/json</code>, <code>Authorization: Bearer &lt;access_token&gt;</code></li>
-<li>Body: <code>{}</code> (nessun parametro richiesto)</li>
+<li>Body:</li>
+<li><code>data_fine</code> (string, opzionale) — data/ora ISO 8601 timestamptz (es. <code>2026-06-21T18:00:00Z</code>) della riattivazione effettiva, anche retroattiva. Default DB <code>NOW()</code> se assente/nulla</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <h3 id="200">200:<a class="headerlink" href="#200" title="Permanent link">&para;</a></h3>
@@ -5010,20 +5043,25 @@
 <li><code>401</code>: JWT mancante o non valido</li>
 <li><code>404</code>: sospensione non trovata o gia' chiusa (<code>E_SOSPENSIONE_NOT_FOUND</code>)</li>
 <li><code>409</code>: transizione di stato non ammessa (<code>PRATICHE_TRANSIZIONE_NON_AMMESSA</code>)</li>
+<li><code>422</code>: <code>data_fine</code> nel futuro (<code>E_SOSPENSIONE_DATA_FUTURA</code>); <code>data_fine</code> anteriore o uguale all'inizio della sospensione (<code>E_SOSPENSIONE_DATA_FINE</code>)</li>
 </ul>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>pratica_id</code> deve essere &gt; 0.</li>
 <li>Deve esistere una sospensione attiva sulla pratica (flusso_id IS NULL, data_fine IS NULL).</li>
+<li><code>data_fine</code> non puo' essere nel futuro (guard DB a10) e deve essere successiva a <code>data_inizio</code> (CHECK DB); se assente il DB usa <code>NOW()</code>.</li>
 <li>Lo stato pratica torna ad APERTA.</li>
 <li>Il trigger DB ripristina i flussi che erano stati sospesi automaticamente.</li>
 <li>Wrappato in <code>@transaction.atomic()</code>.</li>
+<li>Mapping errori: <code>IntegrityError</code> su <code>chk_sospensioni_data_fine</code> → <code>E_SOSPENSIONE_DATA_FINE</code> (via <code>map_integrity_error</code>, intercettato PRIMA di <code>DatabaseError</code> poiche' ne e' sottoclasse); <code>DatabaseError</code> del guard a10 → <code>E_SOSPENSIONE_DATA_FUTURA</code>.</li>
 <li>Permission: <code>riattiva_pratica</code> (area <code>pratiche</code>).</li>
 <li>Endpoint v1 richiede JWT.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>pratiche.sospensioni</code> (UPDATE data_fine = NOW())</li>
+<li><code>pratiche.sospensioni</code> (UPDATE <code>data_fine = COALESCE(%s::timestamptz, NOW())</code> con guard <code>data_fine IS NULL</code>)</li>
+<li>CHECK <code>chk_sospensioni_data_fine</code> (<code>data_fine &gt; data_inizio</code>)</li>
+<li>trigger <code>trg_sospensioni_a10_guard_data_non_futura</code> (guard data non futura)</li>
 <li><code>pratiche.pratiche</code> (UPDATE stato_id → APERTA)</li>
 <li><code>pratiche.flussi</code> (ripristino stati via trigger)</li>
 <li><code>pratiche.giornale</code> (INSERT automatico via trigger)</li>
@@ -5031,6 +5069,7 @@
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
 <li>La chiusura sospensione con guard <code>data_fine IS NULL</code> previene doppie chiusure concorrenti.</li>
+<li>Parametro <code>data_fine</code> aggiunto 2026-06-26 (UI gestione sospensioni con data/ora manuale). Prima la <code>data_fine</code> era sempre <code>NOW()</code> hardcoded nel repository; ora e' parametrizzata con default <code>NOW()</code> (retro-compatibile).</li>
 </ul>
 
 
@@ -5083,10 +5122,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6e5f0216.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.ee611ef6.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.45">
+      <meta name="generator" content="zensical-0.0.46">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.fba56155.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.19d3147f.min.css">
       
       
 
@@ -320,6 +320,8 @@
   
     
       
+      
+        
       
         
       
@@ -2494,6 +2496,8 @@
       
         
       
+        
+      
     
     
     
@@ -3032,6 +3036,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../guide/gestione-commesse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione commesse
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3352,10 +3383,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
         
           
-          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
             
   
   
@@ -3372,8 +3403,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_30">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_31">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4878,6 +4909,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#28-giugno-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        28 giugno 2026
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#20-giugno-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4999,6 +5041,39 @@ per non gonfiare il documento principale.</p>
 test UI o working tree non ancora consolidato, lo stato resta esplicitamente marcato come tale.</p>
 </blockquote>
 <hr />
+<h2 id="28-giugno-2026">28 giugno 2026<a class="headerlink" href="#28-giugno-2026" title="Permanent link">&para;</a></h2>
+<p><strong>Qualità di modello — convenzione <code>codice_interno</code> / <code>codice</code> (cross-anello).</strong> Bonifica
+della coppia di colonne delle tabelle <code>config.*</code>/lookup (<code>codice_interno</code> <strong>immutabile</strong> per
+la logica, <code>codice</code> <strong>mutabile</strong> per il display), in due interventi complementari:</p>
+<ul>
+<li><strong>Mislabel alias</strong> <code>codice_interno AS *_codice</code> (alias bugiardo che esponeva l'immutabile
+  col nome del mutabile): sweep completo DB (viste/funzioni liste contratti/clienti/fornitori/
+  coda, indirizzi/istanze, search-detail) + migrazione consumer BE/FE a <code>*_codice_interno</code> +
+  guardrail CI catalog-based bloccante. Vedi
+  brief-naming-stato-codice-interno.md (<code>docs/it/dev/work-done/brief-naming-stato-codice-interno.md</code>).</li>
+<li><strong>Hardcode contro la colonna mutabile</strong> (<code>WHERE codice = 'X'</code> dove la logica doveva usare
+  <code>codice_interno</code>): audit multi-superficie, <strong>21 BUG_DUAL + 7 CANDIDATE</strong> corretti. DB: 16
+  oggetti della pipeline commesse→push→fatturazione (<code>fn_list_*_da_pushare</code>, <code>config.sorgenti</code>,
+  <code>stati_doc_*</code>) + fix di un <strong>bug reale</strong> in <code>fn_lookup_utilities_per_ba</code> (ritornava 0 righe
+  perché <code>codice ≠ codice_interno</code>). BE: render engine documenti, lookup documenti/sorgenti,
+  approvazioni prezzo, super-admin riconosciuto via enum <code>tipo</code>, categorie clienti. Estratto il
+  BB <code>resolve_config_id_by_codice_interno</code> (regola del 2) e corretti <strong>2 bug di create</strong>
+  emersi in review (colonna <code>codice_interno NOT NULL</code> aggiunta senza default → INSERT rotto su
+  categorie clienti ed email account). Vedi
+  analisi-hardcoded-codice.md (<code>docs/it/dev/work-done/analisi-hardcoded-codice.md</code>).</li>
+</ul>
+<p><strong>Anello 3 (vendite) — gate EVASO ramo commessa.</strong> Corretta l'asimmetria logica col ramo
+ordine nel gate EVASO della pratica (bug logico del modello), applicata e <strong>verificata
+runtime</strong> (smoke preventivo→EVASO al push, evento <code>DOMINIO_PREVENTIVO_EVASO</code>, re-push su EVASO
+bloccato). Avviato lo smoke E2E push commesse→fatturazione. Vedi
+brief-db-gate-evaso-commessa-asimmetria.md (<code>docs/it/dev/work-done/brief-db-gate-evaso-commessa-asimmetria.md</code>),
+a-test-push-commesse-fatturazione.md (<code>docs/it/dev/work-done/a-test-push-commesse-fatturazione.md</code>).</p>
+<p><strong>Anello 2 (pratiche) — sospensioni anti-overlap + guard data manuale.</strong> Anti-sovrapposizione
+delle sospensioni pratica + guard sulla data manuale (DB + piano BE/FE). Vedi
+brief-db-sospensioni-anti-overlap-data-manuale.md (<code>docs/it/dev/work-done/brief-db-sospensioni-anti-overlap-data-manuale.md</code>).</p>
+<p><strong>Sicurezza AI/agenti.</strong> Revisione critica del documento di considerazioni sicurezza AI
+(2026-06-26) tradotta in piano di allineamento documentale/operativo. Vedi
+analisi-sicurezza-aggiornata.md (<code>docs/it/dev/work-done/analisi-sicurezza-aggiornata.md</code>).</p>
 <h2 id="20-giugno-2026">20 giugno 2026<a class="headerlink" href="#20-giugno-2026" title="Permanent link">&para;</a></h2>
 <p>Anello 3 (vendite): <strong>batch fatturazione automatico end-to-end operativo</strong>. Driver CRON
 <code>run-until-done</code> con discovery a <strong>corsie</strong> <code>(emittente, tipo_doc_fiscale, utility)</code>
@@ -5250,10 +5325,10 @@ prosegue nella tabella sopra.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6e5f0216.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.ee611ef6.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

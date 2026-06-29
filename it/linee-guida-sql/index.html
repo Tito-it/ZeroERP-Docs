@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.45">
+      <meta name="generator" content="zensical-0.0.46">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.fba56155.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.19d3147f.min.css">
       
       
 
@@ -326,6 +326,8 @@
   
     
       
+      
+        
       
         
       
@@ -1225,6 +1227,28 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         6b. Riferimenti esterni a tabelle di catalogo (chiave naturale stabile)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6c-esposizione-codice-vs-codice_interno-alias-fedele-alla-sorgente" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6c. Esposizione <code>codice</code> vs <code>codice_interno</code> (alias FEDELE alla sorgente)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6d-antipattern-literale-hardcoded-contro-codice-cosa-fare-se-manca-codice_interno" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6d. Antipattern: literale hardcoded contro <code>codice</code> + cosa fare se manca <code>codice_interno</code>
       </span>
     </span>
   </a>
@@ -3052,6 +3076,8 @@
       
         
       
+        
+      
     
     
     
@@ -3590,6 +3616,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../guide/gestione-commesse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione commesse
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../guide/fatturazione/" class="md-nav__link">
         
   
@@ -3910,10 +3963,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_30" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
         
           
-          <label class="md-nav__link" for="__nav_7_30" id="__nav_7_30_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
             
   
   
@@ -3930,8 +3983,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_30_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_30">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_31">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5532,6 +5585,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#6c-esposizione-codice-vs-codice_interno-alias-fedele-alla-sorgente" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6c. Esposizione <code>codice</code> vs <code>codice_interno</code> (alias FEDELE alla sorgente)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6d-antipattern-literale-hardcoded-contro-codice-cosa-fare-se-manca-codice_interno" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6d. Antipattern: literale hardcoded contro <code>codice</code> + cosa fare se manca <code>codice_interno</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#7-colonne-di-audit-e-log" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6401,6 +6476,83 @@ trgfn_config_stati_prevent_delete_if_used
 <p><strong>Tech debt riconosciuto</strong>: parametri legacy che oggi stoccano id numerici a tabelle di catalogo che <strong>non espongono ancora</strong> una chiave naturale stabile (es. <code>DEFAULT_IVA_ID</code> -&gt; <code>config.iva.id</code>). Restano fuori scope del framework finche' la tabella target non viene dotata della chiave (aggiungere <code>codice_interno</code> -&gt; il lock automatico viene provisionato dal runner -&gt; rinominare il parametro -&gt; aggiungere riga al registry). Migrazione tracciata caso per caso, non bulk.</p>
 <p><strong>Override del principio</strong>: ammessi solo in casi documentati (es. join interni cross-schema con vincoli di performance, FK fisica reale dove il reseed non e' possibile). Va motivato nella migration o nel manuale.</p>
 <hr />
+<h3 id="6c-esposizione-codice-vs-codice_interno-alias-fedele-alla-sorgente">6c. Esposizione <code>codice</code> vs <code>codice_interno</code> (alias FEDELE alla sorgente)<a class="headerlink" href="#6c-esposizione-codice-vs-codice_interno-alias-fedele-alla-sorgente" title="Permanent link">&para;</a></h3>
+<p>Le tabelle di stato/catalogo (<code>config.stati_*</code>, ecc.) espongono spesso <strong>due</strong> colonne con ruoli <strong>opposti</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Natura</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>codice_interno</code></strong></td>
+<td><strong>immutabile</strong> (lock <code>script.trgfn_lock_columns</code>)</td>
+<td><strong>riferimento interno di sistema</strong>: confronti, filtri, state-machine, mapping, seed. La logica si basa SOLO su questo.</td>
+</tr>
+<tr>
+<td><strong><code>codice</code></strong></td>
+<td><strong>modificabile</strong> dall'utente</td>
+<td><strong>etichetta a video</strong> (spesso si mostra invece la <code>descrizione</code>). Mai usato in logica.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regola d'oro</strong>: la logica (DB/BE/FE) usa <strong>sempre</strong> <code>codice_interno</code>; il <code>codice</code> e' solo display. I valori come <code>DRAFT</code>/<code>ATTIVO</code>/<code>CESSATO</code> sono <code>codice_interno</code>.</p>
+<p><strong>Convenzione di naming (alias fedele 1:1)</strong>: l'alias deve <strong>rispecchiare la colonna sorgente</strong>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">sd</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_codice_interno</span><span class="w">   </span><span class="c1">-- ✅ logica (immutabile)</span>
+<span class="n">sd</span><span class="p">.</span><span class="n">codice</span><span class="w">          </span><span class="k">AS</span><span class="w"> </span><span class="n">stato_codice</span><span class="w">           </span><span class="c1">-- ✅ display (mutabile)</span>
+</code></pre></div>
+<ul>
+<li><strong>VIETATO</strong> <code>codice_interno AS *_codice</code> (e il simmetrico <code>codice AS *_codice_interno</code>): il nome mentirebbe sulla sorgente. È un bug latente — il FE che fa <code>stato_codice === 'DRAFT'</code> funziona <em>per caso</em> finché qualcuno non "corregge" la vista in <code>codice AS stato_codice</code> e l'utente rinomina il codice in <code>BOZZA</code>, rompendo la logica in silenzio.</li>
+<li>Se servono <strong>entrambi</strong> (logica + display), esporli <strong>entrambi</strong> con nome fedele (come fanno gia' <code>vw_preventivi_*</code>/<code>vw_ordini_*</code>).</li>
+</ul>
+<p><strong>Guardrail CI</strong> (uccide la classe di bug): un check che fallisce sul pattern mislabel —</p>
+<div class="highlight"><pre><span></span><code>grep<span class="w"> </span>-rEn<span class="w"> </span><span class="s2">&quot;codice_interno\[[:space:\]]+AS\[[:space:\]]+\[a-z_\]*codice\b&quot;</span><span class="w"> </span>db/<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-vE<span class="w"> </span><span class="s2">&quot;AS\[[:space:\]]+\[a-z_\]*codice_interno\b&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="w">   </span><span class="c1"># codice_interno AS *_codice</span>
+grep<span class="w"> </span>-rEn<span class="w"> </span><span class="s2">&quot;\[^_\]codice\[[:space:\]]+AS\[[:space:\]]+\[a-z_\]*codice_interno\b&quot;</span><span class="w"> </span>db/<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="w">  </span><span class="c1"># codice AS *_codice_interno</span>
+</code></pre></div>
+<blockquote>
+<p><strong>Bonifica completata (2026-06-28)</strong>: i mislabel DB sono stati corretti (sweep
+<code>20260628-02..11</code>) e la regola è applicata da un guardrail CI bloccante
+(<code>scripts/sql/check_naming_stato_codice.sql</code>). Storia in brief-naming-stato-codice-interno.md (<code>docs/it/dev/work-done/brief-naming-stato-codice-interno.md</code>).</p>
+</blockquote>
+<hr />
+<h3 id="6d-antipattern-literale-hardcoded-contro-codice-cosa-fare-se-manca-codice_interno">6d. Antipattern: literale hardcoded contro <code>codice</code> + cosa fare se manca <code>codice_interno</code><a class="headerlink" href="#6d-antipattern-literale-hardcoded-contro-codice-cosa-fare-se-manca-codice_interno" title="Permanent link">&para;</a></h3>
+<p><strong>Il dubbio da porsi SEMPRE</strong> (a design time): ogni volta che scrivi un <strong>literale di codice</strong>
+in un <code>WHERE</code>/<code>JOIN</code>/<code>CASE</code>/<code>IN</code> contro una tabella di catalogo o stato (es. <code>'PREVENTIVO'</code>,
+<code>'SUPER_ADMIN'</code>, <code>'STANDARD'</code>, <code>'SISTEMA'</code>, <code>'EF'</code>), fermati e chiediti: <strong>sto confrontando
+contro <code>codice</code> (mutabile) o contro la chiave stabile?</strong></p>
+<p><strong>Antipattern (BUG_DUAL)</strong> — confronto logico contro la colonna mutabile:</p>
+<div class="highlight"><pre><span></span><code><span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">codice</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVENTIVO&#39;</span><span class="w">   </span><span class="c1">-- ❌ BUG latente (colonna mutabile)</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">codice_interno</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVENTIVO&#39;</span><span class="w">   </span><span class="c1">-- ✅ chiave immutabile</span>
+</code></pre></div>
+<p>È una classe <strong>diversa</strong> dal mislabel di alias (§6c): qui il valore <em>letto/filtrato</em> è proprio
+<code>codice</code>. Funziona <em>per caso</em> finché nessuno rinomina il <code>codice</code>; al primo rename → lookup a
+0 righe, state-machine che non risolve, documento che non si genera, <strong>in silenzio</strong>. ⚠️ Il
+guardrail di §6c (sugli alias) <strong>NON</strong> intercetta questo pattern: serve un controllo a parte,
+necessariamente euristico (<code>codice_fiscale</code>/<code>codice_iva</code>/<code>codice_articolo</code>/<code>codice_ba</code>/… sono
+usi legittimi di <code>codice</code>). Caso di studio completo: analisi-hardcoded-codice.md (<code>docs/it/dev/work-in-progress/analisi-hardcoded-codice.md</code>)
+(§3a 21 occorrenze BUG_DUAL bonificate).</p>
+<p><strong>Se la tabella NON espone <code>codice_interno</code></strong> (CANDIDATE_ADD_CI) — decisione, in quest'ordine:</p>
+<ol>
+<li><strong>Esiste già una chiave stabile per-design?</strong> Enum di <code>tipo</code> (es. <code>config.tipo_profilo_accesso</code>
+   valore <code>SUPER_ADMIN</code>), codici ISO (<code>code_iso2/3</code>, <code>currency_code</code>), altra colonna immutabile
+   documentata → <strong>usala</strong>, niente nuova colonna. (Caso reale: i guard anti-lockout SUPER_ADMIN
+   usano l'enum <code>tipo</code>, non un nuovo <code>codice_interno</code> — vedi analisi §10/#1.)</li>
+<li><strong>Altrimenti aggiungi <code>codice_interno</code></strong>: immutabile (il lock si <strong>auto-provisiona</strong> dal
+   runner per la sola presenza della colonna, §6b), backfill <code>= codice</code>, <code>UNIQUE</code> + <code>CHECK</code>
+   nonvuoto; migra i consumer e aggiorna il <strong>seed CSV</strong> (<code>codice_interno = codice</code>).</li>
+<li><strong>Tabella di infrastruttura / chiave-di-sistema non rinominabile</strong> → <strong>lock esplicito</strong> del
+   <code>codice</code> (riga in <code>dbops.automation_lock_columns</code>, <code>exec_mode=AUTO</code>), senza nuova colonna.</li>
+</ol>
+<blockquote>
+<p><strong>Regola pratica anti-duplicazione</strong>: NON introdurre un terzo identificatore se ne esiste già
+uno stabile. Aggiungere <code>codice_interno</code> ha senso quando la tabella ha <strong>solo</strong> <code>codice</code>
+mutabile ed è referenziata da logica/seed.</p>
+</blockquote>
+<hr />
 <h3 id="7-colonne-di-audit-e-log">7. Colonne di Audit e Log<a class="headerlink" href="#7-colonne-di-audit-e-log" title="Permanent link">&para;</a></h3>
 <p>Standardizzare i campi di auditing:</p>
 <div class="highlight"><pre><span></span><code><span class="n">date_insert</span><span class="w">    </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="k">TIME</span><span class="w"> </span><span class="k">ZONE</span>
@@ -7253,10 +7405,10 @@ restrittiva, il bug e' evidente subito.</strong> Mai il contrario.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.6e5f0216.min.js"></script>
+      <script src="../../assets/javascripts/bundle.ee611ef6.min.js"></script>
       
         <script src="../../assets/javascripts/mermaid.min.js"></script>
       
