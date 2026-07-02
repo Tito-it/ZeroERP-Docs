@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2498,6 +2500,8 @@
       
         
       
+        
+      
     
     
     
@@ -3333,6 +3337,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/uso-di-obsoleto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Mandare in pensione una voce di catalogo (obsoleto_dal)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
         
   
@@ -3383,10 +3414,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -3403,8 +3434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_31">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_32">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4950,6 +4981,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#filtro-asse-obsoleto_dal-selezione-per-il-nuovo-vs-storico" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Filtro asse <code>obsoleto_dal</code> (selezione per il nuovo vs storico)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#override-dichiarativi-per-tabelle-non-standard" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5029,13 +5071,17 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(rev 2026-05-20 — override dichiarativi via automation_overrides_cols)</p>
+<p>(rev 2026-06-30 — filtro asse <code>obsoleto_dal</code>; rev 2026-05-20 — override dichiarativi via automation_overrides_cols)</p>
 <p>La funzione <strong><code>dbops.fn_get_lookup_codici()</code></strong> fornisce una lista lookup uniforme
 (<code>id</code>, <code>codice</code>, <code>codice_interno</code>, <code>descrizione</code>, <code>attivo</code>) su tabelle di configurazione
-a bassa/media cardinalita', con ordinamento parametrico e filtro automatico su <code>attivo</code>.</p>
+a bassa/media cardinalita', con ordinamento parametrico e <strong>due filtri opzionali e
+introspettivi</strong>: su <code>attivo</code> (<code>p_attivo_only</code>) e su <code>obsoleto_dal</code> (<code>p_includi_obsoleti</code>).</p>
 <p>Supporta tabelle con chiavi non-standard (es. <code>codice_iso</code>, <code>iso_code</code>) tramite
 <strong>override dichiarativi</strong> in <code>dbops.automation_overrides_cols</code> — senza branch custom
 nel codice e senza modificare la struttura delle tabelle.</p>
+<p>I due filtri sono <strong>ortogonali</strong> e rispecchiano due assi distinti del catalogo:
+<code>attivo</code> = <em>"riferimento ancora valido"</em>; <code>obsoleto_dal</code> = <em>"selezionabile per il nuovo"</em>
+(vedi <code>reference_deprecabilita_catalogo_obsoleto_dal</code> e i brief deprecabilita catalogo).</p>
 <hr />
 <h3 id="parametri-di-input">Parametri di input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <table>
@@ -5070,7 +5116,7 @@ nel codice e senza modificare la struttura delle tabelle.</p>
 <td><code>p_attivo_only</code></td>
 <td>boolean</td>
 <td><code>true</code></td>
-<td>Se la tabella ha <code>attivo boolean</code>, applica <code>WHERE attivo IS TRUE</code>.</td>
+<td>Se la tabella ha <code>attivo boolean</code>, applica <code>attivo IS TRUE</code>.</td>
 </tr>
 <tr>
 <td><code>p_limit</code></td>
@@ -5083,6 +5129,12 @@ nel codice e senza modificare la struttura delle tabelle.</p>
 <td>integer</td>
 <td><code>0</code></td>
 <td>Offset per paginazione.</td>
+</tr>
+<tr>
+<td><code>p_includi_obsoleti</code></td>
+<td>boolean</td>
+<td><code>true</code></td>
+<td>Se la tabella ha <code>obsoleto_dal date</code> <strong>e</strong> il valore è <code>false</code>, esclude i record con <code>obsoleto_dal &lt;= CURRENT_DATE</code>. Default <code>true</code> = mostra tutto (vedi nota sotto).</td>
 </tr>
 </tbody>
 </table>
@@ -5100,7 +5152,49 @@ nel codice e senza modificare la struttura delle tabelle.</p>
 <li>Almeno una tra <code>codice</code>, <code>codice_interno</code> o un override dichiarativo deve essere presente.</li>
 <li><code>descrizione</code> obbligatoria.</li>
 <li><code>attivo</code> opzionale; se presente deve essere <code>boolean</code>.</li>
+<li><code>obsoleto_dal</code> opzionale; se presente deve essere <code>date</code> (altrimenti <code>E_LOOKUP_STRUTTURA_TABELLA_INVALIDA</code>).</li>
 </ul>
+<hr />
+<h3 id="filtro-asse-obsoleto_dal-selezione-per-il-nuovo-vs-storico">Filtro asse <code>obsoleto_dal</code> (selezione per il nuovo vs storico)<a class="headerlink" href="#filtro-asse-obsoleto_dal-selezione-per-il-nuovo-vs-storico" title="Permanent link">&para;</a></h3>
+<p><code>obsoleto_dal</code> separa <strong>"riferimento valido"</strong> (<code>attivo</code>, serve alle istanze già create) da
+<strong>"selezionabile per il nuovo"</strong>. La funzione lo rileva da sola via <code>pg_attribute</code>, esattamente
+come <code>attivo</code>: se la colonna <strong>non esiste</strong>, nessun filtro viene applicato e la lista è restituita
+intera (degradazione trasparente).</p>
+<table>
+<thead>
+<tr>
+<th><code>p_includi_obsoleti</code></th>
+<th>Comportamento (tabella con <code>obsoleto_dal</code>)</th>
+<th>Uso tipico</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>true</code> (<strong>default</strong>)</td>
+<td>mostra <strong>tutti</strong> i record, anche gli obsoleti</td>
+<td>letture <strong>storico/filtro</strong> (es. filtrare le pratiche per tipo, incluso un tipo ritirato)</td>
+</tr>
+<tr>
+<td><code>false</code></td>
+<td>esclude i record con <code>obsoleto_dal &lt;= CURRENT_DATE</code></td>
+<td><strong>selezione per il nuovo</strong> (tendine di creazione)</td>
+</tr>
+</tbody>
+</table>
+<p>Regole:</p>
+<ul>
+<li><code>obsoleto_dal IS NULL</code> → sempre selezionabile.</li>
+<li><code>obsoleto_dal &gt; CURRENT_DATE</code> → <strong>ritiro programmato</strong>: ancora selezionabile fino a quella data.</li>
+<li><code>obsoleto_dal &lt;= CURRENT_DATE</code> → escluso quando <code>p_includi_obsoleti = false</code>.</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>Asimmetria di default voluta</strong> rispetto a <code>p_attivo_only</code> (default <code>true</code> = <em>restringe</em>):
+qui il default <code>true</code> <strong>non</strong> restringe. Un default "nascondi obsoleti" cambierebbe in silenzio
+il comportamento di tutti i chiamatori esistenti (inclusi i contesti storico/filtro). La policy
+"nascondi nel nuovo" è quindi una scelta del <strong>chiamatore</strong> (passa <code>false</code>), non del DB.</p>
+<p>🛡️ La sola selezione <strong>nasconde</strong>; la <strong>difesa in profondità</strong> che <em>vieta</em> nuove istanze su un
+catalogo obsoleto è il guard <code>dbops.trgfn_child_requires_non_obsolete_parent</code>.</p>
+</blockquote>
 <hr />
 <h3 id="override-dichiarativi-per-tabelle-non-standard">Override dichiarativi per tabelle non-standard<a class="headerlink" href="#override-dichiarativi-per-tabelle-non-standard" title="Permanent link">&para;</a></h3>
 <p>Per tabelle che non hanno colonne <code>codice</code> o <code>codice_interno</code> ma hanno una chiave naturale stabile con nome diverso, aggiungere righe in <code>dbops.automation_overrides_cols</code>:</p>
@@ -5156,7 +5250,7 @@ attivo         boolean -- NULL se la tabella non ha colonna ‘attivo’
 <tr>
 <td><code>E_LOOKUP_STRUTTURA_TABELLA_INVALIDA</code></td>
 <td>456</td>
-<td><code>id</code> mancante / uuid / tipo non supportato; né <code>codice</code> né <code>codice_interno</code> né override; <code>descrizione</code> mancante; <code>attivo</code> non boolean</td>
+<td><code>id</code> mancante / uuid / tipo non supportato; né <code>codice</code> né <code>codice_interno</code> né override; <code>descrizione</code> mancante; <code>attivo</code> non boolean; <code>obsoleto_dal</code> non <code>date</code></td>
 </tr>
 </tbody>
 </table>
@@ -5172,6 +5266,15 @@ attivo         boolean -- NULL se la tabella non ha colonna ‘attivo’
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_lookup_codici</span><span class="p">(</span>
 <span class="w">    </span><span class="err">‘</span><span class="n">config</span><span class="p">.</span><span class="n">utilities</span><span class="err">’</span><span class="p">::</span><span class="n">regclass</span><span class="p">,</span><span class="w"> </span><span class="err">‘</span><span class="n">codice</span><span class="err">’</span><span class="p">,</span><span class="w"> </span><span class="err">‘</span><span class="k">DESC</span><span class="err">’</span><span class="p">,</span><span class="w"> </span><span class="k">false</span>
 <span class="p">);</span>
+
+<span class="c1">-- Selezione PER IL NUOVO: nasconde anche gli obsoleti (obsoleto_dal &lt;= oggi)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_lookup_codici</span><span class="p">(</span>
+<span class="w">    </span><span class="n">p_rel</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="err">‘</span><span class="n">pratiche</span><span class="p">.</span><span class="n">tipi_prestazione</span><span class="err">’</span><span class="p">::</span><span class="n">regclass</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_includi_obsoleti</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="k">false</span>
+<span class="p">);</span>
+
+<span class="c1">-- Filtro STORICO: mostra tutto, obsoleti inclusi (default)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_lookup_codici</span><span class="p">(</span><span class="err">‘</span><span class="n">pratiche</span><span class="p">.</span><span class="n">tipi_prestazione</span><span class="err">’</span><span class="p">::</span><span class="n">regclass</span><span class="p">);</span>
 
 <span class="c1">-- Paginato</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_get_lookup_codici</span><span class="p">(</span>

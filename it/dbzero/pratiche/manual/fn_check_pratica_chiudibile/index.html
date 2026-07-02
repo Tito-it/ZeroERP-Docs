@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2498,6 +2500,8 @@
       
         
       
+        
+      
     
     
     
@@ -3333,6 +3337,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/uso-di-obsoleto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Mandare in pensione una voce di catalogo (obsoleto_dal)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
         
   
@@ -3383,10 +3414,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -3403,8 +3434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_31">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_32">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4979,20 +5010,30 @@
 <p>👀 <strong>Vedi anche</strong></p>
 <p>Funzioni / oggetti collegati:</p>
 <p><a href="../fn_check_chiusura_pratica/">pratiche.fn_check_chiusura_pratica</a>
+<a href="../fn_pratica_flussi_aperti/">pratiche.fn_pratica_flussi_aperti</a>
 <a href="../trgfn_flussi_autochiusura_pratica/">pratiche.trgfn_flussi_autochiusura_pratica</a>
 <a href="../trgfn_flussi_guard_chiusura_prematura/">pratiche.trgfn_flussi_guard_chiusura_prematura</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p><code>fn_check_*</code> puro (no raise): risponde "la pratica e' <strong>chiudibile</strong>?", cioe' non
-resta alcun template <strong>obbligatorio bloccante</strong> (obbligatorio, non completato,
-ancora percorribile) secondo <code>fn_check_chiusura_pratica</code>.
-Il ramo morto di un bivio non blocca.</p>
+<p><code>fn_check_*</code> puro (no raise): risponde "la pratica e' <strong>chiudibile</strong>?", cioe' <strong>non ha
+piu' lavoro da fare</strong> (brief-db-chiusura-pratica-nessun-lavoro-pendente §2). Due leve
+data-driven, entrambe devono valere:</p>
+<ul>
+<li><strong>(a)</strong> nessun template <strong>obbligatorio bloccante</strong> (obbligatorio, non completato,
+  ancora percorribile) secondo <a href="../fn_check_chiusura_pratica/">fn_check_chiusura_pratica</a>.
+  Il ramo morto di un bivio non blocca;</li>
+<li><strong>(b)</strong> nessun <strong>flusso istanziato in stato non terminale</strong> (lavoro avviato pendente)
+  secondo <a href="../fn_pratica_flussi_aperti/">fn_pratica_flussi_aperti</a> — clausola <strong>D1</strong>.</li>
+</ul>
+<p>Lo stesso predicato e' usato dalla chiusura <strong>automatica</strong> e dalla chiusura <strong>manuale</strong>
+(via il guard di chiusura), cosi' non divergono.</p>
 <hr />
 <h3 id="firma">Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">fn_check_pratica_chiudibile</span><span class="p">(</span>
-<span class="w">    </span><span class="n">p_pratica_id</span><span class="w">          </span><span class="n">pratiche</span><span class="p">.</span><span class="n">pratiche</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
-<span class="w">    </span><span class="n">p_escludi_template_id</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">template_flussi</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">    </span><span class="n">p_pratica_id</span><span class="w">          </span><span class="n">pratiche</span><span class="p">.</span><span class="n">flussi</span><span class="p">.</span><span class="n">pratica_id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_escludi_template_id</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">template_flussi</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">p_escludi_flusso_id</span><span class="w">   </span><span class="n">pratiche</span><span class="p">.</span><span class="n">flussi</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="w">          </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">NULL</span>
 <span class="p">)</span>
 <span class="k">RETURNS</span><span class="w"> </span><span class="nb">boolean</span>
 <span class="k">LANGUAGE</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="k">STABLE</span>
@@ -5014,21 +5055,32 @@ Il ramo morto di un bivio non blocca.</p>
 <tr>
 <td><code>p_escludi_template_id</code></td>
 <td style="text-align: center;">NO</td>
-<td>Template da ignorare dal calcolo dei bloccanti</td>
+<td>Template da ignorare dalla clausola (a) bloccanti</td>
+</tr>
+<tr>
+<td><code>p_escludi_flusso_id</code></td>
+<td style="text-align: center;">NO</td>
+<td>Istanza da ignorare dalla clausola (b) flussi aperti</td>
 </tr>
 </tbody>
 </table>
-<p><code>p_escludi_template_id</code> serve al guard pre-completamento per escludere il <strong>flusso
-di chiusura stesso</strong> (non ancora COMPLETATO al momento del check): cosi' si valuta
-solo il resto del percorso obbligatorio.</p>
+<p>I due <code>p_escludi_*</code> servono al guard pre-completamento del <strong>flusso di chiusura</strong> (non
+ancora COMPLETATO al momento del check): si escludono il suo <strong>template</strong> dai bloccanti
+e la sua <strong>istanza</strong> dai flussi aperti, cosi' il flusso di chiusura non blocca sé stesso.</p>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Consumata da <a href="../trgfn_flussi_autochiusura_pratica/">trgfn_flussi_autochiusura_pratica</a>
-  (decide se chiudere) e da <a href="../trgfn_flussi_guard_chiusura_prematura/">trgfn_flussi_guard_chiusura_prematura</a>
+  (decide se auto-chiudere) e da <a href="../trgfn_flussi_guard_chiusura_prematura/">trgfn_flussi_guard_chiusura_prematura</a>
   (decide se ammettere il completamento del flusso di chiusura).</li>
+<li>La chiusura <strong>manuale</strong> applica lo stesso principio via
+  <a href="../trgfn_pratiche_guard_chiusura_flussi/">trgfn_pratiche_guard_chiusura_flussi</a>
+  (clausola a → err 485, clausola b → err 501).</li>
 <li>Funzione <code>STABLE</code>, pura: nessun effetto collaterale, nessun <code>RAISE</code>.</li>
-<li>Test: <code>db/pgtap/pratiche/test-autochiusura-pratica.sql</code>.</li>
+<li>La firma a 2 argomenti resta valida (i chiamanti pre-D1 continuano a funzionare: il
+  3° parametro ha default).</li>
+<li>Test: <code>db/pgtap/pratiche/test-chiusura-nessun-lavoro-pendente.sql</code> (bivio + D1) e
+  <code>test-autochiusura-pratica.sql</code> (modelli A/B).</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2498,6 +2500,8 @@
       
         
       
+        
+      
     
     
     
@@ -3333,6 +3337,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/uso-di-obsoleto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Mandare in pensione una voce di catalogo (obsoleto_dal)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
         
   
@@ -3383,10 +3414,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -3403,8 +3434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_31">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_32">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5072,6 +5103,15 @@ in <code>pratiche.template_flussi_handler_eventi</code> (esito-aware: scattano s
 l'handler <code>vendita.accetta_preventivo</code> che porta il preventivo ROOT collegato ad
 <code>ACCETTATO</code>. Sostituisce il vecchio endpoint dedicato M2: la FE chiama il
 completamento <strong>generico</strong> e il motore esegue l'azione di dominio.</p>
+<p><strong>Contesto d'azione al completamento (<code>meta</code>, 2026-06-30)</strong>: il body può includere un
+oggetto <code>meta</code> opzionale, inoltrato agli handler di evento <code>COMPLETATO</code> come <code>extra_meta</code>
+(fuso sopra <code>flussi.meta</code>, <strong>senza persisterlo</strong>: è input d'azione, non stato — le scelte
+durevoli le scrive l'handler sul dominio). È il canale con cui l'operatore passa i dati di
+processo che l'esito richiede. Esempio: l'accettazione del preventivo nel percorso pratica
+non usa più una politica neutra cablata: la FE apre il dialog di accettazione (modalità di
+fatturazione + competenza) al completamento di <code>APPROVAZIONE_CLIENTE</code>, e l'handler
+<code>vendita.accetta_preventivo</code> legge <code>meta.fatturazione_immediata</code> / <code>meta.competenza_mese</code> e
+li persiste sul preventivo (DIFFERITA senza competenza → <code>E_VENDITA_COMPETENZA_RICHIESTA</code>).</p>
 <p>La generazione automatica cross-pratica al completamento e' gestita dal trigger DB <code>trgfn_flussi_generazione</code>.</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
 <ul>
@@ -5080,15 +5120,27 @@ completamento <strong>generico</strong> e il motore esegue l'azione di dominio.<
 <li>Header: <code>Content-Type: application/json</code>, <code>Authorization: Bearer &lt;access_token&gt;</code></li>
 <li>Body:</li>
 <li><code>nuovo_stato</code> (string, <strong>obbligatorio</strong>) — codice_interno dello stato (es. <code>IN_CORSO</code>, <code>COMPLETATO</code>, <code>SOSPESO</code>, <code>ANNULLATO</code>)</li>
-<li><code>esito</code> (string, obbligatorio se <code>nuovo_stato = COMPLETATO</code>) — esito del flusso: <code>POSITIVO</code>, <code>NEGATIVO</code>, <code>PARZIALE</code>, <code>NON_APPLICABILE</code></li>
+<li><code>esito</code> (string, obbligatorio se <code>nuovo_stato = COMPLETATO</code>) — <code>codice_interno</code> dal
+    vocabolario <code>config.esiti_flussi_pratiche</code> (il FE lo alimenta via lookup generico,
+    whitelist 2026-07-02). Gli <strong>esiti di ramo</strong> (<code>MERCE_PRESENTE</code>, <code>SOLO_SERVIZI</code>) sono
+    calcolati dal dominio e <strong>non selezionabili da questo endpoint</strong> (guard
+    <code>require_esito_selezionabile_operatore</code> → <code>E_FLUSSO_VALIDATION</code>)</li>
 <li><code>note_esito</code> (string, opzionale) — note sull'esito</li>
+<li><code>meta</code> (object, opzionale) — <strong>contesto d'azione</strong> del completamento, inoltrato agli
+    handler di dominio su evento <code>COMPLETATO</code> (fuso sopra <code>flussi.meta</code>, <strong>non persistito</strong>
+    sul flusso). Usato quando l'esito richiede dati di processo: es. l'accettazione del
+    preventivo (<code>APPROVAZIONE_CLIENTE</code>/<code>POSITIVO</code>) riceve <code>{"fatturazione_immediata": bool,
+    "competenza_mese": "YYYY-MM-DD"|null}</code> che l'handler persiste <strong>sul preventivo</strong>.
+    Valido solo con <code>nuovo_stato = COMPLETATO</code> (instrada a <code>completa_flusso</code> /
+    <code>avvia_e_completa_flusso</code>); ignorato sugli altri stati.</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <h3 id="200">200:<a class="headerlink" href="#200" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 <ul>
-<li><code>400</code>: ownership mismatch (<code>E_FLUSSO_OWNERSHIP</code>), esito non valido (<code>E_FLUSSO_VALIDATION</code>), stato vuoto (<code>E_FLUSSO_VALIDATION</code>)</li>
+<li><code>400</code>: ownership mismatch (<code>E_FLUSSO_OWNERSHIP</code>), esito non valido o <strong>esito di ramo non
+  selezionabile manualmente</strong> (<code>E_FLUSSO_VALIDATION</code>), stato vuoto (<code>E_FLUSSO_VALIDATION</code>)</li>
 <li><code>401</code>: JWT mancante o non valido</li>
 <li><code>404</code>: flusso non trovato (<code>E_FLUSSO_NOT_FOUND</code>)</li>
 <li><code>409</code>: <strong>pratica terminale</strong> (<code>PRATICHE_TERMINALE_FLUSSO_NON_MODIFICABILE</code>, catalogo DB id 491): transizione/modifica di un flusso di una pratica <code>CHIUSA</code>/<code>ANNULLATA</code>. Guard <code>trg_flussi_a10_guard_pratica_terminale_ins_upd</code>.</li>
@@ -5100,7 +5152,15 @@ completamento <strong>generico</strong> e il motore esegue l'azione di dominio.<
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Ownership check prima di qualsiasi operazione; lo stato corrente del flusso (letto dal <code>get_flusso</code> di verifica) instrada il completamento (CONTESTUALE da <code>DA_ESEGUIRE</code> vs completamento da <code>IN_CORSO</code>).</li>
-<li>Se <code>nuovo_stato = COMPLETATO</code>, <code>esito</code> e' obbligatorio e deve essere uno tra: <code>POSITIVO</code>, <code>NEGATIVO</code>, <code>PARZIALE</code>, <code>NON_APPLICABILE</code> (validazione centralizzata in <code>pratiche_service._require_esito_valido</code>, costante <code>ESITI_FLUSSO_AMMESSI</code>).</li>
+<li>Se <code>nuovo_stato = COMPLETATO</code>, <code>esito</code> e' obbligatorio e deve esistere <strong>attivo</strong> nel
+  vocabolario <code>config.esiti_flussi_pratiche</code> (lettura DB in
+  <code>pratiche_service._require_esito_valido</code> — nessun mirror applicativo: un nuovo esito
+  seedato e' automaticamente valido). In piu', sul percorso operatore (questo endpoint)
+  l'esito deve essere un <strong>verdetto</strong> (<code>is_verdetto = true</code>): gli esiti di ramo
+  (<code>is_verdetto = false</code>, es. <code>MERCE_PRESENTE</code>/<code>SOLO_SERVIZI</code>, calcolati dal dominio via
+  <code>completa_step_pratica</code>) sono respinti dal guard <code>require_esito_selezionabile_operatore</code>
+  con errore parlante <code>E_FLUSSO_VALIDATION</code>. Il Select FE filtra alla fonte sul campo
+  <code>selezionabile_operatore</code> esposto dal lookup (derivato da <code>is_verdetto</code>).</li>
 <li>Se <code>nuovo_stato = COMPLETATO</code> e lo stato corrente è <code>DA_ESEGUIRE</code> (modalita CONTESTUALE), il servizio esegue <code>avvia_e_completa_flusso</code> (avvio + esito atomico); altrimenti <code>completa_flusso</code> da <code>IN_CORSO</code>.</li>
 <li>Se <code>nuovo_stato = IN_CORSO</code>, il servizio transiziona a <code>IN_CORSO</code> e, se il flusso ha un handler <strong>o</strong> <code>modalita_esito = AUTOMATICO</code>, lo completa con <code>esito_default</code> (vedi Contesto). L'utente acting è passato all'handler (<code>p_user</code> delle fn DB).</li>
 <li>Per qualsiasi altro stato, il servizio delega a <code>cambia_stato_flusso</code> con validazione stato non vuoto.</li>
@@ -5114,6 +5174,8 @@ completamento <strong>generico</strong> e il motore esegue l'azione di dominio.<
 <ul>
 <li><code>pratiche.flussi</code> (UPDATE stato_id, esito, note_esito)</li>
 <li><code>config.stati_flussi_pratiche</code> (risoluzione codice_interno → id)</li>
+<li><code>config.esiti_flussi_pratiche</code> (SELECT <code>attivo</code>, <code>is_verdetto</code> per la validazione
+  esito: esistenza + selezionabilita' operatore)</li>
 <li><code>pratiche.trgfn_flussi_generazione</code> (trigger su UPDATE per generazione automatica)</li>
 <li><code>pratiche.trgfn_flussi_autochiusura_pratica</code> (trigger su UPDATE→COMPLETATO: auto-chiusura pratica)</li>
 <li><code>pratiche.trgfn_flussi_guard_pratica_terminale</code> / <code>trgfn_flussi_guard_chiusura_prematura</code> (guard)</li>
@@ -5121,6 +5183,27 @@ completamento <strong>generico</strong> e il motore esegue l'azione di dominio.<
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
+<li>(2 luglio 2026) <strong>Esiti data-driven end-to-end (<code>is_verdetto</code>)</strong>: con il <code>Select</code> esiti
+  FE diventato data-driven dal vocabolario globale (<code>config.esiti_flussi_pratiche</code> aggiunta
+  alla whitelist del lookup generico core), serviva distinguere i <strong>verdetti</strong>
+  dell'operatore dagli <strong>esiti di ramo</strong> calcolati dal dominio (<code>MERCE_PRESENTE</code>/
+  <code>SOLO_SERVIZI</code>, bivio SMISTAMENTO — mai input utente). Risolto col riuso della colonna
+  <code>is_verdetto</code> (DEFAULT false fail-closed, team DB): il lookup espone
+  <code>selezionabile_operatore</code> derivato (il FE filtra il Select alla fonte), l'endpoint
+  respinge i non-verdetto via <code>require_esito_selezionabile_operatore</code> (repo iniettabile,
+  <code>E_FLUSSO_VALIDATION</code>), e la validazione di esistenza (<code>_require_esito_valido</code>) legge il
+  vocabolario a DB. <strong>Bonifica</strong>: eliminati i mirror hardcoded <code>ESITI_FLUSSO_AMMESSI</code> e
+  <code>ESITI_FLUSSO_RAMO</code> — una sola verità. I BB di dominio (<code>completa_step_pratica</code> →
+  <code>completa_flusso</code>) restano liberi di passare gli esiti di ramo. Chiude
+  <code>brief-db-esiti-flussi-selezionabilita.md</code> (opzione riuso, nessuna colonna nuova).</li>
+<li>(30 giugno 2026) <strong>Contesto d'azione <code>meta</code> al completamento</strong>: <code>completa_flusso</code> e
+  <code>avvia_e_completa_flusso</code> accettano un <code>meta</code> opzionale, inoltrato a
+  <code>dispatch_handler_eventi(..., extra_meta=meta)</code> e fuso sopra <code>flussi.meta</code> <strong>senza
+  persistenza</strong>. Abilita l'accettazione preventivo uniforme al programma standalone:
+  modalità di fatturazione + competenza scelte dall'operatore (non più politica neutra
+  cablata né <code>handler_params</code> sul CONFERMA). L'handler <code>vendita.accetta_preventivo</code> legge i
+  due valori da <code>meta</code> e li persiste sul preventivo; fallback retro-compatibile (meta assente
+  → politica neutra). Vedi <code>analisi-uniformita-pratica-preventivi.md</code> (Fase 1).</li>
 <li>(17 giugno 2026) <strong>Esito configurabile sullo step</strong> (colonne <code>template_flussi.modalita_esito</code>
   e <code>esito_default</code>, migration <code>20260617-01</code>/<code>-02</code>): <code>avvia_flusso</code> auto-completa con
   <code>esito_default</code> quando l'handler ritorna un risultato <strong>oppure</strong> <code>modalita_esito =

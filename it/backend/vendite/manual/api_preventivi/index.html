@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2498,6 +2500,8 @@
       
         
       
+        
+      
     
     
     
@@ -3333,6 +3337,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/uso-di-obsoleto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Mandare in pensione una voce di catalogo (obsoleto_dal)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
         
   
@@ -3383,10 +3414,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -3403,8 +3434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_31">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_32">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5207,6 +5238,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#14b-completa-smistamento-percorso-pratica-bivio-per-esito" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        14b. Completa smistamento (percorso pratica — bivio-per-esito)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#15-genera-pratica" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5222,6 +5264,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         16. Pratiche collegate
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16b-risoluzione-preventivo-root-percorso-pratica" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        16b. Risoluzione preventivo ROOT (percorso pratica)
       </span>
     </span>
   </a>
@@ -5649,10 +5702,13 @@ Smista a un <strong>ordine di vendita DRAFT</strong> <strong>solo le righe MERCE
   residuo su <strong>nessun</strong> ramo (<code>fn_preventivo_ha_residuo_ordine</code> +
   <code>fn_preventivo_ha_residuo_commessa</code>), il service transita ACCETTATO→EVASO
   (warning-tolerant al deploy parziale, come il gemello su push-commessa §13).</li>
-<li><strong>Percorso pratica</strong>: lo smistamento è orchestrato da <code>CONFERMA_VENDITA</code>
-  (handler <code>vendita.push_preventivo</code>), che chiama la stessa primitiva passando
-  <code>p_pratica_id</code> per l'aggancio <code>pratiche_sorgenti</code> (ordine <code>COLLEGATO</code>). Questo
-  endpoint è il percorso <strong>standalone</strong> (fuori-pratica, <code>p_pratica_id=NULL</code>).</li>
+<li><strong>Percorso pratica (bivio-per-esito rev.3)</strong>: lo smistamento merce si esegue da
+  qui (Pannello Smistamento); quando il preventivo è in una pratica, <strong>l'aggancio
+  dell'ordine</strong> come <code>pratiche_sorgenti</code> <code>COLLEGATO</code> avviene alla chiusura di
+  SMISTAMENTO via l'handler <strong>merce-only</strong> <code>post_smistamento</code> (esito
+  <code>MERCE_PRESENTE</code>), non da un orchestratore monolitico. Il vecchio
+  <code>CONFERMA_VENDITA</code> / <code>vendita.push_preventivo</code> è <strong>deprecato</strong> (solo tipi legacy
+  9002/9003). Vedi §14b (completa smistamento).</li>
 </ul>
 <blockquote>
 <p><strong>Offerta → ordine</strong>: non disponibile (l'offerta non ha righe materializzate,
@@ -5858,8 +5914,13 @@ db-brief-offerta-righe-espanse.md (<code>docs/it/dev/work-done/db-brief-offerta-
   (<code>fn_preventivo_ha_residuo_ordine</code> <strong>e</strong> <code>fn_preventivo_ha_residuo_commessa</code>
   entrambe false). Il check commessa non è ridondante: con <code>righe_ids</code>
   COMPLETATO si riferisce al solo sottoinsieme. Lo <strong>stesso gate</strong> vive anche
-  sul ramo ordine (<code>ordini_service.crea_ordine_da_preventivo</code>) e nel handler
-  pratica <code>CONFERMA_VENDITA</code>.</li>
+  sul ramo ordine (<code>ordini_service.crea_ordine_da_preventivo</code>).</li>
+<li><strong>Aggancio pratica (ramo servizi dello split, bivio rev.3)</strong>: se il preventivo
+  appartiene a una pratica, a push <code>COMPLETATO</code> la commessa-servizi viene legata
+  alla pratica come <code>pratiche_sorgenti</code> <strong>COLLEGATO</strong> (idempotente). È il punto
+  d'aggancio del ramo servizi: l'handler <code>post_smistamento</code> è <strong>merce-only</strong>, quindi
+  la commessa-servizi non passa da lì. No-op per i push standalone (preventivo non
+  in pratica).</li>
 <li>Output <code>200</code>: report orchestrator <code>{ stato, push_log_id, durata_ms, handlers,
   commesse_ids, righe_pushable, fatturazione_immediata }</code></li>
 <li>Errori: <code>E_PREV_STATO_TRANSIZIONE</code> (409), <code>E_PREV_NESSUNA_RIGA</code> (400)</li>
@@ -5902,6 +5963,45 @@ natura-aware il 2026-06-12: <code>vw_preventivi_smistamento</code> + <code>_righ
 <li>Errori: <code>E_PREV_NOT_FOUND</code> (404)</li>
 </ul>
 <hr />
+<h3 id="14b-completa-smistamento-percorso-pratica-bivio-per-esito">14b. Completa smistamento (percorso pratica — bivio-per-esito)<a class="headerlink" href="#14b-completa-smistamento-percorso-pratica-bivio-per-esito" title="Permanent link">&para;</a></h3>
+<p>Completa lo step <strong>SMISTAMENTO</strong> della pratica con un <strong>esito di RAMO calcolato dal
+dominio</strong> (<code>MERCE_PRESENTE</code> / <code>SOLO_SERVIZI</code>), <strong>non scelto dall'operatore</strong>. È il
+fix di PRA-0000225 (bivio-per-esito rev.3,
+brief-db-chiusura-pratica-nessun-lavoro-pendente.md (<code>docs/it/dev/work-done/brief-db-chiusura-pratica-nessun-lavoro-pendente.md</code>)):
+l'esito viene scritto nella <strong>stessa UPDATE</strong> che completa il flusso, così il check
+di chiusura template-based lo legge subito.</p>
+<ul>
+<li>Metodo: <code>POST</code></li>
+<li>Path: <code>/api/v1/vendite/preventivi/{id}/completa-smistamento/</code></li>
+<li>Auth: area <code>vendite</code>, <code>Idempotency-Key</code> obbligatoria</li>
+<li>Body JSON: <strong>nessuno</strong> (l'esito NON è un input: il FE <strong>sopprime il picker esiti</strong>
+  per SMISTAMENTO — <code>modalita_esito=MANUALE</code> a livello motore).</li>
+<li>View <code>ApiPreventivoCompletaSmistamento</code> → <code>preventivi_service.completa_smistamento</code>.</li>
+<li>Comportamento:</li>
+<li>risolve la pratica del preventivo (ROOT per-flusso) → <code>E_VENDITA_PREVENTIVO_NON_COLLEGATO</code> (422) se il preventivo non nasce da una pratica;</li>
+<li><strong>guard bi-ramo</strong>: nessun residuo su ORDINE né COMMESSA (<code>fn_preventivo_ha_residuo_ordine</code> / <code>_commessa</code>) → <code>E_VENDITA_SMISTAMENTO_NON_ESEGUITO</code> (422) se resta merce/servizi da smistare;</li>
+<li><strong>esito di ramo</strong>: <code>MERCE_PRESENTE</code> se dal preventivo è nato un ordine
+     (stesso lookup <code>documento_origine</code> dell'handler <code>post_smistamento</code>, così
+     l'handler troverà l'ordine da agganciare), altrimenti <code>SOLO_SERVIZI</code> — copre
+     anche il caso <strong>misto</strong> (c'è merce → <code>MERCE_PRESENTE</code>);</li>
+<li>completa (o avvia+completa se lo step è ancora <code>DA_ESEGUIRE</code>) delegando al BB
+     motore <code>pratiche_service.completa_step_pratica</code>.</li>
+<li>Effetto sul percorso pratica:</li>
+<li><strong><code>MERCE_PRESENTE</code></strong> → i flussi ordine <code>CONFERMA_ORDINE</code> (9013) e <code>INVIO_COMMESSA</code>
+    (9014) sono percorribili+obbligatori → la pratica <strong>resta APERTA</strong> finché non
+    completati; nasce anche il retro-aggancio dell'ordine (handler <code>post_smistamento</code>);</li>
+<li><strong><code>SOLO_SERVIZI</code></strong> → 9013/9014 sono <strong>ramo morto</strong> (non bloccano) → la pratica
+    <strong>si chiude subito</strong> (nessun lavoro pendente).</li>
+<li>Idempotente: se lo step è già terminale → no-op, <code>gia_completato=true</code>.</li>
+<li>Output <code>200</code>:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;preventivo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;pratica_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;flusso_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;esito&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MERCE_PRESENTE&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;gia_completato&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<ul>
+<li>Errori: <code>E_VENDITA_PREVENTIVO_NON_COLLEGATO</code> (422), <code>E_VENDITA_SMISTAMENTO_NON_ESEGUITO</code> (422), <code>E_PREV_VALIDAZIONE</code> (400, flusso SMISTAMENTO non istanziato).</li>
+</ul>
+<hr />
 <h3 id="15-genera-pratica">15. Genera pratica<a class="headerlink" href="#15-genera-pratica" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Metodo: <code>POST</code></li>
@@ -5926,6 +6026,26 @@ natura-aware il 2026-06-12: <code>vw_preventivi_smistamento</code> + <code>_righ
 <li>Path: <code>/api/v1/vendite/preventivi/{id}/pratiche/</code></li>
 <li>Output <code>200</code>: lista pratiche con codice, descrizione, stato, ruolo_link</li>
 <li>Regole: filtrata per <code>sorgente_tipo = 'PREVENTIVO_VENDITA'</code> per evitare match spuri</li>
+</ul>
+<hr />
+<h3 id="16b-risoluzione-preventivo-root-percorso-pratica">16b. Risoluzione preventivo ROOT (percorso pratica)<a class="headerlink" href="#16b-risoluzione-preventivo-root-percorso-pratica" title="Permanent link">&para;</a></h3>
+<p>Due endpoint di lettura che risolvono il preventivo ROOT agganciato a una pratica
+(<code>pratiche_sorgenti</code>, ruolo_link <code>ROOT</code>). Alimentano gli step del percorso che
+aprono lo stesso <code>PreventiviDrawer</code>. Ritornano <code>{"preventivo_id": &lt;id|null&gt;}</code>.</p>
+<ul>
+<li><strong>Per flusso</strong>: <code>GET /api/v1/vendite/preventivi/root-per-flusso/?flusso_id=&lt;id&gt;</code>
+  — ROOT agganciato a <strong>quel flusso</strong> (aggancio per-flusso). Usato dalla
+  riapertura del flusso PREVENTIVAZIONE (<code>azione_ui</code> APRI_PREVENTIVO): se il ROOT
+  esiste apre in EDIT, altrimenti CREATE. <code>flusso_id</code> obbligatorio
+  (<code>E_FLUSSO_ID_OBBLIGATORIO</code>).</li>
+<li><strong>Per pratica</strong>: <code>GET /api/v1/vendite/preventivi/root-per-pratica/?pratica_id=&lt;id&gt;</code>
+  — ROOT della <strong>pratica</strong> (non del flusso corrente). Usato dagli step <strong>a valle</strong>
+  (es. <code>azione_ui</code> SMISTAMENTO, flusso che non possiede il ROOT: agganciato a
+  monte da PREVENTIVAZIONE). <code>pratica_id</code> obbligatorio
+  (<code>E_PRATICA_ID_OBBLIGATORIO</code>). Il FE non apre in CREATE se ritorna <code>null</code>
+  (<code>requiresExisting</code>): lo step a valle richiede un preventivo già esistente.</li>
+<li>Lettura libera (area <code>vendite</code>); l'apertura del documento applica comunque RLS
+  sull'emittente.</li>
 </ul>
 <hr />
 <h3 id="17-contesto-pricing">17. Contesto pricing<a class="headerlink" href="#17-contesto-pricing" title="Permanent link">&para;</a></h3>

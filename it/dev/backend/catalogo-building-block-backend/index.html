@@ -387,6 +387,8 @@
       
         
       
+        
+      
     
     
     
@@ -2504,6 +2506,8 @@
       
         
       
+        
+      
     
     
     
@@ -3339,6 +3343,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../guide/uso-di-obsoleto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Mandare in pensione una voce di catalogo (obsoleto_dal)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
         
   
@@ -3389,10 +3420,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -3409,8 +3440,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_31">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_32">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4489,6 +4520,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pratiche-orchestrazione-percorso-appspratiche" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Pratiche — orchestrazione percorso (<code>apps/pratiche/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#mixin-e-tipi-appscore" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5452,6 +5494,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         UI — Personalizzazioni liste (<code>apps/ui/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pratiche-orchestrazione-percorso-appspratiche" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Pratiche — orchestrazione percorso (<code>apps/pratiche/</code>)
       </span>
     </span>
   </a>
@@ -7289,6 +7342,38 @@ ai domini funzionali).</p>
 <td><code>E_UI_GENERIC_FAILED</code></td>
 <td>400</td>
 <td>service (fallback DatabaseError ignote)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="pratiche-orchestrazione-percorso-appspratiche">Pratiche — orchestrazione percorso (<code>apps/pratiche/</code>)<a class="headerlink" href="#pratiche-orchestrazione-percorso-appspratiche" title="Permanent link">&para;</a></h2>
+<p>Building block del motore pratiche riusati dai domini (vendite) per completare gli
+step del percorso senza duplicare la logica percorso + idempotenza. Il dominio
+risolve la <em>propria</em> pratica dal proprio documento e delega la transizione al
+motore (direzione anelli: vendite→pratiche).</p>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>completa_step_pratica</code></td>
+<td><code>pratiche_service.py</code></td>
+<td><strong>BB orchestrazione dominio→motore (bivio-per-esito rev.3, estratto regola del 2).</strong> <code>(pratica_id, *, template_codice, esito, user=None)</code>: trova il flusso ISTANZIATO di <code>template_codice</code> nel percorso e lo completa <strong>idempotente</strong>. Ritorna <code>{flusso_id: id\|None, stato_precedente, completato: bool}</code>: <code>flusso_id=None</code> → step non istanziato (il caller decide se no-op o errore); <code>completato=False</code> con flusso_id valorizzato → step già terminale (no-op su ri-azione); <code>completato=True</code> → transizione fatta (avvia+completa se <code>DA_ESEGUIRE</code>, altrimenti completa). Caller: <code>preventivi_service.completa_smistamento</code> (SMISTAMENTO) + <code>ordini_service._completa_flusso_ordine_pratica</code> (CONFERMA_ORDINE/INVIO_COMMESSA).</td>
+</tr>
+<tr>
+<td><code>_STATI_FLUSSO_TERMINALI</code></td>
+<td><code>pratiche_service.py</code></td>
+<td>Costante <code>("COMPLETATO", "ANNULLATO")</code>: mirror applicativo fail-fast della derivazione data-driven DB (<code>fn_pratica_flussi_aperti</code> / <code>trgfn_flussi_guard_pratica_terminale</code>) per l'idempotenza degli auto-completamenti. La guard DB resta autoritativa.</td>
+</tr>
+<tr>
+<td><code>PraticheRepository.get_pratica_id_by_sorgente</code></td>
+<td><code>pratiche_repository.py</code></td>
+<td>Reverse di <code>upsert_pratica_sorgente</code>: risolve la pratica cui una sorgente è agganciata <code>(sorgente_codice, sorgente_uid, ruolo_link=None)</code> → <code>pratica_id\|None</code>. Usato per risalire alla pratica <strong>dall'ordine</strong> COLLEGATO (auto-completamento step 9013/9014).</td>
 </tr>
 </tbody>
 </table>

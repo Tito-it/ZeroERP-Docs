@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2498,6 +2500,8 @@
       
         
       
+        
+      
     
     
     
@@ -3333,6 +3337,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/uso-di-obsoleto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Mandare in pensione una voce di catalogo (obsoleto_dal)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
         
   
@@ -3383,10 +3414,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -3403,8 +3434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_31">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_32">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5004,6 +5035,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ordine-per-pratica-get-apiv1venditeordiniper-praticapratica_idid" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ordine per pratica <code>GET /api/v1/vendite/ordini/per-pratica/?pratica_>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#riepilogo-iva-get-apiv1venditeordiniidriepilogo-iva" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5414,6 +5456,16 @@ Ritorna <code>{id, uid, numero}</code>.</p>
 <code>non_editable_fields</code>, <code>stato_codice</code>, più <code>righe_count</code>. <em>(<code>can_conferma</code> non è
 più un flag: la conferma è un'entry di <code>available_actions</code>.)</em> 404
 (<code>E_ORD_NOT_FOUND</code>) se inesistente o fuori scope (RLS).</p>
+<h3 id="ordine-per-pratica-get-apiv1venditeordiniper-praticapratica_idid">Ordine per pratica <code>GET /api/v1/vendite/ordini/per-pratica/?pratica_id=&lt;id&gt;</code><a class="headerlink" href="#ordine-per-pratica-get-apiv1venditeordiniper-praticapratica_idid" title="Permanent link">&para;</a></h3>
+<p>Risolve l'ordine <strong>COLLEGATO</strong> a una pratica (<code>pratiche_sorgenti</code>, sorgente
+<code>ORDINE_VENDITA</code>, ruolo <code>COLLEGATO</code> — aggancio fatto dal <code>PostSmistamentoHandler</code>
+alla chiusura di SMISTAMENTO). Alimenta gli step a valle del percorso pratica
+(<code>azione_ui</code> CONFERMA_ORDINE / INVIO_COMMESSA), che aprono l'<code>OrdiniDrawer</code> su
+quell'ordine. Ritorna <code>{"ordine_id": &lt;id|null&gt;}</code> (<code>null</code> se nessun ordine
+agganciato — preventivo tutto-servizi). <code>pratica_id</code> obbligatorio
+(<code>E_PRATICA_ID_OBBLIGATORIO</code>). Lettura libera (area <code>vendite</code>). Se più ordini
+(consegne parziali, 1:N) ritorna il più recente. Gemello di
+<code>GET /vendite/preventivi/root-per-pratica/</code>.</p>
 <h3 id="riepilogo-iva-get-apiv1venditeordiniidriepilogo-iva">Riepilogo IVA <code>GET /api/v1/vendite/ordini/&lt;id&gt;/riepilogo-iva/</code><a class="headerlink" href="#riepilogo-iva-get-apiv1venditeordiniidriepilogo-iva" title="Permanent link">&para;</a></h3>
 <p>Riepilogo IVA aggregato dell'ordine: <strong>una riga per aliquota</strong> con <code>imponibile</code>,
 <code>imposta</code>, <code>arrotondamento</code>, <code>totale_riga</code> (più decodifiche <code>iva_codice</code>/
@@ -5481,6 +5533,14 @@ validate dal <strong>trigger guard DB</strong> <code>trgfn_ordini_guard_transizi
 (<code>E_ORDINE_CONFERMA_SENZA_RIGHE</code>); il service mantiene anche il guard applicativo
 <code>E_ORD_NESSUNA_RIGA</code> (defense-in-depth + messaggio). Le altre transizioni manuali
 (es. annulla) passano da <code>cambia-stato</code>.</p>
+<p><strong>Percorso pratica — auto-completamento step <code>CONFERMA_ORDINE</code> (9013, bivio rev.3):</strong>
+se l'ordine è <strong>COLLEGATO</strong> a una pratica, la conferma completa anche lo step
+<code>CONFERMA_ORDINE</code> con esito <code>POSITIVO</code>, <strong>nella stessa transazione</strong> (atomico:
+conferma + completamento). Sblocca <code>INVIO_COMMESSA</code> (prereq <code>POSITIVO</code>). Riusa
+l'azione standalone (la pratica orchestra, non decide al posto dell'operatore);
+delega al BB motore <code>pratiche_service.completa_step_pratica</code>, <strong>idempotente</strong>
+(no-op se lo step è già terminale o l'ordine non nasce da una pratica). L'<code>user</code>
+del JWT è propagato per l'audit del completamento.</p>
 <h3 id="cambia-stato-post-apiv1venditeordiniidcambia-stato">Cambia stato <code>POST /api/v1/vendite/ordini/&lt;id&gt;/cambia-stato/</code><a class="headerlink" href="#cambia-stato-post-apiv1venditeordiniidcambia-stato" title="Permanent link">&para;</a></h3>
 <p>Transizione di stato <strong>generica data-driven</strong> (es. annulla <code>DRAFT→ANNULLATO</code>).
 Body: <code>stato_codice</code> (= <code>target_state</code> dell'azione da <code>available_actions</code>).
@@ -5502,6 +5562,13 @@ l'autorizzazione delle attività generate. Il ponte vive in
 <code>pr_run_commesse_push_one</code> e vale per ogni percorso (preventivi standalone,
 ordini, handler pratica; il batch <code>pr_run_commesse_push</code> lo applica
 best-effort per commessa con errori in <code>emittibilita_errors</code>).</p>
+<p><strong>Percorso pratica — auto-completamento step <code>INVIO_COMMESSA</code> (9014, bivio rev.3):</strong>
+a push <code>COMPLETATO</code>, se l'ordine è <strong>COLLEGATO</strong> a una pratica, si completa anche
+lo step <code>INVIO_COMMESSA</code> con esito <code>POSITIVO</code>. È lo step <strong>terminale</strong> del ramo
+merce: completandolo (nessun altro flusso aperto, obbligatori fatti) la pratica
+<strong>si auto-chiude</strong> (chiusura data-driven del motore). Stesso BB
+<code>pratiche_service.completa_step_pratica</code> (idempotente, no-op fuori-pratica); gated
+su push <code>COMPLETATO</code> (PARZIALE/ERRORE non completano lo step). <code>user</code> JWT propagato.</p>
 <p>La response espone <code>commesse_ids</code> (commesse toccate dal push), oltre a
 <code>stato</code>/<code>push_log_id</code>/<code>handlers</code>/<code>righe_pushable</code>/<code>fatturazione_trigger</code>.</p>
 <h3 id="righe">Righe<a class="headerlink" href="#righe" title="Permanent link">&para;</a></h3>

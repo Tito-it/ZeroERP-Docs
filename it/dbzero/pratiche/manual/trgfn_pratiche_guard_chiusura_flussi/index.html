@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2498,6 +2500,8 @@
       
         
       
+        
+      
     
     
     
@@ -3333,6 +3337,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/uso-di-obsoleto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Mandare in pensione una voce di catalogo (obsoleto_dal)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
         
   
@@ -3383,10 +3414,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -3403,8 +3434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_31">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_32">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5001,12 +5032,23 @@
 <p>👀 <strong>Vedi anche</strong></p>
 <p>Funzioni collegate:</p>
 <p><a href="../fn_check_chiusura_pratica/">pratiche.fn_check_chiusura_pratica</a>
+<a href="../fn_pratica_flussi_aperti/">pratiche.fn_pratica_flussi_aperti</a>
 <a href="../trgfn_pratiche_guard_transizione/">pratiche.trgfn_pratiche_guard_transizione</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Guard di <strong>chiusura pratica rispetto ai flussi obbligatori</strong> (decisione D4): blocca la transizione a <code>CHIUSA</code> se esistono template <code>obbligatorio = true</code> non completati e <strong>ancora percorribili</strong>. Prima di questo guard la chiusura era governata solo dalla matrice transizioni: una pratica poteva chiudere con step obbligatori mai eseguiti.</p>
-<p>Il <strong>ramo morto</strong> di un bivio (prerequisito esito-aware non piu' soddisfacibile per l'esito preso dal predecessore) <strong>non blocca</strong>: la pratica chiude regolarmente con rami obbligatori mai percorsi, purche' non percorribili.</p>
+<p>Guard di <strong>chiusura pratica</strong>: blocca la transizione a <code>CHIUSA</code> quando la pratica ha
+<strong>ancora lavoro da fare</strong>. Due condizioni, entrambe verificate:</p>
+<ul>
+<li><strong>(a)</strong> template <code>obbligatorio = true</code> non completati e <strong>ancora percorribili</strong>
+  (<code>fn_check_chiusura_pratica</code>, decisione D4). Il <strong>ramo morto</strong> di un bivio
+  (prerequisito esito-aware non piu' soddisfacibile) <strong>non blocca</strong>.</li>
+<li><strong>(b)</strong> flussi <strong>istanziati</strong> in stato <strong>non terminale</strong>
+  (<a href="../fn_pratica_flussi_aperti/">fn_pratica_flussi_aperti</a>, clausola <strong>D1</strong>): anche uno
+  step <strong>opzionale</strong> avviato e lasciato aperto impedisce la chiusura.</li>
+</ul>
+<p>E' lo <strong>stesso predicato</strong> dell'auto-chiusura (<code>fn_check_pratica_chiudibile</code>): chiusura
+manuale e automatica non divergono.</p>
 <hr />
 <h3 id="trigger-associato">Trigger associato<a class="headerlink" href="#trigger-associato" title="Permanent link">&para;</a></h3>
 <table>
@@ -5027,12 +5069,18 @@
 </tr>
 </tbody>
 </table>
-<p>Fase <code>_a10_</code>. Convive con <code>trg_pratiche_a10_guard_transizione_upd</code> (matrice transizioni): questo guard valida il <em>contenuto</em> della pratica, quello la <em>legalita'</em> della transizione.</p>
+<p>Fase <code>_a10_</code>. Convive con <code>trg_pratiche_a10_guard_transizione_upd</code> (matrice transizioni):
+questo guard valida il <em>contenuto</em> della pratica, quello la <em>legalita'</em> della transizione.
+Fra i due <code>_a10_</code> scatta <strong>prima</strong> (ordine alfabetico) → l'errore di contenuto prevale.</p>
 <hr />
 <h3 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Scatta solo alla <strong>transizione</strong> di stato verso <code>CHIUSA</code> (altri stati passano: <code>ANNULLATA</code> resta libera — si annulla anche una pratica a meta').</li>
-<li>Interroga <code>fn_check_chiusura_pratica(NEW.id)</code>: se esistono righe <code>bloccante = true</code>, solleva errore con l'elenco dei codici template.</li>
+<li>Scatta solo alla <strong>transizione</strong> di stato verso <code>CHIUSA</code> (<code>ANNULLATA</code> resta libera —
+   si annulla anche una pratica a meta').</li>
+<li>Clausola (a): <code>fn_check_chiusura_pratica(NEW.id)</code> con righe <code>bloccante = true</code> →
+   errore con l'elenco dei codici template.</li>
+<li>Clausola (b): <code>fn_pratica_flussi_aperti(NEW.id)</code> non vuota → errore con l'elenco dei
+   flussi aperti (codice + stato).</li>
 </ol>
 <hr />
 <h3 id="errori-sollevati">⚠️ Errori sollevati<a class="headerlink" href="#errori-sollevati" title="Permanent link">&para;</a></h3>
@@ -5046,16 +5094,25 @@
 <tbody>
 <tr>
 <td><code>PRATICHE_CHIUSURA_FLUSSI_OBBLIGATORI_MANCANTI</code> (485)</td>
-<td>Transizione a CHIUSA con flussi obbligatori non completati ancora percorribili. Placeholder: elenco codici template bloccanti</td>
+<td>Transizione a CHIUSA con obbligatori non completati ancora percorribili. Placeholder: codici template bloccanti</td>
+</tr>
+<tr>
+<td><code>PRATICHE_CHIUSURA_FLUSSI_APERTI</code> (501)</td>
+<td>Transizione a CHIUSA con flussi istanziati non terminali. Placeholder: elenco flussi aperti (codice/stato)</td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>I tipi prestazione <strong>senza</strong> template obbligatori non sono interessati (il guard e' un no-op).</li>
-<li>La catena PREVENTIVI (tutti gli step <code>obbligatorio = true</code>) chiude solo a giro completo — comportamento voluto.</li>
-<li>Test: <code>db/pgtap/pratiche/test-bivi-condizionali.sql</code> (chiusura bloccata con obbligatorio percorribile; chiusura ammessa con ramo morto).</li>
+<li>I tipi prestazione <strong>senza</strong> obbligatori e <strong>senza</strong> flussi aperti non sono
+  interessati (guard no-op).</li>
+<li><strong>Via d'uscita</strong> per la clausola (b): portare i flussi opzionali rimasti aperti ad
+  <code>ANNULLATO</code> (transizione <code>DA_ESEGUIRE/IN_CORSO → ANNULLATO</code>), poi ripetere la chiusura.</li>
+<li>La catena PREVENTIVI (bivio: step obbligatori-su-ramo) chiude solo a giro completo del
+  ramo attivo; il ramo morto non vincola — comportamento voluto.</li>
+<li>Test: <code>db/pgtap/pratiche/test-chiusura-nessun-lavoro-pendente.sql</code> (chiusura manuale
+  bloccata con flusso opzionale aperto; sbloccata dopo annullamento).</li>
 </ul>
 
 

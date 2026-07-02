@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2498,6 +2500,8 @@
       
         
       
+        
+      
     
     
     
@@ -3333,6 +3337,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/uso-di-obsoleto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Mandare in pensione una voce di catalogo (obsoleto_dal)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
         
   
@@ -3383,10 +3414,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -3403,8 +3434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_31">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_32">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5006,10 +5037,10 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>Il <strong>flusso di chiusura</strong> (<code>template_flussi.chiude_pratica</code>) e' lo step che chiude la
-pratica: non puo' essere completato finche' restano <strong>altri obbligatori bloccanti</strong>.
-Coerente col guard di chiusura della pratica, evita che l'auto-chiusura conseguente
-fallisca (e quindi un rollback della transazione di completamento).</p>
+<p>Il <strong>flusso "di chiusura"</strong> (<code>template_flussi.chiude_pratica</code>) e' lo step che chiude la
+pratica: non puo' essere completato finche' la pratica <strong>non e' chiudibile</strong>. Coerente
+col guard di chiusura della pratica; evita che l'auto-chiusura conseguente fallisca (e
+quindi un rollback della transazione di completamento).</p>
 <hr />
 <h3 id="trigger-associato">Trigger associato<a class="headerlink" href="#trigger-associato" title="Permanent link">&para;</a></h3>
 <table>
@@ -5038,8 +5069,10 @@ fallisca (e quindi un rollback della transazione di completamento).</p>
 <li>Scatta solo alla <strong>transizione</strong> di stato verso <code>COMPLETATO</code>.</li>
 <li>Solo se il template del flusso ha <code>chiude_pratica = true</code>.</li>
 <li>Ammette il completamento <strong>sse</strong> <a href="../fn_check_pratica_chiudibile/">fn_check_pratica_chiudibile</a>
-   <strong>escludendo il template di chiusura stesso</strong> (non ancora COMPLETATO): se restano
-   altri obbligatori bloccanti → errore parlante.</li>
+   <strong>escludendo il flusso di chiusura stesso</strong> — il suo <strong>template</strong> dai bloccanti
+   (clausola a) e la sua <strong>istanza</strong> (<code>NEW.id</code>) dai flussi aperti (clausola b, D1): il
+   flusso, ancora <code>IN_CORSO</code> in <code>BEFORE</code>, non deve contare né bloccare sé stesso. Se
+   <code>false</code> → errore parlante.</li>
 </ol>
 <hr />
 <h3 id="errori-sollevati">⚠️ Errori sollevati<a class="headerlink" href="#errori-sollevati" title="Permanent link">&para;</a></h3>
@@ -5053,23 +5086,20 @@ fallisca (e quindi un rollback della transazione di completamento).</p>
 <tbody>
 <tr>
 <td><code>PRATICHE_CHIUSURA_FLUSSO_PREMATURO</code> (492)</td>
-<td>Completamento del flusso di chiusura con altri obbligatori ancora bloccanti</td>
+<td>Completamento del flusso di chiusura con altri obbligatori bloccanti o altri flussi ancora aperti</td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Il flusso di chiusura va eseguito <strong>per ultimo</strong>: completare prima (o rendere non
-  percorribili) gli altri obbligatori.</li>
-<li>Test: <code>db/pgtap/pratiche/test-autochiusura-pratica.sql</code>.</li>
+<li>Il flusso di chiusura va eseguito <strong>per ultimo</strong>: completare (o annullare) prima gli
+  altri obbligatori e chiudere i flussi aperti.</li>
+<li>L'esclusione per <strong>istanza</strong> (<code>p_escludi_flusso_id = NEW.id</code>) e' ciò che consente al
+  flusso di chiusura di completarsi senza che la clausola (b) di D1 lo veda come "flusso
+  aperto": senza di essa il completamento fallirebbe sempre.</li>
+<li>Test: <code>db/pgtap/pratiche/test-autochiusura-pratica.sql</code> (modello B).</li>
 </ul>
-<hr />
-<div style="text-align: center; margin-top: 2rem;">
-  <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
-  <br>
-  <strong>&copy; 2025-2026 Zero ERP</strong> <em><strong>&bull; powered by Tid &bull;</strong></em>
-</div>
 
 
 

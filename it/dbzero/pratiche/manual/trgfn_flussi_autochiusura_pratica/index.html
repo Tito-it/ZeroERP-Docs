@@ -383,6 +383,8 @@
       
         
       
+        
+      
     
     
     
@@ -2498,6 +2500,8 @@
       
         
       
+        
+      
     
     
     
@@ -3333,6 +3337,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/uso-di-obsoleto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Mandare in pensione una voce di catalogo (obsoleto_dal)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/processi-pgagent-funzionali/" class="md-nav__link">
         
   
@@ -3383,10 +3414,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_31" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
         
           
-          <label class="md-nav__link" for="__nav_7_31" id="__nav_7_31_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
             
   
   
@@ -3403,8 +3434,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_31_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_31">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_32">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4991,6 +5022,7 @@
 <p>Funzioni / oggetti collegati:</p>
 <p><a href="../flussi/">pratiche.flussi</a>
 <a href="../fn_check_pratica_chiudibile/">pratiche.fn_check_pratica_chiudibile</a>
+<a href="../fn_pratica_flussi_aperti/">pratiche.fn_pratica_flussi_aperti</a>
 <a href="../trgfn_flussi_guard_chiusura_prematura/">pratiche.trgfn_flussi_guard_chiusura_prematura</a>
 <a href="../trgfn_pratiche_guard_chiusura_flussi/">pratiche.trgfn_pratiche_guard_chiusura_flussi</a></p>
 </blockquote>
@@ -5030,8 +5062,9 @@ ma in automatico al completamento dei flussi. Al passaggio di un flusso a
 <li>Tipo prestazione <strong>con flusso di chiusura</strong> (<code>template_flussi.chiude_pratica</code>):
    chiude <strong>sse</strong> il flusso completato e' quello.</li>
 <li>Tipo prestazione <strong>senza flusso di chiusura ma con ≥1 obbligatorio</strong>: chiude
-   <strong>sse</strong> <a href="../fn_check_pratica_chiudibile/">fn_check_pratica_chiudibile</a> (nessun
-   obbligatorio bloccante).</li>
+   <strong>sse</strong> <a href="../fn_check_pratica_chiudibile/">fn_check_pratica_chiudibile</a> — predicato
+   <strong>D1</strong>: nessun obbligatorio bloccante <strong>e</strong> nessun flusso istanziato aperto (escluso
+   <code>NEW.id</code>, gia' terminale).</li>
 <li>Tipo <strong>senza obbligatori e senza flusso di chiusura</strong>: <strong>no-op</strong> (nessun percorso
    di chiusura deterministico — la pratica resta APERTA).</li>
 <li>La chiusura e' un <code>UPDATE pratiche → CHIUSA</code> che riusa i guard transizione/chiusura
@@ -5043,11 +5076,13 @@ ma in automatico al completamento dei flussi. Al passaggio di un flusso a
 <ul>
 <li>La <code>UPDATE</code> chiude solo se la pratica e' ancora APERTA (sicurezza concorrenza).</li>
 <li>Nessuna ricorsione: l'UPDATE su <code>pratiche</code> non riscrive <code>flussi</code>.</li>
-<li>Conseguenza del punto 5 (decisione D3): un tipo prestazione senza percorso di
-  chiusura non si chiude mai in automatico; e' responsabilita' di configurazione
-  prevedere obbligatori o un flusso di chiusura.</li>
-<li>Test: <code>db/pgtap/pratiche/test-autochiusura-pratica.sql</code> (+ regressione bivi in
-  <code>test-bivi-condizionali.sql</code>).</li>
+<li><strong>Resta AFTER (eager), niente deferral (D2 scartato)</strong>: i rami condizionali si
+  modellano come <strong>bivio-per-esito</strong> (obbligatori-su-ramo via prerequisito esito-aware),
+  cosi' il predicato template-based blocca <strong>prima</strong> che serva creare istanze a valle.
+  Se un flusso a valle venisse creato su pratica gia' chiusa, il guard pratica-terminale
+  fallisce in modo <strong>rumoroso</strong> (err 490): rete fail-safe che rende inutile il deferral.</li>
+<li>Test: <code>db/pgtap/pratiche/test-autochiusura-pratica.sql</code> (modelli A/B) e
+  <code>test-chiusura-nessun-lavoro-pendente.sql</code> (bivio + D1).</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
