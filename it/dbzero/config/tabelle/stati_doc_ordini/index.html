@@ -4970,6 +4970,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#proiezione-stato-di-dominio-mappa-dichiarata" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Proiezione stato di dominio (mappa dichiarata)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#regole-operative" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5035,6 +5046,80 @@ operativo dell'ordine, dalla bozza fino all'evasione o chiusura.</p>
 <li>**Identita<code>stato**:</code>id<code>,</code>codice<code>,</code>codice_interno`.</li>
 <li><strong>Ordine</strong>: <code>ordine</code> per rappresentare la progressione del flusso ordine.</li>
 <li><strong>Governance</strong>: <code>attivo</code>, <code>meta</code>.</li>
+<li><strong>Proiezione stato di dominio</strong> (D1, brief <code>brief-db-proiezione-stato-dominio</code>):
+  <code>fase</code>, <code>esito</code>, <code>terminale</code> — mappa dichiarata dal dominio, consumata via
+  <code>vendite.vw_stato_sorgente_ordine</code> → <code>script.vw_stato_sorgente</code>.</li>
+</ul>
+<hr />
+<h3 id="proiezione-stato-di-dominio-mappa-dichiarata">Proiezione stato di dominio (mappa dichiarata)<a class="headerlink" href="#proiezione-stato-di-dominio-mappa-dichiarata" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th><code>codice_interno</code></th>
+<th><code>fase</code></th>
+<th><code>esito</code></th>
+<th><code>terminale</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DRAFT</code></td>
+<td><code>APERTO</code></td>
+<td>—</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>CONFERMATO</code></td>
+<td><code>IN_CORSO</code></td>
+<td>—</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>ALLOCATO</code></td>
+<td><code>IN_CORSO</code></td>
+<td>—</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>SPEDITO</code></td>
+<td><code>IN_CORSO</code></td>
+<td>—</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>CONSEGNATO</code></td>
+<td><code>IN_CORSO</code></td>
+<td>—</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>EVASO</code></td>
+<td><code>CHIUSO</code></td>
+<td><code>POSITIVO</code></td>
+<td>sì</td>
+</tr>
+<tr>
+<td><code>FATTURATO</code></td>
+<td><code>CHIUSO</code></td>
+<td><code>POSITIVO</code></td>
+<td>sì</td>
+</tr>
+<tr>
+<td><code>ANNULLATO</code></td>
+<td><code>CHIUSO</code></td>
+<td><code>NEGATIVO</code></td>
+<td>sì</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>fase</code> NOT NULL con CHECK sui 4 valori; <code>esito</code> = verdetto (<code>is_verdetto=true</code>, guard
+  <code>trg_stati_doc_ordini_a10_guard_esito_verdetto_ins_upd</code>) o NULL; <code>terminale ⇒ CHIUSO</code>.</li>
+<li>⚠️ <strong>Mappa centrata sul ciclo di VENDITA.</strong> La tabella e<code>**condivisa** con</code>acquisti.ordini<code>(trigger di deattivazione su entrambi), ma il resolver della
+  proiezione legge solo</code>vendite.ordini<code>(sorgente</code>ORDINE_VENDITA<code>). Un eventuale futuro
+  resolver per l'ordine di **acquisto** dovra</code> validare che questa mappa calzi la sua
+  semantica (es. <code>FATTURATO</code> come terminale/positivo puo` non valere per un acquisto) o
+  valutare lo split della tabella.</li>
 </ul>
 <hr />
 <h3 id="regole-operative">Regole operative<a class="headerlink" href="#regole-operative" title="Permanent link">&para;</a></h3>

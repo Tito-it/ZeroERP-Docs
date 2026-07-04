@@ -5053,6 +5053,25 @@
 <li>La regola di <strong>ripetibilita'</strong> (D3) governa quante istanze dello stesso template possono nascere nella stessa pratica: enforcement a DB nel guard <code>trg_flussi_a10_guard_ripetibilita_ins</code> (<a href="../../funzioni/fn_check_ripetibilita_flusso/">fn_check_ripetibilita_flusso</a>).</li>
 <li>L'<strong>obbligatorieta'</strong> vincola la chiusura della pratica (D4): un template <code>obbligatorio = true</code> non completato e ancora percorribile blocca la transizione a CHIUSA (<a href="../../funzioni/fn_check_chiusura_pratica/">fn_check_chiusura_pratica</a>). Il ramo morto di un bivio non blocca.</li>
 <li>La <strong>chiusura guidata dal workflow</strong> (<code>chiude_pratica</code>): la pratica si chiude in automatico al completamento dei flussi, non con un'azione manuale. Se il tipo prestazione ha un template <code>chiude_pratica = true</code> (il "flusso di chiusura", max uno per tipo), la pratica passa a CHIUSA al completamento di quel flusso (<a href="../../funzioni/trgfn_flussi_autochiusura_pratica/">trgfn_flussi_autochiusura_pratica</a>); altrimenti, se il tipo ha almeno un obbligatorio, si auto-chiude quando non restano obbligatori bloccanti. Un tipo senza obbligatori e senza flusso di chiusura non ha un percorso di chiusura deterministico (non si chiude).</li>
+<li>Ogni template appartiene a una <strong>edizione di workflow</strong> (<code>definizione_id</code> →
+  <a href="../workflow_definizioni/">workflow_definizioni</a>): il set di template di
+  un'edizione E' la definizione. In assenza di valore esplicito, l'INSERT si
+  aggancia al preset del tipo (<a href="../trgfn_template_flussi_default_definizione/">auto-default</a>).</li>
+<li>L'<strong>asse esito</strong> (<code>modalita_esito</code>/<code>esito_default</code>) governa come lo step ottiene
+  l'esito e quale classe di esito e' ammessa al completamento — invarianti config-time
+  in <a href="../trgfn_template_flussi_guard_modalita_esito/">trgfn_template_flussi_guard_modalita_esito</a>,
+  guard runtime in <a href="../trgfn_flussi_guard_esito_classe/">trgfn_flussi_guard_esito_classe</a>.</li>
+<li><strong>Immutabilità strutturale «Leggera» (strategia C)</strong>: se l'edizione di appartenenza è
+  un <strong>fork già emesso</strong> (<code>emittente_fiscale_id</code> valorizzato, stato PUBBLICATA o RITIRATA)
+  la struttura è protetta — <code>INSERT</code>/<code>UPDATE</code> di template e figli <strong>vietati</strong> (UPDATE del
+  solo <code>descrizione</code> ammesso). Il <code>DELETE</code> è vietato <strong>solo</strong> su <strong>PUBBLICATA</strong> (in uso):
+  una <strong>RITIRATA</strong> resta <strong>cancellabile</strong> (housekeeping) pur non essendo modificabile.
+  Errore <code>TEMPLATE_DEFINIZIONE_CONGELATA</code> (514). Il <strong>preset</strong> (emittente NULL) e le
+  <code>BOZZA</code> restano liberamente editabili.
+  Guard: <a href="../trgfn_template_flussi_guard_immutabile/">trgfn_template_flussi_guard_immutabile</a>
+  e <a href="../trgfn_template_flussi_figli_guard_immutabile/">trgfn_template_flussi_figli_guard_immutabile</a>;
+  predicati <a href="../fn_check_definizione_struttura_bloccata/">fn_check_definizione_struttura_bloccata</a>
+  (INSERT/UPDATE) e <a href="../fn_check_definizione_congelata/">fn_check_definizione_congelata</a> (DELETE).</li>
 </ul>
 <hr />
 <h3 id="colonne-specifiche">Colonne specifiche<a class="headerlink" href="#colonne-specifiche" title="Permanent link">&para;</a></h3>
@@ -5092,12 +5111,31 @@
 <td><code>azione_ui_id</code></td>
 <td>INTEGER nullable, FK → <a href="../../tabelle/azioni_ui/"><code>pratiche.azioni_ui</code></a>. NULL = nessuna attivita' interattiva offerta dal flusso. NOT NULL = il frontend offre il lancio dell'attivita' dichiarata (es. APRI_PREVENTIVO). Specchio FE di <code>handler_id</code>.</td>
 </tr>
+<tr>
+<td><code>modalita_esito</code></td>
+<td>VARCHAR(20) CHECK (MANUALE, AUTOMATICO, CONTESTUALE, DOMINIO) DEFAULT 'MANUALE'. Come lo step ottiene l'esito: MANUALE = form esito; AUTOMATICO = avvia+completa con <code>esito_default</code> (solo INTERNA); CONTESTUALE = default pre-selezionato confermato in un'unica azione; <strong>DOMINIO</strong> = esito calcolato da un BB di dominio (es. SMISTAMENTO → <code>vendite.completa_smistamento</code>), nessuna scelta operatore, al completamento solo esiti di ramo <code>is_verdetto=false</code> (guard 504).</td>
+</tr>
+<tr>
+<td><code>esito_default</code></td>
+<td>VARCHAR(20) nullable, FK → <code>config.esiti_flussi_pratiche(codice_interno)</code>. Obbligatorio per AUTOMATICO/CONTESTUALE (Inv1, 494) e deve essere un verdetto (Inv4, 506); <strong>vietato</strong> con DOMINIO (Inv3, 505).</td>
+</tr>
+<tr>
+<td><code>definizione_id</code></td>
+<td>INTEGER NOT NULL. Edizione di workflow di appartenenza (<a href="../workflow_definizioni/">workflow_definizioni</a>); default automatico al preset del tipo. FK <strong>composita</strong> con <code>tipo_prestazione_id</code> → coerenza tipo per costruzione.</td>
+</tr>
 </tbody>
 </table>
 <hr />
 <h3 id="vincoli">Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>UQ composito</strong>: <code>(tipo_prestazione_id, codice)</code> — codice univoco per tipo_prestazione.</li>
+<li><strong>UQ per-definizione</strong>: <code>uq_template_flussi_definizione_codice (definizione_id, codice)</code> —
+  il codice e' il contratto stabile dei BB runtime dentro l'edizione (contratto C5);
+  <code>uq_template_flussi_chiusura_definizione (definizione_id) WHERE chiude_pratica</code> = max un
+  <code>chiude_pratica</code> per edizione.</li>
+<li>I vecchi vincoli <strong>per-tipo</strong> (<code>uq_pratiche_template_flussi_tipo_codice</code>,
+  <code>uq_template_flussi_chiusura</code>) sono stati <strong>rimossi in Fase 2</strong> (<code>20260703-05</code>): con le
+  edizioni versionate un tipo puo' avere piu' definizioni (preset + fork + versioni) con
+  gli <strong>stessi codici</strong>, quindi i vincoli per-tipo diventerebbero errati.</li>
 <li><strong>CHECK direzione</strong>: solo valori ENTRATA, USCITA, INTERNA.</li>
 <li><strong>CHECK ripetibilita</strong>: solo valori MAI, SE_NON_POSITIVO, SEMPRE.</li>
 <li><strong>FK handler_id nullable</strong>: NULL = step manuale, NOT NULL = step automatizzato.</li>

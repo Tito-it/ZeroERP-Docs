@@ -5116,7 +5116,7 @@
 <li><code>stato_id</code> = APERTA</li>
 <li><code>pratica_padre_id</code> = pratica sorgente (fix-2)</li>
 <li><code>flusso_origine_id</code> = <code>p_flusso_id</code></li>
-<li><strong>Flusso iniziale (fix-3)</strong>: se la regola dichiara <code>template_flusso_dest_id</code>, crea il primo flusso della figlia in <code>DA_ESEGUIRE</code> con la <code>sequenza</code> del template. Il template destinazione deve essere <strong>senza prerequisiti</strong> (la figlia nasce vuota): in caso contrario il guard prerequisiti fa fallire la generazione — fail-fast voluto, e' un errore di seed della regola.</li>
+<li><strong>Flusso iniziale (fix-3) — definizione-aware (D2-8, Fase 1)</strong>: se la regola dichiara <code>template_flusso_dest_id</code>, crea il primo flusso della figlia in <code>DA_ESEGUIRE</code>. Il template destinazione <strong>non</strong> viene usato per id: la regola punta a un template del <strong>preset</strong>, ma la figlia potrebbe essere pinnata a un'edizione diversa (fork). Si legge quindi il <strong>codice</strong> del template dichiarato e lo si <strong>rimappa</strong> all'id reale dentro la <strong>definizione pinnata della figlia</strong> (<code>tf2.definizione_id = figlia.definizione_id AND tf2.codice = codice_regola</code>); la <code>sequenza</code> viene dal template rimappato. In Fase 1 (nessun fork) risolve allo stesso id del preset → no-op comportamentale; serve perché il flusso soddisfi il guard <a href="../trgfn_flussi_guard_definizione/">trgfn_flussi_guard_definizione</a> (508) anche in presenza di fork. Il template destinazione deve essere <strong>senza prerequisiti</strong> (la figlia nasce vuota): altrimenti il guard prerequisiti fa fallire la generazione (errore di seed della regola).</li>
 <li><strong>Ritorna</strong> l'ID della pratica (nuova o esistente).</li>
 </ol>
 <hr />
@@ -5144,6 +5144,10 @@
 <tr>
 <td><code>E_CODICE</code></td>
 <td>Stato APERTA (pratiche) o DA_ESEGUIRE (flussi) non configurato</td>
+</tr>
+<tr>
+<td><code>GENERAZIONE_TEMPLATE_NON_IN_DEFINIZIONE</code> (512)</td>
+<td>Il template destinazione (per codice) non esiste nella definizione pinnata della figlia (es. fork che ha rimosso quello step) — fail-fast D2-8</td>
 </tr>
 </tbody>
 </table>

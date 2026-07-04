@@ -5051,7 +5051,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>La funzione <strong><code>pratiche.fn_check_chiusura_pratica</code></strong> e' una <strong>pure check</strong> (<code>fn_check_*</code>) che fotografa i template flusso della pratica ai fini della <strong>chiusura</strong> (decisione D4, analisi-pratiche-workflow-v2): per ogni template attivo del tipo prestazione dice se e' stato eseguito, se e' ancora percorribile e se <strong>blocca</strong> la transizione a <code>CHIUSA</code>.</p>
+<p>La funzione <strong><code>pratiche.fn_check_chiusura_pratica</code></strong> e' una <strong>pure check</strong> (<code>fn_check_*</code>) che fotografa i template flusso della pratica ai fini della <strong>chiusura</strong> (decisione D4, analisi-pratiche-workflow-v2): per ogni template attivo della <strong>definizione pinnata</strong> della pratica (<code>definizione_id</code>, <strong>fork-aware</strong>) dice se e' stato eseguito, se e' ancora percorribile e se <strong>blocca</strong> la transizione a <code>CHIUSA</code>.</p>
 <p>E' anche la fonte BE per la <strong>resa del percorso a bivi</strong>: da <code>completato</code>/<code>percorribile</code> si deriva lo stato visuale di ogni step (completato / eseguibile / <strong>ramo chiuso</strong>).</p>
 <hr />
 <h3 id="firma-della-funzione">Firma della funzione<a class="headerlink" href="#firma-della-funzione" title="Permanent link">&para;</a></h3>
@@ -5115,9 +5115,10 @@
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Consumata da <code>trgfn_pratiche_guard_chiusura_flussi</code> (guard sulla transizione a CHIUSA) e dal percorso BE.</li>
+<li>Consumata da <code>trgfn_pratiche_guard_chiusura_flussi</code> (guard sulla transizione a CHIUSA), da <code>fn_check_pratica_chiudibile</code> (delega per il predicato "nessun obbligatorio bloccante", quindi anche auto-chiusura e guard pre-completamento) e dal percorso BE.</li>
+<li><strong>Fork-aware</strong> (<code>20260703-13</code>, completamento Fase 1): scopa i template per <code>definizione_id</code> pinnata, <strong>non</strong> per <code>tipo_prestazione_id</code>. Con i fork (Fase 2) piu' definizioni condividono il tipo: una pratica considera solo gli step della <strong>sua</strong> edizione. Con una definizione per tipo il comportamento e' identico a prima.</li>
 <li>Le istanze <code>ANNULLATO</code> non contano come eseguite.</li>
-<li>Test: <code>db/pgtap/pratiche/test-bivi-condizionali.sql</code>.</li>
+<li>Test: <code>db/pgtap/pratiche/test-bivi-condizionali.sql</code>, <code>db/pgtap/pratiche/test-fork-chiusura-per-definizione.sql</code>.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

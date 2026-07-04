@@ -5059,13 +5059,13 @@ ma in automatico al completamento dei flussi. Al passaggio di un flusso a
 <ol>
 <li>Scatta solo alla <strong>transizione</strong> di stato verso <code>COMPLETATO</code>.</li>
 <li>Solo da pratica <strong>APERTA</strong> (SOSPESA/BOZZA/terminale non si auto-chiudono).</li>
-<li>Tipo prestazione <strong>con flusso di chiusura</strong> (<code>template_flussi.chiude_pratica</code>):
+<li><strong>Definizione pinnata con flusso di chiusura</strong> (<code>template_flussi.chiude_pratica</code>):
    chiude <strong>sse</strong> il flusso completato e' quello.</li>
-<li>Tipo prestazione <strong>senza flusso di chiusura ma con ≥1 obbligatorio</strong>: chiude
+<li><strong>Definizione pinnata senza flusso di chiusura ma con ≥1 obbligatorio</strong>: chiude
    <strong>sse</strong> <a href="../../manual/fn_check_pratica_chiudibile/">fn_check_pratica_chiudibile</a> — predicato
    <strong>D1</strong>: nessun obbligatorio bloccante <strong>e</strong> nessun flusso istanziato aperto (escluso
    <code>NEW.id</code>, gia' terminale).</li>
-<li>Tipo <strong>senza obbligatori e senza flusso di chiusura</strong>: <strong>no-op</strong> (nessun percorso
+<li><strong>Definizione senza obbligatori e senza flusso di chiusura</strong>: <strong>no-op</strong> (nessun percorso
    di chiusura deterministico — la pratica resta APERTA).</li>
 <li>La chiusura e' un <code>UPDATE pratiche → CHIUSA</code> che riusa i guard transizione/chiusura
    e il <strong>giornale</strong> esistenti: l'evento <code>STATO_CAMBIATO</code> e' registrato come per la
@@ -5081,8 +5081,16 @@ ma in automatico al completamento dei flussi. Al passaggio di un flusso a
   cosi' il predicato template-based blocca <strong>prima</strong> che serva creare istanze a valle.
   Se un flusso a valle venisse creato su pratica gia' chiusa, il guard pratica-terminale
   fallisce in modo <strong>rumoroso</strong> (err 490): rete fail-safe che rende inutile il deferral.</li>
-<li>Test: <code>db/pgtap/pratiche/test-autochiusura-pratica.sql</code> (modelli A/B) e
-  <code>test-chiusura-nessun-lavoro-pendente.sql</code> (bivio + D1).</li>
+<li><strong>Fork-aware</strong> (<code>20260703-14</code>, completamento Fase 1): il flusso di chiusura (regola 3) e
+  il gate obbligatori (regola 4) sono scopati per <code>definizione_id</code> <strong>pinnata</strong> della pratica,
+  <strong>non</strong> per <code>tipo_prestazione_id</code>. Con i fork (Fase 2) piu' definizioni condividono il tipo
+  e l'unique <code>uq_template_flussi_chiusura_definizione</code> garantisce <strong>un</strong> <code>chiude_pratica</code> per
+  definizione: senza il fix la SELECT del template di chiusura leggeva piu' righe (pick
+  arbitrario) e il gate contava obbligatori di edizioni diverse. Con una definizione per tipo
+  il comportamento e' identico a prima.</li>
+<li>Test: <code>db/pgtap/pratiche/test-autochiusura-pratica.sql</code> (modelli A/B),
+  <code>test-chiusura-nessun-lavoro-pendente.sql</code> (bivio + D1) e
+  <code>test-fork-chiusura-per-definizione.sql</code> (isolamento fork: due definizioni stesso tipo).</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

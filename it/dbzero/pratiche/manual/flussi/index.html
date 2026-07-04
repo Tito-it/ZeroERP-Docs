@@ -5046,6 +5046,7 @@
 <ul>
 <li>Ogni pratica ha uno o piu' flussi che ne compongono il workflow.</li>
 <li>I flussi con <code>template_flusso_id NOT NULL</code> sono istanze di template configurati; quelli con <code>NULL</code> sono step manuali (bypassano i guard prerequisiti e ripetibilita').</li>
+<li>Il template del flusso deve appartenere alla <strong>stessa edizione di workflow</strong> pinnata dalla pratica (<code>definizione_id</code>): guard <a href="../trgfn_flussi_guard_definizione/">trgfn_flussi_guard_definizione</a> BEFORE INSERT (508). Coerenza pin↔step del versionamento (V6).</li>
 <li>Al completamento (transizione stato → COMPLETATO), l'<code>esito</code> viene registrato e puo' attivare la <strong>generazione cross-pratica</strong> (se esistono regole matching con <code>auto = true</code>).</li>
 <li>I <strong>prerequisiti</strong> (configurati in <code>template_flussi_prerequisiti</code>, esito-aware) sono verificati dal trigger guard BEFORE INSERT: e' il meccanismo che esprime anche i <strong>bivi condizionali</strong> (D4).</li>
 <li>La <strong>ripetibilita'</strong> (<code>template_flussi.ripetibilita</code>, D3) e' verificata dal guard BEFORE INSERT <code>trg_flussi_a10_guard_ripetibilita_ins</code>: governa quante istanze dello stesso template possono nascere nella stessa pratica (l'ultima istanza = <code>MAX(id)</code>, escluse le ANNULLATO).</li>
@@ -5074,7 +5075,7 @@
 </tr>
 <tr>
 <td><code>esito</code></td>
-<td>VARCHAR(20) CHECK (POSITIVO, NEGATIVO, PARZIALE, NON_APPLICABILE). Registrato al completamento.</td>
+<td>VARCHAR(20), FK → <code>config.esiti_flussi_pratiche(codice_interno)</code> (dal <code>20260701-02</code>, non più CHECK). Registrato al completamento; la <strong>classe</strong> ammessa (verdetto vs esito di ramo) dipende dalla <code>modalita_esito</code> del template — guard <a href="../trgfn_flussi_guard_esito_classe/">trgfn_flussi_guard_esito_classe</a> (504).</td>
 </tr>
 <tr>
 <td><code>note_esito</code></td>
@@ -5089,7 +5090,8 @@
 <hr />
 <h3 id="vincoli-e-regole">Vincoli e regole<a class="headerlink" href="#vincoli-e-regole" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>CHECK esito</strong>: solo POSITIVO, NEGATIVO, PARZIALE, NON_APPLICABILE.</li>
+<li><strong>FK esito</strong>: <code>config.esiti_flussi_pratiche(codice_interno)</code>; la classe (verdetto/ramo) è vincolata al completamento in base alla <code>modalita_esito</code> del template (guard 504).</li>
+<li><strong>Guard definizione</strong> (Fase 1): BEFORE INSERT, il template deve appartenere alla definizione pinnata dalla pratica (508).</li>
 <li><strong>Guard prerequisiti</strong> (DB-5): BEFORE INSERT verifica che tutti i prerequisiti del template siano completati.</li>
 <li><strong>Generazione cross-pratica</strong> (DB-5): AFTER UPDATE, se stato → COMPLETATO, cerca regole matching e genera pratiche.</li>
 <li><strong>FK differita</strong>: la FK <code>pratiche.flusso_origine_id → flussi.id</code> e' definita in questo changeSet perche' crea una dipendenza circolare (pratiche → flussi → pratiche).</li>

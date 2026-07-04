@@ -5030,6 +5030,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#proiezione-stato-di-dominio-mappa-dichiarata" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Proiezione stato di dominio (mappa dichiarata)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5131,12 +5142,6 @@ sovrascritture).</p>
 <td><strong>true</strong></td>
 <td>Bozza annullata prima dell'attivazione — terminale</td>
 </tr>
-<tr>
-<td><code>SOSPESO</code></td>
-<td>—</td>
-<td>false</td>
-<td>Esiste ma fuori scope operativo attuale</td>
-</tr>
 </tbody>
 </table>
 <hr />
@@ -5155,6 +5160,52 @@ sovrascritture).</p>
 <li><strong>Attivazione</strong>: <code>ATTIVO</code> — contratto operativo, resolver pricing attivo, lock post-attivazione.</li>
 <li><strong>Chiusura ordinaria</strong>: <code>CESSATO</code> — scadenza automatica (job notturno) o cessazione manuale.</li>
 <li><strong>Annullamento bozza</strong>: <code>ANNULLATO</code> — bozza non ancora attivata; non blocca nuovi contratti sulla stessa quadrupla.</li>
+</ul>
+<hr />
+<h3 id="proiezione-stato-di-dominio-mappa-dichiarata">Proiezione stato di dominio (mappa dichiarata)<a class="headerlink" href="#proiezione-stato-di-dominio-mappa-dichiarata" title="Permanent link">&para;</a></h3>
+<p>Mappa D1 (brief <code>brief-db-proiezione-stato-dominio</code>) consumata via
+<code>vendite.vw_stato_sorgente_contratto</code> → <code>script.vw_stato_sorgente</code>:</p>
+<table>
+<thead>
+<tr>
+<th><code>codice_interno</code></th>
+<th><code>fase</code></th>
+<th><code>esito</code></th>
+<th><code>terminale</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DRAFT</code></td>
+<td><code>APERTO</code></td>
+<td>—</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>ATTIVO</code></td>
+<td><code>IN_CORSO</code></td>
+<td>—</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>CESSATO</code></td>
+<td><code>CHIUSO</code></td>
+<td><code>POSITIVO</code></td>
+<td>sì</td>
+</tr>
+<tr>
+<td><code>ANNULLATO</code></td>
+<td><code>CHIUSO</code></td>
+<td><code>NEGATIVO</code></td>
+<td>sì</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>fase</code> NOT NULL con CHECK sui 4 valori; <code>esito</code> = verdetto (<code>is_verdetto=true</code>, guard
+  <code>trg_stati_doc_contratti_a10_guard_esito_verdetto_ins_upd</code>) o NULL; <code>terminale ⇒ CHIUSO</code>.</li>
+<li><code>terminale</code> <strong>non sostituisce</strong> <code>is_abortito</code>: <code>CESSATO</code> è terminale ma non abortito;
+  <code>ANNULLATO</code> è entrambi. Sono assi distinti (§decisione E del brief).</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

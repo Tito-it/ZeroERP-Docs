@@ -5056,6 +5056,11 @@
 <h3 id="ruolo-nel-processo">Ruolo nel processo<a class="headerlink" href="#ruolo-nel-processo" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Ogni pratica ha un <strong>tipo_prestazione</strong> che ne determina i template flussi disponibili.</li>
+<li>La pratica <strong>pinna l'edizione di workflow</strong> alla creazione (<code>definizione_id</code> →
+  <a href="../../manual/workflow_definizioni/">workflow_definizioni</a>, auto-pin
+  <a href="../../manual/trgfn_pratiche_default_definizione/">trgfn_pratiche_default_definizione</a>: edizione
+  PUBBLICATA dell'emittente &gt; preset) e la tiene per sempre — le modifiche future alle
+  definizioni non cambiano la roadmap delle pratiche in volo.</li>
 <li>Lo <strong>stato</strong> governa le transizioni del ciclo di vita (BOZZA → APERTA → CHIUSA). La transizione a <strong>CHIUSA</strong> e' inoltre vincolata ai flussi obbligatori percorribili non completati (guard <code>trg_pratiche_a10_guard_chiusura_flussi_upd</code>, D4 — il ramo morto di un bivio non blocca).</li>
 <li>Il <strong>contesto anagrafico</strong> a due rami (<code>soggetto_id</code> → <code>soggetto_ruolo_id</code> <strong>oppure</strong> <code>soggetto_id</code> → <code>istanza_utility_id</code>) classifica la pratica nelle lenti canoniche D1: RUOLO / ISTANZA / SOGGETTO / INTERNA (tutti NULL). Lettura canonica: <a href="../../funzioni/fn_lista_pratiche_per_contesto/">fn_lista_pratiche_per_contesto</a>; coerenza garantita da <code>trgfn_pratiche_guard_contesto</code>.</li>
 <li>L'<strong>assegnazione</strong> (risorsa umana / unita' organizzativa) definisce chi lavora la pratica — ortogonale al contesto cliente (le pratiche interne sono "contesto vuoto + assegnazione", D2).</li>
@@ -5075,6 +5080,10 @@
 <tr>
 <td><code>emittente_fiscale_id</code></td>
 <td>BIGINT NOT NULL. FK a <code>anagrafiche.emittenti_fiscali</code> — identita' fiscale che gestisce la pratica.</td>
+</tr>
+<tr>
+<td><code>definizione_id</code></td>
+<td>INTEGER NOT NULL. <strong>Pin</strong> dell'edizione di workflow (<a href="../../manual/workflow_definizioni/">workflow_definizioni</a>), risolto alla creazione dall'auto-pin e mai aggiornato (immutabilita' enforce-ata dal guard di Fase 1). FK <strong>composita</strong> con <code>tipo_prestazione_id</code> → coerenza tipo per costruzione.</td>
 </tr>
 <tr>
 <td><code>soggetto_id</code></td>
@@ -5189,6 +5198,11 @@
 <tr>
 <td><code>fk_pratiche_canale_origine</code></td>
 <td><code>config.canali_pratiche(id)</code></td>
+<td>NO ACTION</td>
+</tr>
+<tr>
+<td><code>fk_pratiche_definizione</code> (composita: <code>definizione_id, tipo_prestazione_id</code>)</td>
+<td><code>pratiche.workflow_definizioni(id, tipo_prestazione_id)</code></td>
 <td>NO ACTION</td>
 </tr>
 </tbody>
