@@ -5021,22 +5021,21 @@
 <p>👀 <strong>Vedi anche</strong></p>
 <p>Approfondimento tabelle e funzioni:</p>
 <p><a href="../../tabelle/contratti/">vendite.contratti</a>
-<a href="../../tabelle/commesse_attivita/">vendite.commesse_attivita</a>
 <a href="../../../config/tabelle/stati_doc_contratti/">config.stati_doc_contratti</a>
-<a href="../../../config/tabelle/sorgenti/">config.sorgenti</a>
-<a href="../../funzioni/fn_list_contratti_da_pushare/">vendite.fn_list_contratti_da_pushare</a> (predicato gemello)</p>
-<p>Union e aggregata:</p>
+<a href="../../funzioni/fn_list_contratti_da_pushare/">vendite.fn_list_contratti_da_pushare</a></p>
+<p>Union e stock:</p>
 <p><a href="../../manual/vw_dash_fatturazione_documenti/">vw_dash_fatturazione_documenti</a>
-<a href="../../manual/vw_dash_fatturazione_mensile/">vw_dash_fatturazione_mensile</a></p>
+<a href="../../manual/vw_dash_aperto_documenti/">vw_dash_aperto_documenti</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 03-07-2026)
-Resolver dell'area <strong>CONTRATTI</strong> per la Dashboard Fatturazione
-(brief-design-dashboard-fatturazione §5, Fase 1): una riga per <strong>contratto vivo ×
-mese coperto dalla validità</strong>, <strong>a conteggi</strong> (decisione D-3: il canone mensile
-atteso non è un campo pronto — v2). Risponde alla domanda operativa: <em>"per il mese
-M, quali contratti non hanno ancora generato il canone?"</em></p>
+<p>(latest review 07-07-2026)
+Resolver dell'area <strong>CONTRATTI</strong> per la famiglia dash fatturazione / Situazione
+aperta (brief <code>brief-db-situazione-aperta</code> SA-1, decisione <strong>DL-12</strong>): <strong>una riga
+per contratto vivo</strong>, <strong>de-esplosa</strong> (fino al 2026-07-07 era una riga per
+contratto × mese coperto — l'asse mensile serviva alla 5-card, dismessa).
+Area <strong>a conteggi</strong> (D-3), con <strong>giudizio di transito SOSPESO</strong> finché non
+esiste il push ricorrente dei canoni.</p>
 <hr />
 <h3 id="semantica">Semantica<a class="headerlink" href="#semantica" title="Permanent link">&para;</a></h3>
 <table>
@@ -5048,50 +5047,56 @@ M, quali contratti non hanno ancora generato il canone?"</em></p>
 </thead>
 <tbody>
 <tr>
-<td>Mesi generati</td>
-<td><code>generate_series</code> da <code>valido_dal</code> fino a <code>LEAST(valido_al, mese corrente)</code> — <strong>cap al mese corrente</strong>: la domanda ha senso solo per mesi non futuri, e i contratti aperti (<code>valido_al NULL</code>) non esplodono</td>
+<td>Grana</td>
+<td>1 riga per contratto con <code>esito IS DISTINCT FROM 'NEGATIVO'</code> (D-6 alla fonte)</td>
 </tr>
 <tr>
-<td>Transito nel mese M</td>
-<td><code>EXISTS</code> attività con sorgente <code>CONTRATTO</code> (<code>config.sorgenti.codice_interno</code>, mai id letterale), <code>sorgente_uid = uid::text</code>, <code>competenza_mese = M</code>, <code>stato_emissione = 'EMESSA'</code></td>
+<td><strong>Giudizio sospeso (DL-12)</strong></td>
+<td><code>is_transitato</code> / <code>unita_transitate</code> / <code>motivo_fermo</code> = <strong>NULL</strong> — non "fermo", non "transitato": senza push ricorrente ogni contratto risulterebbe fermo in eterno (falso-allarme perenne). La bozza resta leggibile da <code>fase</code>/<code>stato_codice_interno</code></td>
 </tr>
 <tr>
-<td>Contratti abortiti</td>
-<td>Esclusi a monte (<code>esito = 'NEGATIVO'</code>, es. ANNULLATO): per quest'area <code>n_abortiti = 0</code> in v1</td>
+<td><code>competenza_mese</code></td>
+<td><code>NULL</code> (senza asse mese non ha significato)</td>
 </tr>
 <tr>
-<td><code>motivo_fermo</code></td>
-<td><code>DOC_BOZZA</code> (DRAFT) · <code>CANONE_NON_GENERATO</code></td>
+<td><code>data_riferimento</code></td>
+<td><code>valido_dal</code> = "in essere da"</td>
+</tr>
+<tr>
+<td>Valori</td>
+<td><code>NULL</code> (area a conteggi, D-3); <code>unita_totali = 1</code></td>
 </tr>
 <tr>
 <td><code>cliente_display</code></td>
-<td>Ragione sociale intestatario BA (<code>billing_account → soggetto_ruolo → soggetti</code>, path <code>vw_contratti_lista</code>), nullable</td>
+<td>Ragione sociale intestatario BA (<code>billing_account → soggetto_ruolo → soggetti</code>), nullable</td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Contratti senza canone generato per il mese corrente.</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">stato_codice</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Stock contratti vivi per fase.</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">fase</span><span class="p">,</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_dash_fatturazione_contratti</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">competenza_mese</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">date_trunc</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">CURRENT_DATE</span><span class="p">)::</span><span class="nb">date</span>
-<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">motivo_fermo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;CANONE_NON_GENERATO&#39;</span><span class="p">;</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">fase</span><span class="p">;</span>
 </code></pre></div>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Non interrogarla dal BE</strong>: il backend passa da
-  <code>vw_dash_fatturazione_documenti</code> / <code>vw_dash_fatturazione_mensile</code> (layering).</li>
-<li>⚠️ <strong>Push ricorrente non ancora esistente</strong>: oggi <code>fn_list_contratti_da_pushare</code>
-  ancora il canone al <strong>mese di inizio validità</strong> (<code>segment_key
-  'CONTR:&lt;uid&gt;:R:&lt;riga&gt;:M:YYYY-MM'</code>, nessuna iterazione mensile). Nei mesi successivi
-  i contratti attivi appariranno <code>CANONE_NON_GENERATO</code>: è la <strong>realtà operativa</strong>,
-  la dashboard non la maschera. Il predicato su <code>sorgente_* + competenza_mese</code> è già
-  pronto per il futuro push ricorrente.</li>
-<li>L'<code>EXISTS</code> è assistito da <code>ix_commesse_attivita_sorgente_competenza</code>
-  (90_end <code>20260703-58</code>).</li>
+  <code>vw_dash_fatturazione_documenti</code> (drill-down) / <code>vw_dash_aperto_*</code> (stock).</li>
+<li><strong>Backlog (Lente 2)</strong>: i contratti <strong>non vi compaiono</strong> (<code>motivo_fermo NULL</code>
+  → esclusi dal filtro <code>motivo_fermo IS NOT NULL</code>). Già prima erano fuori
+  (entrambi i motivi erano <code>FISIOLOGICO</code>).</li>
+<li><strong>Riaccensione futura</strong>: quando esisterà il push ricorrente, il predicato
+  "canone del mese corrente generato" (EXISTS su <code>commesse_attivita</code> per
+  <code>sorgente CONTRATTO + sorgente_uid + competenza_mese</code>, assistito da
+  <code>ix_commesse_attivita_sorgente_competenza</code>) torna su
+  <code>is_transitato</code>/<code>motivo_fermo</code> (<code>CANONE_NON_GENERATO</code> è <strong>rimasto nel seed</strong>
+  di <code>config.motivi_fermo</code> apposta) e i contratti entrano anche in Lente 2 —
+  contratto colonne identico, si riempie.</li>
 <li>RLS emittente applicata automaticamente (vista invoker su <code>vendite.contratti</code>).</li>
-<li>Test: <code>db/pgtap/vendite/test-vw-dash-fatturazione-v1.sql</code>.</li>
+<li>Test: <code>db/pgtap/vendite/test-vw-dash-fatturazione-v1.sql</code> (test 12-14) e
+  <code>test-vw-dash-aperto-v1.sql</code>.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

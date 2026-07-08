@@ -5061,6 +5061,12 @@
   l'esito e quale classe di esito e' ammessa al completamento — invarianti config-time
   in <a href="../trgfn_template_flussi_guard_modalita_esito/">trgfn_template_flussi_guard_modalita_esito</a>,
   guard runtime in <a href="../trgfn_flussi_guard_esito_classe/">trgfn_flussi_guard_esito_classe</a>.</li>
+<li>L'<strong>avanzamento su esito proiettato</strong> (GUIDA D4): un template step può dichiarare
+  <code>attende_sorgente_tipo_id</code> (il tipo documento il cui verdetto lo fa avanzare) e, insieme al
+  binding <a href="../template_flussi_avanzamento_proiezione/">template_flussi_avanzamento_proiezione</a>,
+  il milestone si completa <strong>automaticamente</strong> quando il documento proietta il verdetto
+  (<a href="../fn_reconcile_sorgente/">fn_reconcile_sorgente</a>). Additivo: senza mappa/binding,
+  comportamento di oggi (nessun avanzamento automatico). Ammesso solo su step <strong>non-DOMINIO</strong>.</li>
 <li><strong>Immutabilità strutturale «Leggera» (strategia C)</strong>: se l'edizione di appartenenza è
   un <strong>fork già emesso</strong> (<code>emittente_fiscale_id</code> valorizzato, stato PUBBLICATA o RITIRATA)
   la struttura è protetta — <code>INSERT</code>/<code>UPDATE</code> di template e figli <strong>vietati</strong> (UPDATE del
@@ -5122,6 +5128,10 @@
 <tr>
 <td><code>definizione_id</code></td>
 <td>INTEGER NOT NULL. Edizione di workflow di appartenenza (<a href="../workflow_definizioni/">workflow_definizioni</a>); default automatico al preset del tipo. FK <strong>composita</strong> con <code>tipo_prestazione_id</code> → coerenza tipo per costruzione.</td>
+</tr>
+<tr>
+<td><code>attende_sorgente_tipo_id</code></td>
+<td>BIGINT nullable, FK → <a href="../../../config/tabelle/sorgenti/"><code>config.sorgenti</code></a>. GUIDA D4/G1: tipo documento il cui verdetto proiettato fa avanzare questo milestone (<a href="../fn_reconcile_sorgente/">fn_reconcile_sorgente</a> + binding <a href="../template_flussi_avanzamento_proiezione/">template_flussi_avanzamento_proiezione</a>). NULL = step non projection-driven (comportamento di oggi). Copiato da <code>fn_copia_definizione</code>.</td>
 </tr>
 </tbody>
 </table>

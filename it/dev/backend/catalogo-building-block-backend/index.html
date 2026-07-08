@@ -5623,6 +5623,11 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td>Normalizzazione query params (bool, int, string)</td>
 </tr>
 <tr>
+<td><code>qp_str_upper</code></td>
+<td><code>payload_validators.py</code></td>
+<td>Parametro enum da query string: strip + UPPER, <code>None</code> se assente/vuoto. Per i filtri a vocabolario maiuscolo (area, fase, classe, stadio). Estratto 2026-07-07 (regola del 2, ok Tid): unifica 5 copie del pattern <code>raw.upper() if raw else None</code> nelle view dashboard vendite.</td>
+</tr>
+<tr>
 <td><code>qp_int_strict</code></td>
 <td><code>payload_validators.py</code></td>
 <td>Parsing int rigoroso con errore se non valido</td>
@@ -6066,6 +6071,11 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><code>validate_order_params</code></td>
 <td><code>list_helpers.py</code></td>
 <td>Valida <code>order_by</code> contro <code>allowed_columns</code> (whitelist del chiamante) e <code>order_dir</code> ∈ {asc,desc}; <code>error_code</code>/<code>function_name</code> parametrici; fail-fast con ServiceError loggato. Estratto 2026-06-04 (regola del 2): unifica <code>_validate_order</code>/<code>_validate_uom_order</code>/<code>_validate_righe_order</code> (catalogo+listini, 4 occorrenze). <strong>NON</strong> confondere con <code>search_validators.validate_order_params</code> (semantica diversa: normalizza maiuscole, tupla opzionale, no error_code di dominio). <code>lookup_service</code> resta fuori: messaggi/dettagli user-facing divergenti.</td>
+</tr>
+<tr>
+<td><code>validate_enum_param</code></td>
+<td><code>list_helpers.py</code></td>
+<td>Valida un parametro enum contro la whitelist ORDINATA del chiamante (<code>allowed</code> tuple: l'ordine entra nel <code>detail</code>), <code>nullable</code> per i filtri opzionali, <code>error_code</code>/<code>function_name</code>/<code>log_to_db</code> parametrici. Estratto 2026-07-06 (regola del 2, ok Tid): unifica i blocchi <code>ErrorManager.require(x in WHITELIST)</code> dei service vendite (area fermi, stadio competenza, area backlog, sort_by/sort_dir lotto fatture — wrapper di dominio <code>_validate_enum</code>). Speculare a <code>validate_order_params</code>/<code>validate_pagination</code>.</td>
 </tr>
 <tr>
 <td><code>validate_pagination</code></td>

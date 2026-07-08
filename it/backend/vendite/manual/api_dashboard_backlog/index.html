@@ -19,7 +19,7 @@
     
     
       
-        <title>API Dashboard Fatturazione (Django) - Zero ERP Documentation</title>
+        <title>API Dashboard Backlog — Lente 2 (Django) - Zero ERP Documentation</title>
       
     
     
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-dashboard-fatturazione-django" class="md-skip">
+        <a href="#api-dashboard-backlog-lente-2-django" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -97,7 +97,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API Dashboard Fatturazione (Django)
+              API Dashboard Backlog — Lente 2 (Django)
             
           </span>
         </div>
@@ -4974,10 +4974,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#get-dashboard-fatturazione" class="md-nav__link">
+  <a href="#get-dashboard-backlog" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        <code>GET /dashboard-fatturazione/</code>
+        <code>GET /dashboard-backlog/</code>
       </span>
     </span>
   </a>
@@ -4985,10 +4985,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#get-dashboard-fatturazionefermi" class="md-nav__link">
+  <a href="#get-dashboard-backlogdocumenti" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        <code>GET /dashboard-fatturazione/fermi/</code>
+        <code>GET /dashboard-backlog/documenti/</code>
       </span>
     </span>
   </a>
@@ -5013,10 +5013,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#matrice-mensile" class="md-nav__link">
+  <a href="#riepilogo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Matrice mensile
+        Riepilogo
       </span>
     </span>
   </a>
@@ -5024,10 +5024,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#drill-down-fermi" class="md-nav__link">
+  <a href="#lista-documenti" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Drill-down fermi
+        Lista documenti
       </span>
     </span>
   </a>
@@ -5090,117 +5090,130 @@
   
 
 
-<h1 id="api-dashboard-fatturazione-django">API Dashboard Fatturazione (Django)<a class="headerlink" href="#api-dashboard-fatturazione-django" title="Permanent link">&para;</a></h1>
+<h1 id="api-dashboard-backlog-lente-2-django">API Dashboard Backlog — Lente 2 (Django)<a class="headerlink" href="#api-dashboard-backlog-lente-2-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Espone la Dashboard Fatturazione (controllo del transito per competenza): matrice
-annuale area × mese e drill-down paginato degli elementi fermi.</p>
+<p>Espone la Lente 2 Backlog dei cruscotti fatturazione a due lenti: contatori per
+classe di azionabilità e lista paginata dei documenti non-collegati non-verdi,
+ordinata per anzianità (i più vecchi prima).</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <p>Fase 2 BE del brief
-brief-design-dashboard-fatturazione (<code>docs/it/dev/work-in-progress/brief-design-dashboard-fatturazione.md</code>):
-due endpoint GET <strong>sottili</strong> sopra le proiezioni read-only
-<code>vendite.vw_dash_fatturazione_mensile</code> (aggregata area × mese) e
-<code>vendite.vw_dash_fatturazione_documenti</code> (union dei 5 resolver, grana documento × mese).
-Nessuna logica di dominio in Python: la semantica totale/transitato/fermo/abortito
-vive nelle viste (DB-first). Livello area <code>LETTURA</code> sufficiente; nessuna azione di
-processo.</p>
-<div class="highlight"><pre><span></span><code>GET /api/v1/vendite/dashboard-fatturazione/            (ApiDashboardFatturazione)
-GET /api/v1/vendite/dashboard-fatturazione/fermi/      (ApiDashboardFatturazioneFermi)
+brief-design-fatturazione-due-lenti (<code>docs/it/dev/work-in-progress/brief-design-fatturazione-due-lenti.md</code>)
+§5 (substrato DB in
+brief-db-fatturazione-due-lenti (<code>docs/it/dev/work-done/brief-db-fatturazione-due-lenti.md</code>)
+§5, migrations <code>20260706-01..15</code>): due endpoint GET <strong>sottili</strong> sopra le
+proiezioni read-only <code>vendite.vw_dash_backlog_riepilogo</code> (contatori
+classe × area) e <code>vendite.vw_dash_backlog_documenti</code> (union dei 5 resolver
+filtrata al non-verde + LEFT JOIN <code>config.motivi_fermo</code>). Nessuna logica di
+dominio in Python: popolazione, classi (mappatura statica <code>motivo_fermo →
+classe</code>, DL-6/7), anzianità (<code>data_riferimento</code>, v1 proxy data documento) e
+regola fail-visible (motivo non mappato ⇒ ANOMALIA) vivono nelle viste.
+Livello area <code>LETTURA</code> sufficiente; nessuna azione di processo.</p>
+<div class="highlight"><pre><span></span><code>GET /api/v1/vendite/dashboard-backlog/            (ApiDashboardBacklog)
+GET /api/v1/vendite/dashboard-backlog/documenti/  (ApiDashboardBacklogDocumenti)
 </code></pre></div>
-<p>Catena: view (<code>views_dashboard_fatturazione.py</code>) →
-<code>vendite_service.fn_dash_fatturazione_mensile</code> / <code>fn_dash_fatturazione_fermi</code> →
-<code>VenditeRepository.list_dash_fatturazione_mensile</code> / <code>list_dash_fatturazione_fermi</code>.</p>
+<p>Catena: view (<code>views_dashboard_backlog.py</code>) →
+<code>vendite_service.fn_dash_backlog_{riepilogo,documenti}</code> →
+<code>VenditeRepository.list_dash_backlog_{riepilogo,documenti}</code>.</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
-<h3 id="get-dashboard-fatturazione"><code>GET /dashboard-fatturazione/</code><a class="headerlink" href="#get-dashboard-fatturazione" title="Permanent link">&para;</a></h3>
+<h3 id="get-dashboard-backlog"><code>GET /dashboard-backlog/</code><a class="headerlink" href="#get-dashboard-backlog" title="Permanent link">&para;</a></h3>
+<p>Nessun parametro.</p>
+<h3 id="get-dashboard-backlogdocumenti"><code>GET /dashboard-backlog/documenti/</code><a class="headerlink" href="#get-dashboard-backlogdocumenti" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>anno</code> (opzionale, int): anno di competenza. Default: anno corrente.
-  Range ammesso 2000–2100 (<code>E_VENDITE_VALIDATION</code> fuori range,
-  <code>E_VALIDATION_INPUT</code> se non numerico).</li>
-</ul>
-<h3 id="get-dashboard-fatturazionefermi"><code>GET /dashboard-fatturazione/fermi/</code><a class="headerlink" href="#get-dashboard-fatturazionefermi" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>competenza_mese</code> (obbligatorio, date ISO): mese di competenza; qualsiasi
-  giorno viene normalizzato al 1° del mese.</li>
-<li><code>area</code> (obbligatorio): <code>PREVENTIVI | ORDINI | OFFERTE | CONTRATTI | COMMESSE</code>
-  (case-insensitive; fuori whitelist → <code>E_VENDITE_VALIDATION</code>).</li>
+<li><code>classe</code> (opzionale, case-insensitive; assente = tutte): vocabolario del
+  CHECK di <code>config.motivi_fermo</code> (<code>RECUPERABILE | SOLLECITO_CLIENTE |
+  ANOMALIA</code>). <strong>Non whitellistato di proposito</strong> (coerenza fail-visible col
+  riepilogo, che accoda le classi fuori whitelist): una classe futura resta
+  drillabile senza toccare il BE; una classe sconosciuta (o <code>FISIOLOGICO</code>,
+  escluso a monte dalla vista) dà lista vuota, mai 400.</li>
+<li><code>area</code> (opzionale): <code>PREVENTIVI | ORDINI | OFFERTE | CONTRATTI | COMMESSE</code>
+  (case-insensitive; fuori whitelist → <code>E_VENDITE_VALIDATION</code>; assente = tutte).</li>
 <li><code>page</code> / <code>page_size</code> (opzionali): paginazione standard (default 1/50, max 200).</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
-<h3 id="matrice-mensile">Matrice mensile<a class="headerlink" href="#matrice-mensile" title="Permanent link">&para;</a></h3>
+<h3 id="riepilogo">Riepilogo<a class="headerlink" href="#riepilogo" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;anno&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2026</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;mesi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;competenza_mese&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-01-01&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;classi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;classe&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;RECUPERABILE&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_documenti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;valore_fermo_tot&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2000.50&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unita_ferme_tot&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;anzianita_max_giorni&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;aree&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">          </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;area&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PREVENTIVI&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;valore_totale&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500.00&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;valore_transitato&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1200.00&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_documenti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;n_transitati&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_fermi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_abortiti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span>
+<span class="w">          </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;area&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PREVENTIVI&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_documenti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;valore_fermo_tot&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500.00&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;unita_ferme_tot&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;anzianita_max_giorni&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">40</span><span class="w"> </span><span class="p">}</span>
 <span class="w">        </span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
-<li><strong>12 mesi sempre presenti</strong> (decisione D-5): i mesi/aree senza dati arrivano con
-  zeri (LEFT JOIN su <code>generate_series</code> nel repository) — nessuna logica calendario
-  nel FE.</li>
-<li>Aree in <strong>ordine funnel</strong> fisso: PREVENTIVI, ORDINI, OFFERTE, CONTRATTI, COMMESSE.</li>
-<li><code>valore_*</code> è l'<strong>imponibile</strong> (decisione D-4), serializzato come stringa; per le
-  aree a conteggi (OFFERTE, CONTRATTI — decisioni D-2/D-3) è sempre <code>null</code>; per le
-  aree in euro senza dati è <code>"0"</code>.</li>
+<li><strong>3 classi sempre presenti</strong> nell'ordine di esposizione UI del design
+  (🟠 <code>RECUPERABILE</code> · 🔵 <code>SOLLECITO_CLIENTE</code> · 🔴 <code>ANOMALIA</code>), con zeri
+  espliciti e <code>aree</code> vuota quando la classe non ha documenti. Eventuali classi
+  <strong>fuori whitelist</strong> (estensione futura del CHECK di <code>config.motivi_fermo</code>)
+  vengono <strong>accodate dopo le 3 note</strong>, mai perse in silenzio.</li>
+<li>Totali per classe = somma delle aree (valore su Decimal, <code>anzianita_max_giorni</code>
+  = massimo); <code>valore_fermo_tot</code> serializzato come stringa, <code>"0"</code> se solo aree
+  a conteggi.</li>
 </ul>
-<h3 id="drill-down-fermi">Drill-down fermi<a class="headerlink" href="#drill-down-fermi" title="Permanent link">&para;</a></h3>
-<p>Envelope paginato standard (<code>count/page/page_size/total_pages/results</code>); ogni riga:
-<code>documento_id</code>, <code>documento_uid</code>, <code>codice</code>, <code>cliente_display</code> (ragione sociale del
-cliente, nullable), <code>valore_totale</code>, <code>valore_transitato</code>, <code>unita_totali</code>,
-<code>unita_transitate</code>, <code>motivo_fermo</code> (vocabolario chiuso, decodifica i18n lato FE —
-vedi doc vista), <code>stato_codice_interno</code>, <code>stato_codice</code>, <code>fase</code>.
-Ordinamento: <code>valore_totale DESC NULLS LAST, codice, documento_id</code>.</p>
+<h3 id="lista-documenti">Lista documenti<a class="headerlink" href="#lista-documenti" title="Permanent link">&para;</a></h3>
+<p>Envelope paginato standard (<code>count/page/page_size/total_pages/results</code>); ogni
+riga: <code>area</code>, <code>competenza_mese</code> (proxy, può essere NULL), chiavi documento
+(<code>documento_id</code>, <code>documento_uid</code>, <code>codice</code>), <code>cliente_display</code>, <code>valore_fermo</code>
+(NULL per aree a conteggi), <code>unita_ferme</code>, <code>motivo_fermo</code> (vocabolario
+<code>config.motivi_fermo</code>, decodifica i18n lato FE), <code>classe</code>, <code>azione</code> (hint
+operativo dalla lookup), <code>data_riferimento</code> ("fermo da…", v1 proxy data
+documento), <code>anzianita_giorni</code>, <code>stato_codice_interno</code>, <code>stato_codice</code>, <code>fase</code>.
+<strong>Ordinamento BE-side</strong> (le viste non garantiscono ORDER):
+<code>data_riferimento ASC NULLS LAST</code> (colonna base, ordine identico ad
+anzianità DESC ma più amichevole per il planner), poi <code>valore_fermo DESC
+NULLS LAST, area, documento_id</code>. <code>anzianita_giorni</code> è clampata a <code>&gt;= 0</code>
+(<code>GREATEST</code>): una <code>data_riferimento</code> futura non produce "fermo da -N gg".
+Nel riepilogo <code>anzianita_max_giorni</code> è <code>null</code> quando nessuna riga della
+classe ha una data nota (età sconosciuta ≠ 0 giorni).</p>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Fermo</strong> = <code>NOT is_transitato AND NOT is_abortito</code> (predicato applicato dal
-  repository sulla vista documenti). Gli abortiti (esito NEGATIVO) sono fuori dal
-  confronto e contati a parte in <code>n_abortiti</code> (decisione D-6).</li>
-<li><strong>Denominatore COMMESSE — solo attività computabili</strong> (dal 20260703-61): il
-  resolver commesse esclude dal totale/unità/transito le attività <em>void</em>
-  (<code>stato_emissione = ANNULLATA</code>, <code>stato_approvazione = RIFIUTATA</code>, salvo
-  <code>EMESSA + RIFIUTATA</code> già transitata), simmetrico all'<code>attivo = true</code> sulle righe
-  ordine. Evita che un'attività annullata gonfi il totale e tenga la commessa ferma
-  in eterno. Le altre 4 aree escludono già i void a livello documento
-  (<code>esito = NEGATIVO</code>) / riga (<code>attivo</code>).</li>
-<li><strong>Scope emittente — interamente DB-side</strong> (dal 20260703-60): le 4 aree documento
-  (preventivi/ordini/offerte/contratti) sono filtrate dalla RLS (viste invoker);
-  l'area <strong>COMMESSE</strong>, fuori RLS by design (tabella di pipeline scritta anche da
-  batch/non-web), è filtrata <strong>dentro il resolver</strong> <code>vw_dash_fatturazione_commesse</code>
-  via <code>script.fn_get_emittenti_scope_sr_ids(app.current_user_id)</code> letto da GUC
-  (NULL = vede tutto, <code>'{}'</code> = niente, array = whitelist). Così <strong>matrice e
-  drill-down concordano</strong> su ogni operatore; il BE <strong>non</strong> passa più alcun
-  <code>auth_user_id</code> (nessun filtro applicativo).</li>
-<li>⚠️ Fail-closed COMMESSE: il filtro-in-vista non è aggirato da <code>BYPASSRLS</code> →
-  senza GUC operatore valorizzata (psql ad-hoc, batch, superuser fuori dal ciclo
-  web) il resolver commesse restituisce 0 righe. Accettabile: la dashboard è
-  solo-web e <code>JwtAuditAuthentication</code> popola sempre <code>app.current_user_id</code>.</li>
+<li><strong>Popolazione = non-verde</strong> (DL-7): la vista espone solo <code>motivo_fermo NOT
+  NULL</code> con classe ≠ <code>FISIOLOGICO</code> — regola unica senza casi speciali per area
+  (contratti assenti finché manca il push ricorrente; offerte solo
+  <code>FIGLIO_ABORTITO</code> 🔴 / <code>IN_ATTESA_ACCETTAZIONE</code> 🔵).</li>
+<li><strong>Anti-drift fail-visible</strong> (DB-3): motivo non mappato nella lookup ⇒
+  <code>classe = 'ANOMALIA'</code> (COALESCE in vista), mai perso; simmetricamente il
+  service accoda le classi sconosciute nel riepilogo.</li>
+<li><strong>Anzianità v1 = proxy data documento</strong> (<code>data_riferimento</code> per area:
+  data preventivo/ordine, catena emissione offerte, mese esploso contratti,
+  competenza commesse). Il timestamp di transito (DL-5) non serve al backlog:
+  i suoi elementi non sono ancora transitati.</li>
+<li><strong>Scope emittente — interamente DB-side</strong>: RLS invoker sulle 4 aree
+  documentali (post fix V-1 <code>20260706-15</code>) + filtro GUC nel resolver commesse.
+  Il BE <strong>non</strong> passa alcun <code>auth_user_id</code>.</li>
+<li>Una <strong>sola valutazione della union</strong> per pagina (<code>_query_paged_view</code>: CTE
+  materializzata + <code>COUNT(*) OVER()</code> + <strong>offset clampato all'ultima pagina in
+  SQL</strong>). Il rientro da una pagina stantia (lista ridotta da altri utenti) non
+  costa più un secondo giro: il BE serve subito l'ultima pagina reale e
+  l'envelope dichiara la <strong>pagina effettiva</strong>, che <code>usePagedDashFetch</code> adotta.</li>
 <li>GET-only, nessun side-effect, nessuna Idempotency-Key.</li>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>vendite.vw_dash_fatturazione_mensile</code> (aggregata) — doc:
-  <code>docs/it/dbzero/vendite/manual/vw_dash_fatturazione_mensile.md</code></li>
-<li><code>vendite.vw_dash_fatturazione_documenti</code> (union resolver) — doc:
-  <code>docs/it/dbzero/vendite/manual/vw_dash_fatturazione_documenti.md</code> (incluso
-  vocabolario <code>motivo_fermo</code>)</li>
-<li><code>script.fn_get_emittenti_scope_sr_ids</code> (scope applicativo area COMMESSE)</li>
-<li>Indici di supporto: <code>ix_commesse_attivita_segment_key</code>,
-  <code>ix_commesse_attivita_sorgente_competenza</code> (migration <code>20260703-58</code>)</li>
+<li><code>vendite.vw_dash_backlog_documenti</code> — doc:
+  <code>docs/it/dbzero/vendite/manual/vw_dash_backlog_documenti.md</code></li>
+<li><code>vendite.vw_dash_backlog_riepilogo</code> — doc:
+  <code>docs/it/dbzero/vendite/manual/vw_dash_backlog_riepilogo.md</code></li>
+<li><code>config.motivi_fermo</code> (lookup classi, DL-6) — doc:
+  <code>docs/it/dbzero/config/manual/motivi_fermo.md</code></li>
+<li><code>vendite.vw_dash_fatturazione_documenti</code> + colonna <code>data_riferimento</code>
+  (migrations <code>20260706-03..08</code>)</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Fase 1 DB applicata con migrations <code>20260703-51..59</code> (pgTAP
-  <code>test-vw-dash-fatturazione-v1.sql</code> 19/19). L'eventuale futura materializzazione
-  dell'aggregata non cambia il contratto verso questi endpoint.</li>
-<li>Test: <code>apps/vendite/tests/api/test_dashboard_fatturazione_api.py</code> (12 casi) +
-  <code>apps/vendite/tests/services/test_dashboard_fatturazione_service.py</code> (10 casi),
+<li>Substrato DB applicato con migrations <code>20260706-01..15</code> (pgTAP
+  <code>test-vw-dash-backlog-v1.sql</code> plan 14 verde).</li>
+<li>Test: <code>apps/vendite/tests/api/test_dashboard_backlog_api.py</code> (8 casi) +
+  <code>apps/vendite/tests/services/test_dashboard_backlog_service.py</code> (9 casi),
   tutti con mock (CI-safe).</li>
+<li>FE (Fase 2): rotta <code>/vendite/dashboard-backlog</code> (<code>DashboardBacklogView.vue</code>,
+  store <code>dashboardBacklog.js</code>, severity <code>classeBacklogSeverity</code>); vocabolario
+  i18n <code>motivo_fermo</code> e label aree condivisi con la dashboard 5-card.</li>
 </ul>
 
 

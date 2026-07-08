@@ -5050,6 +5050,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#figli-per-nodo-di-uno-step-slice-2-anello-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Figli per-nodo di uno step (Slice 2 anello 4)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#archi-del-grafo-slice-2-anello-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Archi del grafo (Slice 2 anello 5)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#immutabilita-e-scope" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5255,6 +5277,90 @@ atomica su <code>(id, definizione_id)</code>. <strong>Output</strong>: <code>{ "
 <h2 id="delete-definizioniidstepsstep_id-cancella-hard-uno-step"><code>DELETE /definizioni/&lt;id&gt;/steps/&lt;step_id&gt;/</code> — cancella (hard) uno step<a class="headerlink" href="#delete-definizioniidstepsstep_id-cancella-hard-uno-step" title="Permanent link">&para;</a></h2>
 <p>Hard delete (una BOZZA non ha pratiche pinnate). Ownership su <code>(id, definizione_id)</code>.
 <strong>Output</strong>: <code>{ "deleted": true }</code>.</p>
+<h2 id="figli-per-nodo-di-uno-step-slice-2-anello-4">Figli per-nodo di uno step (Slice 2 anello 4)<a class="headerlink" href="#figli-per-nodo-di-uno-step-slice-2-anello-4" title="Permanent link">&para;</a></h2>
+<p>CRUD dei figli di uno step, con <code>&lt;kind&gt;</code> ∈ <code>canali | handler-eventi | competenze</code>:</p>
+<div class="highlight"><pre><span></span><code>POST   /definizioni/&lt;id&gt;/steps/&lt;step_id&gt;/&lt;kind&gt;/
+PATCH  /definizioni/&lt;id&gt;/steps/&lt;step_id&gt;/&lt;kind&gt;/&lt;row_id&gt;/
+DELETE /definizioni/&lt;id&gt;/steps/&lt;step_id&gt;/&lt;kind&gt;/&lt;row_id&gt;/
+</code></pre></div>
+<p>Ownership doppia <strong>riga → step → definizione</strong> (via JOIN); l'immutabilità delle
+edizioni emesse è enforce dai guard DB (stesso <code>TEMPLATE_DEFINIZIONE_CONGELATA</code>). Campi
+scrivibili e obbligatori per kind (gli altri hanno DEFAULT/validazione DB):</p>
+<table>
+<thead>
+<tr>
+<th><code>&lt;kind&gt;</code></th>
+<th>Campi scrivibili</th>
+<th>Obbligatori</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>canali</code></td>
+<td><code>canale_id</code>, <code>attivo</code></td>
+<td><code>canale_id</code></td>
+</tr>
+<tr>
+<td><code>handler-eventi</code></td>
+<td><code>evento</code>, <code>esito_richiesto</code>, <code>handler_id</code>, <code>sequenza</code>, <code>attivo</code></td>
+<td><code>evento</code>, <code>handler_id</code></td>
+</tr>
+<tr>
+<td><code>competenze</code></td>
+<td><code>unita_organizzativa_id</code>, <code>risorsa_umana_id</code>, <code>attivo</code></td>
+<td><code>unita_organizzativa_id</code>, <code>risorsa_umana_id</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>template_flusso_id</code> è impostato dal BE (dallo <code>step_id</code> in URL), mai dal client. FK/enum/UNIQUE
+sono validati dai constraint DB. <strong>Output</strong>: <code>{ "id": &lt;row_id&gt; }</code> (POST/PATCH),
+<code>{ "deleted": true }</code> (DELETE). <strong>404</strong> <code>E_DEFINIZIONE_NOT_FOUND</code> se lo step non è nella
+definizione o la riga non è nello step.</p>
+<h2 id="archi-del-grafo-slice-2-anello-5">Archi del grafo (Slice 2 anello 5)<a class="headerlink" href="#archi-del-grafo-slice-2-anello-5" title="Permanent link">&para;</a></h2>
+<p>Gli archi collegano due step e vivono al <strong>livello edizione</strong>, con <code>&lt;kind&gt;</code> ∈
+<code>prerequisiti | formule-tempo | regole-generazione</code>:</p>
+<div class="highlight"><pre><span></span><code>POST   /definizioni/&lt;id&gt;/archi/&lt;kind&gt;/
+PATCH  /definizioni/&lt;id&gt;/archi/&lt;kind&gt;/&lt;row_id&gt;/
+DELETE /definizioni/&lt;id&gt;/archi/&lt;kind&gt;/&lt;row_id&gt;/
+</code></pre></div>
+<p>Ownership via lo step "ancora" dell'arco → definizione (JOIN); immutabilità dai guard DB.
+Gli step-endpoint indicati con <strong>✔ in-def</strong> devono appartenere alla definizione (404
+altrimenti); il <code>tipo_prestazione_id</code> di <code>formule-tempo</code> è <strong>auto-impostato dal BE</strong> = tipo
+della definizione (non dal client).</p>
+<table>
+<thead>
+<tr>
+<th><code>&lt;kind&gt;</code></th>
+<th>Campi scrivibili</th>
+<th>Obbligatori</th>
+<th>Endpoint validati in-def</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prerequisiti</code></td>
+<td><code>template_flusso_id</code>, <code>prerequisito_id</code>, <code>esito_richiesto</code></td>
+<td><code>template_flusso_id</code>, <code>prerequisito_id</code></td>
+<td>entrambi ✔</td>
+</tr>
+<tr>
+<td><code>formule-tempo</code></td>
+<td><code>template_flusso_da_id</code>, <code>template_flusso_a_id</code>, <code>giorni_esecuzione</code>, <code>giorni_warning</code>, <code>giorni_critico</code>, <code>attivo</code>, <code>descrizione</code></td>
+<td>i 2 step + i 3 <code>giorni</code></td>
+<td><code>da</code>, <code>a</code> ✔</td>
+</tr>
+<tr>
+<td><code>regole-generazione</code></td>
+<td><code>template_flusso_origine_id</code>, <code>template_flusso_dest_id</code>, <code>tipo_prestazione_dest_id</code>, <code>esito_richiesto</code>, <code>auto</code>, <code>attivo</code>, <code>descrizione</code></td>
+<td><code>template_flusso_origine_id</code>, <code>tipo_prestazione_dest_id</code></td>
+<td>solo <code>origine</code> ✔ (il <code>dest</code> può essere cross-edizione)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong>: <code>{ "id": &lt;row_id&gt; }</code> / <code>{ "deleted": true }</code>. <strong>Nota</strong>: i CHECK di dominio (es.
+<code>formule-tempo</code>: <code>giorni_critico &lt; giorni_warning &lt; giorni_esecuzione</code>, tutti &gt; 0) sono
+enforce dal DB; una violazione torna oggi <code>E_DATABASE</code> generico — il form FE dovrebbe
+mirrorare la regola d'ordine per un feedback immediato.</p>
 <hr />
 <h2 id="immutabilita-e-scope">Immutabilità e scope<a class="headerlink" href="#immutabilita-e-scope" title="Permanent link">&para;</a></h2>
 <p>Le operazioni di editing (create/patch/delete step) <strong>passano solo su edizioni

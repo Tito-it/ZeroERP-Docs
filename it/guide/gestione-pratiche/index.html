@@ -2960,6 +2960,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#avanzamento-su-esito-proiettato-guida" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Avanzamento su esito proiettato (GUIDA)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#handler-django-registry-pattern" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6130,6 +6141,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#avanzamento-su-esito-proiettato-guida" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Avanzamento su esito proiettato (GUIDA)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#handler-django-registry-pattern" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -7276,6 +7298,57 @@ Giornale registra:
   pratica #789: FLUSSO_CREATO (flusso #890)
 </code></pre></div>
 <p>Se l'esito fosse stato NEGATIVO, la regola non si sarebbe attivata (<code>esito_richiesto = POSITIVO</code>).</p>
+<hr />
+<h2 id="avanzamento-su-esito-proiettato-guida">Avanzamento su esito proiettato (GUIDA)<a class="headerlink" href="#avanzamento-su-esito-proiettato-guida" title="Permanent link">&para;</a></h2>
+<p>Alcuni milestone di una pratica non sono decisi dall'operatore <em>dentro</em> la pratica, ma
+<strong>seguono lo stato di un documento</strong> (un preventivo, un'offerta…). Esempio classico:
+l'<code>APPROVAZIONE_CLIENTE</code> di una pratica commerciale è "completa" quando il <strong>preventivo
+collegato viene accettato</strong> — indipendentemente da <em>dove</em> è avvenuta l'accettazione.</p>
+<p>Il modello <strong>GUIDA</strong> rende questo avanzamento <strong>automatico e uniforme</strong>: quando il documento
+raggiunge un <strong>verdetto</strong> (POSITIVO/NEGATIVO/PARZIALE/NON_APPLICABILE, la "proiezione" del suo
+stato), il milestone che lo attende passa a <strong>COMPLETATO</strong> con quel verdetto. Vale su
+<strong>qualsiasi</strong> percorso: dall'interno della pratica <strong>oppure</strong> dal drawer standalone del
+documento (prima, in quest'ultimo caso, il milestone restava aperto e le due macchine
+divergevano).</p>
+<p><strong>Come si configura</strong> (additivo — senza questi due elementi, nessun avanzamento automatico):</p>
+<ol>
+<li>Sul template step si dichiara <strong>quale tipo documento</strong> attende:
+   <a href="../../dbzero/pratiche/tabelle/template_flussi/"><code>template_flussi.attende_sorgente_tipo_id</code></a> →
+   <a href="../../dbzero/config/tabelle/sorgenti/"><code>config.sorgenti</code></a>.</li>
+<li>Si aggiunge un <strong>binding di avanzamento</strong>
+   (<a href="../../dbzero/pratiche/tabelle/template_flussi_avanzamento_proiezione/"><code>template_flussi_avanzamento_proiezione</code></a>):
+   «avanza con esito X» (o «qualsiasi verdetto»).</li>
+</ol>
+<p><strong>Come funziona</strong> (tutto DB-side):</p>
+<ul>
+<li>Un <strong>trigger</strong> sulla tabella-documento
+  (<a href="../../dbzero/pratiche/funzioni/trgfn_documento_reconcile_proiezione/"><code>trgfn_documento_reconcile_proiezione</code></a>)
+  scatta ad ogni cambio-stato e chiama il motore
+  <a href="../../dbzero/pratiche/funzioni/fn_reconcile_sorgente/"><code>fn_reconcile_sorgente</code></a>, che completa i
+  milestone in attesa (facendo poi scattare la generazione a valle come un completamento
+  manuale).</li>
+<li>Il <strong>documento è sovrano</strong>: se la riconciliazione fallisce, il cambio-stato del documento
+  <strong>non</strong> viene annullato; l'errore è tracciato in
+  <a href="../../dbzero/pratiche/tabelle/reconcile_errori/"><code>reconcile_errori</code></a> (osservabilità).</li>
+<li>È <strong>idempotente</strong> (un milestone già completato non riavanza) e ignora gli step <strong>DOMINIO</strong>
+  (l'esito lì è di ramo, calcolato dal dominio — vedi asse esito).</li>
+</ul>
+<p><strong>Projection-driven vs handler-driven</strong>: uno step o <strong>segue la proiezione</strong> del documento
+(GUIDA) <strong>o</strong> esegue un handler server-side al COMPLETATO
+(<a href="#handler-django-registry-pattern">handler-eventi</a>), <strong>mai entrambi</strong> — un guard config-time
+lo impedisce (altrimenti l'avanzamento automatico salterebbe l'handler, perdendo l'azione di
+dominio). Il primo caso reale è il <strong>ritiro</strong> di <code>vendita.accetta_preventivo</code>: il pulsante
+«Accetta» in pratica chiama il servizio standalone del preventivo e il milestone avanza per
+proiezione.</p>
+<p><strong>Inversione piena (accetta <em>e</em> rifiuta)</strong>: sul preventivo il binding è configurato su
+«qualsiasi verdetto» (non solo POSITIVO), così il milestone <code>APPROVAZIONE_CLIENTE</code> si completa
+sia sull'accettazione (POSITIVO) sia su ogni esito terminale-negativo — rifiutato / scaduto /
+annullato (tutti NEGATIVO). Nel caso negativo il completamento non "fa proseguire" la pratica:
+i passi a valle (es. SMISTAMENTO) hanno prerequisiti <strong>esito-aware</strong> che richiedono
+<code>APPROVAZIONE_CLIENTE = POSITIVO</code>, quindi con NEGATIVO diventano <strong>ramo morto</strong> (non bloccano)
+e la pratica <strong>si chiude pulita</strong>. Prima, con l'avanzamento solo su POSITIVO, un preventivo
+rifiutato lasciava il milestone aperto e la pratica appesa: l'inversione piena chiude la
+divergenza in <strong>entrambe</strong> le direzioni.</p>
 <hr />
 <h2 id="handler-django-registry-pattern">Handler Django (registry pattern)<a class="headerlink" href="#handler-django-registry-pattern" title="Permanent link">&para;</a></h2>
 <blockquote>

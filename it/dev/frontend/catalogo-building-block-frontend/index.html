@@ -4358,6 +4358,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#dashboard-fatturazione-srccorecomponentsdash" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dashboard fatturazione (<code>src/core/components/dash/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#grafici-srccorecomponentscharts" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -4434,6 +4445,17 @@
   
     <nav class="md-nav" aria-label="Componenti Dominio Vendite (src&#x2f;vendite&#x2f;components&#x2f;)">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#config-cruscotti-fatturazione-srcvenditedashboardareejs" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Config cruscotti fatturazione (<code>src/vendite/dashboardAree.js</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#wrapper-select-per-enum-di-dominio-fase-2-refactor-frontend" class="md-nav__link">
@@ -5797,6 +5819,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#dashboard-fatturazione-srccorecomponentsdash" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dashboard fatturazione (<code>src/core/components/dash/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#grafici-srccorecomponentscharts" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5873,6 +5906,17 @@
   
     <nav class="md-nav" aria-label="Componenti Dominio Vendite (src&#x2f;vendite&#x2f;components&#x2f;)">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#config-cruscotti-fatturazione-srcvenditedashboardareejs" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Config cruscotti fatturazione (<code>src/vendite/dashboardAree.js</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#wrapper-select-per-enum-di-dominio-fase-2-refactor-frontend" class="md-nav__link">
@@ -6141,6 +6185,26 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td>Auto-refresh lista quando altre tab modificano entità</td>
 </tr>
 <tr>
+<td><code>useSearchTable</code> — deep-link azzera default data</td>
+<td><code>useSearchTable.js</code></td>
+<td><strong>Dal 2026-07-06 (ok Tid):</strong> una ricerca ESTERNA (deep-link <code>?search=</code> da "apri documento" dashboard, ricerca universale, AI) azzera i default temporali <code>data_da</code>/<code>data_a</code> dello store (se presenti) — un documento piu' vecchio del default anno-1 deve essere trovabile quando lo si cerca per codice. Le ricerche digitate in pagina NON toccano i filtri data. La toolbar resta allineata via sync store→ref di <code>useStoreFilterBindings</code> (bindSelect/bindDate ora osservano lo store: i cambi esterni al widget si riflettono nei DatePicker/select).</td>
+</tr>
+<tr>
+<td><code>usePagedDashFetch</code></td>
+<td><code>usePagedDashFetch.js</code></td>
+<td><strong>Sezione paginata dei cruscotti (estratto 2026-07-06, regola del 2, ok Tid — unifica fermi/attivita'/errori delle due dashboard fatturazione).</strong> Factory <code>(fetchPage, {defaultPageSize}) → {items, count, page, pageSize, loading, loaded, fetch, reset, resetAll, applyPageEvent}</code> sopra <code>useFetchVersion</code>: fetch con guard anti-race, unwrap envelope paginato standard, adozione della pagina EFFETTIVA dichiarata dal BE (dal 2026-07-07 gli endpoint dash clampano l'offset all'ultima pagina in UNA sola valutazione della union — niente secondo giro sul rientro da pagina stantia; resta il fallback di rientro in pagina 1 per endpoint senza clamp), loading corretto anche su risposte scartate; <code>loaded</code> (true solo dopo una fetch riuscita) per empty-state onesti — mai un "vuoto" positivo su dati mai arrivati; <code>resetAll()</code> per il logout (ripristina anche la pageSize al default, <code>reset()</code> la preserva di proposito sui cambi contesto); <code>applyPageEvent(event)</code> applica l'evento @page del DataTable lazy allo stato pagina/dimensione (solo stato: la fetch resta al caller con la sua gestione errori) — unifica il calcolo pagina 1-based prima quadruplicato nei handler delle view dashboard. <code>fetchPage(paging, ...args)</code> riceve <code>{page, page_size}</code> + gli argomenti extra di <code>fetch(...)</code> (es. competenza_mese). Consumer: store <code>dashboardCompetenza</code> (attivita', errori), <code>dashboardBacklog</code> e <code>dashboardAperto</code> (documenti).</td>
+</tr>
+<tr>
+<td><code>useDashMesiNav</code></td>
+<td><code>useDashMesiNav.js</code></td>
+<td><strong>Navigazione anno/mese dei cruscotti fatturazione (estratto 2026-07-06, regola del 2, ok Tid).</strong> <code>({anno, meseIdx, onMeseChange, onAnnoChange}) → {nomiMesi, competenzaCorrente, selezionaMese, cambiaAnno, stepMese}</code>: nomi mese localizzati (un solo Intl.DateTimeFormat), clamp anni sul range BE (<code>DASH_ANNO_MIN/MAX</code> = 2000-2100), passo mese ±1 con scavalcamento d'anno. ⚠ <code>competenzaCorrente</code> e' derivata da (anno, meseIdx), MAI dall'array dati: le fetch di drill-down restano agganciate al mese che l'utente vede anche con l'aggregata nuova in volo (fix race cambio anno, review 2026-07-06). Consumer: <code>DashboardCompetenzaView</code> (unico, dopo il ritiro della 5-card in Fase 3 — il telaio resta BB per futuri cruscotti mensili).</td>
+</tr>
+<tr>
+<td><code>useDashRiepilogo</code></td>
+<td><code>useDashRiepilogo.js</code></td>
+<td><strong>Fetch di testata dei cruscotti con guard anti-race (estratto 2026-07-07, regola del 2, ok Tid).</strong> <code>useDashRiepilogo(fetchFn, onData) → {fetchRiepilogo, invalidate}</code>: tag/isCurrent via <code>useFetchVersion</code>, unwrap <code>res.data.data</code>, <code>onData</code> applica i campi allo stato del caller; <code>invalidate()</code> per reset/logout. Complementare a <code>usePagedDashFetch</code> (sezioni paginate). Consumer: store <code>dashboardBacklog</code> (classi), <code>dashboardAperto</code> (aree+fasi), <code>dashboardCompetenza</code> (aggregata per anno).</td>
+</tr>
+<tr>
 <td><code>useKeyboardShortcuts</code></td>
 <td><code>useKeyboardShortcuts.js</code></td>
 <td>Registra shortcut globali (disabilita su input/textarea)</td>
@@ -6397,6 +6461,11 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td>Validazione formato email/PEC (UX, non RFC)</td>
 </tr>
 <tr>
+<td><code>labelOrCode</code></td>
+<td><code>i18nLabel.js</code></td>
+<td><strong>Decodifica i18n fail-visible (estratto 2026-07-06, regola del 2, ok Tid).</strong> <code>labelOrCode(t, te, key, fallback)</code>: label tradotta se la chiave esiste, altrimenti il fallback (codice grezzo o label generica) — mai il path della chiave a video. Per vocabolari estensibili DB-side (motivi fermo, classi backlog, stadi funnel, azioni giornale). Unifica 8 micro-copie in dashboard/pratiche/catalogo.</td>
+</tr>
+<tr>
 <td><code>resolveSeverity</code></td>
 <td><code>severity.js</code></td>
 <td>Risolve severity PrimeVue da mappa codice</td>
@@ -6405,6 +6474,21 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><code>statoClienteSeverity</code> / <code>statoFornitoreSeverity</code></td>
 <td><code>severity.js</code></td>
 <td>Colori stato cliente/fornitore</td>
+</tr>
+<tr>
+<td><code>statoDocFiscaleSeverity</code></td>
+<td><code>severity.js</code></td>
+<td>Colori stato documento fiscale fatture (DRAFT/EMESSA/INVIATA/REGISTRATA/DEFINITIVA/ANNULLATA) — breakdown 3a Lente Competenza</td>
+</tr>
+<tr>
+<td><code>classeBacklogSeverity</code></td>
+<td><code>severity.js</code></td>
+<td>Colori classe azionabilita' backlog (RECUPERABILE=warn, SOLLECITO_CLIENTE=info, ANOMALIA=danger) — Lente 2 Backlog, allineata al CHECK di <code>config.motivi_fermo.classe</code></td>
+</tr>
+<tr>
+<td><code>faseDocumentoSeverity</code></td>
+<td><code>severity.js</code></td>
+<td>Colori fase normalizzata proiezione stato dominio (APERTO=secondary, IN_ATTESA=info, IN_CORSO=warn, CHIUSO=success) — Situazione aperta, vocabolario <code>config.stati_doc_*.fase</code></td>
 </tr>
 <tr>
 <td><code>statoVersioneListinoSeverity</code> / <code>dominioListinoSeverity</code></td>
@@ -7530,6 +7614,28 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 </tr>
 </tbody>
 </table>
+<h3 id="dashboard-fatturazione-srccorecomponentsdash">Dashboard fatturazione (<code>src/core/components/dash/</code>)<a class="headerlink" href="#dashboard-fatturazione-srccorecomponentsdash" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DashMesiSidebar</code></td>
+<td><code>dash/DashMesiSidebar.vue</code></td>
+<td>Pannello laterale anno + 12 mesi dei cruscotti fatturazione (estratto 2026-07-06, regola del 2, ok Tid). Props <code>anno/mesi/meseIdx/nomiMesi</code>, emits <code>seleziona-mese(idx)</code> / <code>cambia-anno(delta)</code>, slot scoped <code>#badge="{ idx }"</code> per il semaforo di lente (fermi vs aperti+errori). CSS: classi globali <code>app-dash-mesi/anno/mese-btn</code>. i18n condivisa <code>dash_mesi.*</code>. Consumer: le due dashboard fatturazione.</td>
+</tr>
+<tr>
+<td><code>DashMeseStepper</code></td>
+<td><code>dash/DashMeseStepper.vue</code></td>
+<td>Stepper compatto anno/mese (solo piccoli schermi, CSS <code>.app-dash-stepper</code>), gemello mobile di <code>DashMesiSidebar</code>. Props <code>anno/meseIdx/nomiMesi</code>, emit <code>step(delta)</code>, slot <code>#badge</code> per il semaforo del mese corrente. Consumer: le due dashboard fatturazione.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="grafici-srccorecomponentscharts">Grafici (<code>src/core/components/charts/</code>)<a class="headerlink" href="#grafici-srccorecomponentscharts" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -7541,9 +7647,14 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 </thead>
 <tbody>
 <tr>
+<td><code>DashEmptyState</code></td>
+<td><code>DashEmptyState.vue</code></td>
+<td><strong>Empty-state "onesto" delle liste cruscotti (estratto 2026-07-07, regola del 2, ok Tid).</strong> Props <code>loaded</code> (da <code>usePagedDashFetch.loaded</code>), <code>emptyText</code>, <code>placeholderText</code>: check-circle + messaggio positivo SOLO dopo una fetch riuscita, altrimenti inbox + placeholder neutro — mai un all-clear su dati mai arrivati. Consumer: <code>DashboardBacklogView</code>, <code>SituazioneApertaView</code>.</td>
+</tr>
+<tr>
 <td><code>DonutTransito</code></td>
 <td><code>charts/DonutTransito.vue</code></td>
-<td><strong>Unico wrapper chart.js dell'app (decisione D-1 dashboard fatturazione, 2026-07-03).</strong> Le view NON parlano mai con chart.js direttamente: passano da qui. Visualizza "transitato vs fermo" in due modalita': <code>mode="donut"</code> (default, donut a 2 spicchi via PrimeVue <code>&lt;Chart&gt;</code> + percentuale al centro, per valori in euro) e <code>mode="fraction"</code> (frazione n/n grande al posto del grafico, stessa altezza e mini-legenda, per aree a conteggi). Palette SOLO da variabili <code>theme.css</code> (<code>--app-chart-transitato</code>/<code>-fermo</code>/<code>-track</code>, coppia green-600/orange-600 validata CVD+contrasto su dark/light; mai colori hardcoded, <code>feedback_css_centralizzazione</code>); risoluzione <code>getComputedStyle</code> cachata a livello modulo per tema (una sola lettura per toggle dark/light, non per istanza). Options chart STATICHE (non computed) per evitare il destroy+reinit di PrimeVue <code>&lt;Chart&gt;</code> a ogni ricalcolo. Props: <code>transitato</code> (Number), <code>fermo</code> (Number), <code>mode</code> (<code>donut</code>|<code>fraction</code>), <code>format</code> (<code>currency</code>|<code>count</code>), <code>labelTransitato</code>/<code>labelFermo</code> (i18n dal caller), <code>size</code> (px, default 132). Identita' mai solo-colore: percentuale/frazione + legenda con dot+etichetta+valore. Consumer: <code>DashboardFatturazioneView</code>.</td>
+<td><strong>Unico wrapper chart.js dell'app (decisione D-1 dashboard fatturazione, 2026-07-03).</strong> Le view NON parlano mai con chart.js direttamente: passano da qui. Visualizza "transitato vs fermo" in due modalita': <code>mode="donut"</code> (default, donut a 2 spicchi via PrimeVue <code>&lt;Chart&gt;</code> + percentuale al centro, per valori in euro) e <code>mode="fraction"</code> (frazione n/n grande al posto del grafico, stessa altezza e mini-legenda, per aree a conteggi). Palette SOLO da variabili <code>theme.css</code> (<code>--app-chart-transitato</code>/<code>-fermo</code>/<code>-track</code>, coppia green-600/orange-600 validata CVD+contrasto su dark/light; mai colori hardcoded, <code>feedback_css_centralizzazione</code>); risoluzione <code>getComputedStyle</code> cachata a livello modulo per tema (una sola lettura per toggle dark/light, non per istanza). Options chart STATICHE (non computed) per evitare il destroy+reinit di PrimeVue <code>&lt;Chart&gt;</code> a ogni ricalcolo. Props: <code>transitato</code> (Number), <code>fermo</code> (Number), <code>mode</code> (<code>donut</code>|<code>fraction</code>), <code>format</code> (<code>currency</code>|<code>count</code>), <code>labelTransitato</code>/<code>labelFermo</code> (i18n dal caller), <code>size</code> (px, default 132). Identita' mai solo-colore: percentuale/frazione + legenda con dot+etichetta+valore. Consumer: <code>SituazioneApertaView</code> (transito per area dello stock), <code>DashboardCompetenzaView</code> (copertura mese Lente 1).</td>
 </tr>
 </tbody>
 </table>
@@ -7648,6 +7759,33 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 </table>
 <hr />
 <h2 id="componenti-dominio-vendite-srcvenditecomponents">Componenti Dominio Vendite (<code>src/vendite/components/</code>)<a class="headerlink" href="#componenti-dominio-vendite-srcvenditecomponents" title="Permanent link">&para;</a></h2>
+<h3 id="config-cruscotti-fatturazione-srcvenditedashboardareejs">Config cruscotti fatturazione (<code>src/vendite/dashboardAree.js</code>)<a class="headerlink" href="#config-cruscotti-fatturazione-srcvenditedashboardareejs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DASH_AREA_CONFIG</code> / <code>DASH_AREE</code></td>
+<td><code>dashboardAree.js</code></td>
+<td>Config di presentazione per area del funnel (ordine, rotta lista per "apri documento", severity stato), condivisa da Situazione aperta e Lente Backlog (estratta 2026-07-06, regola del 2, ok Tid). Un solo punto di modifica per rinomina rotte / nuova area. La misura euro/count NON vive qui (review 2026-07-07): la decide il BE nel payload (<code>valore_*</code> null = area a conteggi, DL-11) — il FE legge, non ri-decide.</td>
+</tr>
+<tr>
+<td><code>dashAreaSeverity</code> / <code>buildApriDocumentoAction</code></td>
+<td><code>dashboardAree.js</code></td>
+<td>Severity stato per area (fallback secondary) + azione riga "apri documento" (naviga con <code>?search=</code>; il deep-link azzera i default data della lista target via useSearchTable).</td>
+</tr>
+<tr>
+<td><code>dashAreaLabel</code> / <code>dashFaseLabel</code> / <code>dashMotivoLabel</code></td>
+<td><code>dashboardAree.js</code></td>
+<td>Decodifiche i18n fail-visible dei vocabolari condivisi <code>dash_comune.*</code> (aree, fasi, motivi fermo) via <code>labelOrCode</code>; firma <code>(t, te, codice)</code>. Estratte 2026-07-07 (regola del 2, ok Tid): erano duplicate in <code>DashboardBacklogView</code> e <code>SituazioneApertaView</code>.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="wrapper-select-per-enum-di-dominio-fase-2-refactor-frontend">Wrapper select per enum di dominio (Fase 2 refactor frontend)<a class="headerlink" href="#wrapper-select-per-enum-di-dominio-fase-2-refactor-frontend" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
