@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.46">
+      <meta name="generator" content="zensical-0.0.47">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.19d3147f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
       
       
 
@@ -4845,7 +4845,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossario/devops&db/" class="md-nav__link">
+      <a href="../../../../glossario/devops%26db/" class="md-nav__link">
         
   
   
@@ -5024,10 +5024,12 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 07-07-2026)
-Le <strong>card della Situazione aperta</strong>: aggregata <code>area × fase</code> sullo stock
-documenti (<code>vw_dash_aperto_documenti</code>: 4 aree, no abortiti, tutte le fasi —
-DL-13). Alimenta le card senza aggregazione BE-side (DB-first).</p>
+<p>(latest review 08-07-2026 — v2 serbatoio pre-commessa, DL-14..18)
+Le <strong>card della Situazione aperta v2</strong>: aggregata <code>area × fase</code> sullo stock
+degli <strong>aperti-non-conclusi</strong> (<code>vw_dash_aperto_documenti</code> v2). Alimenta le card
+senza aggregazione BE-side (DB-first). Le fasi presenti sono solo
+APERTO/IN_ATTESA/IN_CORSO (CHIUSO escluso a monte dalla dettaglio) → il FE le
+rappresenta con un <strong>donut a spicchi per fase</strong> (maturità verso la commessa).</p>
 <hr />
 <h3 id="semantica">Semantica<a class="headerlink" href="#semantica" title="Permanent link">&para;</a></h3>
 <table>
@@ -5040,23 +5042,21 @@ DL-13). Alimenta le card senza aggregazione BE-side (DB-first).</p>
 <tbody>
 <tr>
 <td><code>n_documenti</code></td>
-<td>Documenti vivi della cella</td>
+<td>Documenti della cella (nel perimetro v2 sono <strong>tutti</strong> aperti)</td>
 </tr>
 <tr>
-<td><code>n_aperti</code></td>
-<td>Con transito non-true (<code>is_aperto</code>); per i CONTRATTI (giudizio sospeso, DL-12) coincide col totale</td>
-</tr>
-<tr>
-<td><code>valore_totale</code> / <code>valore_transitato</code></td>
-<td>Somme <strong>senza COALESCE</strong>: restano <code>NULL</code> per le aree a conteggi OFFERTE/CONTRATTI (DL-11 — <code>NULL</code> = misura non disponibile, <code>0</code> mentirebbe)</td>
+<td><code>valore_totale</code></td>
+<td>Somma <strong>senza COALESCE</strong>: resta <code>NULL</code> per le aree a conteggi OFFERTE/CONTRATTI (DL-11 — <code>NULL</code> = misura non disponibile, <code>0</code> mentirebbe)</td>
 </tr>
 </tbody>
 </table>
-<p>Scope emittente ereditato (invoker su tutta la catena).</p>
+<p>Colonne <strong>rimosse</strong> rispetto alla v1 (DL-14): <code>n_aperti</code> (ridondante — nel
+perimetro v2 coincide con <code>n_documenti</code>) e <code>valore_transitato</code> (concetto
+transito eliminato). Scope emittente ereditato (invoker su tutta la catena).</p>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Le card: stock per area e fase (il FE sceglie quali fasi mostrare).</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">area</span><span class="p">,</span><span class="w"> </span><span class="n">fase</span><span class="p">,</span><span class="w"> </span><span class="n">n_documenti</span><span class="p">,</span><span class="w"> </span><span class="n">n_aperti</span><span class="p">,</span><span class="w"> </span><span class="n">valore_totale</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Le card: stock aperti-non-conclusi per area e fase.</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">area</span><span class="p">,</span><span class="w"> </span><span class="n">fase</span><span class="p">,</span><span class="w"> </span><span class="n">n_documenti</span><span class="p">,</span><span class="w"> </span><span class="n">valore_totale</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_dash_aperto_riepilogo</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">area</span><span class="p">,</span><span class="w"> </span><span class="n">fase</span><span class="p">;</span>
 </code></pre></div>
@@ -5066,8 +5066,9 @@ DL-13). Alimenta le card senza aggregazione BE-side (DB-first).</p>
 <li>Nessun asse temporale: la domanda "il mese M è completo?" è della <strong>Lente 1</strong>
   (<code>vw_dash_competenza_mensile</code>); "cosa è fermo e da quanto?" è della
   <strong>Lente 2</strong> (<code>vw_dash_backlog_*</code>). Qui: "com'è messa la pipeline, adesso?".</li>
-<li>La fase <code>CHIUSO</code> è inclusa e cresce nel tempo (DL-13): il FE tipicamente
-  non la mostra o la mostra a parte.</li>
+<li>Ricreata con <strong>DROP + CREATE</strong> (<code>20260708-04</code>) dopo la dettaglio (<code>20260708-03</code>
+  la droppa prima per sciogliere la dipendenza): <code>CREATE OR REPLACE</code> non può
+  rimuovere colonne.</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-dash-aperto-v1.sql</code>.</li>
 </ul>
 <hr />
@@ -5137,7 +5138,7 @@ DL-13). Alimenta le card senza aggregazione BE-side (DB-first).</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.ee611ef6.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

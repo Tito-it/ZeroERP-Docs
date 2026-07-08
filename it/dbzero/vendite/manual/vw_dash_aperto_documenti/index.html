@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.46">
+      <meta name="generator" content="zensical-0.0.47">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.19d3147f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
       
       
 
@@ -4845,7 +4845,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../glossario/devops&db/" class="md-nav__link">
+      <a href="../../../../glossario/devops%26db/" class="md-nav__link">
         
   
   
@@ -5026,12 +5026,14 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 07-07-2026)
-Vista dettaglio della <strong>Situazione aperta</strong> (Fase 3 due lenti, trasformazione
-della dashboard 5-card): lo <strong>stock dei documenti vivi</strong> delle 4 aree documento
-(PREVENTIVI, ORDINI, OFFERTE, CONTRATTI), <strong>senza asse temporale</strong> — è la vista
-di consistenza della pipeline, 🟢 fisiologici <strong>inclusi</strong> (a differenza del
-Backlog che tiene solo il non-verde).</p>
+<p>(latest review 08-07-2026 — v2 serbatoio pre-commessa, DL-14..18)
+Vista dettaglio della <strong>Situazione aperta v2 — serbatoio pre-commessa</strong>: lo
+<strong>stock dei documenti aperti e non conclusi</strong> delle 4 aree documento
+(PREVENTIVI, ORDINI, OFFERTE, CONTRATTI), <strong>senza asse temporale</strong>. Risponde a:
+<em>"quali documenti aperti, se conclusi, andrebbero in commessa/fatturazione ma
+non ci sono ancora arrivati, e in che fase sono?"</em>. Il concetto <strong>"transitato"</strong>
+è <strong>eliminato</strong> (DL-14): in una vista senza asse temporale totalizzava <em>dalla
+notte dei tempi</em> documenti già passati avanti, informazione non azionabile.</p>
 <hr />
 <h3 id="semantica">Semantica<a class="headerlink" href="#semantica" title="Permanent link">&para;</a></h3>
 <table>
@@ -5043,20 +5045,20 @@ Backlog che tiene solo il non-verde).</p>
 </thead>
 <tbody>
 <tr>
-<td><strong>Perimetro</strong></td>
-<td>union <code>WHERE area &lt;&gt; 'COMMESSE' AND NOT is_abortito</code>. Le COMMESSE sono coperte dalla Lente 1 Competenza. Gli abortiti (esito NEGATIVO) si escludono <strong>qui</strong>: i resolver preventivi/ordini/offerte non li escludono alla fonte, li marcano soltanto (<code>is_abortito</code>)</td>
+<td><strong>Perimetro (DL-15 — 4 predicati)</strong></td>
+<td><code>area &lt;&gt; 'COMMESSE' AND NOT is_abortito AND is_transitato IS DISTINCT FROM true AND fase &lt;&gt; 'CHIUSO'</code>. Le COMMESSE sono coperte dalla Lente 1; gli abortiti (esito NEGATIVO) sono marcati dai resolver ed esclusi qui</td>
 </tr>
 <tr>
-<td><strong>Tutte le fasi (DL-13)</strong></td>
-<td>Anche <code>CHIUSO</code> è nello stock (cresce nel tempo): la vista è consultazione neutra, <strong>il FE decide quali card mostrare</strong></td>
+<td><strong>I due filtri servono entrambi</strong></td>
+<td><code>is_transitato IS DISTINCT FROM true</code> toglie i <strong>transitati-non-chiusi</strong> (es. preventivo ACCETTATO già completamente smistato, resta IN_CORSO); <code>fase &lt;&gt; 'CHIUSO'</code> toglie i <strong>chiusi-non-transitati</strong> (es. preventivo EVASO con riga residua: POSITIVO → non abortito, non transitato). ⚠️ Un'offerta SUPERATA <strong>non</strong> è un chiuso-non-transitato: SUPERATA ha esito NEGATIVO → è già abortita</td>
 </tr>
 <tr>
-<td><code>is_aperto</code></td>
-<td><code>is_transitato IS DISTINCT FROM true</code> — include il <strong>giudizio sospeso</strong> dei contratti (<code>is_transitato NULL</code>, DL-12)</td>
+<td><strong>Contratti (DL-18)</strong></td>
+<td>Giudizio sospeso (<code>is_transitato NULL</code> → aperto): compaiono DRAFT + ATTIVO; CESSATO escono con <code>fase&lt;&gt;CHIUSO</code>, ANNULLATO sono abortiti. Un ATTIVO figura come IN_CORSO (astrazione fase normalizzata, accettata)</td>
 </tr>
 <tr>
 <td>Valori</td>
-<td>Da resolver: € per PREVENTIVI/ORDINI, <code>NULL</code> per OFFERTE/CONTRATTI (aree a conteggi)</td>
+<td>Da resolver: € per PREVENTIVI/ORDINI, <code>NULL</code> per OFFERTE/CONTRATTI (aree a conteggi, DL-11)</td>
 </tr>
 <tr>
 <td>Scope</td>
@@ -5064,20 +5066,25 @@ Backlog che tiene solo il non-verde).</p>
 </tr>
 </tbody>
 </table>
+<p>Colonne <strong>rimosse</strong> rispetto alla v1 (DL-14): <code>is_transitato</code>, <code>is_aperto</code>,
+<code>valore_transitato</code>, <code>unita_transitate</code> (<code>is_transitato</code> resta usato solo nel
+WHERE, dalla union). <code>motivo_fermo</code> <strong>tenuto</strong> come hint informativo di riga.</p>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Drill-down di una card: i preventivi aperti in fase IN_ATTESA.</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Drill-down di una card: i preventivi aperti in fase IN_ATTESA. Il filtro</span>
+<span class="c1">-- &quot;aperti da oltre N giorni&quot; è BE-side su data_riferimento (solo sulla lista).</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">cliente_display</span><span class="p">,</span><span class="w"> </span><span class="n">stato_codice</span><span class="p">,</span><span class="w"> </span><span class="n">motivo_fermo</span><span class="p">,</span><span class="w"> </span><span class="n">data_riferimento</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_dash_aperto_documenti</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVENTIVI&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">fase</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;IN_ATTESA&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">is_aperto</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVENTIVI&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">fase</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;IN_ATTESA&#39;</span><span class="p">;</span>
 </code></pre></div>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
 <li>È il <strong>perimetro unico</strong> di card (<code>vw_dash_aperto_riepilogo</code>) e drill-down:
-  il BE non deve replicare filtri.</li>
-<li>Sostituisce (con la gemella riepilogo) l'impianto mensile della 5-card:
-  <code>vw_dash_fatturazione_mensile</code> è stata <strong>dismessa</strong> (<code>20260707-06</code>).</li>
+  il BE non deve replicare filtri (aggiunge solo il ritardo su <code>data_riferimento</code>).</li>
+<li>Ricreata con <strong>DROP + CREATE</strong> (<code>20260708-03</code>): rimuovere colonne da una vista
+  non è possibile con <code>CREATE OR REPLACE</code>; il riepilogo dipendente è droppato
+  prima (ordine di dipendenza, no CASCADE) e ricreato dal <code>20260708-04</code>.</li>
 <li><code>fase</code> è sempre valorizzata sulle 4 aree (join <code>config.stati_doc_*</code>).</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-dash-aperto-v1.sql</code>.</li>
 </ul>
@@ -5141,7 +5148,7 @@ Backlog che tiene solo il non-verde).</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.ee611ef6.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

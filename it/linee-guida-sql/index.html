@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.46">
+      <meta name="generator" content="zensical-0.0.47">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.19d3147f.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.5e19f6ca.min.css">
       
       
 
@@ -1207,6 +1207,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         5. Trigger e Funzioni
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5b-atomicita-delle-operazioni-multi-scrittura-funzione-madre" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5b. Atomicità delle operazioni multi-scrittura — funzione "madre"
       </span>
     </span>
   </a>
@@ -5425,7 +5436,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../glossario/devops&db/" class="md-nav__link">
+      <a href="../glossario/devops%26db/" class="md-nav__link">
         
   
   
@@ -5587,6 +5598,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         5. Trigger e Funzioni
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5b-atomicita-delle-operazioni-multi-scrittura-funzione-madre" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5b. Atomicità delle operazioni multi-scrittura — funzione "madre"
       </span>
     </span>
   </a>
@@ -6451,6 +6473,70 @@ trgfn_config_stati_prevent_delete_if_used
 <p>una volta fn_check_<em> che fa RAISE
   una volta fn_guard_</em> che torna boolean</p>
 <p>Diventa impossibile capire dal nome se la funzione lancia o verifica soltanto.</p>
+<hr />
+<h3 id="5b-atomicita-delle-operazioni-multi-scrittura-funzione-madre">5b. Atomicità delle operazioni multi-scrittura — funzione "madre"<a class="headerlink" href="#5b-atomicita-delle-operazioni-multi-scrittura-funzione-madre" title="Permanent link">&para;</a></h3>
+<p><strong>Il problema (trappola ricorrente).</strong> Quando un'operazione di dominio compone <strong>più scritture</strong>
+(INSERT/UPDATE/DELETE o <code>SELECT fn_...</code> di mutazione), farle in sequenza dal layer applicativo in
+autocommit è una trappola: se la 2ª fallisce, la 1ª resta committata → <strong>stato parziale / righe
+orfane</strong> impossibili da riconciliare.</p>
+<p><strong>La regola DB-first.</strong> Un'operazione di dominio che compone <strong>solo</strong> scritture/funzioni DB va
+incapsulata in <strong>un'unica funzione "madre"</strong> (<code>fn_*</code>), invocata con <strong>una sola <code>SELECT</code></strong>. Una
+singola statement su connessione autocommit è <strong>atomica per costruzione</strong>: PostgreSQL la avvolge in
+una transazione implicita e <strong>qualsiasi eccezione non gestita annulla l'intero effetto</strong> — non
+serve scrivere <code>BEGIN/EXCEPTION</code> per l'all-or-nothing (i blocchi <code>EXCEPTION</code> servono solo a
+<em>catturare/tradurre</em> un errore).</p>
+<p><strong>Dove mettere la transazione — criterio di scelta:</strong></p>
+<table>
+<thead>
+<tr>
+<th>L'operazione...</th>
+<th>Meccanismo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>compone <strong>solo</strong> scritture/fn DB</td>
+<td><strong>funzione madre DB</strong> (una <code>SELECT fn_()</code>) — preferito</td>
+</tr>
+<tr>
+<td>richiede orchestrazione <strong>Python</strong> (advisory lock, dispatch a handler, control-flow applicativo)</td>
+<td><code>transaction.atomic()</code> nel service Django (esplicito, non <code>ATOMIC_REQUESTS</code>)</td>
+</tr>
+<tr>
+<td>ha un <strong>side-effect esterno</strong> (email/SMTP)</td>
+<td>pattern <strong>outbox/saga</strong>, mai dentro una transazione</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Convenzioni della funzione madre:</strong></p>
+<ul>
+<li><strong><code>SECURITY INVOKER</code></strong> (esplicito): gira come il ruolo chiamante → RLS e scope emittente restano
+  applicati identici. Mai <code>SECURITY DEFINER</code> senza motivazione documentata.</li>
+<li><strong>Tipi ancorati con <code>%TYPE</code></strong> (parametri, DECLARE, RETURNS / RETURNS TABLE, COMMENT); array
+  <code>bigint&#91;&#93;</code> espliciti (<code>colonna%TYPE&#91;&#93;</code> non esiste in PostgreSQL).</li>
+<li><strong>Delega ai trigger</strong> esistenti audit (<code>data_update</code>/<code>user_update</code>), <code>tx_id</code>, storico,
+  <code>gen_codice</code>: la madre fa solo le scritture di dominio.</li>
+<li><strong>Riusa le figlie</strong> invece di duplicare: una fn condivisa (es. <code>pratiche.fn_crea_pratica</code>) usata
+  da più madri di dominio; un nuovo dominio = un madre sottile che compone le figlie condivise.</li>
+<li><strong>Delta parziale</strong> via JSONB (<code>jsonb_exists()</code> per la presenza chiave, <code>jsonb_populate_record</code>
+  per l'INSERT dinamico): aggiorna solo le chiavi presenti e rispetta i default/trigger DB.</li>
+<li><strong>Errori</strong> con <code>script.fn_log_and_raise_error</code> e codici <strong>registrati</strong> (mai <code>E_GENERICO</code>).</li>
+<li><strong>Cosa NON spostare in DB</strong>: le validazioni read-only di input restano pre-check del service —
+  non attengono all'atomicità (la causa del problema).</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>Le sequence non fanno rollback.</strong> Un numero/codice da <code>nextval</code> (es. via
+<code>script.fn_generate_codice</code>) consumato resta un <strong>gap</strong> anche se la transazione rolla: è normale e
+innocuo. La madre elimina la <strong>riga orfana</strong>, non il gap di numerazione (che c'era già).</p>
+</blockquote>
+<p><strong>pgTAP obbligatorio.</strong> Testare sia il caso felice sia il <strong>rollback totale</strong> su fallimento di uno
+step (pattern: trigger temporaneo che fa fallire l'ultima scrittura → verificare che nessun effetto
+delle scritture precedenti sopravviva). Il pgTAP gira come owner: attenzione ai <strong>GRANT</strong> e agli
+scope che nel percorso applicativo reale (<code>zeroerp_app</code>, INVOKER) potrebbero mancare.</p>
+<blockquote>
+<p>Caso di studio completo, catalogo dei finding e criterio esteso (madre DB <em>vs</em> <code>transaction.atomic()</code>
+<em>vs</em> outbox): analisi-fix-transazioni (<code>docs/it/dev/work-in-progress/analisi-fix-transazioni</code>).</p>
+</blockquote>
 <hr />
 <h3 id="6-viste-views">6. Viste (Views)<a class="headerlink" href="#6-viste-views" title="Permanent link">&para;</a></h3>
 <ul>
@@ -7439,7 +7525,7 @@ restrittiva, il bug e' evidente subito.</strong> Mai il contrario.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.ee611ef6.min.js"></script>
+      <script src="../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
       
         <script src="../../assets/javascripts/mermaid.min.js"></script>
       

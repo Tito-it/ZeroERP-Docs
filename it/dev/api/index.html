@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.46">
+      <meta name="generator" content="zensical-0.0.47">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.19d3147f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
       
       
 
@@ -4336,6 +4336,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#atomicita-e-composizione-di-scritture" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Atomicità e composizione di scritture
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tassonomia-errori" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5488,7 +5499,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../glossario/devops&db/" class="md-nav__link">
+      <a href="../../glossario/devops%26db/" class="md-nav__link">
         
   
   
@@ -6049,6 +6060,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Letture vs scritture
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#atomicita-e-composizione-di-scritture" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Atomicità e composizione di scritture
       </span>
     </span>
   </a>
@@ -7158,6 +7180,49 @@ Non prima.</p>
 </ul>
 <p>Non creare sottodirectory <code>commands/</code> e <code>queries/</code>. La separazione
 nei commenti e nelle sezioni del file e' sufficiente.</p>
+<h3 id="atomicita-e-composizione-di-scritture">Atomicità e composizione di scritture<a class="headerlink" href="#atomicita-e-composizione-di-scritture" title="Permanent link">&para;</a></h3>
+<p>Un endpoint che modifica stato è <strong>un'unità di lavoro atomica</strong>. Quando l'operazione compone
+<strong>più scritture</strong> (INSERT/UPDATE o <code>SELECT fn_...</code> di mutazione), decidere <strong>dove</strong> vive la
+transazione — non lasciarle in autocommit una dietro l'altra (se la 2ª fallisce, la 1ª resta
+committata → stato parziale / orfani).</p>
+<table>
+<thead>
+<tr>
+<th>L'operazione...</th>
+<th>Meccanismo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>compone <strong>solo</strong> scritture/fn DB</td>
+<td><strong>una sola <code>SELECT fn_madre(...)</code></strong> nel repository — atomica per costruzione (preferito, DB-first)</td>
+</tr>
+<tr>
+<td>richiede orchestrazione <strong>Python</strong> (lock, dispatch handler, control-flow)</td>
+<td><strong><code>with transaction.atomic()</code></strong> esplicito nel service</td>
+</tr>
+<tr>
+<td>ha un <strong>side-effect esterno</strong> (email/SMTP)</td>
+<td>pattern <strong>outbox/saga</strong>, mai dentro la transazione</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>Non affidarsi a <code>ATOMIC_REQUESTS</code>.</strong> Sarebbe inefficace qui: <code>handle_post_json</code> <strong>cattura</strong>
+l'eccezione e restituisce una <code>Response</code>, quindi non esce mai dalla view → il rollback a livello
+di request non scatta e il parziale viene committato (e su <code>IntegrityError</code> il 4xx diventa 500).
+<strong><code>with transaction.atomic()</code> esplicito è invece sicuro</strong>: fa rollback al confine del blocco (nel
+suo <code>__exit__</code>), <em>prima</em> che <code>handle_post_json</code> catturi l'eccezione. È l'attrezzo corretto.</p>
+</blockquote>
+<p><strong>Guardrail: «una azione = una unità atomica».</strong> Un metodo service che compone 2+ scritture con
+side-effect <strong>deve</strong> avvolgerle in un solo <code>transaction.atomic()</code> <strong>oppure</strong> delegare a una singola
+funzione madre DB. Domini con natura mista (es. pratiche): le operazioni pure-dato → madre DB
+(<code>pratiche.fn_crea_pratica</code>); il motore-flussi-con-handler → <code>transaction.atomic()</code>.</p>
+<blockquote>
+<p>Faccia DB della stessa regola (come scrivere la funzione madre): <a href="../../linee-guida-sql/">linee-guida-sql §5b</a>.
+Caso di studio, criterio esteso e catalogo dei finding:
+analisi-fix-transazioni (<code>docs/it/dev/work-in-progress/analisi-fix-transazioni</code>).</p>
+</blockquote>
 <h3 id="tassonomia-errori">Tassonomia errori<a class="headerlink" href="#tassonomia-errori" title="Permanent link">&para;</a></h3>
 <p>Tutti i codici errore seguono <code>E_{MODULO}_{TIPO}</code> e DEVONO essere registrati
 in <code>error_policies.py</code> prima dell'uso. Il suffisso determina la categoria:</p>
@@ -7421,7 +7486,7 @@ nel sistema, non solo agli operatori. Quando si implementa un nuovo endpoint
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.ee611ef6.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       
