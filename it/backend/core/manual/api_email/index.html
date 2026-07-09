@@ -385,6 +385,8 @@
       
         
       
+        
+      
     
     
     
@@ -2502,6 +2504,8 @@
       
         
       
+        
+      
     
     
     
@@ -3094,6 +3098,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3414,10 +3445,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3434,8 +3465,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5975,6 +6006,15 @@ Filtri: <code>stato</code>, <code>pratica_id</code>, <code>limit</code>, <code>o
 dalla bozza (non dal template originale). Copia allegati su <code>email_log_id</code>.
 Lo stato SMTP e' nel log (<code>SENT</code> o <code>FAILED</code>); lo stato outbox riflette se l'operatore
 deve agire (DRAFT = da riprovare, SENT = completato).</p>
+<p><strong>Semantica saga/outbox (fix analisi-fix-transazioni #16, 2026-07-08).</strong> Lo stato
+<code>READY</code> e' committato <strong>prima</strong> dell'invio SMTP (l'invio esterno sta fuori da ogni
+transazione DB). I <strong>tre write post-invio</strong> (link outbox↔log + copia allegati + stato
+finale <code>SENT</code>/<code>DRAFT</code>) sono ora fusi in <strong>un solo</strong> <code>transaction.atomic()</code>: o tutti o
+nessuno. Se quel blocco fallisce, l'outbox resta <code>READY</code> <strong>coerente</strong> (non parziale):
+nessun stato ibrido con log linkato e allegati mancanti. Un outbox rimasto <code>READY</code>
+(bozza fantasma) e' recuperabile da un job di riconciliazione — <strong>follow-up</strong> da
+progettare per NON ri-inviare (lo SMTP e' gia' partito): recupero idempotente, non
+re-send.</p>
 <h3 id="annulla-bozza">Annulla bozza<a class="headerlink" href="#annulla-bozza" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="err">POST /api/v1/core/email/outbox/{id}/cancel/</span>
 </code></pre></div>

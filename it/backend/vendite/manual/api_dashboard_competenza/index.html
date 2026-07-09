@@ -385,6 +385,8 @@
       
         
       
+        
+      
     
     
     
@@ -2502,6 +2504,8 @@
       
         
       
+        
+      
     
     
     
@@ -3094,6 +3098,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3414,10 +3445,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3434,8 +3465,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5154,6 +5185,15 @@ GET /api/v1/vendite/dashboard-competenza/errori/     (ApiDashboardCompetenzaErro
   assente = tutti gli stadi).</li>
 <li><code>solo_ritardo</code> (opzionale, bool): se <code>true</code> solo le attività emesse in ritardo
   (<code>emessa_in_ritardo IS TRUE</code> — recuperi tardivi, §7 del design).</li>
+<li><code>order_by</code> / <code>order_dir</code> (opzionali): <strong>ordinamento colonne server-side</strong>
+  (convenzione delle liste standard). <code>order_by</code> in whitelist —
+  <code>commessa_codice</code> | <code>cliente_display</code> | <code>articolo_codice</code> (ordina per la
+  descrizione <strong>mostrata</strong>, <code>COALESCE(art.descrizione, art.codice)</code>) |
+  <code>data_attivita</code> (default; ordina per la <strong>colonna data</strong>, non per la stringa
+  gg/mm/aaaa del FE) | <code>valore</code>; <code>order_dir</code> = <code>asc</code> | <code>desc</code>. Server-side
+  perché la lista è paginata: ordine corretto su <strong>tutte</strong> le pagine. Colonna
+  fuori whitelist o direzione ≠ asc/desc → 400 (<code>E_VENDITE_VALIDATION</code>). Tiebreak
+  stabile <code>(commessa_codice, commessa_attivita_id)</code>.</li>
 <li><code>page</code> / <code>page_size</code> (opzionali): paginazione standard (default 1/50, max 200).</li>
 </ul>
 <h3 id="get-dashboard-competenzaerrori"><code>GET /dashboard-competenza/errori/</code><a class="headerlink" href="#get-dashboard-competenzaerrori" title="Permanent link">&para;</a></h3>
@@ -5219,7 +5259,10 @@ assi grezzi (<code>stato_approvazione</code>, <code>stato_emissione</code>), <co
 (NULL se non emessa), flag AF (<code>sospesa</code>, <code>posticipa_al</code>), aggancio fattura
 (<code>fattura_id/anno/serie/numero</code>, <code>stato_fattura_codice_interno/codice</code>,
 <code>valore_fatturato</code>, <code>fattura_critical</code>).
-Ordinamento: <code>valore DESC NULLS LAST, commessa_codice, commessa_attivita_id</code>.</p>
+Ordinamento: default <code>valore DESC NULLS LAST, commessa_codice,
+commessa_attivita_id</code>; con <code>order_by</code>/<code>order_dir</code> (vedi Input) l'ORDER BY diventa
+<code>&lt;colonna whitelist&gt; &lt;asc|desc&gt; NULLS LAST</code> + tiebreak <code>commessa_codice,
+commessa_attivita_id</code> — colonna e direzione <strong>whitelistate</strong> (mai input grezzo).</p>
 <h3 id="errori-vivi">Errori vivi<a class="headerlink" href="#errori-vivi" title="Permanent link">&para;</a></h3>
 <p>Envelope paginato standard; ogni riga: <code>tipo_evento</code>
 (<code>TASK_ERRORE | FATTURA_CRITICA</code>), <code>competenza_mese</code>, <code>lotto_id/lotto_codice/

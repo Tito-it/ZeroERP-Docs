@@ -385,6 +385,8 @@
       
         
       
+        
+      
     
     
     
@@ -2502,6 +2504,8 @@
       
         
       
+        
+      
     
     
     
@@ -3094,6 +3098,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3414,10 +3445,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3434,8 +3465,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5127,6 +5158,14 @@ GET /api/v1/vendite/dashboard-backlog/documenti/  (ApiDashboardBacklogDocumenti)
   escluso a monte dalla vista) dà lista vuota, mai 400.</li>
 <li><code>area</code> (opzionale): <code>PREVENTIVI | ORDINI | OFFERTE | CONTRATTI | COMMESSE</code>
   (case-insensitive; fuori whitelist → <code>E_VENDITE_VALIDATION</code>; assente = tutte).</li>
+<li><code>order_by</code> / <code>order_dir</code> (opzionali): <strong>ordinamento colonne server-side</strong>
+  (convenzione delle liste standard). <code>order_by</code> in whitelist —
+  <code>anzianita_giorni</code> (default, "fermo da") | <code>area</code> | <code>codice</code> |
+  <code>cliente_display</code> | <code>valore_fermo</code> | <code>stato_codice</code>; <code>order_dir</code> = <code>asc</code> |
+  <code>desc</code> (default <code>desc</code> su <code>anzianita_giorni</code>: i più vecchi prima). Server-side
+  perché la lista è paginata: ordine corretto su <strong>tutte</strong> le pagine, non solo
+  su quella visibile. Colonna fuori whitelist o direzione ≠ asc/desc → 400
+  (<code>E_VENDITE_VALIDATION</code>). Tiebreak stabile <code>(area, documento_id)</code>.</li>
 <li><code>page</code> / <code>page_size</code> (opzionali): paginazione standard (default 1/50, max 200).</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
@@ -5163,10 +5202,13 @@ riga: <code>area</code>, <code>competenza_mese</code> (proxy, può essere NULL),
 <code>config.motivi_fermo</code>, decodifica i18n lato FE), <code>classe</code>, <code>azione</code> (hint
 operativo dalla lookup), <code>data_riferimento</code> ("fermo da…", v1 proxy data
 documento), <code>anzianita_giorni</code>, <code>stato_codice_interno</code>, <code>stato_codice</code>, <code>fase</code>.
-<strong>Ordinamento BE-side</strong> (le viste non garantiscono ORDER):
+<strong>Ordinamento BE-side</strong> (le viste non garantiscono ORDER): default
 <code>data_riferimento ASC NULLS LAST</code> (colonna base, ordine identico ad
 anzianità DESC ma più amichevole per il planner), poi <code>valore_fermo DESC
-NULLS LAST, area, documento_id</code>. <code>anzianita_giorni</code> è clampata a <code>&gt;= 0</code>
+NULLS LAST, area, documento_id</code>; con <code>order_by</code>/<code>order_dir</code> (vedi Input)
+l'ORDER BY diventa <code>&lt;colonna whitelist&gt; &lt;asc|desc&gt; NULLS LAST</code> + tiebreak
+<code>area, documento_id</code> — colonna e direzione <strong>whitelistate</strong> (mai input grezzo).
+<code>anzianita_giorni</code> è clampata a <code>&gt;= 0</code>
 (<code>GREATEST</code>): una <code>data_riferimento</code> futura non produce "fermo da -N gg".
 Nel riepilogo <code>anzianita_max_giorni</code> è <code>null</code> quando nessuna riga della
 classe ha una data nota (età sconosciuta ≠ 0 giorni).</p>

@@ -19,7 +19,7 @@
     
     
       
-        <title>API Situazione aperta (Django) - Zero ERP Documentation</title>
+        <title>API Situazione aperta — serbatoio pre-commessa (Django) - Zero ERP Documentation</title>
       
     
     
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-situazione-aperta-django" class="md-skip">
+        <a href="#api-situazione-aperta-serbatoio-pre-commessa-django" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -97,7 +97,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API Situazione aperta (Django)
+              API Situazione aperta — serbatoio pre-commessa (Django)
             
           </span>
         </div>
@@ -320,6 +320,8 @@
   
     
       
+      
+        
       
         
       
@@ -2502,6 +2504,8 @@
       
         
       
+        
+      
     
     
     
@@ -3094,6 +3098,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3414,10 +3445,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3434,8 +3465,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5090,25 +5121,27 @@
   
 
 
-<h1 id="api-situazione-aperta-django">API Situazione aperta (Django)<a class="headerlink" href="#api-situazione-aperta-django" title="Permanent link">&para;</a></h1>
+<h1 id="api-situazione-aperta-serbatoio-pre-commessa-django">API Situazione aperta — serbatoio pre-commessa (Django)<a class="headerlink" href="#api-situazione-aperta-serbatoio-pre-commessa-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Espone la Situazione aperta dei cruscotti fatturazione: riepilogo dello stock
-di documenti per <code>area × fase</code> normalizzata (senza asse temporale) e lista
-paginata dei documenti, ordinata per "in essere da" (i più vecchi prima).</p>
+<p>Espone la <strong>Situazione aperta v2</strong> (serbatoio pre-commessa) dei cruscotti
+fatturazione: i documenti <strong>aperti-non-chiusi</strong> che, se conclusi, andrebbero
+in commessa/fatturazione ma non ci sono ancora arrivati. Riepilogo dello stock
+per <code>area × fase</code> normalizzata (senza asse temporale) e lista paginata dei
+documenti, ordinata per "in essere da" (i più vecchi prima), con soglia
+opzionale <strong>"aperti da oltre N giorni"</strong> sul solo drill-down.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <p>Fase 3 BE del brief
 brief-design-fatturazione-due-lenti (<code>docs/it/dev/work-in-progress/brief-design-fatturazione-due-lenti.md</code>)
-§6-bis (substrato DB in
-brief-db-situazione-aperta (<code>docs/it/dev/work-done/brief-db-situazione-aperta.md</code>),
-migrations <code>20260707-03..06</code>): due endpoint GET <strong>sottili</strong> sopra le
+<strong>§6-ter (DL-14..18)</strong> (substrato DB v2 in
+brief-db-situazione-aperta-v2 (<code>docs/it/dev/work-done/brief-db-situazione-aperta-v2.md</code>),
+changeset <code>20260708-03/04</code>, PR #944): due endpoint GET <strong>sottili</strong> sopra le
 proiezioni read-only <code>vendite.vw_dash_aperto_riepilogo</code> (celle <code>area × fase</code>)
-e <code>vendite.vw_dash_aperto_documenti</code> (union dei resolver, 4 aree documento,
-<code>NOT is_abortito</code>, <strong>tutte le fasi</strong> — DL-13: perimetro unico di card e
-drill-down, il BE non replica filtri). Sostituisce i 2 endpoint
-<code>dashboard-fatturazione/{,fermi/}</code> della 5-card (asse mensile dismesso).
-Nessuna logica di dominio in Python: popolazione, <code>fase</code> (da
-<code>config.stati_doc_*</code>), <code>is_aperto</code> (<code>is_transitato IS DISTINCT FROM true</code>: il
-giudizio <strong>sospeso</strong> dei contratti conta aperto, DL-12) vivono nelle viste.
+e <code>vendite.vw_dash_aperto_documenti</code> (union dei resolver, 4 aree documento).
+<strong>Perimetro serbatoio interamente DB-side</strong> (DL-15): la vista v2 filtra
+<code>is_transitato IS DISTINCT FROM true AND fase &lt;&gt; 'CHIUSO'</code> — perimetro unico di
+card e drill-down, il BE <strong>non</strong> replica filtri (via il vecchio toggle
+<code>solo_aperti</code>). Nessuna logica di dominio in Python: popolazione, <code>fase</code> (da
+<code>config.stati_doc_*</code>), esclusione transitati/chiusi vivono nelle viste.
 Livello area <code>LETTURA</code> sufficiente; nessuna azione di processo.</p>
 <div class="highlight"><pre><span></span><code>GET /api/v1/vendite/dashboard-aperto/            (ApiDashboardAperto)
 GET /api/v1/vendite/dashboard-aperto/documenti/  (ApiDashboardApertoDocumenti)
@@ -5128,14 +5161,25 @@ GET /api/v1/vendite/dashboard-aperto/documenti/  (ApiDashboardApertoDocumenti)
   un'area sconosciuta — o <code>COMMESSE</code>, esclusa dal WHERE della vista (coperta
   dalla Lente 1) — dà lista vuota, mai 400.</li>
 <li><code>fase</code> (opzionale, case-insensitive; assente = tutte): vocabolario
-  <code>config.stati_doc_*.fase</code> (<code>APERTO | IN_ATTESA | IN_CORSO | CHIUSO</code>).
-  <strong>Non whitellistato di proposito</strong> (coerenza fail-visible col riepilogo, che
-  accoda le fasi fuori whitelist): una fase futura resta drillabile senza
+  <code>config.stati_doc_*.fase</code> — <strong>3 fasi vive</strong> <code>APERTO | IN_ATTESA | IN_CORSO</code>
+  (via <code>CHIUSO</code>: fuori perimetro serbatoio). <strong>Non whitellistato di proposito</strong>
+  (coerenza fail-visible col riepilogo): una fase futura resta drillabile senza
   toccare il BE; una fase sconosciuta dà lista vuota, mai 400.</li>
-<li><code>solo_aperti</code> (opzionale, default <code>true</code>): solo documenti non completamente
-  transitati (<code>is_aperto</code>). <code>false</code> = fotografia completa dello stock
-  (inclusi i transitati/chiusi). <strong>Strict</strong>: un token non riconosciuto dà 400
-  (<code>qp_bool_optional</code>, niente coercion silenziosa a true).</li>
+<li><code>ritardo_giorni</code> (opzionale, intero &gt; 0; assente = nessuna soglia): filtro
+  <strong>"aperti da oltre N giorni"</strong> su data documento (<code>data_riferimento &lt;= oggi −
+  N</code>, DL-17). Soglia del <strong>solo drill-down</strong>: le card del riepilogo restano la
+  fotografia completa. <strong>Strict</strong>: non numerico → 400 (<code>qp_int_optional</code>);
+  intero <code>&lt;= 0</code> → 400 (<code>E_VENDITE_VALIDATION</code>, niente normalizzazione
+  silenziosa).</li>
+<li><code>order_by</code> / <code>order_dir</code> (opzionali): <strong>ordinamento colonne server-side</strong>
+  (convenzione delle liste standard, es. clienti/soggetti). <code>order_by</code> in
+  whitelist — <code>anzianita_giorni</code> (default, "aperto da") | <code>codice</code> |
+  <code>cliente_display</code> | <code>valore_totale</code>; <code>order_dir</code> = <code>asc</code> | <code>desc</code> (default
+  <code>desc</code> su <code>anzianita_giorni</code>: i più "in essere da" prima). Server-side perché
+  la lista è paginata: l'ordine è corretto su <strong>tutte</strong> le pagine, non solo su
+  quella visibile. Colonna fuori whitelist o direzione ≠ asc/desc → 400
+  (<code>E_VENDITE_VALIDATION</code>, whitelist definita una volta nel service). Tiebreak
+  stabile <code>(area, documento_id)</code> per paginazione deterministica.</li>
 <li><code>page</code> / <code>page_size</code> (opzionali): paginazione standard (default 1/50, max 200).</li>
 </ul>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
@@ -5143,66 +5187,67 @@ GET /api/v1/vendite/dashboard-aperto/documenti/  (ApiDashboardApertoDocumenti)
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;aree&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;area&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PREVENTIVI&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_documenti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_aperti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;valore_totale&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2000.50&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;valore_transitato&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;300.00&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;area&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PREVENTIVI&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_documenti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;valore_totale&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2000.50&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">&quot;fasi&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">          </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;fase&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;APERTO&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_documenti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_aperti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;valore_totale&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500.00&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;valore_transitato&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">          </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;fase&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;APERTO&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_documenti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;valore_totale&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1500.00&quot;</span><span class="w"> </span><span class="p">}</span>
 <span class="w">        </span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;fasi&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">\</span><span class="p">[</span><span class="s2">&quot;APERTO&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;IN_ATTESA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;IN_CORSO&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;CHIUSO&quot;</span><span class="err">\</span><span class="p">]</span>
+<span class="w">    </span><span class="nt">&quot;fasi&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">\</span><span class="p">[</span><span class="s2">&quot;APERTO&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;IN_ATTESA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;IN_CORSO&quot;</span><span class="err">\</span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
 <li><strong>4 aree sempre presenti</strong> nell'ordine del funnel (<code>PREVENTIVI, ORDINI,
-  OFFERTE, CONTRATTI</code>), ognuna con la <strong>griglia delle 4 fasi sempre presenti</strong>
-  nell'ordine del ciclo di vita (<code>APERTO, IN_ATTESA, IN_CORSO, CHIUSO</code>) e zeri
-  espliciti — DL-13: la griglia è neutra, il FE decide quali card mostrare.
-  Aree o fasi <strong>fuori whitelist</strong> emesse dalla vista vengono <strong>accodate dopo le
-  note</strong>, mai perse in silenzio; il vocabolario <code>fasi</code> top-level alimenta i
-  filtri FE (nessuna copia FE, nessun contrabbando dalla griglia di un'area);
-  un'area extra che porta <strong>valori</strong> li espone (decisione data-driven, non la
-  whitelist euro statica).</li>
-<li>Totali per area = somma delle fasi (su Decimal). Misura mista (DL-11,
-  conferma D-2/D-3/D-4): aree euro (<code>PREVENTIVI</code>/<code>ORDINI</code>) con
-  <code>valore_totale</code>/<code>valore_transitato</code> come stringa (<code>"0"</code> se vuote); aree a
-  conteggi (<code>OFFERTE</code>/<code>CONTRATTI</code>) con valori <code>null</code>. Il valore residuo aperto
-  è <code>valore_totale − valore_transitato</code> (i documenti completamente transitati
-  contribuiscono 0).</li>
+  OFFERTE, CONTRATTI</code>), ognuna con la <strong>griglia delle 3 fasi vive sempre
+  presenti</strong> nell'ordine della maturità verso la commessa (<code>APERTO, IN_ATTESA,
+  IN_CORSO</code>) e zeri espliciti — DL-13: la griglia è neutra, il FE decide quali
+  card mostrare. Aree o fasi <strong>fuori whitelist</strong> emesse dalla vista vengono
+  <strong>accodate dopo le note</strong>, mai perse in silenzio; il vocabolario <code>fasi</code>
+  top-level alimenta i filtri FE (nessuna copia FE, nessun contrabbando dalla
+  griglia di un'area); un'area extra che porta <strong>valori</strong> li espone (decisione
+  data-driven, non la whitelist euro statica).</li>
+<li>Totali per area = somma delle fasi (su Decimal). Misura mista (DL-11/16,
+  conferma D-2/D-3/D-4): aree euro (<code>PREVENTIVI</code>/<code>ORDINI</code>) con <code>valore_totale</code>
+  come stringa (<code>"0"</code> se vuote); aree a conteggi (<code>OFFERTE</code>/<code>CONTRATTI</code>) con
+  <code>valore_totale</code> <code>null</code> (il FE le legge da <code>valore_totale !== null</code>).</li>
 </ul>
 <h3 id="lista-documenti">Lista documenti<a class="headerlink" href="#lista-documenti" title="Permanent link">&para;</a></h3>
 <p>Envelope paginato standard (<code>count/page/page_size/total_pages/results</code>); ogni
 riga: <code>area</code>, chiavi documento (<code>documento_id</code>, <code>documento_uid</code>, <code>codice</code>),
 <code>cliente_display</code>, <code>fase</code>, <code>stato_codice_interno</code>, <code>stato_codice</code>,
-<code>valore_totale</code>/<code>valore_transitato</code> (NULL per aree a conteggi),
-<code>unita_totali</code>/<code>unita_transitate</code>, <code>is_transitato</code> (<strong>NULL = giudizio
-sospeso</strong>, contratti fino al push ricorrente), <code>is_aperto</code>, <code>motivo_fermo</code>
-(può essere NULL: qui è un hint, non il criterio di popolazione),
-<code>data_riferimento</code> ("in essere da": data documento, <code>valido_dal</code> per i
-contratti). <strong>Ordinamento BE-side</strong> (le viste non garantiscono ORDER):
-<code>data_riferimento ASC NULLS LAST</code>, poi <code>valore_totale DESC NULLS LAST, area,
-documento_id</code>.</p>
+<code>valore_totale</code> (NULL per aree a conteggi), <code>unita_totali</code>, <strong><code>anzianita_giorni</code></strong>
+(derivata BE in SELECT: <code>GREATEST(current_date − data_riferimento, 0)</code>, come il
+gemello Backlog — alimenta la colonna "aperto da N gg" e allinea la lettura al
+filtro <code>ritardo_giorni</code>), <code>motivo_fermo</code> (può essere NULL: qui è un hint, non il
+criterio di popolazione), <code>data_riferimento</code> ("in essere da": data documento,
+<code>valido_dal</code> per i contratti). <strong>Ordinamento BE-side</strong> (le viste non
+garantiscono ORDER): default per <code>data_riferimento ASC NULLS LAST</code>, poi
+<code>valore_totale DESC NULLS LAST, area, documento_id</code>; con <code>order_by</code>/<code>order_dir</code>
+(vedi Input) l'ORDER BY diventa <code>&lt;colonna whitelist&gt; &lt;asc|desc&gt; NULLS LAST</code> +
+tiebreak <code>area, documento_id</code>. Colonna e direzione <strong>whitelistate</strong> (mai input
+grezzo nell'ORDER BY).</p>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Popolazione = stock documenti vivi</strong> (§6-bis): union 4 aree documento,
-  esclusi gli abortiti (<code>NOT is_abortito</code> — l'esclusione D-6 vive nella vista
-  stock: i resolver non-contratti <em>marcano</em> soltanto), <strong>tutte le fasi</strong>
-  incluse le 🟢 fisiologiche che il Backlog esclude. Complementare alle due
-  lenti: Lente 1 = mese di competenza, Lente 2 = lavoro da sbloccare,
-  Situazione aperta = fotografia della pipeline.</li>
-<li><strong>Contratti = consistenza pura</strong> (DL-12): resolver de-esploso (1 riga per
-  contratto vivo), giudizio di transito sospeso (<code>is_transitato</code>/<code>motivo_fermo</code>
-  NULL) finché non esiste il push ricorrente — un contratto conta sempre
-  aperto, mai "fermo" (falso-allarme perenne evitato).</li>
+<li><strong>Popolazione = serbatoio pre-commessa</strong> (§6-ter, DL-14/15): union 4 aree
+  documento con perimetro <strong>aperti-non-chiusi</strong> — <code>is_transitato IS DISTINCT
+  FROM true</code> (esce l'accettato-già-smistato, transitato-non-chiuso) <strong>AND</strong>
+  <code>fase &lt;&gt; 'CHIUSO'</code> (esce il preventivo EVASO-con-riga-residua,
+  chiuso-non-transitato); abortiti esclusi a monte (<code>NOT is_abortito</code>). È il
+  pezzo <strong>a monte</strong> della Lente 1 Competenza (che parte dalla commessa); resta
+  distinto dalla Lente 2 Backlog (stesso insieme, tagli diversi: Backlog = cosa
+  sbloccare ora; Situazione aperta = dove sono tutti gli aperti, per fase).</li>
+<li><strong>Card = fotografia completa; filtro solo-lista</strong> (DL-17): il riepilogo NON è
+  toccato da <code>ritardo_giorni</code> (le card fotografano tutto il serbatoio); la
+  soglia "aperti da oltre N giorni" agisce solo sul drill-down.</li>
+<li><strong>Contratti</strong> (DL-18): giudizio di transito sospeso → restano sempre aperti
+  (<code>DRAFT</code> + <code>ATTIVO</code>; <code>CESSATO</code> esce con <code>fase &lt;&gt; CHIUSO</code>). <code>ATTIVO</code> figura
+  come <code>IN_CORSO</code> (astrazione fase normalizzata).</li>
 <li><strong>Anti-drift fail-visible</strong>: fasi/aree sconosciute accodate nel riepilogo e
   <strong>passthrough su entrambi i filtri</strong> <code>area</code>/<code>fase</code> del drill-down (mai 400,
   mai perse: la card accodata resta drillabile).</li>
-<li><strong>Scope emittente — interamente DB-side</strong>: RLS invoker sulle 4 aree
-  documento (fix V-1 <code>20260706-15</code>; il <code>security_invoker</code> perso dal resolver
-  contratti col <code>20260707-03</code> è stato <strong>ripristinato e verificato</strong> — brief DB
-  §5, con guard pgTAP su <code>pg_class.reloptions</code>). Il BE <strong>non</strong> passa alcun
-  <code>auth_user_id</code>.</li>
+<li><strong>Scope emittente — interamente DB-side</strong>: RLS invoker sulle 4 aree documento
+  (<code>security_invoker=on</code> su entrambe le viste v2, verificato con guard pgTAP su
+  <code>pg_class.reloptions</code>). Il BE <strong>non</strong> passa alcun <code>auth_user_id</code>.</li>
 <li>Una <strong>sola valutazione della union</strong> per pagina (<code>_query_paged_view</code>: CTE
   materializzata + <code>COUNT(*) OVER()</code> + <strong>offset clampato all'ultima pagina in
   SQL</strong>). Il rientro da una pagina stantia (lista ridotta da altri utenti) non
@@ -5212,28 +5257,28 @@ documento_id</code>.</p>
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>vendite.vw_dash_aperto_documenti</code> — doc:
+<li><code>vendite.vw_dash_aperto_documenti</code> (v2) — doc:
   <code>docs/it/dbzero/vendite/manual/vw_dash_aperto_documenti.md</code></li>
-<li><code>vendite.vw_dash_aperto_riepilogo</code> — doc:
+<li><code>vendite.vw_dash_aperto_riepilogo</code> (v2) — doc:
   <code>docs/it/dbzero/vendite/manual/vw_dash_aperto_riepilogo.md</code></li>
-<li><code>vendite.vw_dash_fatturazione_contratti</code> de-esploso (migration <code>20260707-03</code>)</li>
-<li><code>vendite.vw_dash_fatturazione_mensile</code> <strong>dismessa</strong> (migration <code>20260707-06</code>)</li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Sostituisce <code>api_dashboard_fatturazione.md</code> (endpoint
-  <code>dashboard-fatturazione/{,fermi/}</code> ritirati insieme a
-  <code>views_dashboard_fatturazione.py</code>, <code>fn_dash_fatturazione_*</code>,
-  <code>list_dash_fatturazione_*</code> e relativi test).</li>
-<li>Substrato DB applicato con migrations <code>20260707-03..06</code> (pgTAP
-  <code>test-vw-dash-aperto-v1.sql</code> plan 10 + <code>test-vw-dash-fatturazione-v1.sql</code>
-  rimaneggiato plan 28, verdi).</li>
+<li><strong>v2 (serbatoio pre-commessa)</strong> su v1: eliminato il concetto <em>transitato</em>
+  (in una vista senza asse temporale totalizzava dalla notte dei tempi roba
+  già passata, non azionabile). Rimossi dagli endpoint il toggle <code>solo_aperti</code>
+  e i campi <code>n_aperti</code>/<code>valore_transitato</code>/<code>unita_transitate</code>/<code>is_transitato</code>/
+  <code>is_aperto</code>; aggiunti il filtro <code>ritardo_giorni</code> e il campo <code>anzianita_giorni</code>.</li>
+<li>Substrato DB v2 applicato con changeset <code>20260708-03/04</code> (PR #944): viste
+  ristrette agli aperti-non-chiusi + drop colonne transitato (DROP+CREATE
+  ordinato, non <code>CREATE OR REPLACE</code>), pgTAP <code>test-vw-dash-security-invoker.sql</code>
+  (plan 14, verdi).</li>
 <li>Test: <code>apps/vendite/tests/api/test_dashboard_aperto_api.py</code> (9 casi) +
-  <code>apps/vendite/tests/services/test_dashboard_aperto_service.py</code> (12 casi),
+  <code>apps/vendite/tests/services/test_dashboard_aperto_service.py</code> (16 casi),
   tutti con mock (CI-safe).</li>
 <li>FE (Fase 3): rotta <code>/vendite/situazione-aperta</code> (<code>SituazioneApertaView.vue</code>,
-  store <code>dashboardAperto.js</code>, severity <code>faseDocumentoSeverity</code>); vocabolari
-  i18n <code>motivo_fermo</code>/<code>area_*</code>/<code>fase_*</code> ricollocati nel gruppo condiviso
+  store <code>dashboardAperto.js</code>, severity <code>faseDocumentoSeverity</code>, donut per fase
+  <code>DonutFasi</code> su <code>DonutBase</code>); vocabolari i18n nel gruppo condiviso
   <code>dash_comune</code> (riusato dal Backlog).</li>
 </ul>
 

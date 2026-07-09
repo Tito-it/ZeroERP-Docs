@@ -385,6 +385,8 @@
       
         
       
+        
+      
     
     
     
@@ -2502,6 +2504,8 @@
       
         
       
+        
+      
     
     
     
@@ -3094,6 +3098,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3414,10 +3445,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3434,8 +3465,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5356,12 +5387,19 @@ ogni fase.</p>
 <p>Riferimento: refactor-contratti-modalita.md (<code>docs/it/dev/work-done/refactor-contratti-modalita</code>) §3-bis-A/A-schema.</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Il <strong>numero contratto</strong> e' generato lato service via
-  <code>script.fn_generate_codice('contratto')</code> (prefix <code>CNT</code>, len 7,
-  config in <code>config.sistema_codici</code>). NON e' accettato in payload (lock
-  via trigger <code>trgfn_lock_columns('numero', 'CODICE_NON_MODIFICABILE')</code>).</li>
-<li>Lo <strong>stato iniziale</strong> di ogni contratto e' <code>DRAFT</code> (risolto dal service
-  via <code>config.stati_doc_contratti.codice_interno</code>).</li>
+<li>Il <strong>numero contratto</strong> e' generato via <code>script.fn_generate_codice('contratto')</code>
+  (prefix <code>CNT</code>, len 7, config in <code>config.sistema_codici</code>) <strong>dentro la funzione madre</strong>
+  <code>vendite.fn_create_contratto</code> (fix analisi-fix-transazioni #2, 2026-07-08 — prima
+  lato service, prima dell'INSERT). NON e' accettato in payload (lock via trigger
+  <code>trgfn_lock_columns('numero', 'CODICE_NON_MODIFICABILE')</code>).</li>
+<li>Lo <strong>stato iniziale</strong> di ogni contratto e' <code>DRAFT</code> (risolto <strong>dentro</strong> la fn madre
+  da <code>config.stati_doc_contratti.codice_interno</code>).</li>
+<li><strong>Atomicità creazione (#2):</strong> generazione numero + INSERT testata + INSERT utility 1:1
+  opzionale avvengono in <strong>un'unica</strong> <code>SELECT vendite.fn_create_contratto(...)</code>, atomica
+  per costruzione: o tutto o rollback (contatore numero incluso). Prima erano
+  <code>generate_numero()</code> + 2 INSERT separati in autocommit → un fallimento dell'INSERT
+  utility lasciava un contratto orfano. NB: il numero viene da una <strong>sequence</strong> e un
+  rollback lascia comunque un <strong>gap</strong> di numerazione (innocuo, gia' cosi' in precedenza).</li>
 <li>Le coerenze cross-table (tipo/classe utenza per ambito utility, no-overlap,
   coerenza tipo_eccezione/prezzo) sono enforced dai trigger DB e dal
   temporal UNIQUE PG18:</li>

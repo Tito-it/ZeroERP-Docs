@@ -389,6 +389,8 @@
       
         
       
+        
+      
     
     
     
@@ -2508,6 +2510,8 @@
       
         
       
+        
+      
     
     
     
@@ -3100,6 +3104,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3420,10 +3451,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3440,8 +3471,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6870,9 +6901,16 @@ in <a href="../../../../../frontend/src/assets/main.css">main.css</a> e usano <c
 <td><code>--app-preview-bg</code>, <code>--app-preview-border</code>, <code>--app-preview-radius</code></td>
 <td>Riquadri anteprima</td>
 </tr>
+<tr>
+<td>Grafici (donut dashboard)</td>
+<td><code>--app-chart-transitato</code>, <code>--app-chart-fermo</code>, <code>--app-chart-track</code>, <code>--app-chart-errore</code>, <code>--app-chart-fase-*</code> (<code>-aperto</code>/<code>-in-attesa</code>/<code>-in-corso</code>/<code>-chiuso</code>/<code>-default</code>)</td>
+<td>Palette dei donut fatturazione (<code>DonutBase</code> + skin <code>DonutTransito</code>/<code>DonutFasi</code>). Coppia transitato/fermo (green-600/orange-600) e palette per-fase allineata a <code>faseDocumentoSeverity</code>: colori saturi validi su entrambe le superfici, <strong>senza override light</strong> (solo <code>--app-chart-track</code> lo ha, essendo il neutro dell'anello vuoto)</td>
+</tr>
 </tbody>
 </table>
-<p><strong>Dark/Light mode</strong>: tutte le variabili sopra hanno un override in <code>:root:not(.p-dark)</code> per light mode.
+<p><strong>Dark/Light mode</strong>: tutte le variabili sopra hanno un override in <code>:root:not(.p-dark)</code> per light mode
+(eccezione documentata: la famiglia <code>--app-chart-*</code> dei colori grafico usa valori saturi
+validi su dark e light e non richiede l'override, tranne <code>--app-chart-track</code>).
 Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <code>toggleDarkMode</code>) e persistito in <code>localStorage</code>.</p>
 <h3 id="classi-layout-pagina-maincss">Classi layout pagina (<code>main.css</code>)<a class="headerlink" href="#classi-layout-pagina-maincss" title="Permanent link">&para;</a></h3>
 <table>
@@ -7652,9 +7690,19 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 <td><strong>Empty-state "onesto" delle liste cruscotti (estratto 2026-07-07, regola del 2, ok Tid).</strong> Props <code>loaded</code> (da <code>usePagedDashFetch.loaded</code>), <code>emptyText</code>, <code>placeholderText</code>: check-circle + messaggio positivo SOLO dopo una fetch riuscita, altrimenti inbox + placeholder neutro — mai un all-clear su dati mai arrivati. Consumer: <code>DashboardBacklogView</code>, <code>SituazioneApertaView</code>.</td>
 </tr>
 <tr>
+<td><code>DonutBase</code></td>
+<td><code>charts/DonutBase.vue</code></td>
+<td><strong>Substrato riusabile dei donut dashboard (estratto 2026-07-08, regola del 2, ok Tid — quando è servito un secondo donut, per fase).</strong> Unico wrapper chart.js dell'app (decisione D-1, 2026-07-03): le view/facciate NON parlano mai con chart.js direttamente. Possiede SOLO la macchina condivisa: <code>&lt;Chart&gt;</code> doughnut, risoluzione delle variabili <code>theme.css</code> in colori concreti con cache module-level per <code>(tema, variabile)</code> — un solo <code>getComputedStyle</code> per toggle dark/light —, anello neutro "nessun dato", options STATICHE (solo <code>data</code> reattivo → niente destroy+reinit del <code>&lt;Chart&gt;</code>), mini-legenda dot+label+valore. Props: <code>segments</code> (<code>&#91;{label, cssVar, fallback, value, formatted}&#93;</code>), <code>mode</code> (<code>donut</code>|<code>fraction</code>), <code>centerText</code> (String|null), <code>fractionText</code> (String|null), <code>size</code>. Le facciate passano i segmenti già decisi; palette SOLO da <code>--app-chart-*</code> (mai colori hardcoded, <code>feedback_css_centralizzazione</code>).</td>
+</tr>
+<tr>
 <td><code>DonutTransito</code></td>
 <td><code>charts/DonutTransito.vue</code></td>
-<td><strong>Unico wrapper chart.js dell'app (decisione D-1 dashboard fatturazione, 2026-07-03).</strong> Le view NON parlano mai con chart.js direttamente: passano da qui. Visualizza "transitato vs fermo" in due modalita': <code>mode="donut"</code> (default, donut a 2 spicchi via PrimeVue <code>&lt;Chart&gt;</code> + percentuale al centro, per valori in euro) e <code>mode="fraction"</code> (frazione n/n grande al posto del grafico, stessa altezza e mini-legenda, per aree a conteggi). Palette SOLO da variabili <code>theme.css</code> (<code>--app-chart-transitato</code>/<code>-fermo</code>/<code>-track</code>, coppia green-600/orange-600 validata CVD+contrasto su dark/light; mai colori hardcoded, <code>feedback_css_centralizzazione</code>); risoluzione <code>getComputedStyle</code> cachata a livello modulo per tema (una sola lettura per toggle dark/light, non per istanza). Options chart STATICHE (non computed) per evitare il destroy+reinit di PrimeVue <code>&lt;Chart&gt;</code> a ogni ricalcolo. Props: <code>transitato</code> (Number), <code>fermo</code> (Number), <code>mode</code> (<code>donut</code>|<code>fraction</code>), <code>format</code> (<code>currency</code>|<code>count</code>), <code>labelTransitato</code>/<code>labelFermo</code> (i18n dal caller), <code>size</code> (px, default 132). Identita' mai solo-colore: percentuale/frazione + legenda con dot+etichetta+valore. Consumer: <code>SituazioneApertaView</code> (transito per area dello stock), <code>DashboardCompetenzaView</code> (copertura mese Lente 1).</td>
+<td><strong>Facciata "transitato vs fermo" a 2 spicchi — skin sottile su <code>DonutBase</code></strong> (dal 2026-07-08; API pubblica invariata). <code>mode="donut"</code> (percentuale al centro, aree euro) o <code>mode="fraction"</code> (frazione n/n, aree a conteggi). Qui vivono SOLO la semantica binaria e la formattazione per natura del dato; colori da <code>--app-chart-transitato</code>/<code>-fermo</code> (coppia green-600/orange-600 validata CVD+contrasto su dark/light). Props: <code>transitato</code> (Number), <code>fermo</code> (Number), <code>mode</code> (<code>donut</code>|<code>fraction</code>), <code>format</code> (<code>currency</code>|<code>count</code>), <code>labelTransitato</code>/<code>labelFermo</code> (i18n dal caller), <code>size</code> (px, default 132). Consumer: <code>DashboardCompetenzaView</code> (copertura mese Lente 1).</td>
+</tr>
+<tr>
+<td><code>DonutFasi</code></td>
+<td><code>charts/DonutFasi.vue</code></td>
+<td><strong>Facciata donut a N spicchi per FASE — skin su <code>DonutBase</code></strong> (Situazione aperta v2, DL-16). Un segmento per fase con documenti, colore dalla palette fase <code>--app-chart-fase-*</code> (allineata a <code>faseDocumentoSeverity</code>: APERTO grigio, IN_ATTESA azzurro, IN_CORSO arancio, CHIUSO verde; fasi extra fail-visible → neutro default), centro = totale area. Misura mista (DL-11/16): riceve i valori già decisi dal caller (euro o conteggi) + flag <code>format</code>, non ri-decide la misura. Props: <code>fasi</code> (<code>&#91;{fase, label, value}&#93;</code>), <code>format</code> (<code>currency</code>|<code>count</code>), <code>size</code>. Consumer: <code>SituazioneApertaView</code> (serbatoio pre-commessa).</td>
 </tr>
 </tbody>
 </table>

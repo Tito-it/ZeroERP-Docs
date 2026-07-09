@@ -385,6 +385,8 @@
       
         
       
+        
+      
     
     
     
@@ -2502,6 +2504,8 @@
       
         
       
+        
+      
     
     
     
@@ -3094,6 +3098,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3414,10 +3445,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3434,8 +3465,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5058,6 +5089,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#read-side-lista-dettaglio-e-seed-trasporto" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Read-side (lista / dettaglio) e seed trasporto
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#note-finali" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5108,7 +5150,7 @@
 <ul>
 <li>Traccia i <strong>metadati di spedizione</strong> (data, mittente/destinatario, causale, vettore).</li>
 <li>Collega le <strong>righe</strong> in <code>vendite.ddt_righe</code>.</li>
-<li>Espone lo <strong>stato</strong> operativo tramite <code>config.stati_doc_ddt</code> (es. <em>EMESSO → IN_TRANSITO → CONSEGNATO → RESO</em> – nomenclatura da confermare).</li>
+<li>Espone lo <strong>stato</strong> operativo tramite <code>config.stati_doc_ddt</code> (<em>DRAFT → EMESSO → SPEDITO → CONSEGNATO → RESO</em>, + <em>ANNULLATO</em>), con transizioni data-driven in <code>config.transizioni_stati_ddt</code>.</li>
 <li>Partecipa alle ricostruzioni <strong>ordine↔ddt</strong> via fulfillment (riga↔riga) e alla derivazione <strong>ddt↔ordine</strong> (testata↔testata) tramite <code>mv_ddt_ordini</code>.</li>
 </ul>
 <blockquote>
@@ -5127,12 +5169,15 @@
 </blockquote>
 <hr />
 <h3 id="stati-del-ddt">Stati del DDT<a class="headerlink" href="#stati-del-ddt" title="Permanent link">&para;</a></h3>
-<p>Gli stati sono definiti in <strong><code>config.stati_doc_ddt</code></strong>. Mappatura tipica del ciclo:</p>
-<div class="highlight"><pre><span></span><code>EMESSO → IN_TRANSITO → CONSEGNATO → (RESO opz.)
+<p>Gli stati sono definiti in <strong><code>config.stati_doc_ddt</code></strong>; le <strong>transizioni ammesse</strong> vivono in <strong><code>config.transizioni_stati_ddt</code></strong> (matrice data-driven, mirror di <code>transizioni_stati_ordini</code>). Ciclo:</p>
+<div class="highlight"><pre><span></span><code>DRAFT → EMESSO → SPEDITO → CONSEGNATO → RESO   (+ ANNULLATO; RESO anche da SPEDITO)
 </code></pre></div>
 <ul>
-<li>Gli <strong>stati</strong> sono valori <strong>enum</strong> del dominio; per policy non si effettuano cancellazioni fisiche (no hard delete).</li>
-<li>La logica di avanzamento può dipendere da eventi applicativi (es. conferma vettore, POD, consegna).</li>
+<li><strong>Enforcement</strong>: il trigger <code>vendite.trgfn_ddt_guard_transizione</code> (fase <code>_a10_</code>, <code>BEFORE UPDATE OF stato_doc_ddt_id</code>) valida la coppia <code>(vecchio, nuovo)</code> contro la matrice attiva (<code>E_STATO_DDT_TRANSIZIONE_NON_VALIDA</code>).</li>
+<li><strong>Gate emissione</strong>: alla transizione a <strong>EMESSO</strong>, <code>vendite.trgfn_ddt_guard_transizione_approvazione</code> blocca se esistono componenti BoM CASO A in <code>PENDING</code> (<code>E_COMPONENTE_PREZZO_PENDENTE</code>) o con prezzo NULL (<code>E_DOC_COMPONENTI_PENDING_VALORIZZAZIONE</code>).</li>
+<li><strong>Azioni UI data-driven</strong>: il <code>meta.ui</code> di ogni transizione (label/icona/severity) è esposto da <code>script.fn_available_actions_ddt</code> → il FE non hardcoda i pulsanti.</li>
+<li><strong>Numerazione a EMESSO</strong>: il <code>numero</code> si assegna alla transizione a EMESSO (no buchi da bozze scartate) via <code>vendite.trgfn_ddt_gen_numero_emesso</code> — fuori dal framework <code>sistema_codici</code> (mirror fatture); immutabile dopo l'assegnazione (<code>vendite.trgfn_v_ddt_protect_num</code>).</li>
+<li>No hard delete: annullo/storno, mai DELETE fisica.</li>
 </ul>
 <blockquote>
 <p> La funzione di sync degli <strong>stati ordine</strong> legge anche lo stato del DDT per determinare le quantità <strong>consegnate</strong>.</p>
@@ -5146,10 +5191,10 @@
 <p><strong>Indici operativi</strong>:</p>
 </li>
 <li>
-<p><code>ix_ddt_data_documento (data_documento)</code></p>
+<p><code>ix_ddt_vendita_dest_stato_data (destinatario_soggetto_ruolo_id, stato_doc_ddt_id, data)</code></p>
 </li>
-<li><code>ix_ddt_stato (stato_doc_ddt_id)</code></li>
-<li><code>ix_ddt_destinatario (soggetto_destinatario_id)</code></li>
+<li><code>ix_vendite_ddt_stato_doc_ddt_id (stato_doc_ddt_id)</code></li>
+<li><code>ix_ddt_v_sorgente (sorgente_tipo_id, sorgente_uid)</code> — lookup DDT-per-ordine (multi-DDT, A-1)</li>
 </ul>
 <blockquote>
 <p>ℹ️ Gli indici reali possono variare in base ai volumi e all’uso (reporting vs operativo).</p>
@@ -5158,13 +5203,22 @@
 <h3 id="flussi-di-processo-collegati">Flussi di processo collegati<a class="headerlink" href="#flussi-di-processo-collegati" title="Permanent link">&para;</a></h3>
 <ol>
 <li>
-<p><strong>Evasione da Ordine</strong></p>
+<p><strong>Evasione da Ordine</strong> (<code>vendite.fn_genera_ddt_da_ordine</code>)</p>
 </li>
 <li>
-<p>Inserimento in <code>ordini_righe_fulfillment</code> genera il collegamento riga Ordine ↔ riga DDT.</p>
+<p>Funzione madre atomica: da un ordine (CONFERMATO / PARZIALMENTE_EVASO) crea testata DDT
+     (DRAFT, <code>sorgente_tipo_id = ORDINE_VENDITA</code>, <code>sorgente_uid = ordini.uid</code>), copia lo
+     <strong>snapshot</strong> delle righe (prezzo/sconto/iva) e dei componenti CASO A (A-2), e inserisce il
+     <strong>fulfillment</strong> riga↔riga (<code>qta_evasa</code>).</p>
 </li>
+<li><strong>Multi-DDT</strong> (A-1): un ordine può generare più DDT (consegne parziali). L'over-shipping è
+     bloccato dal guard <code>trgfn_ordini_ful_guard_consistenza</code> (<code>E_QTA_SUPERA_RESIDUO</code>); l'unicità del
+     legame è sul fulfillment <code>(ordine_riga_id, ddt_riga_id)</code>, non più sulla testata.</li>
+<li><strong>Proiezione stato ordine</strong> (atomica): residuo pieno → <code>CONFERMATO</code>, <code>0 &lt; residuo &lt; pieno</code> →
+     <code>PARZIALMENTE_EVASO</code>, residuo 0 → <code>EVASO</code> (predicato <code>fn_ordine_ha_residuo_evasione</code>).</li>
 <li>
-<p>La <strong>MV</strong> <code>mv_ddt_ordini</code> riflette le coppie testata↔testata.</p>
+<p>La <strong>MV</strong> <code>mv_ddt_ordini</code> riflette le coppie testata↔testata (refresh via
+     <code>dbops.fn_refresh_mv_ddt_ordini</code>, non nella fn).</p>
 </li>
 <li>
 <p><strong>Consegna</strong></p>
@@ -5202,9 +5256,9 @@
 </ul>
 <p><div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="o">*</span>
 <span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">ddt</span><span class="w"> </span><span class="n">d</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">data_documento</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="p">:</span><span class="n">dal</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">:</span><span class="n">al</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="k">data</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="p">:</span><span class="n">dal</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">:</span><span class="n">al</span>
 <span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">stato_doc_ddt_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">stato_id</span>
-<span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">data_documento</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
+<span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="k">data</span><span class="w"> </span><span class="k">DESC</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
 </code></pre></div>
 * <strong>Ordini collegati a un DDT (via MV)</strong></p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">o</span><span class="p">.</span><span class="o">*</span>
@@ -5238,6 +5292,17 @@
 <li>[ ] Trigger di blocco DELETE attivi su <code>ddt_righe</code></li>
 <li>[ ] MV <code>mv_ddt_ordini</code> presente e indicizzata (UNIQUE)</li>
 <li>[ ] Procedure di <strong>storno/annullo</strong> definite nei flussi applicativi</li>
+</ul>
+<hr />
+<h3 id="read-side-lista-dettaglio-e-seed-trasporto">Read-side (lista / dettaglio) e seed trasporto<a class="headerlink" href="#read-side-lista-dettaglio-e-seed-trasporto" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>vendite.vw_ddt_lista</code></strong> — vista canonica denormalizzata (stato, destinatario/mittente/vettore,
+  trasporto, ordine di origine via <code>sorgente_uid</code>) per <code>&lt;ListaConfigurabile&gt;</code> (<code>security_invoker=on</code>).
+  Definizione lista/colonne in <code>ui.lista_definizione</code> / <code>ui.lista_colonna</code> (<code>codice = vendite.ddt</code>).</li>
+<li><strong><code>script.fn_available_actions_ddt</code></strong> — capabilities per il drawer (azioni data-driven dalla
+  matrice, <code>can_edit_*</code>, <code>push_commessa</code> via <code>fn_list_ddt_da_pushare</code>).</li>
+<li><strong>Seed trasporto</strong>: <code>config.causali_trasporto</code> e <code>config.aspetti_beni</code> (valori standard IT) —
+  valorizzabili in testata, base per il PDF accompagnatorio.</li>
 </ul>
 <hr />
 <h3 id="note-finali">📘 Note finali<a class="headerlink" href="#note-finali" title="Permanent link">&para;</a></h3>

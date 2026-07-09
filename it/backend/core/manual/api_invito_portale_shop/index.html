@@ -385,6 +385,8 @@
       
         
       
+        
+      
     
     
     
@@ -2502,6 +2504,8 @@
       
         
       
+        
+      
     
     
     
@@ -3094,6 +3098,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3414,10 +3445,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3434,8 +3465,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5306,7 +5337,15 @@ area <code>anagrafiche</code> ≥ <code>LETTURA</code>.</p>
 <span class="p">}</span>
 </code></pre></div>
 <p><code>reinvio=true</code>: invalida i token portale precedenti per quell'auth_user
-prima di generare il nuovo invito.</p>
+e genera il nuovo invito.</p>
+<p><strong>Semantica transazionale del reinvio (fix analisi-fix-transazioni #17, 2026-07-08).</strong>
+L'invalidazione dei token precedenti e la ri-emissione identita/token avvengono nella
+<strong>stessa</strong> transazione (<code>transaction.atomic()</code>): se la ri-emissione fallisce, anche
+l'invalidazione rolla → l'utente <strong>conserva i token vecchi</strong> e non resta mai senza
+alcun token valido (prima l'invalidazione era una scrittura separata committata prima).
+L'invio email resta <strong>fuori</strong> dalla transazione, best-effort. Vale su <strong>tutte e tre le
+vesti</strong> — CLIENTE_PORTALE, FORNITORE_PORTALE e <strong>SHOP_CUSTOMER</strong> (simmetria ripristinata:
+lo shop aveva ancora l'invalidazione fuori-atomic).</p>
 <p><strong>Response</strong>:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>

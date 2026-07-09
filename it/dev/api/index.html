@@ -389,6 +389,8 @@
       
         
       
+        
+      
     
     
     
@@ -2508,6 +2510,8 @@
       
         
       
+        
+      
     
     
     
@@ -3100,6 +3104,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3420,10 +3451,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3440,8 +3471,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6962,7 +6993,7 @@ Vedi <a href="../../guide/architettura-multi-face-auth/">architettura-multi-face
 <ul>
 <li><strong>Pratiche</strong>: <a href="../../backend/pratiche/manual/api_pratiche_list/">api_pratiche_list.md</a> | <a href="../../backend/pratiche/manual/api_pratiche_generate/">api_pratiche_generate.md</a> | <a href="../../backend/pratiche/manual/api_pratiche_note/">api_pratiche_note.md</a> | <a href="../../backend/pratiche/manual/api_pratiche_allegati/">api_pratiche_allegati.md</a> | <a href="../../backend/pratiche/manual/api_flusso_assegnazione/">api_flusso_assegnazione.md</a> | <a href="../../backend/pratiche/manual/api_operatori_reparto/">api_operatori_reparto.md</a> | <a href="../../backend/pratiche/manual/api_prendi_in_carico/">api_prendi_in_carico.md</a> | <a href="../../backend/pratiche/manual/api_coda_lavoro/">api_coda_lavoro.md</a></li>
 <li><strong>Amm. Software</strong>: <a href="../../backend/amm-software/manual/api_amm_software/">api_amm_software.md</a></li>
-<li><strong>Anagrafiche</strong>: <a href="../../backend/anagrafiche/manual/api_soggetti/">api_soggetti.md</a> | <a href="../../backend/anagrafiche/manual/api_indirizzi/">api_indirizzi.md</a> | <a href="../../backend/anagrafiche/manual/api_geo_config/">api_geo_config.md</a> | <a href="../../backend/anagrafiche/manual/api_fornitori/">api_fornitori.md</a></li>
+<li><strong>Anagrafiche</strong>: <a href="../../backend/anagrafiche/manual/api_soggetti/">api_soggetti.md</a> | <a href="../../backend/anagrafiche/manual/api_clienti/">api_clienti.md</a> | <a href="../../backend/anagrafiche/manual/api_indirizzi/">api_indirizzi.md</a> | <a href="../../backend/anagrafiche/manual/api_geo_config/">api_geo_config.md</a> | <a href="../../backend/anagrafiche/manual/api_fornitori/">api_fornitori.md</a></li>
 <li><strong>Auth</strong>: <a href="../../backend/core/manual/api_multi_veste_token/">api_multi_veste_token.md</a> | <a href="../../backend/core/manual/auth_views_audit/">auth_views_audit.md</a> | <a href="../../backend/core/manual/api_user_profile/">api_user_profile.md</a> | <a href="../../backend/core/manual/api_token_cambio_password/">api_token_cambio_password.md</a> | <a href="../../backend/core/manual/api_password_reset/">api_password_reset.md</a> | <a href="../../backend/core/manual/api_invito_operatore/">api_invito_operatore.md</a> | <a href="../../backend/core/manual/api_invito_portale_shop/">api_invito_portale_shop.md</a> | <a href="../../backend/core/manual/api_logout/">api_logout.md</a></li>
 <li><strong>Email</strong>: <a href="../../backend/core/manual/api_email/">api_email.md</a></li>
 <li><strong>Parametri</strong>: <a href="../../backend/core/manual/api_parameter_settings/">api_parameter_settings.md</a></li>
@@ -7218,10 +7249,17 @@ suo <code>__exit__</code>), <em>prima</em> che <code>handle_post_json</code> cat
 side-effect <strong>deve</strong> avvolgerle in un solo <code>transaction.atomic()</code> <strong>oppure</strong> delegare a una singola
 funzione madre DB. Domini con natura mista (es. pratiche): le operazioni pure-dato → madre DB
 (<code>pratiche.fn_crea_pratica</code>); il motore-flussi-con-handler → <code>transaction.atomic()</code>.</p>
+<p><strong>Enforcement CI.</strong> Un test AST — <code>apps/core/tests/test_transaction_atomicity_guardrail.py</code> (gira
+senza DB) — fallisce se un metodo compone 2+ scritture non tutte in un <code>transaction.atomic()</code>.
+Copertura <strong>v1 = livello repository</strong> (<code>cursor.execute</code> di scrittura, con <code>ALLOWLIST</code> motivata per i
+casi deliberati come il protocollo idempotency); il livello service (2+ chiamate a metodi-write del
+repo) è un <strong>follow-up v2</strong> (richiede euristiche receiver-aware per non generare falsi positivi). La
+regola sopra vale comunque per intero: il check automatico ne presidia oggi il sottoinsieme più
+verificabile, non sostituisce la disciplina in review.</p>
 <blockquote>
 <p>Faccia DB della stessa regola (come scrivere la funzione madre): <a href="../../linee-guida-sql/">linee-guida-sql §5b</a>.
 Caso di studio, criterio esteso e catalogo dei finding:
-analisi-fix-transazioni (<code>docs/it/dev/work-in-progress/analisi-fix-transazioni</code>).</p>
+analisi-fix-transazioni (<code>docs/it/dev/work-done/analisi-fix-transazioni</code>).</p>
 </blockquote>
 <h3 id="tassonomia-errori">Tassonomia errori<a class="headerlink" href="#tassonomia-errori" title="Permanent link">&para;</a></h3>
 <p>Tutti i codici errore seguono <code>E_{MODULO}_{TIPO}</code> e DEVONO essere registrati

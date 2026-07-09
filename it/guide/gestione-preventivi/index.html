@@ -391,6 +391,8 @@
       
         
       
+        
+      
     
     
     
@@ -2510,6 +2512,8 @@
       
         
       
+        
+      
     
     
     
@@ -3205,6 +3209,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#45-differenza-col-modello-offerte" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4.5 Differenza col modello offerte
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3694,6 +3709,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -4017,10 +4059,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="">
             
   
   
@@ -4037,8 +4079,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5748,6 +5790,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#45-differenza-col-modello-offerte" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4.5 Differenza col modello offerte
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6386,9 +6439,13 @@ generato per la rev precedente (il nuovo rev mantiene lo stesso <code>numero</co
 <p>ZeroERP non mantiene un flag persistito "questa è la rev attiva": il predicato
 è <strong>calcolato dalla view <code>vw_preventivi</code></strong> come:</p>
 <blockquote>
-<p>"è la rev viva del numero" = "non esiste una rev superiore non-abortita per
-lo stesso numero"</p>
+<p>"è la rev viva del numero" = "il suo stato <strong>non è abortito</strong> <strong>e</strong> non esiste
+una rev superiore non-abortita per lo stesso numero"</p>
 </blockquote>
+<p>Il termine sul proprio stato (aggiunto 2026-07-08) garantisce che una revisione
+<strong>annullata in cima</strong> alla catena non si dichiari attiva "guardando solo verso
+l'alto": senza di esso <code>is_attiva</code> non sarebbe univoco (due rev attive per lo
+stesso numero) nel caso "rev0 EMESSO + rev1 ANNULLATO".</p>
 <p>Conseguenza pratica nei casi limite:</p>
 <table>
 <thead>
@@ -6425,6 +6482,48 @@ accettazione, ulteriore revisione). Senza ricorrere a interventi manuali.</p>
 Esiste un toggle "Mostra storico revisioni" che espone tutte le righe,
 incluse quelle annullate o superseded. Il filtro lato API è il parametro
 <code>solo_attiva</code> (default <code>true</code>).</p>
+<h3 id="45-differenza-col-modello-offerte">4.5 Differenza col modello offerte<a class="headerlink" href="#45-differenza-col-modello-offerte" title="Permanent link">&para;</a></h3>
+<p>Preventivi e offerte gestiscono le revisioni in <strong>due modi diversi</strong>, per una
+ragione precisa.</p>
+<table>
+<thead>
+<tr>
+<th>Aspetto</th>
+<th><strong>Preventivi</strong></th>
+<th><strong>Offerte</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cosa succede alla versione precedente quando nasce la revisione</td>
+<td><strong>resta EMESSA/viva</strong>; il sistema calcola "qual è la versione valida" senza chiudere la precedente</td>
+<td>passa <strong>subito a SUPERATA</strong> (stato chiuso e definitivo, imposto in automatico)</td>
+</tr>
+<tr>
+<td>Se abbandono/annullo la revisione appena iniziata</td>
+<td>la precedente <strong>torna automaticamente la versione valida</strong>: si può accettarla o revisionarla di nuovo</td>
+<td>la precedente <strong>resta chiusa</strong> (SUPERATA): non torna indietro. Per riprovare si fa una nuova revisione</td>
+</tr>
+<tr>
+<td>Come nasce il concetto di "versione valida"</td>
+<td>da un <strong>calcolo</strong> (<code>is_attiva</code>), non da uno stato dedicato</td>
+<td>dallo <strong>stato</strong> (SUPERATA/ANNULLATA = non valida)</td>
+</tr>
+</tbody>
+</table>
+<p>Il preventivo <strong>è lo stesso documento</strong> (stesso numero, più revisioni) e il flusso
+previsto è <em>"comincio una revisione, ci ripenso, la versione emessa di prima resta
+valida"</em>. Per questo la precedente <strong>non</strong> viene mai chiusa: se annullo la bozza
+di revisione, la versione emessa torna da sola quella valida (vedi la tabella dei
+casi limite in §4.3). <strong>Non</strong> esiste uno stato "SUPERATO" sui preventivi proprio
+perché chiuderebbe la precedente e romperebbe questo ritorno.</p>
+<p>L'offerta invece è un <strong>documento a sé</strong> per ogni revisione (OFC-… diversi in
+catena): chiudere la precedente non crea problemi, perché se serve si emette una
+nuova offerta. Dettaglio nella
+<a href="../gestione-offerte-commerciali/">guida offerte §4.3</a>.</p>
+<p>Sui cruscotti entrambi i modelli sono corretti: i preventivi escludono le
+revisioni non valide tramite <code>is_attiva</code>, le offerte escludono la SUPERATA
+(è un esito negativo).</p>
 <hr />
 <h2 id="5-articoli-compositi-e-bom">5. Articoli compositi e BoM<a class="headerlink" href="#5-articoli-compositi-e-bom" title="Permanent link">&para;</a></h2>
 <h3 id="51-cosa-succede-quando-aggiungi-un-composito">5.1 Cosa succede quando aggiungi un composito<a class="headerlink" href="#51-cosa-succede-quando-aggiungi-un-composito" title="Permanent link">&para;</a></h3>

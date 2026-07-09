@@ -385,6 +385,8 @@
       
         
       
+        
+      
     
     
     
@@ -2502,6 +2504,8 @@
       
         
       
+        
+      
     
     
     
@@ -3094,6 +3098,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/cruscotti-fatturazione/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cruscotti fatturazione (le tre lenti)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/gestione-dei-pagamenti/" class="md-nav__link">
         
   
@@ -3414,10 +3445,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_32" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
         
           
-          <label class="md-nav__link" for="__nav_7_32" id="__nav_7_32_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
             
   
   
@@ -3434,8 +3465,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_32_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_32">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_33">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5921,6 +5952,14 @@ db-brief-offerta-righe-espanse.md (<code>docs/it/dev/work-done/db-brief-offerta-
   d'aggancio del ramo servizi: l'handler <code>post_smistamento</code> è <strong>merce-only</strong>, quindi
   la commessa-servizi non passa da lì. No-op per i push standalone (preventivo non
   in pratica).</li>
+<li><strong>Semantica transazionale (fix analisi-fix-transazioni #5, 2026-07-08)</strong>: push +
+  transizione EVASO + aggancio commessa-servizi alla pratica avvengono in un <strong>unico</strong>
+  <code>transaction.atomic()</code>. Un fallimento dell'<strong>aggancio-pratica</strong> rolla l'<strong>intero
+  push</strong> (commesse + ponte emittibilità): non resta mai una commessa-servizi orfana
+  senza link pratica (prima l'aggancio era una scrittura separata post-push). Il push
+  è idempotente/ri-eseguibile (advisory lock + dedup <code>segment_key</code>) → retry sicuro. La
+  sola <strong>transizione EVASO</strong> resta best-effort, isolata su un <strong>savepoint dedicato</strong> (un
+  suo fallimento logga e prosegue, senza rollbackare push+aggancio).</li>
 <li>Output <code>200</code>: report orchestrator <code>{ stato, push_log_id, durata_ms, handlers,
   commesse_ids, righe_pushable, fatturazione_immediata }</code></li>
 <li>Errori: <code>E_PREV_STATO_TRANSIZIONE</code> (409), <code>E_PREV_NESSUNA_RIGA</code> (400)</li>
