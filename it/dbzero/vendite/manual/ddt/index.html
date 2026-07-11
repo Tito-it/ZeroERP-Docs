@@ -5100,6 +5100,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#scope-emittente-e-rls-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Scope emittente e RLS (§15)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#note-finali" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5303,6 +5314,21 @@
   matrice, <code>can_edit_*</code>, <code>push_commessa</code> via <code>fn_list_ddt_da_pushare</code>).</li>
 <li><strong>Seed trasporto</strong>: <code>config.causali_trasporto</code> e <code>config.aspetti_beni</code> (valori standard IT) —
   valorizzabili in testata, base per il PDF accompagnatorio.</li>
+</ul>
+<hr />
+<h3 id="scope-emittente-e-rls-15">Scope emittente e RLS (§15)<a class="headerlink" href="#scope-emittente-e-rls-15" title="Permanent link">&para;</a></h3>
+<p>Il DDT <strong>memorizza</strong> l'emittente fiscale (<code>emittente_fiscale_id</code>, <code>NOT NULL</code>, FK) — allineato a
+ordini/preventivi — come chiave di scope multi-emittente.</p>
+<ul>
+<li><strong>Valorizzazione</strong>: <code>trgfn_ddt_normalize</code> eredita l'emittente dall'ordine sorgente; per lo
+  standalone lo risolve dal <code>billing_account</code> (<code>anagrafiche.fn_get_emittente_fiscale_pk</code>).</li>
+<li><strong>Guard scrittura</strong> (defense-in-depth): <code>trg_ddt_a10_guard_emittente_scope_ins_upd</code>
+  (<code>script.trgfn_guard_emittente_scope('fiscale','emittente_fiscale_id')</code>) blocca INSERT/UPDATE
+  se l'operatore non ha scope sull'emittente; skippa se <code>app.current_user_id</code> non e` settato (batch).</li>
+<li><strong>RLS</strong>: policy <code>rls_ddt_ef_whitelist</code> (<code>FOR ALL</code>, <code>script.fn_scope_ef_whitelist</code>, gate
+  <code>OPERATORE</code>). Stato a parita<code>con ordini/preventivi/fatture: **</code>ENABLE<code>senza</code>FORCE<code>** →
+  l'owner-app la bypassa finche</code> non arriva il <code>FORCE</code> (ondata coordinata). Protezione <strong>attiva</strong>
+  oggi = filtro applicativo BE su <code>vw_ddt_lista.emittente_fiscale_id</code>.</li>
 </ul>
 <hr />
 <h3 id="note-finali">📘 Note finali<a class="headerlink" href="#note-finali" title="Permanent link">&para;</a></h3>

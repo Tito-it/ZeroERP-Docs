@@ -5182,7 +5182,7 @@ invece del calcolo hardcoded in <code>ordini_service.py</code> (eliminato in fas
     &quot;can_change_state&quot;:   true,   // SOLO transizioni di stato (escluso push_commessa)
     &quot;can_edit_testata&quot;:   true,   // true solo in DRAFT
     &quot;can_edit_righe&quot;:     true,   // true solo in DRAFT
-    &quot;can_push_commessa&quot;:  false,  // true solo da CONFERMATO con righe pushabili
+    &quot;can_push_commessa&quot;:  false,  // true se righe pushabili (trigger CONFERMATO, anche PARZIALMENTE_EVASO/EVASO)
     &quot;can_push_commessa_reason&quot;:     &quot;ORDINE_NON_CONFERMATO&quot;,                  // null se push disponibile
     &quot;can_push_commessa_reason_key&quot;: &quot;ordini.push_commessa_reason.non_confermato&quot;, // chiave i18n tooltip
     &quot;non_editable_fields&quot;: \[...\],
@@ -5210,6 +5210,11 @@ invece del calcolo hardcoded in <code>ordini_service.py</code> (eliminato in fas
 <td>Nessuna transizione manuale: <code>CONFERMATO → ANNULLATO</code> è <code>attivo=false</code>. <code>push_commessa</code> appesa solo se l'ordine è pushabile</td>
 </tr>
 <tr>
+<td><code>PARZIALMENTE_EVASO</code> / <code>EVASO</code></td>
+<td><code>push_commessa</code> <em>(se eleggibile)</em></td>
+<td><strong>Rev 2026-07-10 (decoupling)</strong>: la spedizione non chiude la finestra di push per il trigger CONFERMATO (fix «orfano»)</td>
+</tr>
+<tr>
 <td><code>ANNULLATO</code></td>
 <td><code>&#91;&#93;</code></td>
 <td>Terminale</td>
@@ -5223,8 +5228,12 @@ CONFERMATO pushabile: <code>can_change_state=false</code> ma <code>available_act
 <code>push_commessa</code> (che non cambia lo stato).</p>
 </blockquote>
 <h3 id="azione-push_commessa-applicativa-non-di-stato">Azione <code>push_commessa</code> — applicativa, non di stato<a class="headerlink" href="#azione-push_commessa-applicativa-non-di-stato" title="Permanent link">&para;</a></h3>
-<p>Appesa a mano (non da matrice) quando <code>stato=CONFERMATO</code> <strong>e</strong> l'ordine ha almeno una
-riga pushabile:</p>
+<p>Appesa a mano (non da matrice) quando l'ordine ha almeno una riga pushabile secondo
+<code>fn_list_ordini_da_pushare</code> (fonte unica: <code>fatturazione_trigger='CONFERMATO'</code>, stato
+<strong>non</strong> <code>DRAFT</code>/<code>ANNULLATO</code>/<code>FATTURATO</code>, righe non ancora <code>EMESSA</code>). <strong>Rev 2026-07-10
+(decoupling fatturazione ↔ spedizione)</strong>: vale anche in <code>PARZIALMENTE_EVASO</code>/<code>EVASO</code> —
+la fatturazione su conferma è ortogonale alla spedizione (recupero ordine «orfano»,
+piano <code>piano-db-fix-orfano-push-ordine-confermato.md</code>):</p>
 <div class="highlight"><pre><span></span><code>{
     &quot;key&quot;: &quot;push_commessa&quot;,
     &quot;target_state&quot;: null,            // non cambia stato
@@ -5242,7 +5251,7 @@ valorizza la coppia motivo/chiave i18n per il tooltip:</p>
 <table>
 <thead>
 <tr>
-<th>Stato</th>
+<th>Condizione</th>
 <th style="text-align: center;"><code>can_push_commessa</code></th>
 <th><code>can_push_commessa_reason</code></th>
 <th><code>can_push_commessa_reason_key</code></th>
@@ -5250,25 +5259,43 @@ valorizza la coppia motivo/chiave i18n per il tooltip:</p>
 </thead>
 <tbody>
 <tr>
-<td>≠ CONFERMATO</td>
+<td>stato <code>DRAFT</code>/<code>ANNULLATO</code></td>
 <td style="text-align: center;"><code>false</code></td>
 <td><code>ORDINE_NON_CONFERMATO</code></td>
 <td><code>ordini.push_commessa_reason.non_confermato</code></td>
 </tr>
 <tr>
-<td>CONFERMATO, 0 righe pushabili</td>
+<td><code>fatturazione_trigger</code> ≠ CONFERMATO</td>
 <td style="text-align: center;"><code>false</code></td>
-<td><code>ORDINE_NESSUNA_RIGA_PUSHABILE</code></td>
-<td><code>ordini.push_commessa_reason.nessuna_riga_pushabile</code></td>
+<td><code>ORDINE_FATTURA_DA_DDT</code></td>
+<td><code>ordini.push_commessa_reason.fattura_da_ddt</code></td>
 </tr>
 <tr>
-<td>CONFERMATO, ≥1 riga pushabile</td>
+<td>≥1 riga pushabile (<code>fn_list_ordini_da_pushare</code>)</td>
 <td style="text-align: center;"><code>true</code></td>
 <td><code>null</code></td>
 <td><code>null</code></td>
 </tr>
+<tr>
+<td>0 righe pushabili, ≥1 segmento <code>EMESSA</code></td>
+<td style="text-align: center;"><code>false</code></td>
+<td><code>ORDINE_GIA_FATTURATO</code></td>
+<td><code>ordini.push_commessa_reason.gia_fatturato</code></td>
+</tr>
+<tr>
+<td>0 righe pushabili, nessun segmento emesso</td>
+<td style="text-align: center;"><code>false</code></td>
+<td><code>ORDINE_NESSUNA_RIGA_PUSHABILE</code></td>
+<td><code>ordini.push_commessa_reason.nessuna_riga_pushabile</code></td>
+</tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong><code>ORDINE_GIA_EVASO</code> rimosso (rev 2026-07-10).</strong> Asseriva «EVASO = già fatturato», in
+collisione con «EVASO = spedizione completa» del flusso DDT. La verità di billing è
+<code>vendite.commesse_attivita.stato_emissione='EMESSA'</code> (stessa usata dal <code>NOT EXISTS</code>
+di <code>fn_list_ordini_da_pushare</code>), non lo stato documento.</p>
+</blockquote>
 <h3 id="dettaglio-non_editable_fields">Dettaglio <code>non_editable_fields</code><a class="headerlink" href="#dettaglio-non_editable_fields" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -5312,8 +5339,11 @@ da DRAFT è bloccata tutta la testata, allineata a <code>_UPDATE_KEYS_ORDINE</co
    <code>sa.ordine</code>. Guard defense-in-depth: <code>AND t.meta ? 'action_key' AND t.meta ? 'label_key'</code>.</li>
 <li><strong><code>can_change_state</code></strong> — <code>jsonb_array_length(v_actions) &gt; 0</code> calcolato <strong>qui</strong>, prima di
    appendere <code>push_commessa</code>.</li>
-<li><strong>push_commessa</strong> — se <code>stato=CONFERMATO</code>: <code>EXISTS</code> su <code>fn_list_ordini_da_pushare(p_ordine_id)</code>.
-   Se eleggibile, appende l'azione; altrimenti valorizza <code>reason</code>/<code>reason_key</code>.</li>
+<li><strong>push_commessa</strong> — cascata (rev 2026-07-10): stato <code>DRAFT</code>/<code>ANNULLATO</code> → reason;
+   <code>fatturazione_trigger ≠ 'CONFERMATO'</code> → <code>ORDINE_FATTURA_DA_DDT</code>; <code>EXISTS</code> su
+   <code>fn_list_ordini_da_pushare(p_ordine_id)</code> → eleggibile; ≥1 segmento
+   <code>ORD:{uid}:R:{riga_id}</code> con <code>stato_emissione='EMESSA'</code> → <code>ORDINE_GIA_FATTURATO</code>;
+   fallback → <code>ORDINE_NESSUNA_RIGA_PUSHABILE</code>.</li>
 <li><strong>Capability editabilità</strong> — da <code>v_stato_cod</code>: <code>can_edit_testata/righe = (stato='DRAFT')</code>;
    <code>non_editable_fields</code> via <code>CASE</code> con costanti PL/pgSQL.</li>
 <li><strong>Build JSONB</strong> — <code>jsonb_build_object</code> con tutte le chiavi.</li>
@@ -5347,6 +5377,16 @@ da DRAFT è bloccata tutta la testata, allineata a <code>_UPDATE_KEYS_ORDINE</co
 <td><code>vendite.fn_list_ordini_da_pushare</code></td>
 <td>funzione</td>
 <td>eleggibilità push (riuso, no duplicazione)</td>
+</tr>
+<tr>
+<td><code>vendite.commesse_attivita</code></td>
+<td>tabella</td>
+<td>predicato «già fatturato» su <code>segment_key</code>+<code>stato_emissione</code> (rev 2026-07-10)</td>
+</tr>
+<tr>
+<td><code>vendite.ordini_righe</code></td>
+<td>tabella</td>
+<td>costruzione <code>segment_key</code> per il predicato «già fatturato»</td>
 </tr>
 <tr>
 <td><code>20260605-08-create-transizioni-stati-ordini-mctit</code></td>

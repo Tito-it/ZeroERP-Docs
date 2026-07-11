@@ -4990,10 +4990,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#regole-principali" class="md-nav__link">
+  <a href="#regole-principali-in-ordine" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Regole principali
+        Regole principali (in ordine)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#note" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Note
       </span>
     </span>
   </a>
@@ -5043,20 +5054,30 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>La trigger function <code>vendite.trgfn_ddt_normalize()</code> completa i campi
-temporali minimi del DDT quando il numero documento e` presente.</p>
+<p>La trigger function <code>vendite.trgfn_ddt_normalize()</code> normalizza la testata del DDT
+su <code>INSERT</code>: completa i campi temporali minimi ed <strong>eredita billing/utility/valuta/
+emittente dall'ordine sorgente</strong>.</p>
 <hr />
-<h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
+<h3 id="regole-principali-in-ordine">Regole principali (in ordine)<a class="headerlink" href="#regole-principali-in-ordine" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Anno/data</strong>: se <code>numero</code> e<code>valorizzato e</code>anno<code>/</code>data<code>mancano → anno corrente /</code>CURRENT_DATE`.</li>
+<li><strong>Eredita<code>da ordine sorgente** (DDT da ordine): se</code>sorgente_tipo_id<code>/</code>sorgente_uid<code>sono valorizzati e la sorgente e</code> </strong><code>ORDINE_VENDITA</code><strong> (lookup per <code>codice_interno</code>,
+   immutabile), eredita dall'ordine i campi mancanti — <code>billing_account_id</code>, <code>utility_id</code>,
+   <code>valuta_id</code>, </strong><code>emittente_fiscale_id</code>**.</li>
+<li><strong>Fallback emittente</strong> (standalone): se dopo il punto 2 <code>emittente_fiscale_id</code> e<code>ancora</code>NULL<code>ed esiste un</code>billing_account_id<code>, lo risolve via</code>anagrafiche.fn_get_emittente_fiscale_pk` (convenzione PK).</li>
+</ol>
+<p>Non altera mai campi gia<code>valorizzati (</code>COALESCE`).</p>
+<hr />
+<h3 id="note">Note<a class="headerlink" href="#note" title="Permanent link">&para;</a></h3>
 <ul>
-<li>su <code>INSERT</code>, se <code>numero</code> e` valorizzato:</li>
-<li>imposta <code>anno</code> all’anno corrente se nullo/0;</li>
-<li>imposta <code>data</code> a <code>CURRENT_DATE</code> se nulla;</li>
-<li>non altera campi gia` valorizzati.</li>
+<li>La sorgente si risolve per <strong><code>codice_interno</code></strong> (immutabile), non per <code>codice</code> (mutabile) —
+  coerente con <code>fn_list_ddt_da_pushare</code>. E<code>la condizione per cui</code>fn_genera_ddt_da_ordine<code>deve scrivere</code>sorgente_tipo_id = ORDINE_VENDITA<code>(con</code>DDT_VENDITA<code>l'eredita</code> non scatta).</li>
+<li>L'<code>emittente_fiscale_id</code> ereditato e<code>la chiave di **scope RLS** (§15):</code>NOT NULL<code>, garantito
+  su ogni DDT; guard di scrittura</code>trgfn_guard_emittente_scope<code>; policy</code>rls_ddt_ef_whitelist`.</li>
 </ul>
 <hr />
 <h3 id="utilizzo">Utilizzo<a class="headerlink" href="#utilizzo" title="Permanent link">&para;</a></h3>
-<p>Usata come trigger <code>BEFORE INSERT</code> su <code>vendite.ddt</code> per evitare documenti
-con numerazione presente ma data/anno mancanti.</p>
+<p>Trigger <code>trg_ddt_normalize_ins_upd</code> (<code>BEFORE INSERT/UPDATE</code>) su <code>vendite.ddt</code>.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

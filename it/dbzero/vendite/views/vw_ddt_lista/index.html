@@ -5021,6 +5021,7 @@
 <p><a href="../../tabelle/ddt/">vendite.ddt</a>
 <a href="../../../config/tabelle/stati_doc_ddt/">config.stati_doc_ddt</a>
 <a href="../../../anagrafiche/tabelle/soggetti_ruoli/">anagrafiche.soggetti_ruoli</a>
+<a href="../../../anagrafiche/tabelle/emittenti_fiscali/">anagrafiche.emittenti_fiscali</a>
 <a href="../../../config/tabelle/causali_trasporto/">config.causali_trasporto</a>
 <a href="../../../config/tabelle/aspetti_beni/">config.aspetti_beni</a>
 <a href="../../../config/tabelle/modalita_addebito_trasporto/">config.modalita_addebito_trasporto</a></p>
@@ -5040,9 +5041,13 @@ display), <strong>nessun</strong> filtro/scope/paginazione (restano nel reposito
   <code>vendite.ddt</code> si applicano (no RLS cosmetica).</li>
 <li>Espone: identificazione (numero/anno/serie/data), stato (<code>stato_codice_interno</code>/<code>stato_descrizione</code>),
   <strong>destinatario</strong> (soggetto_ruolo NOT NULL) + <strong>mittente</strong>/<strong>vettore</strong> (nullable),
-  billing/utility/valuta, campi <strong>trasporto</strong> (causale, aspetto, modalità addebito, colli/pesi/volume,
+  billing/utility/valuta, <strong><code>emittente_fiscale_id</code> + <code>emittente_fiscale_codice</code></strong> (scope, §15),
+  campi <strong>trasporto</strong> (causale, aspetto, modalità addebito, colli/pesi/volume,
   targa, autista, date, tracking) per il PDF, e la <strong>provenienza</strong>: <code>sorgente_codice_interno</code> +
   <code>ordine_origine_numero</code> (ordine risolto via <code>sorgente_uid</code>).</li>
+<li><strong>Scope emittente</strong>: <code>emittente_fiscale_id</code> alimenta il <strong>filtro applicativo</strong> del repository BE
+  (<code>= ANY(script.fn_get_emittenti_scope_pk_ids(auth_user_id))</code>, defense-in-depth) e la policy RLS
+  <code>rls_ddt_ef_whitelist</code> su <code>vendite.ddt</code> (§15).</li>
 <li>Nomi canonici: <code>ragione_sociale_completa</code>, <code>id_fiscale_univoco_cf_piva</code>, <code>ba_codice</code>,
   <code>stato_codice_interno</code>. <code>numero</code> è NULL in DRAFT, valorizzato a EMESSO.</li>
 </ul>
