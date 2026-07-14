@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.47">
+      <meta name="generator" content="zensical-0.0.50">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.62c9b9cc.min.css">
       
       
 
@@ -2910,6 +2910,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#istanza-e-billing-account-relazione-11-per-utility-invariante" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Istanza e billing account: relazione 1:1 per utility (invariante)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pdp-opzionale" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5563,6 +5574,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#istanza-e-billing-account-relazione-11-per-utility-invariante" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Istanza e billing account: relazione 1:1 per utility (invariante)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pdp-opzionale" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6060,6 +6082,55 @@
 </ol>
 <p>Nella creazione immediata (utility con <code>richiede_pdp = false</code>) non c'e fase precontrattuale: BA e cliente vengono creati atomicamente dal <code>ClienteService</code>, e la utility e immediatamente disponibile da <code>billing_account</code> e <code>clienti</code>.</p>
 <p><strong>Perche e importante:</strong> il sistema usa <code>istanza_utility_id</code> come differenziatore su indirizzi, conti bancari e contatti a livello ruolo (cascata istanza → generico ruolo → soggetto). In qualsiasi fase del ciclo di vita dell'istanza, la utility deve essere reperibile per la UI e per le funzioni di risoluzione. Se <code>istanze_dati_precontrattuali</code> non viene popolato nella fase precontrattuale, la utility resta ignota fino alla creazione del BA.</p>
+<h3 id="istanza-e-billing-account-relazione-11-per-utility-invariante">Istanza e billing account: relazione 1:1 per utility (invariante)<a class="headerlink" href="#istanza-e-billing-account-relazione-11-per-utility-invariante" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Invariante fondamentale — da tenere a mente ogni volta che si ragiona su
+"quale istanza usa un documento".</strong> Per una data utility, <strong>un'istanza ha un
+solo billing account e un billing account ha una sola istanza</strong>: la relazione
+BA ↔ istanza e' <strong>1:1</strong>.</p>
+</blockquote>
+<p>Da cosa discende, a livello di modello:</p>
+<ul>
+<li><code>billing_account.istanza_utility_id</code> e' una <strong>FK singola NOT NULL</strong> → ogni BA
+  punta a <strong>esattamente una</strong> istanza.</li>
+<li><code>billing_account</code> ha <code>UNIQUE (istanza_utility_id, utility_id)</code>
+  (<code>uq_billing_instance_utility</code>) → per una data coppia (istanza, utility)
+  esiste <strong>al massimo un</strong> BA.</li>
+<li>Sommato a "1 istanza = 1 utility" (i tre UNIQUE dei satelliti, sezione
+  Utility), il risultato e' che <strong>dato il BA, l'istanza e' univoca</strong>: non c'e'
+  nulla da "scegliere".</li>
+</ul>
+<p><strong>Conseguenza pratica (il punto che ricapita spesso).</strong> Un BA <strong>non</strong> puo' avere
+piu' istanze sulla stessa utility, quindi un documento che ha gia' un
+billing_account <strong>non deve</strong> — e non puo' utilmente — "scegliere" o memorizzare
+una propria istanza: la ricava in modo univoco dal BA. Questo spiega
+l'asimmetria voluta fra i documenti di vendita:</p>
+<table>
+<thead>
+<tr>
+<th>Documenti</th>
+<th>Hanno <code>istanza_utility_id</code> sulla testata?</th>
+<th>Perche'</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Precontrattuali</strong> (preventivi, offerte, contratti)</td>
+<td><strong>Si'</strong></td>
+<td>L'istanza si <strong>sceglie direttamente</strong> (senza filtro utility, eventualmente <strong>prima</strong> che esista un BA): va congelata sul documento</td>
+</tr>
+<tr>
+<td><strong>Esecutivi</strong> (ordini, DDT, fatture)</td>
+<td><strong>No</strong></td>
+<td>Hanno <strong>sempre</strong> un BA (obbligatorio) → l'istanza e' gia' univoca: si legge da <code>ba.istanza_utility_id</code>, non si duplica sulla testata</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regola operativa</strong>: se il documento ha (o richiede) un billing_account,
+l'istanza <strong>viene dal BA</strong> — non aggiungere colonne istanza a documenti
+BA-backed (duplicherebbero un dato gia' univoco, creando solo occasioni di
+disallineamento). Se invece il documento vive <strong>prima</strong> del BA
+(precontrattuale), l'istanza e' una scelta e va memorizzata sulla sua testata.</p>
 <h3 id="pdp-opzionale">PDP (opzionale)<a class="headerlink" href="#pdp-opzionale" title="Permanent link">&para;</a></h3>
 <p>L'istanza puo essere collegata a un punto di prelievo gia esistente:</p>
 <ul>
@@ -6290,7 +6361,7 @@ un BA ma nessuna IDP. Le istanze totalmente orfane vanno valutate manualmente.</
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.d7f30b55.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

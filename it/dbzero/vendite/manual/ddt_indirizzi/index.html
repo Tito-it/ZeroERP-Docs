@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.47">
+      <meta name="generator" content="zensical-0.0.50">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.62c9b9cc.min.css">
       
       
 
@@ -5067,11 +5067,25 @@
 •<a href="../../../anagrafiche/tabelle/indirizzi/">anagrafiche.indirizzi</a>    <br />
 •<a href="../../../anagrafiche/tabelle/soggetti_ruoli/">anagrafiche.soggetti_ruoli</a>      </p>
 <p>Approfondimento funzioni:</p>
-<p>•<a href="../../funzioni/trgfn_tipi_indirizzi_only_allowed/"><code>vendite.trgfn_tipi_indirizzi_only_allowed</code></a>
-</p>
+<p>•<a href="../../funzioni/trgfn_tipi_indirizzi_only_allowed/"><code>vendite.trgfn_tipi_indirizzi_only_allowed</code></a></p>
+<p><strong>Aggiornamento 2026-07-11 (brief indirizzi simmetria/cascata).</strong>
+- Sul DDT <strong>serve solo la destinazione merce</strong>: il tipo ammesso è <strong><code>CON</code></strong>
+  (consegna, "dove va la merce"). Il vecchio codice <code>SPED</code> è <strong>ritirato</strong> dagli
+  ambiti documento (l'unico codice "dove va la merce" è ora <code>CON</code>). Mittente
+  (= emittente fiscale) e dati di trasporto/vettore stanno <strong>nella testata DDT</strong>,
+  non qui.
+- La whitelist non è più hardcoded nel trigger: è letta da
+  <code>config.tipi_indirizzi_allowed</code> (ambito <code>DDT</code> → <code>CON</code>), seedata e autoritativa.
+- <strong><code>CON</code> è obbligatorio all'emissione</strong>: il guard
+  <code>trg_ddt_a10_guard_indirizzi_obbligatori_upd</code> blocca la transizione a <code>EMESSO</code>
+  se manca (errore <code>E_INDIRIZZO_DOC_OBBLIGATORIO</code>).
+- Alla generazione da ordine (<code>fn_genera_ddt_da_ordine</code>) la destinazione
+  <strong>arriva già copiata 1:1</strong> dagli indirizzi dell'ordine (cascata), filtrata
+  sull'ambito DDT.
+- <code>tipo_indirizzo_id</code> è ora <strong><code>integer</code></strong> (allineato a <code>config.tipi_indirizzi.id</code>).</p>
 </blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>vendite.ddt_indirizzi gestisce gli indirizzi associati alla testata DDT tramite snapshot JSON al momento dell’emissione (o conferma logistica). Per ogni DDT è ammesso al più un indirizzo per tipo (es. spedizione, fornitura, residenza), garantito dall’univocità (ddt_id, tipo_indirizzo_id).</p>
+<p>vendite.ddt_indirizzi gestisce gli indirizzi associati alla testata DDT tramite snapshot JSON al momento dell’emissione (o conferma logistica). Per ogni DDT è ammesso al più un indirizzo per tipo — nella pratica la <strong>consegna (<code>CON</code>)</strong> — garantito dall’univocità (ddt_id, tipo_indirizzo_id).</p>
 <p>Lo snapshot consente di cristallizzare dati variabili (via/numero, CAP, città, provincia, nazione, contatti, e-mail, note di resa, etc.) senza dipendere dalle future modifiche anagrafiche.</p>
 <hr />
 <h3 id="modello-dati-estratto">Modello Dati (estratto)<a class="headerlink" href="#modello-dati-estratto" title="Permanent link">&para;</a></h3>
@@ -5195,7 +5209,7 @@ trg_ddt_indirizzi_a10_ins_upd_only_allowed_tipi BEFORE  INSERT/UPDATE OF tipo_in
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.d7f30b55.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

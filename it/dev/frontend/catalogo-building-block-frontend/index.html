@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.47">
+      <meta name="generator" content="zensical-0.0.50">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.62c9b9cc.min.css">
       
       
 
@@ -4516,6 +4516,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#indirizzi-documento-srcvendite_sharedindirizzi" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Indirizzi documento (<code>src/vendite/_shared/indirizzi/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#documenti-stampa-srcdocumenti" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5977,6 +5988,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#indirizzi-documento-srcvendite_sharedindirizzi" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Indirizzi documento (<code>src/vendite/_shared/indirizzi/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#documenti-stampa-srcdocumenti" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6223,7 +6245,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>usePagedDashFetch</code></td>
 <td><code>usePagedDashFetch.js</code></td>
-<td><strong>Sezione paginata dei cruscotti (estratto 2026-07-06, regola del 2, ok Tid — unifica fermi/attivita'/errori delle due dashboard fatturazione).</strong> Factory <code>(fetchPage, {defaultPageSize}) → {items, count, page, pageSize, loading, loaded, fetch, reset, resetAll, applyPageEvent}</code> sopra <code>useFetchVersion</code>: fetch con guard anti-race, unwrap envelope paginato standard, adozione della pagina EFFETTIVA dichiarata dal BE (dal 2026-07-07 gli endpoint dash clampano l'offset all'ultima pagina in UNA sola valutazione della union — niente secondo giro sul rientro da pagina stantia; resta il fallback di rientro in pagina 1 per endpoint senza clamp), loading corretto anche su risposte scartate; <code>loaded</code> (true solo dopo una fetch riuscita) per empty-state onesti — mai un "vuoto" positivo su dati mai arrivati; <code>resetAll()</code> per il logout (ripristina anche la pageSize al default, <code>reset()</code> la preserva di proposito sui cambi contesto); <code>applyPageEvent(event)</code> applica l'evento @page del DataTable lazy allo stato pagina/dimensione (solo stato: la fetch resta al caller con la sua gestione errori) — unifica il calcolo pagina 1-based prima quadruplicato nei handler delle view dashboard. <code>fetchPage(paging, ...args)</code> riceve <code>{page, page_size}</code> + gli argomenti extra di <code>fetch(...)</code> (es. competenza_mese). Consumer: store <code>dashboardCompetenza</code> (attivita', errori), <code>dashboardBacklog</code> e <code>dashboardAperto</code> (documenti).</td>
+<td><strong>Sezione paginata dei cruscotti (estratto 2026-07-06, regola del 2, ok Tid — unifica fermi/attivita'/errori delle due dashboard fatturazione).</strong> Factory <code>(fetchPage, {defaultPageSize}) → {items, count, page, pageSize, loading, loaded, fetch, reset, resetAll, applyPageEvent}</code> sopra <code>useFetchVersion</code>: fetch con guard anti-race, unwrap envelope paginato standard, adozione della pagina EFFETTIVA dichiarata dal BE (dal 2026-07-07 gli endpoint dash clampano l'offset all'ultima pagina in UNA sola valutazione della union — niente secondo giro sul rientro da pagina stantia; resta il fallback di rientro in pagina 1 per endpoint senza clamp), loading corretto anche su risposte scartate; <code>loaded</code> (true solo dopo una fetch riuscita) per empty-state onesti — mai un "vuoto" positivo su dati mai arrivati; <code>resetAll()</code> per il logout (ripristina anche la pageSize al default, <code>reset()</code> la preserva di proposito sui cambi contesto); <code>applyPageEvent(event)</code> applica l'evento @page del DataTable lazy allo stato pagina/dimensione (solo stato: la fetch resta al caller con la sua gestione errori) — unifica il calcolo pagina 1-based prima quadruplicato nei handler delle view dashboard. <code>fetchPage(paging, ...args)</code> riceve <code>{page, page_size}</code> + gli argomenti extra di <code>fetch(...)</code> (es. competenza_mese). Consumer: store <code>dashboardCompetenza</code> (attivita', errori), <code>dashboardBacklog</code> e <code>dashboardAperto</code> (documenti); <code>ResiCodaTable</code> (code resi, 2026-07-14 — adapter <code>{page,page_size}</code>→<code>{limit,offset}</code> sul fetchPage: il BB copre anche endpoint offset-based senza estensioni).</td>
 </tr>
 <tr>
 <td><code>useDashMesiNav</code></td>
@@ -6349,6 +6371,16 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><code>useRigaArticoloComposito</code> (vendite)</td>
 <td><code>useRigaArticoloComposito.js</code></td>
 <td><strong>Cuore thin form riga articolo (B11 2026-06-05, regola del 2).</strong> Nucleo condiviso di OrdiniRigaForm/PreventiviRigaForm: <code>isEdit</code>/<code>isCasoA</code>/<code>isPadreComposito</code> + wiring UoM (<code>useArticoloUomOptions</code> + <code>uomLabel</code> + autopick base) + wiring <code>useComponentiDialog</code> + <code>submitRiga</code> create/update. <strong>Deliberatamente thin</strong>: resolver listino + gate L2 + cella prezzo-listino + campo <code>ordine</code> (superset preventivo) e <code>form</code>/<code>canSave</code>/<code>buildPayload</code>/<code>handleSave</code> restano nei form di dominio (campo <code>ordine</code> solo preventivi; il drift sconto_perc/sconto_percentuale è stato <strong>sanato col rename DB 2026-06-05</strong> → <code>sconto_percentuale</code> ovunque, brief eseguito (<code>docs/it/dev/work-done/brief-db-unificazione-sconto-righe.md</code>)). API: <code>useRigaArticoloComposito({ store, parentId, riga, articoloObj, form })</code>.</td>
+</tr>
+<tr>
+<td><code>useRigheSelezioneQta</code> (vendite)</td>
+<td><code>useRigheSelezioneQta.js</code></td>
+<td><strong>Macchina "selezione righe con quantità" (estratto 2026-07-14, regola del 2 alla 3ª copia, ok Tid).</strong> Unifica i pannelli <code>OrdineEvasionePanel</code> (evasione ordine→DDT), <code>DdtResoPanel</code> (crea reso da DDT) e <code>ResoRiconsegnaPanel</code> (ri-spedizione reso): righe con residuo, selezione multipla preselezionata, <code>qtaMap</code> (default = residuo, seed 0 per le esaurite), <code>coversAllResiduo</code> (selezione completa e intatta ⇒ il caller invia <code>null</code> e delega al BE il residuo effettivo, race-proof), <code>buildPayloadRighe(mapRow, {filterRow})</code> (scarta qta&lt;=0, shape payload iniettata). Config: <code>fetchRighe</code> (righe già filtrate dal caller), <code>residuoDi(row)</code>, <code>rowKey</code> (default <code>id</code>), <code>readonly()</code>, <code>onLoaded(rows)</code> per mappe extra (tipo/motivo del crea-reso). Restano nel caller: template/colonne, watch sull'id padre, confirm/execute/notify e i toast.</td>
+</tr>
+<tr>
+<td><code>buildDocListParams</code> / <code>hasDocListActiveFilters</code> (vendite)</td>
+<td><code>listaDocumenti.js</code></td>
+<td><strong>Param-builder filtri lista documenti vendite lato store (estratto 2026-07-14, regola del 2 alla 3ª copia, ok Tid).</strong> Convenzione comune consumata da <code>useListaEmptyStateFetch</code>: search&gt;=3, <code>stato_codice_interno</code>, <code>billing_account_id</code>, <code>data_da</code>/<code>data_a</code>, limit/offset, order_by+order_dir; <code>{withUtility:true}</code> aggiunge <code>utility_id</code> (ordini/ddt; resi senza). Gemello BE <code>extract_doc_list_filters</code>. Consumer: store <code>ordini</code>/<code>ddt</code>/<code>resi</code>.</td>
 </tr>
 <tr>
 <td><code>useEntityCapabilities</code></td>
@@ -7410,7 +7442,7 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 <tr>
 <td><code>IndirizziSoggettoDrawer</code></td>
 <td><code>IndirizziSoggettoDrawer.vue</code></td>
-<td>Drawer indirizzo per soggetto</td>
+<td>Drawer indirizzi per soggetto/ruolo (cascata fonte). Prop <code>selectable</code> + evento <code>select</code> (2026-07-12): modalita' selezione per il drawer gestione indirizzi documento; slot <code>#pre-list</code>/<code>#extra-actions</code> per contenuto del caller</td>
 </tr>
 <tr>
 <td><code>ContiBancariDrawer</code></td>
@@ -7895,6 +7927,41 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 </tbody>
 </table>
 <hr />
+<h2 id="indirizzi-documento-srcvendite_sharedindirizzi">Indirizzi documento (<code>src/vendite/_shared/indirizzi/</code>)<a class="headerlink" href="#indirizzi-documento-srcvendite_sharedindirizzi" title="Permanent link">&para;</a></h2>
+<p>BB condiviso per gli indirizzi dei documenti vendite (gemello BE
+<code>build_indirizzi_documento_views</code>, doc api_indirizzi_documento.md). UX v2
+(brief design §7): sezione inline col solo indirizzo di default + drawer di
+gestione basato sull'elenco anagrafico. Montato sui 5 drawer documento
+(DdtDrawer pilota; rollout 2026-07-12 su PreventiviDrawer, OrdiniDrawer,
+OffertaDrawer, ContrattoDrawer). Prerequisito per il montaggio: il detail
+del dominio espone <code>soggetto_ruolo_id</code> + <code>istanza_utility_id</code> (senza istanza
+il livello 'istanza' della cascata anagrafica resta invisibile).</p>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DocumentoIndirizziSection</code></td>
+<td><code>DocumentoIndirizziSection.vue</code></td>
+<td>Sezione inline per il corpo del drawer documento: mostra SOLO il default (CON → fallback FATT), avviso se mancante (obbligatorio all'emissione), contatore "+N altri", pulsante "Indirizzi" che apre il drawer di gestione (montato internamente: il caller aggiunge una sola sezione). Readonly cumulativo <code>useInjectReadonly</code>.</td>
+</tr>
+<tr>
+<td><code>DocumentoIndirizziDrawer</code></td>
+<td><code>DocumentoIndirizziDrawer.vue</code></td>
+<td>Drawer di GESTIONE: riusa <code>IndirizziSoggettoDrawer</code> in modalita' <code>selectable</code> (elenco cliente con badge fonte + "usa questo"); dialog "Usa come" quando il dominio ammette piu' tipi (default CON→FATT); riepilogo slot impostati sul documento con rimozione (slot <code>#pre-list</code>); "aggiungi indirizzo" anagrafico nativo + "indirizzo libero" una-tantum (slot <code>#extra-actions</code>). Righe fonte=soggetto → snapshot senza origine.</td>
+</tr>
+<tr>
+<td><code>makeIndirizziDocumentoApi</code> + <code>formatSnapshotDisplay</code></td>
+<td><code>documentoIndirizziApi.js</code></td>
+<td>Client API factory bindato al basePath dominio (<code>list/upsert/remove</code>, schema identico sui 5 domini) + display compatto dello snapshot condiviso tra sezione e drawer.</td>
+</tr>
+</tbody>
+</table>
 <h2 id="documenti-stampa-srcdocumenti">Documenti / Stampa (<code>src/documenti/</code>)<a class="headerlink" href="#documenti-stampa-srcdocumenti" title="Permanent link">&para;</a></h2>
 <p>Building block trasversali per la <strong>stampa PDF</strong> di qualunque entità documentale
 (motore <code>documenti</code> lato BE). Oggi consumati da preventivi, offerte commerciali,
@@ -8136,7 +8203,7 @@ Qui sono catalogati i pannelli e drawer della pagina admin.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.d7f30b55.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

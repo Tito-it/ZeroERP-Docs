@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.47">
+      <meta name="generator" content="zensical-0.0.50">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.62c9b9cc.min.css">
       
       
 
@@ -4971,6 +4971,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#12-luglio-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        12 luglio 2026
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-luglio-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        11 luglio 2026
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-luglio-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        10 luglio 2026
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#28-giugno-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5103,6 +5136,62 @@ per non gonfiare il documento principale.</p>
 test UI o working tree non ancora consolidato, lo stato resta esplicitamente marcato come tale.</p>
 </blockquote>
 <hr />
+<h2 id="12-luglio-2026">12 luglio 2026<a class="headerlink" href="#12-luglio-2026" title="Permanent link">&para;</a></h2>
+<p><strong>Anello 3 (vendite) — Indirizzi documento UX v2 (building block cross-dominio).</strong>
+Nuovo BB condiviso per gli indirizzi dei documenti di vendita: una sezione inline
+(mostra l'indirizzo di <strong>consegna</strong> di default + contatore "+N altri") e un drawer
+di gestione (scelta dall'anagrafica del cliente "usa questo" o indirizzo libero
+una-tantum), con <strong>snapshot congelato</strong> all'emissione. Lato BE, factory indirizzi
+documento parametrica su una <code>IndirizziDocumentoConfig</code> per dominio + endpoint
+CRUD (<code>/&lt;dominio&gt;/&lt;id&gt;/indirizzi/</code>) su <strong>tutti e 5 i domini</strong>
+(preventivi/offerte/contratti/ordini/DDT) e <strong>auto-assegnazione</strong> dell'indirizzo
+di default (indirizzo di ruolo <code>CON</code>, fallback <code>FATT</code>) in create + fallback
+post-push. Pilota sul DDT, poi rollout ai 4 drawer. Vedi
+brief-design-indirizzi-documenti-vendita.md (<code>docs/it/dev/work-in-progress/brief-design-indirizzi-documenti-vendita.md</code>).</p>
+<p><strong>Anello 3 (vendite) — Riepilogo IVA DDT + colonna Emittente lista.</strong> Vista
+derivata <code>vw_ddt_riepilogo_iva_dettaglio</code> (una riga per aliquota, righe con prezzo
+NULL escluse: un DDT di solo trasporto non ha riepilogo) esposta dal drawer via
+<code>RiepilogoIvaTable</code> (componente cross-dominio). Seed opt-in della colonna
+"Emittente" nel catalogo lista DDT (parità con le altre 4 liste documento). Vedi
+brief-db-ddt-riepilogo-iva.md (<code>docs/it/dev/work-done/brief-db-ddt-riepilogo-iva.md</code>),
+brief-db-ddt-colonna-emittente-catalogo.md (<code>docs/it/dev/work-done/brief-db-ddt-colonna-emittente-catalogo.md</code>).</p>
+<h2 id="11-luglio-2026">11 luglio 2026<a class="headerlink" href="#11-luglio-2026" title="Permanent link">&para;</a></h2>
+<p><strong>Anello 2 (documenti) — Stampa PDF DDT: quinto dominio del motore documentale.</strong>
+Il DDT diventa il 5° consumatore del motore documenti parametrico: template
+<code>DDT_VENDITA</code> pubblicato + builder del contesto documentale del DDT (testata,
+trasporto, righe, totali, note). L'anteprima in bozza e il documento definitivo
+all'emissione seguono il pattern degli altri domini (<code>pdf_mode</code> data-driven da
+<code>stati_doc_ddt</code>). Export lista DDT (CSV/XLSX) allineato agli ordini.</p>
+<p><strong>Anello 3 (vendite) — 2 refactor BB (regola del 2).</strong> (1) Factory
+<code>build_documenti_sorgente_views</code> per generare le 7 view "documenti per sorgente"
+di ogni dominio (~80 righe/dominio); (2) <code>add_emittente_scope_condition</code>
+(<code>apps/core/db/emittente_scope_helpers</code>) che risolve l'array di scope emittente
+<strong>una volta</strong> in Python (era 2×/query in 5 repository). Vedi
+brief-be-ddt-vendita.md (<code>docs/it/dev/work-done/brief-be-ddt-vendita.md</code>) §13.</p>
+<h2 id="10-luglio-2026">10 luglio 2026<a class="headerlink" href="#10-luglio-2026" title="Permanent link">&para;</a></h2>
+<p><strong>Anello 3 (vendite) — DDT di vendita (DB + BE + FE).</strong> Nuovo documento del ciclo
+attivo: il documento di trasporto. Testata (dati di trasporto: causale, aspetto
+beni, vettore, mittente, colli/pesi/volume, targa, autista, tracking) + righe
+(prezzo/IVA <strong>opzionali</strong> → DDT di solo trasporto) + componenti BoM condivisi.
+Nascita per <strong>evasione</strong> di un ordine confermato — legame <strong>1:N</strong> con <strong>residuo
+per riga</strong> (<code>ordini_righe_fulfillment</code> append-only: l'evasione aggiunge la
+quantità evasa, non la sottrae) — oppure <strong>standalone</strong> manuale. Stati
+<strong>data-driven</strong> <code>DRAFT → EMESSO → SPEDITO → CONSEGNATO</code> (+ <code>RESO</code>/<code>ANNULLATO</code>) via
+matrice <code>config.transizioni_stati_ddt</code> + <code>fn_available_actions_ddt</code>. <strong>Numero
+assegnato all'emissione</strong> (non alla nascita, <code>trgfn_ddt_gen_numero_emesso</code>) e poi
+immutabile. Cliente/destinatario immutabili post-creazione. Push a commessa
+(sorgente <code>DDT_VENDITA</code>) per la fatturazione. Componenti BoM estesi al 5° dominio.
+Guida operativa: <a href="../../guide/gestione-ddt/">gestione-ddt.md</a>. Vedi
+brief-db-ddt-vendita-evasione-e-stati.md (<code>docs/it/dev/work-done/brief-db-ddt-vendita-evasione-e-stati.md</code>),
+brief-be-ddt-vendita.md (<code>docs/it/dev/work-done/brief-be-ddt-vendita.md</code>),
+brief-fe-ddt-vendita.md (<code>docs/it/dev/work-done/brief-fe-ddt-vendita.md</code>).</p>
+<p><strong>Addendum SCOPE §15 — emittente memorizzato + RLS su DDT.</strong> Colonna
+<code>vendite.ddt.emittente_fiscale_id</code> (NOT NULL) memorizzata sul documento (mirror
+ordini/preventivi), ereditata dall'ordine sorgente in evasione o risolta dal
+billing account per lo standalone (<code>trgfn_ddt_normalize</code>), con policy RLS
+<code>rls_ddt_ef_whitelist</code> e guard di scope in scrittura: un operatore non emette DDT
+fuori dal proprio scope emittente. <code>vw_ddt_lista</code> espone <code>emittente_fiscale_id</code>
+per il filtro applicativo (mirror <code>vw_ordini_lista</code>).</p>
 <h2 id="28-giugno-2026">28 giugno 2026<a class="headerlink" href="#28-giugno-2026" title="Permanent link">&para;</a></h2>
 <p><strong>Qualità di modello — convenzione <code>codice_interno</code> / <code>codice</code> (cross-anello).</strong> Bonifica
 della coppia di colonne delle tabelle <code>config.*</code>/lookup (<code>codice_interno</code> <strong>immutabile</strong> per
@@ -5390,7 +5479,7 @@ prosegue nella tabella sopra.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.d7f30b55.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

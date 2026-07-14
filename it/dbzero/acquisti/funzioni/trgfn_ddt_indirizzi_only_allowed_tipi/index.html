@@ -15,18 +15,18 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.47">
+      <meta name="generator" content="zensical-0.0.50">
     
     
       
-        <title>Trgfn ddt indirizzi only allowed tipi - Zero ERP Documentation</title>
+        <title>⚙️ Funzione trgfn_ddt_indirizzi_only_allowed_tipi - Zero ERP Documentation</title>
       
     
     
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.62c9b9cc.min.css">
       
       
 
@@ -62,7 +62,8 @@
     <label class="md-overlay" for="__drawer" aria-label="Navigazione"></label>
     <div data-md-component="skip">
       
-        <a href="#__skip" class="md-skip">
+        
+        <a href="#funzione-trgfn_ddt_indirizzi_only_allowed_tipi" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -96,7 +97,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Trgfn ddt indirizzi only allowed tipi
+              ⚙️ Funzione trgfn_ddt_indirizzi_only_allowed_tipi
             
           </span>
         </div>
@@ -4943,6 +4944,8 @@
                     
                     
                     
+                      
+                    
                     
                   
                   <div class="md-sidebar__inner">
@@ -4952,6 +4955,8 @@
 <nav class="md-nav md-nav--secondary" aria-label="Indice">
   
   
+  
+    
   
   
 </nav>
@@ -4970,8 +4975,39 @@
   
 
 
-  <h1 id="__skip">Trgfn ddt indirizzi only allowed tipi</h1>
+<h1 id="funzione-trgfn_ddt_indirizzi_only_allowed_tipi">⚙️ Funzione <code>trgfn_ddt_indirizzi_only_allowed_tipi</code><a class="headerlink" href="#funzione-trgfn_ddt_indirizzi_only_allowed_tipi" title="Permanent link">&para;</a></h1>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">trgfn_ddt_indirizzi_only_allowed_tipi</span><span class="p">()</span>
+</code></pre></div>
+<p><strong>Definizione completa:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">acquisti</span><span class="p">.</span><span class="n">trgfn_ddt_indirizzi_only_allowed_tipi</span><span class="p">()</span>
+<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span>
+<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
+<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
+<span class="k">DECLARE</span>
+<span class="w">  </span><span class="n">v_codice</span><span class="w"> </span><span class="nb">text</span><span class="p">;</span>
+<span class="k">BEGIN</span>
 
+<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">codice_interno</span>
+<span class="w">    </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_codice</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">tipi_indirizzi</span><span class="w"> </span><span class="n">t</span>
+<span class="w">   </span><span class="k">WHERE</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">tipo_indirizzo_id</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">IF</span><span class="w"> </span><span class="n">v_codice</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">v_codice</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;CON&#39;</span><span class="p">,</span><span class="s1">&#39;SPED&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
+
+<span class="w">     </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">        </span><span class="s1">&#39;database&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">TG_NAME</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;E_TIPO_INDIRIZZO&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;table&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;acquisti.ddt_indirizzi&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;ddt_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">ddt_id</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;tipo_indirizzo_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">tipo_indirizzo_id</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">&#39;codice_interno&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_codice</span><span class="p">),</span>
+<span class="w">        </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span><span class="w">  </span><span class="k">NEW</span><span class="p">.</span><span class="n">tipo_indirizzo_id</span><span class="p">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="n">v_codice</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ddt&#39;</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;CON, SPED&#39;</span>
+<span class="w">      </span><span class="p">);</span>
+<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+<span class="err">$</span><span class="k">function</span><span class="err">$</span>
+</code></pre></div>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -5032,7 +5068,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.d7f30b55.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

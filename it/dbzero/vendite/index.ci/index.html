@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.47">
+      <meta name="generator" content="zensical-0.0.50">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.62c9b9cc.min.css">
       
       
 
@@ -5040,11 +5040,12 @@
 <li><a href="../manual/commesse_push_log/">commesse_push_log</a> — <code>vendite.commesse_push_log</code> traccia ogni esecuzione dell'orchestratore di push sorgenti verso commesse/attivita` con un audit minimale ma operativo.</li>
 <li><a href="../manual/commesse_sorgenti/">commesse_sorgenti</a> — La tabella <code>vendite.commesse_sorgenti</code> traccia la sorgente ROOT della commessa e garantisce idempotenza sorgente a livello commessa.</li>
 <li><a href="../manual/contratti/">contratti</a> — (Initial version - 19-01-26) <code>vendite.contratti</code> rappresenta la <strong>testata del contratto commerciale</strong>: l’accordo che lega un <strong>billing account</strong> a una <strong>istanza/utility</strong> e ne definisce <strong>ambito</strong>, <strong>periodo di validita</strong> e <strong>stato</strong>. E<code>la base di aggregazione delle righe (</code>vendite.contratti_righe`) e il punto di riferimento per la generazione di <strong>attivita fatturabili</strong>.</li>
+<li><a href="../manual/contratti_indirizzi/">contratti_indirizzi</a> — Snapshot degli indirizzi collegati alla testata di un <strong>contratto</strong>, uno per tipo (univocità <code>contratto_id, tipo_indirizzo_id</code>). Struttura <strong>identica</strong> alle altre tabelle <code>*_indirizzi</code> documento (snapshot JSONB congelato + <code>origine_indirizzo_id</code> / <code>origine_soggetto_ruolo_id</code> soft FK <code>SET NULL</code>, <code>tx_id</code>).</li>
 <li><a href="../manual/contratti_righe/">contratti_righe</a> — (Initial version - 19-01-26) <code>vendite.contratti_righe</code> contiene il <strong>dettaglio economico e operativo</strong> del contratto: ogni riga rappresenta un <strong>articolo/servizio</strong> con le proprie regole di erogazione (canone, consumo, una‑tantum), periodicita e parametri di quantita/prezzo.</li>
 <li><a href="../manual/contratti_righe_componenti/">contratti_righe_componenti</a> — <code>vendite.contratti_righe_componenti</code> modella il <strong>prezzo negoziabile per singolo componente</strong> di un articolo composito CASO A nell'ambito di un contratto. Stesso pattern delle altre 3 tabelle (preventivi, ordini, ddt).</li>
 <li><a href="../manual/contratti_utilities/">contratti_utilities</a> — (latest review 20/01/26) <code>vendite.contratti_utilities</code> conserva lo <strong>snapshot</strong> dei dati pre‑contrattuali al <strong>momento della creazione del contratto</strong>.   L’obiettivo e<code>rendere il contratto **autonomo e stabile**: i dati tecnici/commerciali che lo qualificano non vengono piu</code> aggiornati dopo la creazione.</li>
 <li><a href="../manual/ddt/">ddt</a> — La tabella <strong><code>vendite.ddt</code></strong> rappresenta la <strong>testata</strong> dei Documenti di Trasporto. È il fulcro del ciclo logistico tra <strong>Ordini</strong> (evasione/spedizione) e <strong>Fatture</strong> (conto vendita / accompagnatoria).</li>
-<li><a href="../manual/ddt_indirizzi/">ddt_indirizzi</a> — vendite.ddt_indirizzi gestisce gli indirizzi associati alla testata DDT tramite snapshot JSON al momento dell’emissione (o conferma logistica). Per ogni DDT è ammesso al più un indirizzo per tipo (es. spedizione, fornitura, residenza), garantito dall’univocità (ddt_id, tipo_indirizzo_id).</li>
+<li><a href="../manual/ddt_indirizzi/">ddt_indirizzi</a> — vendite.ddt_indirizzi gestisce gli indirizzi associati alla testata DDT tramite snapshot JSON al momento dell’emissione (o conferma logistica). Per ogni DDT è ammesso al più un indirizzo per tipo — nella pratica la <strong>consegna (<code>CON</code>)</strong> — garantito dall’univocità (ddt_id, tipo_indirizzo_id).</li>
 <li><a href="../manual/ddt_righe/">ddt_righe</a> — <code>vendite.ddt_righe</code> rappresenta le <strong>righe dei Documenti di Trasporto di vendita</strong>. Ogni record corrisponde a una <strong>voce di spedizione</strong> associata a una testata DDT (<code>vendite.ddt</code>), identificando articolo, quantità, unità di misura e dettagli di tracciabilità (lotto, seriale).</li>
 <li><a href="../manual/ddt_righe_componenti/">ddt_righe_componenti</a> — <code>vendite.ddt_righe_componenti</code> modella il <strong>prezzo negoziabile per singolo componente</strong> di un articolo composito CASO A nell'ambito di un DDT: almeno un componente della BoM ha <code>esposto_in_fattura = TRUE</code>.</li>
 <li><a href="../manual/documenti_fatturazione_canali/">documenti_fatturazione_canali</a> — (latest review 24-02-2026) <code>vendite.documenti_fatturazione_canali</code> e<code>il registro tecnico unico dei canali fatturabili per documento sorgente (</code>sorgente_tipo_id + sorgente_uid`), usato per uniformare le regole su contratti, preventivi, ordini e DDT.</li>
@@ -5083,6 +5084,7 @@
 <li><a href="../manual/offerte_commerciali/">offerte_commerciali</a> — (rev 2026-05-24)</li>
 <li><a href="../manual/offerte_commerciali_eccezioni/">offerte_commerciali_eccezioni</a> — (rev 2026-05-24)</li>
 <li><a href="../manual/offerte_commerciali_eccezioni_componenti/">offerte_commerciali_eccezioni_componenti</a> — (rev 2026-05-26)</li>
+<li><a href="../manual/offerte_commerciali_indirizzi/">offerte_commerciali_indirizzi</a> — Snapshot degli indirizzi collegati alla testata di un'<strong>offerta commerciale</strong>, uno per tipo (univocità <code>offerta_id, tipo_indirizzo_id</code>). Struttura <strong>identica</strong> alle altre tabelle <code>*_indirizzi</code> documento (snapshot JSONB congelato + <code>origine_indirizzo_id</code> / <code>origine_soggetto_ruolo_id</code> soft FK <code>SET NULL</code>, <code>tx_id</code>).</li>
 <li><a href="../manual/offerte_commerciali_utilities/">offerte_commerciali_utilities</a> — (rev 2026-05-24)</li>
 <li><a href="../manual/ordini/">ordini</a> — La tabella <strong><code>vendite.ordini</code></strong> rappresenta la <strong>testata dell’ordine di vendita</strong>, documento commerciale preliminare che raccoglie le condizioni di vendita, spedizione e pagamento concordate con il cliente.   È il punto di partenza del ciclo attivo, destinato a generare documenti successivi (DDT, fatture, contratti di fornitura).</li>
 <li><a href="../manual/ordini_indirizzi/">ordini_indirizzi</a> — <code>vendite.ordini_indirizzi</code> memorizza gli <strong>indirizzi associati alla testata ordine</strong> come <strong>snapshot JSON</strong> al momento dell’inserimento/conferma. Per ciascun ordine è ammesso <strong>al massimo un indirizzo per tipo</strong> (es. <em>spedizione</em>, <em>fornitura</em>, <em>residenza</em>), garantito da <code>UNIQUE(ordine_id, tipo_indirizzo_id)</code>.</li>
@@ -5097,6 +5099,9 @@
 <li><a href="../manual/promo_articoli/">promo_articoli</a> — (latest review 14-04-26)</li>
 <li><a href="../manual/registri_fatturazione/">registri_fatturazione</a> — (latest review 26-01-2026) <code>vendite.registri_fatturazione</code> definisce i <strong>registri fiscali di emissione</strong>: serie, regole di reset e collegamento all’emittente fiscale. Ogni fattura si aggancia a un registro, che governa numerazione e perimetro fiscale.</li>
 <li><a href="../manual/registri_fatturazione_progressivi/">registri_fatturazione_progressivi</a> — (latest review 26-01-2026) <code>vendite.registri_fatturazione_progressivi</code> memorizza i <strong>progressivi di numerazione</strong> per ciascun registro, anno, mese e serie. E` la base per l’assegnazione del numero documento in fase di emissione.</li>
+<li><a href="../manual/resi/">resi</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/resi_righe/">resi_righe</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/resi_righe_riconsegne/">resi_righe_riconsegne</a> — (rev 2026-07-13)</li>
 <li><a href="../manual/stati_commessa/">stati_commessa</a> — (latest review 26-02-2026)   <code>vendite.stati_commessa</code> e` la lookup centrale degli stati lifecycle della commessa.</li>
 <li><a href="../manual/tipi_doc_fiscale_registri/">tipi_doc_fiscale_registri</a> — (latest review 27-01-2026) La tabella <strong><code>vendite.tipi_doc_fiscale_registri</code></strong> definisce il mapping <strong>tipo documento fiscale → registro di fatturazione</strong>, necessario per la numerazione e la contabilizzazione dei documenti.</li>
 <li><a href="../manual/tipi_fondi_fattura/">tipi_fondi_fattura</a> — (latest review 10-02-2026)   <code>vendite.tipi_fondi_fattura</code> definisce il <strong>catalogo delle tipologie di fondo fattura</strong> (addebiti/accrediti fatture precedenti, canone RAI, ecc.). Serve a normalizzare i motivi di addebito/accredito extra rispetto alle righe standard.</li>
@@ -5104,6 +5109,7 @@
 </ul>
 <h2 id="funzioni-manuale">⚙️ Funzioni (manuale)<a class="headerlink" href="#funzioni-manuale" title="Permanent link">&para;</a></h2>
 <ul>
+<li><a href="../manual/fn_annulla_reso/">fn_annulla_reso</a> — (rev 2026-07-13)</li>
 <li><a href="../manual/fn_applica_fondi_fattura/">fn_applica_fondi_fattura</a> — La funzione <strong><code>vendite.fn_applica_fondi_fattura()</code></strong> applica i fondi fattura in stato <code>DISPONIBILE</code> ad una <strong>fattura figlia</strong>, creando le righe in <code>vendite.fatture_fondi_fattura</code> e aggiornando la <code>source</code> a stato <code>ASSEGNATO</code>.</li>
 <li><a href="../manual/fn_approva_commessa_attivita/">fn_approva_commessa_attivita</a> — (rev 2026-06-07) <code>vendite.fn_approva_commessa_attivita(p_commessa_id, p_righe_ids, p_user)</code> porta le righe <code>commesse_attivita</code> da <code>stato_approvazione = 'BOZZA'</code> a <code>'APPROVATA'</code>.</li>
 <li><a href="../manual/fn_assign_numero_fattura/">fn_assign_numero_fattura</a> — (latest review 09-02-2026) La funzione <strong><code>vendite.fn_assign_numero_fattura()</code></strong> assegna il progressivo in base al registro e aggiorna <code>anno</code>, <code>serie</code> e <code>numero</code> sulla testata fattura.</li>
@@ -5116,6 +5122,7 @@
 <li><a href="../manual/fn_cleanup_fatture_by_ids/">fn_cleanup_fatture_by_ids</a> — (latest review 10-02-2026)   La funzione <strong><code>vendite.fn_cleanup_fatture_by_ids()</code></strong> centralizza il cleanup di fatture e righe correlate, ripristinando le righe di <code>attivita_fatturabili</code>.</li>
 <li><a href="../manual/fn_close_giornaliero_lotto/">fn_close_giornaliero_lotto</a> — (latest review 03-02-2026) La funzione <strong><code>vendite.fn_close_giornaliero_lotto()</code></strong> chiude operativamente un lotto di tipo <strong>GIORNALIERO</strong> e allinea lo stato documentale delle fatture collegate al valore passato (tipicamente stato <code>INVIATA</code>).</li>
 <li><a href="../manual/fn_complete_lotto_task_run/">fn_complete_lotto_task_run</a> — Chiude un task run impostando <code>task_stato = COMPLETATO</code> e <code>ended_at</code>.</li>
+<li><a href="../manual/fn_conferma_reso/">fn_conferma_reso</a> — (rev 2026-07-13)</li>
 <li><a href="../manual/fn_contratto_riga_componenti_init/">fn_contratto_riga_componenti_init</a></li>
 <li><a href="../manual/fn_contratto_riga_componenti_preview/">fn_contratto_riga_componenti_preview</a></li>
 <li><a href="../manual/fn_contratto_righe_preview/">fn_contratto_righe_preview</a></li>
@@ -5130,6 +5137,7 @@
 <li><a href="../manual/fn_espandi_listino_versione/">fn_espandi_listino_versione</a></li>
 <li><a href="../manual/fn_fail_lotto_task_run/">fn_fail_lotto_task_run</a> — Chiude un task run in errore impostando <code>task_stato = ERRORE</code>, codice e messaggio.</li>
 <li><a href="../manual/fn_genera_ddt_da_ordine/">fn_genera_ddt_da_ordine</a> — (rev 2026-07-09)</li>
+<li><a href="../manual/fn_genera_ddt_riconsegna/">fn_genera_ddt_riconsegna</a> — (rev 2026-07-13)</li>
 <li><a href="../manual/fn_genera_fondi_fattura_source/">fn_genera_fondi_fattura_source</a> — (latest review 12-02-2026)   La funzione <strong><code>vendite.fn_genera_fondi_fattura_source()</code></strong> genera record in <code>fatture_fondi_fattura_source</code> per fatture con <code>minimo = true</code>, e mantiene allineata la source in base al saldo documento.</li>
 <li><a href="../manual/fn_genera_pratica_da_preventivo/">fn_genera_pratica_da_preventivo</a> — (latest review 08-07-2026)</li>
 <li><a href="../manual/fn_generate_fatture_righe/">fn_generate_fatture_righe</a> — (latest review 07-02-2026)   (Deprecate-trasferite in django)   La funzione <strong><code>vendite.fn_generate_fatture_righe()</code></strong> genera le righe fattura partendo dalle <code>attivita_fatturabili</code> lockate sul lotto.</li>
@@ -5168,9 +5176,10 @@
 <li><a href="../manual/fn_offerta_eccezione_componenti_init/">fn_offerta_eccezione_componenti_init</a></li>
 <li><a href="../manual/fn_offerta_eccezione_componenti_preview/">fn_offerta_eccezione_componenti_preview</a></li>
 <li><a href="../manual/fn_offerta_righe_espanse/">fn_offerta_righe_espanse</a></li>
-<li><a href="../manual/fn_ordine_ha_residuo_evasione/">fn_ordine_ha_residuo_evasione</a> — (rev 2026-07-09)</li>
+<li><a href="../manual/fn_ordine_ha_residuo_evasione/">fn_ordine_ha_residuo_evasione</a> — (rev 2026-07-13 — <strong>reso-aware</strong>)</li>
 <li><a href="../manual/fn_ordine_riga_componenti_init/">fn_ordine_riga_componenti_init</a></li>
 <li><a href="../manual/fn_ordine_riga_componenti_preview/">fn_ordine_riga_componenti_preview</a></li>
+<li><a href="../manual/fn_ordine_riga_qta_riconsegna/">fn_ordine_riga_qta_riconsegna</a> — (rev 2026-07-13)</li>
 <li><a href="../manual/fn_prepare_sdi_payload/">fn_prepare_sdi_payload</a> — (latest review 16-02-2026)   Preparare il payload SDI di un lotto:</li>
 <li><a href="../manual/fn_preventivo_ha_residuo_commessa/">fn_preventivo_ha_residuo_commessa</a> — <code>TRUE</code> se il <strong>push commessa avrebbe effetto</strong> sul preventivo: esistono righe eleggibili (vista predicato unico) <strong>e</strong> la testata e' completa. E' la meta' "servizi" della coppia simmetrica di capability del modello split-per-natura.</li>
 <li><a href="../manual/fn_preventivo_ha_residuo_ordine/">fn_preventivo_ha_residuo_ordine</a> — <code>TRUE</code> se il preventivo ha righe natura <strong>ORDINE</strong> (merce) non ancora allocate a un ordine: il push ordine avrebbe effetto. E' la meta' "merce" della coppia simmetrica di capability del modello split-per-natura (brief-preventivi-ordini.md D6/D8).</li>
@@ -5228,8 +5237,11 @@
 <li><a href="../manual/trgfn_contratti_righe_guard_aggiunta_fuori_listino/">trgfn_contratti_righe_guard_aggiunta_fuori_listino</a> — Un operatore che vuole modificare il prezzo di un articolo già in listino deve usare <code>OVERRIDE</code>, non <code>AGGIUNTA</code>. Questo guard è la <strong>barriera DB-first</strong> che rende impossibile la confusione tra i due tipi, anche da psql diretto o da chiamate API non validate.</li>
 <li><a href="../manual/trgfn_contratti_righe_lock_post_attivazione/">trgfn_contratti_righe_lock_post_attivazione</a> — Le eccezioni di un contratto attivo (OVERRIDE, ESCLUSIONE, AGGIUNTA) sono <strong>immutabili post-attivazione</strong> (§3-bis-A). Questo enforcement avviene a livello DB per garantire il blocco anche da psql diretto, script di manutenzione o chiamate API non validate. Il lock è simmetrico a quello sulla testata (<code>trgfn_contratti_lock_post_attivazione</code>).</li>
 <li><a href="../manual/trgfn_contratti_snapshot_precontrattuali/">trgfn_contratti_snapshot_precontrattuali</a> — (latest review 20/01/26) La funzione <code>vendite.trgfn_contratti_snapshot_precontrattuali()</code> crea lo <strong>snapshot</strong> dei dati precontrattuali <strong>solo alla creazione del contratto</strong>.   La scelta progettuale e` deliberata: il contratto diventa la <strong>fonte stabile</strong> per i dati tecnici/commerciali e le eventuali correzioni richiedono <strong>un nuovo contratto</strong>.</li>
+<li><a href="../manual/trgfn_ddt_default_emittente/">trgfn_ddt_default_emittente</a> — (rev 2026-07-13)</li>
 <li><a href="../manual/trgfn_ddt_gen_codice/">trgfn_ddt_gen_codice</a> — La trigger function <code>vendite.trgfn_ddt_gen_codice()</code> genera automaticamente <code>numero</code> DDT quando il valore non viene fornito in inserimento.</li>
 <li><a href="../manual/trgfn_ddt_gen_numero_emesso/">trgfn_ddt_gen_numero_emesso</a> — (rev 2026-07-09)</li>
+<li><a href="../manual/trgfn_ddt_guard_emittente_ba/">trgfn_ddt_guard_emittente_ba</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/trgfn_ddt_guard_indirizzi_obbligatori/">trgfn_ddt_guard_indirizzi_obbligatori</a> — (rev 2026-07-11)</li>
 <li><a href="../manual/trgfn_ddt_guard_transizione/">trgfn_ddt_guard_transizione</a> — (rev 2026-07-09)</li>
 <li><a href="../manual/trgfn_ddt_guard_transizione_approvazione/">trgfn_ddt_guard_transizione_approvazione</a> — (rev 2026-07-09)</li>
 <li><a href="../manual/trgfn_ddt_normalize/">trgfn_ddt_normalize</a> — La trigger function <code>vendite.trgfn_ddt_normalize()</code> normalizza la testata del DDT su <code>INSERT</code>: completa i campi temporali minimi ed <strong>eredita billing/utility/valuta/ emittente dall'ordine sorgente</strong>.</li>
@@ -5253,6 +5265,7 @@
 <li><a href="../manual/trgfn_listini_versioni_guard_transizione_stato/">trgfn_listini_versioni_guard_transizione_stato</a> — (latest review 26-04-2026)</li>
 <li><a href="../manual/trgfn_logs_guard_delete/">trgfn_logs_guard_delete</a> — (latest review 20-02-2026)   La funzione trigger <strong><code>vendite.trgfn_logs_guard_delete()</code></strong> blocca la cancellazione diretta dei log funzionali (<code>fatture_log</code>, <code>fatturazione_lotti_log</code>) salvo abilitazione esplicita di manutenzione.</li>
 <li><a href="../manual/trgfn_note_validate_generic/">trgfn_note_validate_generic</a> — La trigger function <code>vendite.trgfn_note_validate_generic()</code> valida la coerenza delle note ancorate a una riga documento (<code>anchor_tipo = 'RIGA'</code>), verificando che <code>target_riga_id</code> appartenga davvero alla testata indicata da <code>target_id</code>.</li>
+<li><a href="../manual/trgfn_offerte_commerciali_guard_emittente_ba/">trgfn_offerte_commerciali_guard_emittente_ba</a> — (rev 2026-07-13)</li>
 <li><a href="../manual/trgfn_offerte_commerciali_revisione/">trgfn_offerte_commerciali_revisione</a> — (rev 2026-05-24)</li>
 <li><a href="../manual/trgfn_ordini_default_emittente/">trgfn_ordini_default_emittente</a> — (rev 2026-06-01)</li>
 <li><a href="../manual/trgfn_ordini_ful_guard_consistenza/">trgfn_ordini_ful_guard_consistenza</a> — La trigger function <code>vendite.trgfn_ordini_ful_guard_consistenza()</code> protegge la coerenza delle righe fulfillment ordine↔DDT e impedisce over-fulfillment.</li>
@@ -5265,6 +5278,7 @@
 <li><a href="../manual/trgfn_ordini_righe_ricalcola_totali/">trgfn_ordini_righe_ricalcola_totali</a> — (latest review 05-06-2026)</li>
 <li><a href="../manual/trgfn_preventivi_default_emittente/">trgfn_preventivi_default_emittente</a></li>
 <li><a href="../manual/trgfn_preventivi_gen_codice/">trgfn_preventivi_gen_codice</a> — La trigger function <code>vendite.trgfn_preventivi_gen_codice()</code> genera automaticamente <code>numero</code> preventivo quando il campo non viene valorizzato.</li>
+<li><a href="../manual/trgfn_preventivi_guard_emittente_ba/">trgfn_preventivi_guard_emittente_ba</a> — (rev 2026-07-13)</li>
 <li><a href="../manual/trgfn_preventivi_guard_transizione_approvazione/">trgfn_preventivi_guard_transizione_approvazione</a> — (latest revision 12-05-2026b — form atomic: rimosso Check 3 prezzo NULL; Sprint E listini v5 §14.6)</li>
 <li><a href="../manual/trgfn_preventivi_guard_utility_istanza_coerenza/">trgfn_preventivi_guard_utility_istanza_coerenza</a></li>
 <li><a href="../manual/trgfn_preventivi_normalize/">trgfn_preventivi_normalize</a> — La trigger function <code>vendite.trgfn_preventivi_normalize()</code> completa i dati minimi di data documento in insert quando il numero preventivo e<code>gia</code> presente.</li>
@@ -5272,7 +5286,16 @@
 <li><a href="../manual/trgfn_preventivi_righe_guard_pending/">trgfn_preventivi_righe_guard_pending</a> — (latest revision 22-04-2026, Sprint E listini v5 §14.6)</li>
 <li><a href="../manual/trgfn_preventivi_righe_ricalcola_totali/">trgfn_preventivi_righe_ricalcola_totali</a> — (latest review 03-04-2026) <code>vendite.trgfn_preventivi_righe_ricalcola_totali()</code> e' la trigger function <strong>STATEMENT-level</strong> che mantiene i totali testata preventivo sempre coerenti con le righe. Invoca <code>vendite.fn_ricalcola_totali_preventivo()</code> <strong>una sola volta per ogni preventivo_id coinvolto</strong>, anche in caso di operazioni bulk (es. copia righe in revisione).</li>
 <li><a href="../manual/trgfn_promo_articoli_guard_data_driven/">trgfn_promo_articoli_guard_data_driven</a> — (latest review 27-04-2026)</li>
+<li><a href="../manual/trgfn_resi_gen_numero/">trgfn_resi_gen_numero</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/trgfn_resi_guard_ddt_consegnato/">trgfn_resi_guard_ddt_consegnato</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/trgfn_resi_guard_emittente_ba/">trgfn_resi_guard_emittente_ba</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/trgfn_resi_guard_transizione/">trgfn_resi_guard_transizione</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/trgfn_resi_normalize/">trgfn_resi_normalize</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/trgfn_resi_riconsegne_guard/">trgfn_resi_riconsegne_guard</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/trgfn_resi_righe_guard_quantita/">trgfn_resi_righe_guard_quantita</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/trgfn_tipi_indirizzi_only_allowed/">trgfn_tipi_indirizzi_only_allowed</a> — (rev 2026-07-11)</li>
 <li><a href="../manual/trgfn_v_ddt_protect_num/">trgfn_v_ddt_protect_num</a> — (rev 2026-07-09)</li>
+<li><a href="../manual/trgfn_v_resi_protect_num/">trgfn_v_resi_protect_num</a> — (rev 2026-07-13)</li>
 </ul>
 <h2 id="views-manuale">🔍 Views (manuale)<a class="headerlink" href="#views-manuale" title="Permanent link">&para;</a></h2>
 <ul>
@@ -5302,6 +5325,9 @@
 <li><a href="../manual/vw_preventivi_righe_smistabili_ordine/">vw_preventivi_righe_smistabili_ordine</a> — Vista <strong>predicato unico</strong> del ramo ordine: le righe preventivo <strong>eleggibili</strong> allo smistamento merce→ordine. Capability (<code>fn_preventivo_ha_residuo_ordine</code>), push (<code>fn_push_preventivo_a_ordine</code>) e Pannello Smistamento leggono da qui la stessa verita' (brief-preventivi-ordini.md D8).</li>
 <li><a href="../manual/vw_preventivi_smistamento/">vw_preventivi_smistamento</a> — Aggregata per preventivo della vista righe smistamento: <strong>contatori per ramo</strong> per badge e progress della UI. Sostituisce <code>vw_preventivi_stato_fatturazione</code> (rename + rework natura-aware, 2026-06-12).</li>
 <li><a href="../manual/vw_preventivi_smistamento_righe/">vw_preventivi_smistamento_righe</a> — Fonte dati del <strong>Pannello Smistamento</strong> (brief-db-smistamento-preventivi.md, B): una riga per ogni riga <strong>attiva</strong> del preventivo, con natura, destinazione e lo <strong>stato di smistamento autorevole</strong> per la UI. Sostituisce <code>vw_preventivi_stato_fatturazione_righe</code> (rename + rework natura-aware, 2026-06-12): i flag booleani <code>in_commessa</code>/<code>emessa_af</code>/<code>fatturata</code> sono stati <strong>rimossi</strong> — <code>stato_smistamento</code> e' l'unica verita'.</li>
+<li><a href="../manual/vw_resi_da_accreditare/">vw_resi_da_accreditare</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/vw_resi_da_riconsegnare/">vw_resi_da_riconsegnare</a> — (rev 2026-07-13)</li>
+<li><a href="../manual/vw_resi_lista/">vw_resi_lista</a> — (rev 2026-07-13)</li>
 <li><a href="../manual/vw_stato_sorgente_contratto/">vw_stato_sorgente_contratto</a> — (latest review 2026-07-02) <code>vendite.vw_stato_sorgente_contratto</code> è il <strong>resolver del dominio CONTRATTO</strong> per la proiezione dello stato di dominio (brief-db-proiezione-stato-dominio, deliverable D2): espone il <strong>descrittore normalizzato</strong> dello stato <strong>vivo</strong> di ogni contratto — stato nativo + mapping <code>fase</code>/<code>esito</code>/<code>terminale</code> dichiarato su <code>config.stati_doc_contratti</code> — con chiave <code>(sorgente_tipo_id, sorgente_uid)</code> coerente con <code>pratiche.pratiche_sorgenti</code>.</li>
 <li><a href="../manual/vw_stato_sorgente_offerta/">vw_stato_sorgente_offerta</a> — (latest review 2026-07-02) <code>vendite.vw_stato_sorgente_offerta</code> è il <strong>resolver del dominio OFFERTA</strong> per la proiezione dello stato di dominio (brief-db-proiezione-stato-dominio, deliverable D2): espone il <strong>descrittore normalizzato</strong> dello stato <strong>vivo</strong> di ogni offerta commerciale — stato nativo + mapping <code>fase</code>/<code>esito</code>/<code>terminale</code> dichiarato su <code>config.stati_doc_offerte</code> — con chiave <code>(sorgente_tipo_id, sorgente_uid)</code> coerente con <code>pratiche.pratiche_sorgenti</code>.</li>
 <li><a href="../manual/vw_stato_sorgente_ordine/">vw_stato_sorgente_ordine</a> — (latest review 2026-07-02) <code>vendite.vw_stato_sorgente_ordine</code> è il <strong>resolver del dominio ORDINE (di vendita)</strong> per la proiezione dello stato di dominio (brief-db-proiezione-stato-dominio, deliverable D2): espone il <strong>descrittore normalizzato</strong> dello stato <strong>vivo</strong> di ogni ordine di vendita — stato nativo + mapping <code>fase</code>/<code>esito</code>/<code>terminale</code> dichiarato su <code>config.stati_doc_ordini</code> — con chiave <code>(sorgente_tipo_id, sorgente_uid)</code> coerente con <code>pratiche.pratiche_sorgenti</code>.</li>
@@ -5367,7 +5393,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.d7f30b55.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

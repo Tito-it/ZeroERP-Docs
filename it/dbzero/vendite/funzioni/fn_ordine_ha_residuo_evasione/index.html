@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.47">
+      <meta name="generator" content="zensical-0.0.50">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5e19f6ca.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.62c9b9cc.min.css">
       
       
 
@@ -4990,10 +4990,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#formula-reso-aware-per-costruzione" class="md-nav__link">
+  <a href="#formula-reso-aware" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Formula (reso-aware per costruzione)
+        Formula (reso-aware)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ciclo-che-converge" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ciclo che converge
       </span>
     </span>
   </a>
@@ -5030,26 +5041,32 @@
 <p>👀 <strong>Vedi anche</strong></p>
 <p>Tabelle:
 <a href="../../tabelle/ordini_righe/">vendite.ordini_righe</a>
-<a href="../../tabelle/ordini_righe_fulfillment/">vendite.ordini_righe_fulfillment</a></p>
+<a href="../../tabelle/ordini_righe_fulfillment/">vendite.ordini_righe_fulfillment</a>
+<a href="../../tabelle/resi_righe/">vendite.resi_righe</a></p>
 <p>Funzioni:
+<a href=".././fn_ordine_riga_qta_riconsegna/">vendite.fn_ordine_riga_qta_riconsegna</a> (helper addendo)
 <a href=".././fn_genera_ddt_da_ordine/">vendite.fn_genera_ddt_da_ordine</a>
-<a href=".././fn_preventivo_ha_residuo_ordine/">vendite.fn_preventivo_ha_residuo_ordine</a> (gemella)</p>
+<a href=".././fn_conferma_reso/">vendite.fn_conferma_reso</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(rev 2026-07-09)</p>
+<p>(rev 2026-07-13 — <strong>reso-aware</strong>)</p>
 <p><strong><code>vendite.fn_ordine_ha_residuo_evasione(p_ordine_id) → boolean</code></strong> ritorna <code>TRUE</code> se l'ordine ha
-ancora quantità da evadere su <strong>almeno una</strong> riga. È il gemello di
-<code>fn_preventivo_ha_residuo_ordine</code>, applicato all'asse fulfillment (DDT), ed è il <strong>gate</strong> con cui
-<code>fn_genera_ddt_da_ordine</code> proietta lo stato ordine (<code>CONFERMATO</code> / <code>PARZIALMENTE_EVASO</code> / <code>EVASO</code>).</p>
+ancora quantità da evadere su <strong>almeno una</strong> riga. È il <strong>gate</strong> con cui <code>fn_genera_ddt_da_ordine</code>,
+<code>fn_conferma_reso</code> e <code>fn_genera_ddt_riconsegna</code> proiettano lo stato ordine
+(<code>CONFERMATO</code> / <code>PARZIALMENTE_EVASO</code> / <code>EVASO</code>).</p>
 <p><code>STABLE</code>, <code>SECURITY INVOKER</code>. Guard input: errore se <code>p_ordine_id</code> <code>NULL</code> o <code>&lt;= 0</code>.</p>
-<h3 id="formula-reso-aware-per-costruzione">Formula (reso-aware per costruzione)<a class="headerlink" href="#formula-reso-aware-per-costruzione" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>residuo(riga) = ordini_righe.quantita − Σ qta_evasa  \[ + Σ qta_resa_per_riconsegna \]
+<h3 id="formula-reso-aware">Formula (reso-aware)<a class="headerlink" href="#formula-reso-aware" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>residuo(riga) = ordini_righe.quantita − Σ qta_evasa + Σ qta_riconsegna
 </code></pre></div>
-<p>Tutto in <strong>unità base</strong> (coerente con il guard <code>trgfn_ordini_ful_guard_consistenza</code>). L'addendo
-dei resi <strong>non è ancora presente</strong> (nessun modello resi): la slice resi estenderà questa funzione
-aggiungendo il termine di rientro, <strong>senza toccare</strong> i gate di stato che la consumano
-(vedi brief §12).</p>
+<p>Tutto in <strong>unità base</strong>. L'addendo <code>Σ qta_riconsegna</code> è calcolato dall'<strong>helper unico</strong>
+<a href=".././fn_ordine_riga_qta_riconsegna/"><code>fn_ordine_riga_qta_riconsegna</code></a>
+(somma delle righe reso di tipo <em>ri-consegna</em> su resi <strong>CONFERMATI</strong>). Lo stesso helper alimenta
+il guard <code>trgfn_ordini_ful_guard_consistenza</code>, così gate ed enforcement usano <strong>la stessa formula</strong>.</p>
+<h3 id="ciclo-che-converge">Ciclo che converge<a class="headerlink" href="#ciclo-che-converge" title="Permanent link">&para;</a></h3>
+<p>Evaso 10 → reso per ri-consegna 3 (residuo riaperto = 3 → ordine <code>PARZIALMENTE_EVASO</code>) →
+ri-spedizione 3 (nuovo fulfillment: Σqta_evasa=13 → residuo = 10−13+3 = 0 → ordine <code>EVASO</code>).
+La ri-spedizione <strong>chiude</strong> ciò che il reso ha riaperto.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -5110,7 +5127,7 @@ aggiungendo il termine di rientro, <strong>senza toccare</strong> i gate di stat
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.b6b7e04f.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.0df4f2d0.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.d7f30b55.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
