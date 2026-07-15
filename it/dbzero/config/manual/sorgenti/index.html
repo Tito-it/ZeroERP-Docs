@@ -387,6 +387,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2506,6 +2512,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3044,6 +3056,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/gestione-ddt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ddt
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/gestione-commesse/" class="md-nav__link">
         
   
@@ -3368,6 +3407,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../guide/sorgente-polimorfa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sorgente polimorfa
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../guide/contratto-guc-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contatto GUC APP
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../guide/uso-di-obsoleto/" class="md-nav__link">
         
   
@@ -3445,10 +3538,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_36" >
         
           
-          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_36" id="__nav_7_36_label" tabindex="0">
             
   
   
@@ -3465,8 +3558,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_33">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_36_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_36">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5001,6 +5094,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#convenzione-chiave-sorgente-id-vs-uid-mappa-e-trappole" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔑 Convenzione chiave sorgente (<code>id</code> vs <code>uid</code>) — mappa e trappole
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#relazioni" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5193,6 +5297,65 @@
 </li>
 <li>se valorizzato, ha priorita` sul tipo documento di default della utility.</li>
 </ul>
+<hr />
+<h3 id="convenzione-chiave-sorgente-id-vs-uid-mappa-e-trappole">🔑 Convenzione chiave sorgente (<code>id</code> vs <code>uid</code>) — mappa e trappole<a class="headerlink" href="#convenzione-chiave-sorgente-id-vs-uid-mappa-e-trappole" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Leggere prima di costruire qualsiasi grafo/join tra documenti</strong> (lineage,
+genealogia, proiezione stato). Questa convenzione è <strong>voluta e portante</strong>: non
+va "ripulita".</p>
+<p>📖 Per il <strong>funzionamento completo</strong> del meccanismo (a cosa serve, come si usa, il
+guard, e le query per lo <strong>stato d'uso vivo</strong>) vedi la guida
+<a href="../../../../guide/sorgente-polimorfa/">Sorgente polimorfa</a>. Questa sezione ne è la mappa-chiave.</p>
+</blockquote>
+<p><strong>Mappa attuale <code>key_selector</code> per tipo</strong> (verificata sul seed):</p>
+<table>
+<thead>
+<tr>
+<th>Sorgente</th>
+<th><code>key_selector</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PREVENTIVO</code>, <code>OFFERTA_COMMERCIALE</code></td>
+<td><strong><code>uid</code></strong> (UUID)</td>
+</tr>
+<tr>
+<td><code>ORDINE_VENDITA</code>, <code>CONTRATTO</code>, <code>DDT_VENDITA</code>, <code>FATTURA</code>, <code>COMMESSA</code>, <code>ATTIVITA</code>, <code>ATTIVITA_CONSUMI</code></td>
+<td><strong><code>id</code></strong> (bigint, <code>::text</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Cioè: nelle tabelle di collegamento polimorfe (<code>pratiche.pratiche_sorgenti</code>,
+<code>vendite.commesse_sorgenti</code>) e nelle viste <code>vw_stato_sorgente_*</code>, la colonna
+<code>sorgente_uid</code> (di tipo <code>text</code>) contiene <strong>l'uid per preventivo/offerta</strong> e
+<strong>l'id (::text) per gli altri</strong>. È esattamente ciò che validano
+<code>script.trgfn_guard_sorgente_polimorfa</code> e su cui sono costruite le
+<code>vw_stato_sorgente_*</code>.</p>
+<p><strong>⚠️ Due meccanismi diversi — non confonderli:</strong></p>
+<ol>
+<li><strong>Sorgente polimorfa</strong> (questa tabella + <code>pratiche_sorgenti</code> /
+   <code>commesse_sorgenti</code> / <code>vw_stato_sorgente_*</code>): chiave nodo =
+   <code>(sorgente_tipo_id, sorgente_uid)</code>, con <code>sorgente_uid</code> <strong>secondo
+   <code>key_selector</code></strong>. Guard attivo: <code>trgfn_guard_sorgente_polimorfa</code>.</li>
+<li><strong>Colonne tipizzate dirette</strong> (fuori dal meccanismo polimorfo): es.
+   <code>vendite.ddt.sorgente_uid</code> e <code>vendite.resi.sorgente_uid</code> sono <strong><code>uuid</code></strong> (puntano
+   a <code>ordini.uid</code> / <code>ddt.uid</code>); <code>vendite.ordini.documento_origine_id</code> e
+   <code>vendite.contratti.offerta_id</code> sono <strong><code>bigint</code></strong> (puntano per <code>id</code>). Ognuna è
+   corretta per sé, ma <strong>non</strong> passa per <code>key_selector</code>.</li>
+</ol>
+<p><strong>Regola pratica per chi unisce documenti (es. lineage):</strong> usare la <strong>chiave
+nativa polimorfa</strong> <code>(sorgente_tipo_id, sorgente_uid)</code> come identità del nodo (per
+la commessa → <code>id::text</code>, coerente con <code>key_selector='id'</code>). Le colonne tipizzate
+dirette del punto 2 vanno <strong>tradotte</strong> su quella chiave con un join alla tabella
+target (es. <code>ddt.sorgente_uid</code> uuid → <code>ordini.id::text</code>). <strong>Non</strong> standardizzare i
+due meccanismi a un'unica chiave "al volo": è un refactor del motore polimorfo
+(guard + resolver + <code>vw_stato_sorgente_*</code> + writer), non un ritocco.</p>
+<blockquote>
+<p>Nota storica: le tabelle <strong>più vecchie</strong> referenziano per <code>id</code>, quelle <strong>più
+recenti</strong> (ddt, resi) per <code>uid</code>. La disomogeneità è incapsulata da <code>key_selector</code>
+e dai tipi di colonna; si vede solo unendo tutto in un grafo unico.</p>
+</blockquote>
 <hr />
 <h3 id="relazioni">Relazioni<a class="headerlink" href="#relazioni" title="Permanent link">&para;</a></h3>
 <p><code>config.sorgenti</code> è una tabella <strong>di dominio/i18n logico</strong> usata tipicamente da:</p>

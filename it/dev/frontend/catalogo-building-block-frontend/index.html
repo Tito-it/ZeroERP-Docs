@@ -391,6 +391,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2512,6 +2518,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3050,6 +3062,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../guide/gestione-ddt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Gestione ddt
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../guide/gestione-commesse/" class="md-nav__link">
         
   
@@ -3374,6 +3413,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../guide/sorgente-polimorfa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sorgente polimorfa
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/contratto-guc-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contatto GUC APP
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../guide/uso-di-obsoleto/" class="md-nav__link">
         
   
@@ -3451,10 +3544,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_33" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_36" >
         
           
-          <label class="md-nav__link" for="__nav_7_33" id="__nav_7_33_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_36" id="__nav_7_36_label" tabindex="0">
             
   
   
@@ -3471,8 +3564,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_33_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_33">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_36_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_36">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4512,6 +4605,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lineage-documenti-pannello-passaggi-srcvendite_sharedlineage" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Lineage documenti / pannello "Passaggi" (<code>src/vendite/_shared/lineage/</code>)
+      </span>
+    </span>
+  </a>
   
 </li>
       
@@ -5984,6 +6088,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lineage-documenti-pannello-passaggi-srcvendite_sharedlineage" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Lineage documenti / pannello "Passaggi" (<code>src/vendite/_shared/lineage/</code>)
+      </span>
+    </span>
+  </a>
   
 </li>
       
@@ -7927,6 +8042,47 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 </tbody>
 </table>
 <hr />
+<h2 id="lineage-documenti-pannello-passaggi-srcvendite_sharedlineage">Lineage documenti / pannello "Passaggi" (<code>src/vendite/_shared/lineage/</code>)<a class="headerlink" href="#lineage-documenti-pannello-passaggi-srcvendite_sharedlineage" title="Permanent link">&para;</a></h2>
+<p>BB condiviso per la genealogia/lineage dei documenti vendite (gemello BE
+<code>build_passaggi_view</code> + <code>get_documento_passaggi</code>, doc api_lineage_passaggi.md).
+Montato nei 6 drawer documento (preventivi, offerte, ordini, contratti, ddt,
+resi) come sezione in coda al contenuto (Fase A brief lineage, 2026-07-15).</p>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LineagePassaggiPanel</code></td>
+<td><code>LineagePassaggiPanel.vue</code></td>
+<td>Pannello "Passaggi": pratica collegata (numero cliccabile → <code>PraticaDrawer</code>), frontiera (Tag tipo + codice + Tag fase <code>faseDocumentoSeverity</code>), catena Origine (indietro) + Destinazioni (avanti) come timeline indentata per <code>livello</code>; arco R (<code>is_ramo_inverso</code>, DDT→Reso) reso come "ramo di ritorno" attenuato. Le tappe apribili (<code>*_doc_id</code> valorizzato + tipo con drawer) aprono il <strong>dettaglio impilato</strong> via <code>LineageDocumentoDrawerHost</code> — uniforme al link pratica (fatture/commesse: nodi terminali consultivi). <strong>Lazy per costruzione</strong>: PrimeVue Panel toggleable chiuso di default, fetch a OGNI expand (freshness fra riaperture del drawer padre; errori via <code>useApiHandler</code>, guard anti-race <code>useFetchVersion</code> sui cambi docId). Root <code>app-escape</code>: consultazione legittima nei drawer <code>.app-readonly</code> post-DRAFT. Props: <code>basePath</code>, <code>docId</code>.</td>
+</tr>
+<tr>
+<td><code>LineageDocumentoDrawerHost</code> + <code>lineageDrawers.js</code></td>
+<td><code>LineageDocumentoDrawerHost.vue</code></td>
+<td>Host cross-dominio che apre "a comando" il drawer di dettaglio del documento (tipo sorgente + id) impilato, come <code>PraticaDrawer</code>. <code>lineageDrawers.js</code> mappa i <strong>7 tipi</strong> (6 documenti + COMMESSA, Fase C) → drawer con <strong><code>defineAsyncComponent</code></strong> (import dinamico): rompe il ciclo di import (i drawer importano <code>LineagePassaggiPanel</code>) e code-splitta i drawer. Gestisce prop id a nome variabile per dominio + <code>mode='edit'</code> (ResoDrawer/CommessaDrawer senza <code>mode</code>). Props: <code>visible</code> (v-model), <code>tipoCodice</code>, <code>docId</code>.</td>
+</tr>
+<tr>
+<td><code>CommessaDrawer</code> (lineage)</td>
+<td><code>CommessaDrawer.vue</code></td>
+<td><strong>Drawer leggero SOLA LETTURA della commessa (Fase C, genealogia inversa).</strong> La commessa non ha lista/CRUD propria: qui si consulta solo la sua genealogia (Origine = sorgenti che l'hanno generata, Destinazioni = fatture a valle) riusando <code>LineagePassaggiPanel</code> con <code>start-open</code>. Header (codice + stato <code>statoCommessaSeverity</code>) dal payload passaggi già caricato (evento <code>@loaded</code>, niente seconda fetch). Aperto dalle tappe COMMESSA dei pannelli "Passaggi" dei documenti (via l'host). Props: <code>visible</code> (v-model), <code>commessaId</code>.</td>
+</tr>
+<tr>
+<td><code>getPassaggi</code></td>
+<td><code>lineageApi.js</code></td>
+<td>Client <code>GET {base}/{id}/passaggi/</code> bindato al basePath del dominio (il BE traduce il pk nella chiave nodo polimorfa: FE ignaro di <code>key_selector</code>, P-1).</td>
+</tr>
+<tr>
+<td><code>LineagePraticaCell</code> / <code>LineageFaseTag</code> / <code>LineageFrontieraChip</code></td>
+<td><code>LineagePraticaCell.vue</code> · <code>LineageFaseTag.vue</code> · <code>LineageFrontieraChip.vue</code></td>
+<td><strong>Celle lineage delle liste documento (Fase B).</strong> Slot <code>#cell-pratica</code>/<code>#cell-fase</code>/<code>#cell-transito</code> di <code>&lt;ListaConfigurabile&gt;</code> sulle 5 liste (preventivi/offerte/ordini/contratti/ddt). <code>LineagePraticaCell</code>: numero pratica cliccabile (<code>@click.stop</code> → <code>PraticaDrawer</code> impilato, montato solo su apertura) + badge <code>+N</code> (n_pratiche&gt;1). <code>LineageFaseTag</code>: Tag <code>faseDocumentoSeverity</code> + <code>dashFaseLabel</code> (riuso Situazione aperta). <code>LineageFrontieraChip</code>: chip <code>→ &lt;tipo&gt; CODICE · fase</code> in sola lettura, suffisso <code>+N attive</code> sul fan-out (G-9), "—" se non transitato. Colonne servite dalle <code>vw_*_lista</code> estese dal DB (<code>frontiera_tipo_id</code> decodificato a <code>frontiera_tipo_codice</code> nei repo lista).</td>
+</tr>
+</tbody>
+</table>
 <h2 id="indirizzi-documento-srcvendite_sharedindirizzi">Indirizzi documento (<code>src/vendite/_shared/indirizzi/</code>)<a class="headerlink" href="#indirizzi-documento-srcvendite_sharedindirizzi" title="Permanent link">&para;</a></h2>
 <p>BB condiviso per gli indirizzi dei documenti vendite (gemello BE
 <code>build_indirizzi_documento_views</code>, doc api_indirizzi_documento.md). UX v2
