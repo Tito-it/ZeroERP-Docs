@@ -5094,13 +5094,30 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#whitelist-operativa-seed-10-codici" class="md-nav__link">
+  <a href="#whitelist-operativa-seed-14-codici" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Whitelist operativa (seed, 10 codici)
+        Whitelist operativa (seed, 14 codici)
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Whitelist operativa (seed, 14 codici)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i-quattro-codici-aggiunti-dalla-slice-ddtresi-2026-07-18" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        I quattro codici aggiunti dalla slice DDT/resi (2026-07-18)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -5192,10 +5209,56 @@ decisa dal dominio (decisione DL-6, Tid 2026-07-04), collocata qui DB-first.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="whitelist-operativa-seed-10-codici">Whitelist operativa (seed, 10 codici)<a class="headerlink" href="#whitelist-operativa-seed-10-codici" title="Permanent link">&para;</a></h3>
+<h3 id="whitelist-operativa-seed-14-codici">Whitelist operativa (seed, 14 codici)<a class="headerlink" href="#whitelist-operativa-seed-14-codici" title="Permanent link">&para;</a></h3>
 <p><code>RIGA_RESIDUA</code>, <code>PUSH_NON_ESEGUITO</code>, <code>PUSH_PARZIALE</code>, <code>ATTIVITA_NON_APPROVATA</code>,
-<code>ATTIVITA_NON_EMESSA</code> → 🟠 · <code>FIGLIO_ABORTITO</code> → 🔴 · <code>IN_ATTESA_ACCETTAZIONE</code>
-→ 🔵 · <code>DOC_BOZZA</code>, <code>CANONE_NON_GENERATO</code>, <code>SENZA_FIGLIO</code> → 🟢.</p>
+<code>ATTIVITA_NON_EMESSA</code>, <strong><code>RICONSEGNA_NON_ESEGUITA</code></strong> → 🟠 · <code>FIGLIO_ABORTITO</code> → 🔴 ·
+<code>IN_ATTESA_ACCETTAZIONE</code> → 🔵 · <code>DOC_BOZZA</code>, <code>CANONE_NON_GENERATO</code>, <code>SENZA_FIGLIO</code>,
+<strong><code>IN_TRANSITO</code></strong>, <strong><code>IN_ATTESA_DDT</code></strong>, <strong><code>MERCE_RESA_GIA_FATTURATA</code></strong> → 🟢.</p>
+<h4 id="i-quattro-codici-aggiunti-dalla-slice-ddtresi-2026-07-18">I quattro codici aggiunti dalla slice DDT/resi (2026-07-18)<a class="headerlink" href="#i-quattro-codici-aggiunti-dalla-slice-ddtresi-2026-07-18" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th><code>codice_interno</code></th>
+<th>Classe</th>
+<th>Emesso da</th>
+<th>Perché quella classe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IN_TRANSITO</code></td>
+<td>🟢</td>
+<td><code>vw_dash_fatturazione_ddt</code></td>
+<td>Merce spedita che non ha ancora raggiunto lo stato che fattura: <strong>è in viaggio, non in ritardo</strong></td>
+</tr>
+<tr>
+<td><code>IN_ATTESA_DDT</code></td>
+<td>🟢</td>
+<td><code>vw_dash_fatturazione_ordini</code></td>
+<td>Ordine con trigger <code>SPEDITO</code>/<code>CONSEGNATO</code>: <strong>non è lui a pushare</strong>, lo faranno i suoi DDT. Resta nel serbatoio, esce dal backlog</td>
+</tr>
+<tr>
+<td><code>RICONSEGNA_NON_ESEGUITA</code></td>
+<td>🟠</td>
+<td>ramo resi del backlog</td>
+<td>L'azione <strong>esiste</strong> (<code>fn_genera_ddt_riconsegna</code>) e la sua mancata esecuzione <strong>blocca la fatturazione</strong>: il residuo dell'ordine resta riaperto</td>
+</tr>
+<tr>
+<td><code>MERCE_RESA_GIA_FATTURATA</code></td>
+<td>🟢 <strong>oggi</strong></td>
+<td>ramo resi del backlog</td>
+<td>Merce resa che risulta già fatturata → accredito dovuto. Fisiologico <strong>perché nessuna azione esiste</strong>: la nota di credito non c'è ancora, e correggere la quantità a mano è vietato dall'immutabilità</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong><code>MERCE_RESA_GIA_FATTURATA</code> diventerà 🟠 cambiando questa sola cella di seed.</strong>
+Il ramo che lo emette è già costruito e la classe si risolve a valle della union:
+quando esisterà la slice NC, il backlog si popolerà <strong>senza toccare una vista né
+rilasciare BE/FE</strong>. Il nome nomina <strong>il fatto</strong> («fatturata per 10, tenuta 7»), non
+il rimedio: un <code>NC_DOVUTA</code> pre-deciderebbe la risposta e mentirebbe se il rimedio
+scelto fosse un altro.</p>
+</blockquote>
 <hr />
 <h3 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h3>
 <ul>

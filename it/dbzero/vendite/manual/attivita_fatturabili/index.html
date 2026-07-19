@@ -5127,6 +5127,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#validazione-polimorfa-della-sorgente-non-attiva-decisione-non-dimenticanza" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Validazione polimorfa della sorgente — NON attiva (decisione, non dimenticanza)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#esempi-duso-query-applicative" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5164,6 +5175,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Snapshot pricing (v5, 14-04-2026)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registro-della-riga-tipo_movimento-17-07-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Registro della riga: <code>tipo_movimento</code> (17-07-2026)
       </span>
     </span>
   </a>
@@ -5316,9 +5338,40 @@ Queste righe sono <strong>pre‑documentali</strong>: quando il ciclo di fattura
 <p><code>trg_attivita_fatturabili_normalize_ins_upd</code> → <strong>normalizza</strong> <code>competenza_mese</code> al 1° del mese (obbligatoria, derivata da <code>posticipa_al</code> se assente), imposta <code>sorgente_riga</code> a <code>0</code> se <code>sorgente_tipo_id</code> è valorizzato e risolve <code>tipo_doc_fiscale_id</code>/<code>valuta_id</code> quando mancanti.</p>
 </li>
 <li><code>trg_attivita_fatturabili_a10_guard_ba_coerenza_ins_upd</code> → <strong>coerenze BA/istanza/articolo</strong> (regole di dominio).</li>
-<li><code>trg_attivita_fatturabili_a10_guard_fonte_ins_upd</code> → <strong>validazione sorgente</strong> (<code>sorgente_tipo_id</code>/<code>sorgente_uid</code>).</li>
+<li><code>trg_attivita_fatturabili_a10_guard_commessa_ins_upd</code> → coerenza col segmento commessa (<code>commessa_id</code>/<code>commessa_attivita_id</code>).</li>
 <li><code>trg_attivita_fatturabili_a10_guard_fatturato_upd_dlt</code> → <strong>fail‑fast</strong>: blocca update/delete se già collegate a fattura.</li>
 </ul>
+<hr />
+<h3 id="validazione-polimorfa-della-sorgente-non-attiva-decisione-non-dimenticanza">⚠️ Validazione polimorfa della sorgente — NON attiva (decisione, non dimenticanza)<a class="headerlink" href="#validazione-polimorfa-della-sorgente-non-attiva-decisione-non-dimenticanza" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>Registrato qui (doc permanente) perché i brief migrano in work-done —
+decisioni Tid 2026-02-25 e 2026-07-18.</p>
+</blockquote>
+<p>Le colonne <code>sorgente_tipo_id</code> / <code>sorgente_riga</code> / <code>sorgente_uid</code> <strong>non hanno un
+guard polimorfo di esistenza</strong>. Storia:</p>
+<ul>
+<li><code>20251026-02</code>: agganciato <code>trg_attivita_fatturabili_a10_guard_fonte_ins_upd</code>
+  (guard polimorfo, oggi <code>script.trgfn_guard_sorgente_polimorfa_tipizzata</code>);</li>
+<li><code>20260225-45</code>: <strong>rimosso deliberatamente</strong> — nel flusso commessa-only la
+  sorgente è sempre COMMESSA e la FK <code>commessa_attivita_id</code> garantisce già il
+  padre; il probe polimorfo era ridondante;</li>
+<li>2026-07-18 (brief-db-guard-sorgente-polimorfa, D6): <strong>confermato staccato</strong>.</li>
+</ul>
+<p><strong>Condizione di riaggancio</strong> — rivalutare <code>trgfn_guard_sorgente_polimorfa_tipizzata</code>
+il giorno in cui un flusso scriverà attività fatturabili <strong>non</strong> commessa-only
+(import esterni diretti, sorgenti documento senza segmento commessa): solo lì il
+guard aggiunge protezione che la FK non dà. Prerequisiti già censiti per quel
+giorno:</p>
+<ol>
+<li><strong>semantica <code>sorgente_riga</code></strong>: qui NON è la chiave del modello A — il trigger
+   normalize la imposta a <code>0</code> (sentinella «nessuna riga specifica») quando
+   <code>sorgente_tipo_id</code> è valorizzato, e il guard tipizzato com'è oggi la
+   interpreterebbe come id documento (fallendo sempre su 0). Va risolto il
+   conflitto (togliere la sentinella o adattare il guard);</li>
+<li>drop del DEFAULT 0 su <code>sorgente_riga</code>;</li>
+<li>verifica dei writer (le fn di generazione attività);</li>
+<li>regressione pgTAP (~20 file toccano questa tabella).</li>
+</ol>
 <hr />
 <h3 id="esempi-duso-query-applicative">Esempi d’uso (query applicative)<a class="headerlink" href="#esempi-duso-query-applicative" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- 1) Selezione righe eleggibili per il ciclo del mese M</span>
@@ -5405,6 +5458,20 @@ La qualità e la coerenza dei dati in <code>vendite.attivita_fatturabili</code> 
 </tbody>
 </table>
 <p>CHECK sui domini di <code>origine_prezzo</code> e <code>tipo_variazione_applicata</code>. Indice dedicato su <code>origine_prezzo</code> per filtri dashboard.</p>
+<hr />
+<h3 id="registro-della-riga-tipo_movimento-17-07-2026">Registro della riga: <code>tipo_movimento</code> (17-07-2026)<a class="headerlink" href="#registro-della-riga-tipo_movimento-17-07-2026" title="Permanent link">&para;</a></h3>
+<p>Insieme alle 8 colonne dello snapshot pricing, l'emissione propaga 1:1 anche
+<code>tipo_movimento</code> — il <strong>registro</strong> della riga: <code>NORMALE</code> (merce/servizio che rispecchia il
+documento d'origine), <code>ONERE</code> (voce di valore caricata dalla porta dedicata, quantita' 1
+fissa), <code>RETTIFICA</code> (riservato ai conguagli futuri). CHECK sul dominio, come per
+<code>origine_prezzo</code>.</p>
+<p>Serve qui, e non solo sulla commessa, perche' <strong>il conto della merce si fa su questa
+tabella</strong>: il contatore della fatturazione (<code>tenuti − fatturati</code>) somma le quantita' delle
+sole righe <code>NORMALE</code>, e l'esistenza stessa della riga di attivita' fatturabile e' la prova
+che quella merce e' stata emessa. Se il registro vivesse solo sulla commessa, il contatore
+dovrebbe risalire la catena per sapere se sta guardando merce o un onere.</p>
+<p>Semantica e razionale completi: <a href="../../tabelle/commesse_attivita/"><code>vendite.commesse_attivita</code></a>,
+sezione "Registro della riga".</p>
 
 
 

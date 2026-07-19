@@ -5249,7 +5249,15 @@ export via <code>ListaExportService</code>, scope emittente RLS + filtro applica
 filtro stato).</p>
 <ul>
 <li>Da accreditare <code>GET /api/v1/vendite/resi/da-accreditare/</code> (+ <code>…/export/</code>) —
-  righe a credito (<code>tipi_reso.riapre_residuo=false</code>), config <code>vendite.resi_da_accreditare</code>.</li>
+  <strong>forma contatore</strong> (2026-07-18, brief DDT-resi §3c): righe la cui partita ha
+  differenza negativa (<code>accredito_dovuto = fatturati − tenuti &gt; 0</code>),
+  <strong>qualunque tipo di reso</strong> — il tipo è degradato a <code>etichetta</code>
+  <code>DOVUTA</code> (a credito, NC obbligatoria) | <code>FACOLTATIVA</code> (per ri-consegna,
+  opzione DL-26). Colonne del conto esposte: <code>accredito_dovuto</code>, <code>tenuti</code>,
+  <code>fatturati</code>; <code>ddt_numero</code>/<code>ddt_id</code> possono essere <strong>NULL</strong> (aggancio partita
+  via ordine, join DDT LEFT). Filtro extra <code>etichetta</code> (whitelist
+  <code>DOVUTA|FACOLTATIVA</code>, case-insensitive; fuori whitelist →
+  <code>E_RESO_VALIDAZIONE</code>; assente = tutte). Config <code>vendite.resi_da_accreditare</code>.</li>
 <li>Da ri-consegnare <code>GET /api/v1/vendite/resi/da-riconsegnare/</code> (+ <code>…/export/</code>) —
   righe con copertura incompleta + <code>stato_riconsegna</code> derivato
   (DA_RICONSEGNARE/PARZIALE/COMPLETATA), config <code>vendite.resi_da_riconsegnare</code>.</li>

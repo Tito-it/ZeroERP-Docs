@@ -6796,6 +6796,21 @@ esclusivi grazie al <code>UNIQUE (token_hash)</code>.</p>
 <td>Coercion difensiva jsonb -&gt; dict (il driver puo' restituire jsonb come str). Promozione regola-del-2 (2026-07-12) del clone nato in <code>pratiche_repository</code> e replicato in ui_admin/vendite; JSON malformato o non-oggetto -&gt; <code>{}</code>. Usato dal mixin indirizzi documento.</td>
 </tr>
 <tr>
+<td><code>extract_paginated</code></td>
+<td><code>_helpers.py</code></td>
+<td>Estrae (righe dict senza <code>total_count</code>, totale) da un cursore la cui SELECT proietta <code>COUNT(*) OVER() AS total_count</code> — paginazione in UNA valutazione. Promozione a core 2026-07-18 (regola del 2, ok Tid): nato in <code>anagrafiche/db/_helpers.py</code> (6 repository, ora sul BB core); lo stesso lavoro resta scritto inline in ~15 siti storici core/amm (email, dbops, lookup, search, maintenance…) — <strong>adottabile lì come allineamento dedicato</strong>, behavior-preserving. A pagina oltre l'ultima il totale è 0: se serve distinguere la pagina stantia usare <code>fetch_paged_with_total</code>.</td>
+</tr>
+<tr>
+<td><code>fetch_paged_with_total</code></td>
+<td><code>_helpers.py</code></td>
+<td>Esegue una query paginata (<code>data_sql</code> con <code>COUNT(*) OVER() AS total_count</code> + LIMIT/OFFSET nei params) e ritorna (righe, totale) in UNA valutazione; <code>fallback_count_sql</code> opzionale eseguita SOLO su pagina-oltre-l'ultima (offset&gt;0, 0 righe) — per liste che si accorciano sotto l'utente (es. code di lavoro resi che si auto-svuotano) il totale resta onesto senza pagare la COUNT nel caso comune. Estratto 2026-07-18 (regola del 2, ok Tid). Consumer: <code>ResiRepository._list_coda</code> (entrambe le code).</td>
+</tr>
+<tr>
+<td><code>query_paged_view</code></td>
+<td><code>_helpers.py</code></td>
+<td>Variante <strong>CLAMP</strong>: CTE MATERIALIZED + <code>COUNT(*) OVER()</code> + OFFSET clampato all'ultima pagina in SQL — serve subito l'ultima pagina REALE (una sola valutazione anche sul rientro da pagina stantia). Semantica diversa da <code>fetch_paged_with_total</code> (pagina richiesta): usarla solo dove il contratto API dichiara la <strong>pagina effettiva</strong> nell'envelope (famiglia cruscotti + <code>usePagedDashFetch</code>). Promozione a core 2026-07-18 da <code>VenditeRepository._query_paged_view</code> (che resta come delegatore per aperto/backlog/errori). <code>select_sql</code> senza ORDER/LIMIT; <code>order_by</code> clausola completa su colonne di output, whitelist a carico del chiamante.</td>
+</tr>
+<tr>
 <td><code>CoreRepository.get_user_profile</code></td>
 <td><code>core_repository.py</code></td>
 <td>Profilo utente completo via script.fn_get_user_profile</td>

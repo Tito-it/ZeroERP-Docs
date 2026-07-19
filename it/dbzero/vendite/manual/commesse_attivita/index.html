@@ -5115,6 +5115,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#registro-della-riga-tipo_movimento-17-07-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Registro della riga: <code>tipo_movimento</code> (17-07-2026)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5173,6 +5184,10 @@ segmentazione idempotente (<code>segment_key</code>) e stato approvazione/emissi
 <li><code>NON_EMESSA</code></li>
 <li><code>EMESSA</code></li>
 <li><code>ANNULLATA</code></li>
+<li><code>tipo_movimento</code> (registro della riga, vedi sezione dedicata):</li>
+<li><code>NORMALE</code></li>
+<li><code>ONERE</code></li>
+<li><code>RETTIFICA</code></li>
 </ul>
 <hr />
 <h3 id="utilizzo-previsto">Utilizzo previsto<a class="headerlink" href="#utilizzo-previsto" title="Permanent link">&para;</a></h3>
@@ -5237,6 +5252,56 @@ segmentazione idempotente (<code>segment_key</code>) e stato approvazione/emissi
 </table>
 <p>Due CHECK presidiano il dominio di <code>origine_prezzo</code> e <code>tipo_variazione_applicata</code>. Il campo <code>meta</code> resta per dettagli non strutturati (es. deroghe, flag specifici): qui stanno solo le dimensioni che servono per query dirette e filtri dashboard.</p>
 <p>Le stesse 8 colonne vengono propagate su <a href="../../tabelle/attivita_fatturabili/"><code>vendite.attivita_fatturabili</code></a>, preservando la tracciabilita' fino al layer fatture.</p>
+<hr />
+<h3 id="registro-della-riga-tipo_movimento-17-07-2026">Registro della riga: <code>tipo_movimento</code> (17-07-2026)<a class="headerlink" href="#registro-della-riga-tipo_movimento-17-07-2026" title="Permanent link">&para;</a></h3>
+<p>La commessa e' un <strong>libro giornale</strong>: una riga nata dal push e' un <em>fatto</em> — lo specchio della
+riga del documento d'origine al momento del push. I fatti non si modificano, si correggono
+aggiungendo altri fatti.</p>
+<p>Ne discende che righe di natura diversa convivono nella stessa tabella, e serve dire <strong>di che
+natura e'</strong> ciascuna. E' il compito di <code>tipo_movimento</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Valore</th>
+<th>Chi la scrive</th>
+<th>Cos'e'</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NORMALE</code></td>
+<td>il push (default di <code>fn_upsert_commessa_attivita</code>)</td>
+<td>merce/servizio che rispecchia il documento d'origine</td>
+</tr>
+<tr>
+<td><code>ONERE</code></td>
+<td>la porta "aggiungi onere"</td>
+<td>voce di <strong>valore</strong> senza contratto specifico: quantita' 1 fissa, il prezzo <em>e'</em> l'importo</td>
+</tr>
+<tr>
+<td><code>RETTIFICA</code></td>
+<td>nessuno, oggi</td>
+<td>riservato ai conguagli/rettifiche futuri (il dominio lo prevede gia')</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Perche' e' portante.</strong> Il contatore della fatturazione (<code>tenuti − fatturati</code>) somma le
+quantita' delle sole righe <code>NORMALE</code>: e' cosi' che una voce di valore caricata a mano non
+finisce per errore nel conto della merce. Il registro viaggia fino ad
+<a href="../../tabelle/attivita_fatturabili/"><code>attivita_fatturabili</code></a>, propagato 1:1
+dall'emissione come le 8 colonne dello snapshot pricing — il contatore misura li' e non deve
+risalire alla commessa per sapere che natura ha la riga.</p>
+<p><strong>Perche' e' una colonna e non una chiave di <code>meta</code>.</strong> Fino al 17-07-2026 il valore viveva nel
+campo <code>meta</code> (jsonb), validato solo dalla funzione di upsert: un INSERT diretto lo aggirava, e
+un discriminatore su cui si fondano soldi e riconciliazioni non puo' dipendere dalla buona
+educazione del chiamante. Ora e' una colonna con un CHECK, e il campo <code>meta</code> non lo ospita
+piu'. Su <code>meta</code> resta <code>tipo_consumo</code> (<code>ACCONTO</code> | <code>CONGUAGLIO</code> | <code>STORNO</code>), non promosso.</p>
+<blockquote>
+<p>Le righe scritte prima di questa data conservano in <code>meta</code> una chiave <code>tipo_movimento</code>
+residua: vale sempre <code>NORMALE</code> (verificato all'applicazione della migrazione) e nessuno la
+legge — la colonna e' l'unica fonte.</p>
+</blockquote>
+<p>Riferimento: <code>brief-db-immutabilita-quantita-e-porta-oneri</code> §4c.2.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

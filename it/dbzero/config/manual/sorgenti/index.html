@@ -5329,15 +5329,31 @@ guard, e le query per lo <strong>stato d'uso vivo</strong>) vedi la guida
 <p>Cioè: nelle tabelle di collegamento polimorfe (<code>pratiche.pratiche_sorgenti</code>,
 <code>vendite.commesse_sorgenti</code>) e nelle viste <code>vw_stato_sorgente_*</code>, la colonna
 <code>sorgente_uid</code> (di tipo <code>text</code>) contiene <strong>l'uid per preventivo/offerta</strong> e
-<strong>l'id (::text) per gli altri</strong>. È esattamente ciò che validano
-<code>script.trgfn_guard_sorgente_polimorfa</code> e su cui sono costruite le
-<code>vw_stato_sorgente_*</code>.</p>
+<strong>l'id (::text) per gli altri</strong>. Dal 2026-07-18 la convenzione è <strong>blindata</strong>
+(brief-db-guard-sorgente-polimorfa) da due livelli:</p>
+<ul>
+<li><strong>rubinetto</strong>: <code>vendite.fn_link_commessa_sorgente</code> normalizza la chiave prima
+  di scrivere (traduce l'uuid dei chiamanti storici in <code>id::text</code> per i tipi a
+  chiave <code>id</code>; formato non conforme → <code>E_SORG_FORMATO</code>, uuid non risolvibile →
+  <code>E_SORG_NORM_NON_RISOLTA</code>);</li>
+<li><strong>guard</strong>: <code>script.trgfn_guard_sorgente_polimorfa_testuale</code> (modello B) valida
+  formato ed esistenza su INSERT/UPDATE di <code>pratiche_sorgenti</code> e
+  <code>commesse_sorgenti</code>.</li>
+</ul>
+<blockquote>
+<p>Nota COMMESSA: <code>target_table</code> del tipo è <code>vendite.commesse</code> (fix 2026-07-18:
+il seed storico puntava a <code>vendite.commesse_attivita</code>, il marker di pipeline —
+ma i link di collegamento usano l'id della <strong>commessa</strong>, ed è contro
+<code>vendite.commesse</code> che il guard risolve).</p>
+</blockquote>
 <p><strong>⚠️ Due meccanismi diversi — non confonderli:</strong></p>
 <ol>
 <li><strong>Sorgente polimorfa</strong> (questa tabella + <code>pratiche_sorgenti</code> /
    <code>commesse_sorgenti</code> / <code>vw_stato_sorgente_*</code>): chiave nodo =
    <code>(sorgente_tipo_id, sorgente_uid)</code>, con <code>sorgente_uid</code> <strong>secondo
-   <code>key_selector</code></strong>. Guard attivo: <code>trgfn_guard_sorgente_polimorfa</code>.</li>
+   <code>key_selector</code></strong>. Guard attivo: <code>trgfn_guard_sorgente_polimorfa_testuale</code>
+   (modello B — chiave testuale; la sorella <code>_tipizzata</code> per il modello A a
+   colonne tipizzate esiste ma oggi non è agganciata).</li>
 <li><strong>Colonne tipizzate dirette</strong> (fuori dal meccanismo polimorfo): es.
    <code>vendite.ddt.sorgente_uid</code> e <code>vendite.resi.sorgente_uid</code> sono <strong><code>uuid</code></strong> (puntano
    a <code>ordini.uid</code> / <code>ddt.uid</code>); <code>vendite.ordini.documento_origine_id</code> e

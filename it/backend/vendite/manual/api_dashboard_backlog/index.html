@@ -5226,8 +5226,12 @@ brief-design-fatturazione-due-lenti (<code>docs/it/dev/work-in-progress/brief-de
 brief-db-fatturazione-due-lenti (<code>docs/it/dev/work-done/brief-db-fatturazione-due-lenti.md</code>)
 §5, migrations <code>20260706-01..15</code>): due endpoint GET <strong>sottili</strong> sopra le
 proiezioni read-only <code>vendite.vw_dash_backlog_riepilogo</code> (contatori
-classe × area) e <code>vendite.vw_dash_backlog_documenti</code> (union dei 5 resolver
-filtrata al non-verde + LEFT JOIN <code>config.motivi_fermo</code>). Nessuna logica di
+classe × area) e <code>vendite.vw_dash_backlog_documenti</code> (union dei 6 resolver
+documento filtrata al non-verde + LEFT JOIN <code>config.motivi_fermo</code>, <strong>più i due
+rami RESI</strong> a grana reso × motivo dalle code accrediti/ri-consegne —
+<code>20260718-14</code>, §6-quater DL-24: un reso misto può comparire due volte, una per
+motivo, deroga dichiarata; area RESI a conteggi, <code>valore_fermo</code> NULL mai 0).
+Nessuna logica di
 dominio in Python: popolazione, classi (mappatura statica <code>motivo_fermo →
 classe</code>, DL-6/7), anzianità (<code>data_riferimento</code>, v1 proxy data documento) e
 regola fail-visible (motivo non mappato ⇒ ANOMALIA) vivono nelle viste.
@@ -5249,7 +5253,8 @@ GET /api/v1/vendite/dashboard-backlog/documenti/  (ApiDashboardBacklogDocumenti)
   riepilogo, che accoda le classi fuori whitelist): una classe futura resta
   drillabile senza toccare il BE; una classe sconosciuta (o <code>FISIOLOGICO</code>,
   escluso a monte dalla vista) dà lista vuota, mai 400.</li>
-<li><code>area</code> (opzionale): <code>PREVENTIVI | ORDINI | OFFERTE | CONTRATTI | COMMESSE</code>
+<li><code>area</code> (opzionale): <code>PREVENTIVI | ORDINI | DDT | OFFERTE | CONTRATTI |
+  COMMESSE | RESI</code>
   (case-insensitive; fuori whitelist → <code>E_VENDITE_VALIDATION</code>; assente = tutte).</li>
 <li><code>order_by</code> / <code>order_dir</code> (opzionali): <strong>ordinamento colonne server-side</strong>
   (convenzione delle liste standard). <code>order_by</code> in whitelist —

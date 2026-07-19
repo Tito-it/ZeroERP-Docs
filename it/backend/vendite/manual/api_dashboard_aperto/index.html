@@ -5229,7 +5229,9 @@ brief-design-fatturazione-due-lenti (<code>docs/it/dev/work-in-progress/brief-de
 brief-db-situazione-aperta-v2 (<code>docs/it/dev/work-done/brief-db-situazione-aperta-v2.md</code>),
 changeset <code>20260708-03/04</code>, PR #944): due endpoint GET <strong>sottili</strong> sopra le
 proiezioni read-only <code>vendite.vw_dash_aperto_riepilogo</code> (celle <code>area × fase</code>)
-e <code>vendite.vw_dash_aperto_documenti</code> (union dei resolver, 4 aree documento).
+e <code>vendite.vw_dash_aperto_documenti</code> (union dei resolver, 5 aree documento —
+DDT dal 2026-07-18, §6-quater DL-21: popolazione ristretta ai DDT con ruolo
+di fatturazione; i RESI restano fuori per costruzione, DL-24).
 <strong>Perimetro serbatoio interamente DB-side</strong> (DL-15): la vista v2 filtra
 <code>is_transitato IS DISTINCT FROM true AND fase &lt;&gt; 'CHIUSO'</code> — perimetro unico di
 card e drill-down, il BE <strong>non</strong> replica filtri (via il vecchio toggle
@@ -5248,7 +5250,7 @@ GET /api/v1/vendite/dashboard-aperto/documenti/  (ApiDashboardApertoDocumenti)
 <h3 id="get-dashboard-apertodocumenti"><code>GET /dashboard-aperto/documenti/</code><a class="headerlink" href="#get-dashboard-apertodocumenti" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>area</code> (opzionale, case-insensitive; assente = tutte): <code>PREVENTIVI |
-  ORDINI | OFFERTE | CONTRATTI</code>. <strong>Non whitellistato di proposito</strong> (coerenza
+  ORDINI | DDT | OFFERTE | CONTRATTI</code>. <strong>Non whitellistato di proposito</strong> (coerenza
   fail-visible col riepilogo, che accoda le aree fuori whitelist e le rende
   card cliccabili): un'area futura resta drillabile senza toccare il BE;
   un'area sconosciuta — o <code>COMMESSE</code>, esclusa dal WHERE della vista (coperta
@@ -5290,8 +5292,8 @@ GET /api/v1/vendite/dashboard-aperto/documenti/  (ApiDashboardApertoDocumenti)
 <span class="p">}</span>
 </code></pre></div>
 <ul>
-<li><strong>4 aree sempre presenti</strong> nell'ordine del funnel (<code>PREVENTIVI, ORDINI,
-  OFFERTE, CONTRATTI</code>), ognuna con la <strong>griglia delle 3 fasi vive sempre
+<li><strong>5 aree sempre presenti</strong> nell'ordine del funnel (<code>PREVENTIVI, ORDINI,
+  DDT, OFFERTE, CONTRATTI</code>), ognuna con la <strong>griglia delle 3 fasi vive sempre
   presenti</strong> nell'ordine della maturità verso la commessa (<code>APERTO, IN_ATTESA,
   IN_CORSO</code>) e zeri espliciti — DL-13: la griglia è neutra, il FE decide quali
   card mostrare. Aree o fasi <strong>fuori whitelist</strong> emesse dalla vista vengono
@@ -5300,9 +5302,15 @@ GET /api/v1/vendite/dashboard-aperto/documenti/  (ApiDashboardApertoDocumenti)
   griglia di un'area); un'area extra che porta <strong>valori</strong> li espone (decisione
   data-driven, non la whitelist euro statica).</li>
 <li>Totali per area = somma delle fasi (su Decimal). Misura mista (DL-11/16,
-  conferma D-2/D-3/D-4): aree euro (<code>PREVENTIVI</code>/<code>ORDINI</code>) con <code>valore_totale</code>
-  come stringa (<code>"0"</code> se vuote); aree a conteggi (<code>OFFERTE</code>/<code>CONTRATTI</code>) con
-  <code>valore_totale</code> <code>null</code> (il FE le legge da <code>valore_totale !== null</code>).</li>
+  conferma D-2/D-3/D-4): aree euro (<code>PREVENTIVI</code>/<code>ORDINI</code>/<code>DDT</code>) con
+  <code>valore_totale</code> come stringa (<code>"0"</code> se vuote); aree a conteggi
+  (<code>OFFERTE</code>/<code>CONTRATTI</code>) con <code>valore_totale</code> <code>null</code> (il FE le legge da
+  <code>valore_totale !== null</code>).</li>
+<li>⚠️ <strong>Misura MISTA dell'area ORDINI</strong> (DL-23 emendato, <code>20260718-13</code>): gli
+  ordini con <code>fatturazione_trigger ∈ {SPEDITO, CONSEGNATO}</code> portano il <strong>valore
+  ancora da spedire</strong> (il DDT prende in carico il resto); quelli con trigger
+  <code>CONFERMATO</code> restano al valore pieno. Il calcolo vive nel resolver DB, il BE
+  è passthrough; il FE lo dichiara con un hint sulla card.</li>
 </ul>
 <h3 id="lista-documenti">Lista documenti<a class="headerlink" href="#lista-documenti" title="Permanent link">&para;</a></h3>
 <p>Envelope paginato standard (<code>count/page/page_size/total_pages/results</code>); ogni

@@ -5278,7 +5278,7 @@
 <strong>qualunque</strong> documento/entità (preventivo, ordine, DDT, fattura, commessa…) usando
 <strong>un solo pattern</strong>, invece di una colonna dedicata per ogni tipo.</p>
 <p><strong>Vedi anche</strong>: <a href="../../dbzero/config/tabelle/sorgenti/">config.sorgenti</a> ·
-<a href="../../dbzero/script/funzioni/trgfn_guard_sorgente_polimorfa/">script.trgfn_guard_sorgente_polimorfa</a> ·
+<a href="../../dbzero/script/funzioni/trgfn_guard_sorgente_polimorfa_testuale/">script.trgfn_guard_sorgente_polimorfa_testuale</a> ·
 <a href="../../dbzero/script/views/vw_stato_sorgente/">script.vw_stato_sorgente</a></p>
 </blockquote>
 <hr />
@@ -5297,10 +5297,17 @@ diverso</strong> e vivere in <strong>tabelle diverse</strong>. Avere un collegam
 <li><strong>Le colonne di aggancio</strong> sulla tabella che collega:</li>
 <li><code>sorgente_tipo_id</code> = <em>che tipo è</em> (FK a <code>config.sorgenti</code>);</li>
 <li><code>sorgente_uid</code> = <em>quale in particolare</em> (il valore che identifica la riga).</li>
-<li><strong>Il guard</strong> — <code>script.trgfn_guard_sorgente_polimorfa</code>. Su INSERT/UPDATE apre il
-   dizionario, va nella <code>target_table</code> giusta, cerca con la chiave giusta e verifica
-   che <strong>quel documento esista davvero</strong>; altrimenti <strong>blocca</strong> (niente collegamenti a
-   documenti fantasma, niente <code>key_selector</code> non gestiti).</li>
+<li><strong>Il guard</strong> — <code>script.trgfn_guard_sorgente_polimorfa_testuale</code> (dal 2026-07-18,
+   attivo su <code>pratiche_sorgenti</code> e <code>commesse_sorgenti</code>). Su INSERT/UPDATE apre il
+   dizionario, controlla che la chiave sia <strong>nel formato giusto</strong> per il
+   <code>key_selector</code>, va nella <code>target_table</code> giusta e verifica che <strong>quel documento
+   esista davvero</strong>; altrimenti <strong>blocca</strong> (niente collegamenti a documenti
+   fantasma, niente chiavi nel formato sbagliato che poi «non risolvono» in
+   silenzio). Esiste anche la sorella <code>_tipizzata</code> per il modello a colonne
+   tipizzate (<code>sorgente_riga</code> BIGINT / <code>sorgente_uid</code> UUID), oggi non agganciata.
+   In più, <code>vendite.fn_link_commessa_sorgente</code> <strong>normalizza</strong> la chiave alla
+   scrittura (traduce l'uuid in <code>id::text</code> per i tipi a chiave <code>id</code>): i chiamanti
+   storici continuano a funzionare e scrivono canonico.</li>
 </ol>
 <blockquote>
 <p>Analogia: un <strong>adattatore universale</strong>. Non serve una presa diversa per ogni Paese:
@@ -5335,7 +5342,7 @@ come <code>ddt.sorgente_uid</code>/<code>resi.sorgente_uid</code> che sono <code
 <span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="k">c</span><span class="w">     </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgrelid</span>
 <span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relnamespace</span>
 <span class="k">JOIN</span><span class="w"> </span><span class="n">pg_proc</span><span class="w"> </span><span class="n">p</span><span class="w">      </span><span class="k">ON</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgfoid</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">proname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;trgfn_guard_sorgente_polimorfa&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">proname</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;trgfn_guard_sorgente_polimorfa%&#39;</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgisinternal</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
 </code></pre></div>

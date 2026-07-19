@@ -6710,15 +6710,49 @@ un rerun esplicito.</p>
 </tr>
 </tbody>
 </table>
-<p>In questo caso, se un lotto MASSIVO in stato EMESSA deve tornare a DRAFT,
-il sistema esegue il task <code>reset_lotto_draft</code> che pulisce fondi, righe IVA
-e totali generati dallo step forward.</p>
+<p>In questo caso, se un lotto MASSIVO in stato EMESSA deve tornare a DRAFT, il sistema
+esegue il task <code>reset_lotto_draft</code>, che ripristina i fondi delle fatture sorgente,
+cancella le righe IVA e i totali generati dallo step forward — <strong>e poi cancella le
+fatture e chiude il lotto</strong>. Non è un rollback reversibile: è una demolizione.</p>
+<blockquote>
+<p>⚠️ <strong><code>reset_lotto_draft</code> non riporta il lotto a DRAFT: lo ANNULLA.</strong>
+Il nome inganna. Cosa fa davvero, nell'ordine:</p>
+<ol>
+<li><strong>pretende il lotto già in DRAFT</strong> (guard <em>«rollback solo se DRAFT»</em>): il ritorno
+   EMESSA→DRAFT lo fa il rerun dello step, <em>prima</em>; il task non lo esegue.</li>
+<li><strong>ripristina i fondi</strong> delle fatture sorgente (<code>fn_reset_fondi_fattura</code>) — vedi
+   il caveat sotto.</li>
+<li><strong>cancella fisicamente</strong> riepiloghi IVA, righe, log, note e <strong>le fatture stesse</strong>.</li>
+<li><strong>sblocca le righe</strong> di <code>attivita_fatturabili</code> (<code>fattura_riga_id</code> → NULL,
+   <code>fatturato</code> → false, lock rimosso): sopravvivono e restano pronte.</li>
+<li><strong>chiude il lotto</strong>: <code>stato_doc_fiscale</code> = ANNULLATA, <code>stato_operativo</code> = CHIUSO,
+   <code>stato_lotto</code> = COMPLETATO.</li>
+</ol>
+<p><strong>Quel lotto è morto.</strong> Per rifatturare serve un <strong>lotto nuovo</strong>, che ripescherà le
+stesse righe <code>attivita_fatturabili</code> rimaste libere. Non si "riapre e si corregge" il
+lotto: si demolisce e si rifà.</p>
+<p>⚠️ <strong>E il ripristino dei fondi non è integrale.</strong> Un fondo già <strong>postato su una
+contabile CHIUSA</strong> non viene ripristinato: <code>fn_reset_fondi_fattura</code> non lo tocca,
+scrive un warning in <code>vendite.fatture_log</code> (<em>«Minimo non ripristinabile: gia postato
+(fattura X del Y)»</em>) e marca la riga source come ANNULLATO. Il reset <strong>riesce
+comunque</strong>: controllare il log, non darlo per pulito.</p>
+</blockquote>
 <p><strong>Vincoli:</strong></p>
 <ul>
-<li>Il rollback e` ammesso solo per lotti MASSIVO in stati pre-fiscali (tipicamente DRAFT ed EMESSA).</li>
-<li>Dopo la DEFINITIVA (numerazione fiscale) il rollback globale non e<code>piu</code> possibile;
+<li>Il rollback è ammesso solo per lotti <strong>MASSIVO</strong> e solo se il lotto è già in <strong>DRAFT</strong>;
+  le <strong>fatture</strong> del lotto possono essere DRAFT o EMESSA (pre-fiscali), altrimenti la fn
+  rifiuta.</li>
+<li>Dopo la DEFINITIVA (numerazione fiscale) il rollback globale non è più possibile;
   il sistema usa resume per fattura.</li>
-<li>Se <code>rollback</code> e<code></code>[]` (array vuoto), lo step non prevede operazioni di pulizia.</li>
+<li>Le <strong>fatture non tornano mai a DRAFT</strong>: nella matrice <code>config.stati_doc_fiscale_transizioni</code>
+  la transizione EMESSA→DRAFT ha <code>solo_lotto = true</code>, quindi vale per il <strong>lotto</strong>, non per
+  il documento. Una fattura EMESSA si può solo <strong>cancellare</strong> (dal reset), mai retrocedere.</li>
+<li>L'auto-rollback <strong>esclude</strong> questo task: il <code>PipelineStepExecutor</code> non lo esegue mai in
+  auto-run, proprio perché distruttivo. Serve una richiesta esplicita
+  (<code>POST /lotti/&lt;id&gt;/reset-draft/</code>).</li>
+<li>Per una singola fattura esiste l'alternativa che <strong>non</strong> annulla il lotto:
+  <code>fn_reset_lotto_fattura_draft</code> (richiede la fattura <strong>strettamente DRAFT</strong>).</li>
+<li>Se <code>rollback</code> è <code>&#91;&#93;</code> (array vuoto), lo step non prevede operazioni di pulizia.</li>
 </ul>
 <h3 id="regole-operative-del-modello-lotti">Regole operative del modello lotti<a class="headerlink" href="#regole-operative-del-modello-lotti" title="Permanent link">&para;</a></h3>
 <ol>

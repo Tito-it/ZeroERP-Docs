@@ -5166,17 +5166,30 @@ Brief autorevole: <code>docs/it/dev/work-in-progress/brief-design-dashboard-fatt
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 03-07-2026)
+<p>(latest review 2026-07-18)
 <code>vendite.vw_dash_fatturazione_documenti</code> è la fonte dati del <strong>drill-down della
 Dashboard Fatturazione</strong>: una riga per <strong>documento × mese di competenza</strong> su tutte
-e 5 le aree che portano alla fatturazione (<code>PREVENTIVI</code>, <code>ORDINI</code>, <code>OFFERTE</code>,
-<code>CONTRATTI</code>, <code>COMMESSE</code>), con valore/unità <strong>totali</strong> vs <strong>transitati</strong> verso l'area
-successiva e il <strong>motivo</strong> per cui un documento è fermo.</p>
+e <strong>6</strong> le aree che portano alla fatturazione (<code>PREVENTIVI</code>, <code>ORDINI</code>, <code>OFFERTE</code>,
+<code>CONTRATTI</code>, <code>COMMESSE</code>, <strong><code>DDT</code></strong>), con valore/unità <strong>totali</strong> vs <strong>transitati</strong>
+verso l'area successiva e il <strong>motivo</strong> per cui un documento è fermo.</p>
 <p>È una <strong>proiezione read-only</strong>: nessuno stato nuovo sui documenti — il transito è
 derivato dai link che i push scrivono già (FK, <code>segment_key</code>, <code>stato_emissione</code>,
-<code>sorgente_*</code>). <code>UNION ALL</code> dei 5 resolver di area (stesso layering della proiezione
+<code>sorgente_*</code>). <code>UNION ALL</code> dei 6 resolver di area (stesso layering della proiezione
 stato dominio). Il backend consuma <strong>solo</strong> questa vista (drill-down fermi) e
 l'aggregata mensile — mai i resolver singoli.</p>
+<blockquote>
+<p><strong>Area <code>DDT</code> aggiunta il 2026-07-18</strong> (slice fatturazione DDT/resi, §4a). Due cose
+da sapere per chi consuma:</p>
+<ul>
+<li>la popolazione DDT è <strong>selettiva</strong>: entrano solo i DDT con un ruolo di
+  fatturazione — fuori quelli di ordini a trigger <code>CONFERMATO</code> (fattura l'ordine)
+  e quelli con causale di trasporto non fatturabile (solo trasporto). Dettaglio in
+  <a href="../vw_dash_fatturazione_ddt/">vw_dash_fatturazione_ddt</a>;</li>
+<li><strong>i RESI non sono qui e non ci saranno</strong>: sono flusso inverso (<code>REVERSE_FLOW</code>),
+  quindi non appartengono al funnel pre-commessa. Compaiono solo nel
+  <a href="../vw_dash_backlog_documenti/">backlog</a>, con rami propri.</li>
+</ul>
+</blockquote>
 <hr />
 <h3 id="contratto-colonne">📑 Contratto colonne<a class="headerlink" href="#contratto-colonne" title="Permanent link">&para;</a></h3>
 <table>
@@ -5189,7 +5202,7 @@ l'aggregata mensile — mai i resolver singoli.</p>
 <tbody>
 <tr>
 <td><code>area</code></td>
-<td><code>PREVENTIVI</code> / <code>ORDINI</code> / <code>OFFERTE</code> / <code>CONTRATTI</code> / <code>COMMESSE</code></td>
+<td><code>PREVENTIVI</code> / <code>ORDINI</code> / <code>OFFERTE</code> / <code>CONTRATTI</code> / <code>COMMESSE</code> / <code>DDT</code></td>
 </tr>
 <tr>
 <td><code>competenza_mese</code></td>

@@ -5146,15 +5146,24 @@
 <p><a href="../../../config/tabelle/motivi_fermo/">config.motivi_fermo</a>
 <a href="../vw_dash_fatturazione_documenti/">vw_dash_fatturazione_documenti</a>
 <a href="../vw_dash_backlog_riepilogo/">vw_dash_backlog_riepilogo</a></p>
+<p>Rami resi (dal 2026-07-18):</p>
+<p><a href="../../views/vw_resi_da_riconsegnare/">vw_resi_da_riconsegnare</a> ·
+<a href="../vw_resi_da_accreditare/">vw_resi_da_accreditare</a></p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 06-07-2026)
+<p>(latest review 2026-07-18)
 <strong>Lente 2 Backlog</strong> (cruscotti fatturazione a due lenti): la lista dei
 <strong>non-collegati azionabili</strong> — cosa è fermo prima della commessa, da quanto, e
 cosa serve per sbloccarlo. L'asse <strong>non è la competenza</strong> (i fermi non ce
 l'hanno): è l'<strong>anzianità</strong> (<code>data_riferimento</code>/<code>anzianita_giorni</code>) e
 l'<strong>azionabilità</strong> (<code>classe</code> dalla lookup <code>config.motivi_fermo</code>).</p>
+<blockquote>
+<p>⚠️ <strong>Cambio di forma (2026-07-18)</strong>: la vista <strong>è diventata una <code>UNION</code></strong> — non è
+più costruita solo sopra <code>vw_dash_fatturazione_documenti</code>. Ai documenti si
+affiancano <strong>due rami resi</strong>, che in quella union non possono stare (i resi sono
+flusso inverso, <code>REVERSE_FLOW</code>) ma nel backlog sì: hanno lavoro arretrato vero.</p>
+</blockquote>
 <hr />
 <h3 id="semantica">Semantica<a class="headerlink" href="#semantica" title="Permanent link">&para;</a></h3>
 <table>
@@ -5167,7 +5176,7 @@ l'<strong>azionabilità</strong> (<code>classe</code> dalla lookup <code>config.
 <tbody>
 <tr>
 <td><strong>Popolazione</strong></td>
-<td>Le righe della union <code>vw_dash_fatturazione_documenti</code> con <code>motivo_fermo IS NOT NULL</code> e classe <strong>non</strong> <code>FISIOLOGICO</code> (regola unica DL-7, nessun caso speciale per area)</td>
+<td><strong>Tre rami</strong> uniti: (1) <code>vw_dash_fatturazione_documenti</code> con <code>motivo_fermo IS NOT NULL</code>; (2) <code>vw_resi_da_riconsegnare</code> → <code>RICONSEGNA_NON_ESEGUITA</code>; (3) <code>vw_resi_da_accreditare</code> con etichetta <code>DOVUTA</code> → <code>MERCE_RESA_GIA_FATTURATA</code>. Su <strong>tutti</strong> si applica poi la stessa regola unica DL-7: classe <strong>non</strong> <code>FISIOLOGICO</code>, nessun caso speciale per area</td>
 </tr>
 <tr>
 <td><strong><code>classe</code></strong></td>
@@ -5183,11 +5192,19 @@ l'<strong>azionabilità</strong> (<code>classe</code> dalla lookup <code>config.
 </tr>
 <tr>
 <td><strong>Anzianità (v1 proxy)</strong></td>
-<td><code>data_riferimento</code>: data documento (preventivi/ordini), emissione con fallback (offerte), mese della riga (contratti/commesse). <code>anzianita_giorni = CURRENT_DATE - data_riferimento</code></td>
+<td><code>data_riferimento</code>: data documento (preventivi/ordini), emissione con fallback (offerte), mese della riga (contratti/commesse), <strong>data del reso</strong> (area RESI). <code>anzianita_giorni = CURRENT_DATE - data_riferimento</code></td>
 </tr>
 <tr>
 <td><code>valore_fermo</code> / <code>unita_ferme</code></td>
 <td><code>totale - transitato</code> (valore NULL per le aree a conteggi)</td>
+</tr>
+<tr>
+<td><strong>Area <code>RESI</code> — grana</strong></td>
+<td>Una riga per <strong>(reso × motivo)</strong>, non per riga di reso né per documento. Un <strong>reso misto</strong> (parte da ri-spedire, parte a credito) ha davvero due cose in corso e compare <strong>due volte</strong>, ciascuna con la sua azione e la sua classe: è una <strong>deroga dichiarata</strong>, unica area in cui accade — non un doppione da de-duplicare</td>
+</tr>
+<tr>
+<td><strong>Area <code>RESI</code> — misura</strong></td>
+<td><strong>A conteggi</strong> (i resi non hanno importi): <code>valore_fermo</code> <strong>NULL</strong>, mai <code>0</code> — zero direbbe «valore nullo», NULL dice «non misurabile in euro». <code>unita_ferme</code> = numero di righe reso del motivo</td>
 </tr>
 </tbody>
 </table>
@@ -5209,6 +5226,12 @@ l'<strong>azionabilità</strong> (<code>classe</code> dalla lookup <code>config.
 <li><strong>Nuovo <code>motivo_fermo</code></strong> = append al CSV seed della lookup <strong>prima</strong> di
   emetterlo da una vista; il pgTAP di coerenza (<code>test-vw-dash-backlog-v1.sql</code>
   test 4) diventa rosso se un codice emesso non è mappato.</li>
+<li><strong>La classe si risolve una volta sola, a valle della union</strong>: i rami emettono
+  soltanto il <em>motivo</em>. Conseguenza pratica: promuovere un motivo da
+  <code>FISIOLOGICO</code> a <code>RECUPERABILE</code> <strong>cambia il backlog senza toccare la vista</strong>. È
+  esattamente ciò che accadrà a <code>MERCE_RESA_GIA_FATTURATA</code> quando esisterà la nota
+  di credito — oggi il ramo lo emette e il filtro di classe lo esclude, perché
+  nessuna azione è possibile (niente NC, quantità immutabile).</li>
 <li>Il timestamp di transito (DL-5) <strong>non serve qui</strong>: gli elementi del backlog
   non sono ancora transitati — l'anzianità v1 resta sulla data documento.</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-dash-backlog-v1.sql</code>.</li>

@@ -5201,12 +5201,24 @@
 <p>L’indice <code>ix_causali_trasporto_attivo</code> è pensato per velocizzare i filtri sulle causali attive (combo di selezione, ricerche).</p>
 </li>
 <li>
+<p><strong><code>fatturabile</code> (dal 2026-07-18) — la causale dichiara l'intento commerciale</strong>:</p>
+</li>
+<li>
+<p><code>boolean NOT NULL</code>, <strong>default <code>false</code></strong>. Dice se la merce che viaggia con questa causale genera una <strong>vendita da fatturare</strong> (<code>true</code>) o è <strong>solo trasporto</strong> (<code>false</code>).</p>
+</li>
+<li>Seed vivo: <strong><code>VENDITA</code> è l'unica <code>true</code></strong>; <code>CONTO_VISIONE</code>, <code>RESO</code>, <code>RIPARAZIONE</code>, <code>CAMPIONATURA</code>, <code>TRASFERIMENTO</code>, <code>CONTO_LAVORO</code>, <code>OMAGGIO</code> sono <code>false</code>.</li>
+<li><strong>Perché il default è <code>false</code></strong>: una causale nuova nasce non fatturabile, così una dimenticanza produce un DDT che <strong>non entra</strong> nella coda di fatturazione — errore visibile e recuperabile — invece di uno che fattura per sbaglio, che è silenzioso e ha i soldi in mezzo.</li>
+<li><strong>Zero <code>IF</code> hardcoded</strong>: il vocabolario guida il comportamento (stesso pattern di <code>tipi_reso.riapre_residuo</code>). I casi ambigui — l'omaggio, che qualcuno fattura a sconto 100% — si risolvono cambiando <strong>una cella di seed</strong>, senza toccare codice.</li>
+<li><strong>Cosa ne dipende</strong>: il gate all'emissione <a href="../../../vendite/manual/trgfn_ddt_guard_causale_emissione/"><code>trgfn_ddt_guard_causale_emissione</code></a> (con causale fatturabile ogni riga attiva deve avere un prezzo risolvibile), il lister di push DDT e i cruscotti di fatturazione, che escludono i DDT di solo trasporto.</li>
+<li>
+<p>⚠️ <strong>La causale è obbligatoria dall'emissione del DDT in poi</strong> (in bozza il valore nullo resta legittimo): senza, il documento sarebbe ambiguo per la fatturazione.</p>
+</li>
+<li>
 <p><strong>Estensioni tramite <code>meta</code></strong>:</p>
 </li>
 <li>
 <p><code>meta</code> è un campo <code>jsonb</code> utilizzabile per <strong>parametri opzionali</strong>, ad esempio:</p>
 <ul>
-<li>indicazione se la causale <strong>genera documento di vendita</strong> o meno;</li>
 <li>flag per distinguere movimenti <strong>in uscita / in entrata / interni</strong>;</li>
 <li>configurazioni per collegamento con <strong>causali contabili</strong> o <strong>tipologie di fatturazione</strong>;</li>
 <li>eventuali opzioni specifiche del gestore (es. forzare presenza ordine, vincoli su cliente/fornitore, ecc.).</li>

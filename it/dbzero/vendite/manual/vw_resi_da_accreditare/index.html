@@ -5093,6 +5093,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#campi-chiave-esposti" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        📑 Campi chiave esposti
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempio-duso" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Esempio d'uso
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#note-operative" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Note operative
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5124,21 +5157,103 @@
 <p><a href="../../tabelle/resi_righe/">vendite.resi_righe</a> ·
 <a href="../../../config/tabelle/tipi_reso/">config.tipi_reso</a> ·
 <a href="../../views/vw_resi_da_riconsegnare/">vendite.vw_resi_da_riconsegnare</a> (gemella)</p>
+<p>Fonti del conto:
+<a href="../vw_contatore_merce/">vw_contatore_merce</a> ·
+<a href="../vw_resi_righe_effettive/">vw_resi_righe_effettive</a></p>
+<p>Consumatore: <a href="../vw_dash_backlog_documenti/">vw_dash_backlog_documenti</a>
+Brief autorevole: <code>docs/it/dev/work-in-progress/brief-db-fatturazione-ddt-resi.md</code> §3c</p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(rev 2026-07-13)</p>
-<p><strong>Coda di lavoro</strong> delle righe reso <em>a credito</em> confermate, da accreditare via nota di credito. In
-questa slice è <strong>solo predisposizione</strong>: la vista è interrogabile, la generazione NC arriva con una
-slice successiva.</p>
+<p>(rev 2026-07-18 — <strong>forma cambiata: rileggere le regole chiave</strong>)</p>
+<p><strong>Coda di lavoro</strong> delle righe reso per cui c'è un <strong>accredito dovuto</strong>: merce che il cliente
+ha reso ma che gli <strong>risulta già fatturata</strong>. La generazione della nota di credito arriva con
+una slice successiva; qui la coda dice <em>cosa è successo</em> («fatturata per 10, tenuta 7»), non
+<em>cosa fare</em>.</p>
+<blockquote>
+<p>⚠️ <strong>Breaking rispetto alla forma precedente (fino al 2026-07-17).</strong> Prima la vista
+chiedeva <em>«che tipo di reso è?»</em> ed elencava tutte le righe a credito confermate. Ora chiede
+<strong>«il conto è in rosso?»</strong>: popolazione e quantità vengono dal contatore, e il tipo di reso è
+degradato a semplice <strong>etichetta</strong>. La popolazione cambia in <strong>entrambe le direzioni</strong> — chi
+consuma questa vista deve rileggere le regole qui sotto.</p>
+</blockquote>
+<hr />
 <h3 id="regole-chiave">Regole chiave<a class="headerlink" href="#regole-chiave" title="Permanent link">&para;</a></h3>
+<p><strong>Popolazione = il conto, non il tipo.</strong> Entra chi ha <code>vw_contatore_merce.differenza &lt; 0</code>,
+cioè <code>fatturati &gt; tenuti</code>:</p>
+<div class="highlight"><pre><span></span><code>accredito_dovuto = fatturati − tenuti      (esposto in colonna)
+</code></pre></div>
+<p>Cosa cambia in concreto:</p>
 <ul>
-<li>Grana = <strong>riga reso</strong>. Filtro <code>stato = CONFERMATO</code> <strong>AND <code>tipi_reso.riapre_residuo = false</code></strong>
-  (credito, <strong>data-driven</strong> — non si hardcoda il codice) AND riga attiva.</li>
-<li>Riferimenti per la futura NC: DDT/riga DDT origine, billing account, emittente, articolo/quantità.</li>
-<li><strong><code>security_invoker=on</code></strong> + RLS sulla base; espone <code>emittente_fiscale_id</code> per il filtro
-  applicativo BE.</li>
+<li><strong>escono</strong> le righe a credito con conto già pareggiato — merce resa che non era mai stata
+  fatturata (il push l'aveva già sottratta). Prima restavano in coda per sempre: erano falsi
+  positivi eterni;</li>
+<li><strong>entrano</strong> le righe <strong>per ri-consegna</strong> su merce già fatturata, prima invisibili (il filtro
+  <code>riapre_residuo = false</code> le tagliava) ma che un accredito lo meritano eccome, finché la merce
+  non riesce.</li>
 </ul>
+<p><strong>Grana = riga reso</strong> (invariata). Il conto però vive sulla <em>partita</em> (riga d'ordine), quindi
+l'accredito della partita si <strong>distribuisce</strong> fra le sue righe reso, oldest-first, cappato alla
+quantità della singola riga; chi riceve 0 esce.</p>
+<p><strong>Il tipo di reso è solo un'etichetta</strong>:</p>
+<table>
+<thead>
+<tr>
+<th><code>etichetta</code></th>
+<th>Quando</th>
+<th>Natura</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DOVUTA</code></td>
+<td>reso <em>a credito</em>: la merce non torna più</td>
+<td>obbligo — è arretrato</td>
+</tr>
+<tr>
+<td><code>FACOLTATIVA</code></td>
+<td>reso <em>per ri-consegna</em>: la merce tornerà fuori</td>
+<td>opzione dell'operatore</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="campi-chiave-esposti">📑 Campi chiave esposti<a class="headerlink" href="#campi-chiave-esposti" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Chiave</strong>: <code>resi_riga_id</code> (invariata — gli ordinamenti del BE reggono)</li>
+<li><strong>Il conto (nuovo)</strong>: <code>accredito_dovuto</code>, <code>tenuti</code>, <code>fatturati</code></li>
+<li><strong>Etichetta (nuovo)</strong>: <code>etichetta</code> (<code>DOVUTA</code> | <code>FACOLTATIVA</code>)</li>
+<li><strong>Riferimenti</strong>: reso, DDT/riga DDT d'origine, <code>ordine_riga_id</code>, billing account, emittente,
+  articolo, quantità resa</li>
+</ul>
+<p>⚠️ <strong><code>ddt_id</code> e <code>ddt_numero</code> ora possono essere NULL</strong>: la riga si aggancia alla partita via
+<code>ordine_riga_id</code>, e il join al DDT è diventato facoltativo.</p>
+<hr />
+<h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Quanto va accreditato, e perché.</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">reso_numero</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">,</span><span class="w"> </span><span class="n">fatturati</span><span class="p">,</span><span class="w"> </span><span class="n">tenuti</span><span class="p">,</span><span class="w"> </span><span class="n">accredito_dovuto</span><span class="p">,</span><span class="w"> </span><span class="n">etichetta</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_resi_da_accreditare</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">data</span><span class="p">;</span>
+</code></pre></div>
+<hr />
+<h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Perimetro ereditato dal contatore</strong>: solo merce nata da un ordine e non composita. Le righe
+  reso senza <code>ordine_riga_id</code> (standalone) non entrano più — è la frontiera di tutta la slice,
+  non una scelta di questa vista.</li>
+<li><strong>Nel backlog ci va solo la <code>DOVUTA</code></strong> (motivo <code>MERCE_RESA_GIA_FATTURATA</code>): le facoltative
+  sono un'opzione, non arretrato. Oggi quel motivo è <code>FISIOLOGICO</code>, quindi in lista non compare
+  ancora — si promuove con una cella di seed quando esisterà la NC.</li>
+<li><strong><code>security_invoker=on</code></strong> + RLS sulla base; espone <code>emittente_fiscale_id</code> per il filtro
+  applicativo BE. ⚠️ Ri-specificarla a ogni <code>CREATE OR REPLACE</code>.</li>
+<li>Test: <code>db/pgtap/vendite/test-vw-resi-da-accreditare-contatore-v1.sql</code>.</li>
+</ul>
+<hr />
+<div style="text-align: center; margin-top: 2rem;">
+  <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
+  <br>
+  <strong>&copy; 2025-2026 Zero ERP</strong> <em><strong>&bull; powered by Tid &bull;</strong></em>
+</div>
 
 
 

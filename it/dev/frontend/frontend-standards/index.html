@@ -5020,6 +5020,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#glifo-vs-controllo-icone-decorativeindicative" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Glifo vs controllo — icone decorative/indicative
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iconografia-di-dominio-base-documento-overlay-tipo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Iconografia di dominio — base documento + overlay-tipo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#regole-css-per-i-componenti" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -7638,6 +7660,28 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#glifo-vs-controllo-icone-decorativeindicative" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Glifo vs controllo — icone decorative/indicative
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iconografia-di-dominio-base-documento-overlay-tipo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Iconografia di dominio — base documento + overlay-tipo
+      </span>
+    </span>
+  </a>
   
 </li>
         
@@ -10651,6 +10695,144 @@ tramite CSS, e accetta un array di azioni dichiarativo. Vedi sezione "Colonna az
 nel pattern lista per l'API completa.</p>
 <p>Per l'inventario completo di classi CSS, pulsanti e componenti, consultare il
 <a href="../catalogo-building-block-frontend/">Catalogo Building Block Frontend</a>.</p>
+<h3 id="glifo-vs-controllo-icone-decorativeindicative">Glifo vs controllo — icone decorative/indicative<a class="headerlink" href="#glifo-vs-controllo-icone-decorativeindicative" title="Permanent link">&para;</a></h3>
+<p>Non tutte le icone sono pulsanti. Un'icona <strong>decorativa/indicativa</strong> (una freccia
+di direzione, un <code>↩</code> di ramo, il glifo accanto a un titolo di sezione) <strong>non deve
+mai sembrare cliccabile</strong>; un'icona <strong>azione</strong> deve esserlo senza ambiguità. La
+distinzione si gioca sul <strong>chrome, non sulla tinta</strong>.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Icona <strong>azione</strong> (controllo)</th>
+<th>Icona <strong>glifo</strong> (decorativa)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hit-area (padding/box)</td>
+<td>sì</td>
+<td><strong>no</strong> — inline nel flusso</td>
+</tr>
+<tr>
+<td>Hover</td>
+<td>sì</td>
+<td><strong>no</strong></td>
+</tr>
+<tr>
+<td><code>cursor</code></td>
+<td><code>pointer</code></td>
+<td><code>default</code></td>
+</tr>
+<tr>
+<td>Colore</td>
+<td><strong>semantico saturo</strong> via classe <code>app-*-btn</code> (verde azione / blu gestisci / rosso distruttivo / arancio cautela)</td>
+<td><code>--app-text-muted</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regole</strong>:</p>
+<ul>
+<li><strong>Il colore non è l'affordance principale: lo è il chrome.</strong> Un glifo senza
+  hit-area, senza hover e con <code>cursor: default</code> non viene letto come pulsante
+  qualunque sia la sua tinta.</li>
+<li><strong>Mai un colore nuovo</strong> (teal, viola, ecc.) per dire "non sono cliccabile":
+  nella palette il colore È semantica, un 6° colore sarebbe l'unico senza
+  significato e, per essere distinguibile, dovrebbe essere saturo → <em>avanza</em>
+  invece di <em>arretrare</em>. Pacchiano per costruzione.</li>
+<li><strong>Mai uno sfondo/chip</strong> per un glifo: è il segnale più forte di "sono un
+  bottone" — l'opposto dell'obiettivo.</li>
+<li>Per il glifo usare <code>--app-text-muted</code> (arretra). <strong>Attenzione</strong>: ha lo stesso
+  valore di <code>--app-btn-disabled-color</code>, quindi <em>da solo</em> direbbe "bottone
+  disabilitato" — è il <strong>chrome assente</strong> a chiarire che è decorativo. La
+  differenza <code>--app-text-color</code> vs <code>--app-text-muted</code> su un glifo piccolo
+  (≈0.8rem) è impercettibile: non usarla come leva.</li>
+<li><strong><code>opacity</code> non è un segnale semantico.</strong> Non usarla per "attenuare" un
+  elemento: si <strong>somma</strong> ai veli dei contenitori (es. <code>.app-readonly</code> a <code>0.85</code>
+  nei drawer post-DRAFT → <code>0.85 × 0.75 ≈ 0.64</code>, area illeggibile) e smorza anche
+  i <strong>dati veri</strong> dentro la riga (codici, Tag stato). Se un ramo/stato va
+  segnalato, farlo con icona + label esplicita, non con <code>opacity</code>.</li>
+</ul>
+<p>Primo consumatore: <code>LineagePassaggiPanel</code> (pannello "Passaggi" dei drawer
+documento) — frecce direzione e <code>↩</code> ramo inverso come glifi muted.</p>
+<h3 id="iconografia-di-dominio-base-documento-overlay-tipo">Iconografia di dominio — base documento + overlay-tipo<a class="headerlink" href="#iconografia-di-dominio-base-documento-overlay-tipo" title="Permanent link">&para;</a></h3>
+<p>Le icone delle entità vendite (preventivi, offerte, ordini, ddt, resi,
+contratti, fatture) sono <strong>icone composite</strong> definite in <code>main.css</code> come
+<code>.app-nav-icon-&lt;entita&gt;</code> con due pseudo-elementi, e referenziate da <code>NAV_ICONS</code>
+(<code>navigation.js</code>), <strong>non</strong> da PrimeIcons singole.</p>
+<p><strong>Il principio</strong> (deciso con Tid 2026-07-09): nessun glifo "si spiega da solo"
+per un nome proprio (un <code>calculator</code> significa "calcolo" ovunque, non
+"preventivo"). Il riconoscimento nasce da <strong>famiglia coerente, differenziatore
+ed etichetta</strong> (l'icona ha sempre label o tooltip accanto). Quindi:</p>
+<ul>
+<li><strong><code>::before</code> = base documento</strong> (<code>pi-file</code> <code>\e958</code>) → il <strong>marcatore di
+  famiglia/area</strong>: "questo è un documento vendite" (mai un glifo generico che
+  potrebbe significare altro).</li>
+<li><strong><code>::after</code> = overlay del TIPO</strong> → il <strong>differenziatore</strong>, un badge d'angolo:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Entità</th>
+<th>Overlay</th>
+<th>Glifo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Preventivo</td>
+<td>matita (bozza/proposta)</td>
+<td><code>pi-pencil</code> <code>\e942</code></td>
+</tr>
+<tr>
+<td>Offerta</td>
+<td>tag (offerta commerciale)</td>
+<td><code>pi-tag</code> <code>\e95e</code></td>
+</tr>
+<tr>
+<td>Ordine</td>
+<td>carrello</td>
+<td><code>pi-shopping-cart</code> <code>\e980</code></td>
+</tr>
+<tr>
+<td>DDT</td>
+<td>camion (trasporto)</td>
+<td><code>pi-truck</code> <code>\ea00</code></td>
+</tr>
+<tr>
+<td>Reso</td>
+<td>freccia-ritorno</td>
+<td><code>pi-arrow-circle-left</code> <code>\e91f</code></td>
+</tr>
+<tr>
+<td>Contratto</td>
+<td>verificato (vincolante)</td>
+<td><code>pi-verified</code> <code>\ea02</code></td>
+</tr>
+<tr>
+<td>Fattura</td>
+<td>euro (documento fiscale)</td>
+<td><code>pi-euro</code> <code>\e9bd</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regole</strong>:</p>
+<ul>
+<li><strong>L'overlay deve VARIARE per tipo, non essere condiviso.</strong> L'errore da evitare
+  (corretto qui): mettere lo <strong>stesso</strong> badge (l'euro) su tutte le entità a
+  valore → il pezzo comune domina la lettura e le icone si assomigliano. Il
+  pezzo che varia (l'overlay) è quello che deve distinguere; l'<strong>euro resta solo
+  su Fattura</strong>, dove finalmente significa qualcosa di specifico.</li>
+<li><strong>Due elementi, non tre.</strong> Base (famiglia) + overlay (tipo). Non aggiungere un
+  terzo marcatore "area": la base È già l'area → sarebbe solo ingombrante.</li>
+<li><strong>Niente collisioni di dominio/azione</strong>: l'icona del dominio Vendite è il
+  carrello <strong>intero</strong> (<code>pi-shopping-cart</code> pieno) → l'ordine usa il carrello come
+  <strong>badge</strong> su documento, non collide. Mai <code>pi-replay</code>/<code>pi-refresh</code> per i Resi
+  (si leggono come "ricarica").</li>
+<li>Nuova entità vendite: aggiungere <code>.app-nav-icon-&lt;entita&gt;</code> (base <code>\e958</code> +
+  overlay-tipo) in <code>main.css</code> e la chiave in <code>NAV_ICONS</code>, mai una PrimeIcon
+  singola generica.</li>
+</ul>
 <h3 id="regole-css-per-i-componenti">Regole CSS per i componenti<a class="headerlink" href="#regole-css-per-i-componenti" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Sempre <code>&lt;style scoped&gt;</code> — mai globale (eccetto <code>main.css</code>)</li>

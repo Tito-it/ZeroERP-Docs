@@ -5197,13 +5197,13 @@ dal factory condiviso <code>build_passaggi_view</code>
 (<code>apps/vendite/api/lineage_views.py</code>) sopra il service
 <code>vendite_service.get_documento_passaggi</code>.</p>
 <p>Design-of-record:
-brief-design-genealogia-transiti-vendite.md (<code>docs/it/dev/work-in-progress/brief-design-genealogia-transiti-vendite.md</code>)
+brief-design-genealogia-transiti-vendite.md (<code>docs/it/dev/work-done/brief-design-genealogia-transiti-vendite.md</code>)
 (decisioni G-1..G-11). Modello DB:
 brief-db-lineage-documenti-vendite.md (<code>docs/it/dev/work-done/brief-db-lineage-documenti-vendite.md</code>)
 — viste <code>vendite.vw_documento_lineage{_nodi,_archi,}</code> +
 <code>vendite.fn_documento_lineage</code> (tutte <code>security_invoker</code>: RLS emittente del
 chiamante, il BE non passa <code>auth_user_id</code>). Piano operativo:
-brief-be-fe-lineage-documenti-vendite.md (<code>docs/it/dev/work-in-progress/brief-be-fe-lineage-documenti-vendite.md</code>).</p>
+brief-be-fe-lineage-documenti-vendite.md (<code>docs/it/dev/work-done/brief-be-fe-lineage-documenti-vendite.md</code>).</p>
 <table>
 <thead>
 <tr>
@@ -5290,9 +5290,13 @@ brief-be-fe-lineage-documenti-vendite.md (<code>docs/it/dev/work-in-progress/bri
   <code>indietro</code> la tappa da mostrare è il nodo FROM.</li>
 <li><code>from_doc_id</code> / <code>to_doc_id</code> (bigint | null): <strong>id numerico di dominio</strong> del
   nodo, per aprire il drawer di dettaglio dal FE. <code>uid::bigint</code> per i tipi
-  <code>key_selector='id'</code>; per preventivo/offerta (<code>key_selector='uid'</code>) è la
-  traduzione UUID→id (LEFT JOIN a <code>preventivi</code>/<code>offerte_commerciali</code>).
-  <code>null</code> = fuori scope RLS o nodo terminale senza drawer (fattura/commessa).</li>
+  <code>key_selector='id'</code> (ordine/contratto/ddt/reso/commessa/fattura); per
+  preventivo/offerta (<code>key_selector='uid'</code>) è la traduzione UUID→id (LEFT JOIN
+  a <code>preventivi</code>/<code>offerte_commerciali</code>). <code>null</code> <strong>solo</strong> se il nodo è fuori
+  scope RLS (traduzione UUID→id senza match). NB: <code>doc_id</code> valorizzato <strong>non</strong>
+  implica apribile — è il FE a decidere in base ai tipi con drawer
+  (<code>LINEAGE_DRAWER_TIPI</code>: i 6 documenti + commessa; la fattura ha <code>doc_id</code> ma
+  nessun drawer, resta tappa consultiva).</li>
 </ul>
 <h3 id="esempio-di-risposta-caso-reale-get-venditepreventivi524passaggi-prv0000185">Esempio di risposta (caso reale: <code>GET /vendite/preventivi/524/passaggi/</code> — PRV0000185)<a class="headerlink" href="#esempio-di-risposta-caso-reale-get-venditepreventivi524passaggi-prv0000185" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>

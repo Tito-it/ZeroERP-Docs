@@ -5143,10 +5143,21 @@ garantisce idempotenza sorgente a livello commessa.</p>
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li>una sola root per commessa (<code>UNIQUE commessa_id + ruolo_link</code>);</li>
-<li>in v1 <code>ruolo_link</code> ammesso solo <code>ROOT</code>;</li>
-<li>una sorgente (<code>sorgente_tipo_id + sorgente_uid + ruolo_link</code>) non puo` essere
-  collegata due volte.</li>
+<li>una sola ROOT per commessa (unique parziale <code>uq_commesse_sorgenti_commessa_root</code>);
+  dal 2026-06-09 la commessa è <strong>multi-sorgente</strong>: 1 ROOT + N COLLEGATO
+  (<code>vendite.fn_link_commessa_sorgente</code> decide il ruolo);</li>
+<li>una sorgente (<code>sorgente_tipo_id + sorgente_uid</code>) appartiene a <strong>una sola
+  commessa</strong> (<code>uq_commesse_sorgenti_src_uid</code>);</li>
+<li><strong>formato della chiave</strong> (<code>sorgente_uid</code> TEXT): segue
+  <code>config.sorgenti.key_selector</code> — uuid testuale per i tipi a chiave <code>uid</code>
+  (preventivo, offerta), <strong><code>id::text</code></strong> per i tipi a chiave <code>id</code> (ordine,
+  contratto, ddt, commessa). Dal 2026-07-18 la convenzione è blindata
+  (brief-db-guard-sorgente-polimorfa): la fn di link <strong>normalizza</strong> (traduce
+  l'uuid dei chiamanti storici in <code>id::text</code>) e il guard
+  <code>trg_commesse_sorgenti_a10_guard_sorgente_ins_upd</code>
+  (<code>trgfn_guard_sorgente_polimorfa_testuale</code>) valida formato ed esistenza;</li>
+<li><code>sorgente_riga</code> non è una chiave documento: è la grana di riga del link,
+  non validata dal guard.</li>
 </ul>
 <hr />
 <h3 id="utilizzo-previsto">Utilizzo previsto<a class="headerlink" href="#utilizzo-previsto" title="Permanent link">&para;</a></h3>

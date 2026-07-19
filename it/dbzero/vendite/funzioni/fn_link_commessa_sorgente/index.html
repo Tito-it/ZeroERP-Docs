@@ -5136,10 +5136,23 @@ Collega la ROOT source a una commessa in modo idempotente e coerente.</p>
 <hr />
 <h3 id="regole-applicate">Regole applicate<a class="headerlink" href="#regole-applicate" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Una commessa puo<code>avere una sola ROOT (</code>ruolo_link='ROOT'`).</li>
-<li>Se ROOT gia` presente, deve coincidere con la sorgente in ingresso.</li>
+<li>Una commessa puo<code>avere una sola ROOT (</code>ruolo_link='ROOT'`); le sorgenti
+  successive diventano COLLEGATO (multi-sorgente, la fn decide il ruolo).</li>
+<li>Una sorgente (tipo + uid) appartiene a una sola commessa
+  (<code>uq_commesse_sorgenti_src_uid</code>); se gia<code>su altra commessa:</code>E_COMMESSA_SORGENTE_ALTRA_COMMESSA`.</li>
 <li><code>sorgente_uid</code> obbligatoria e non vuota.</li>
-<li>In caso di mismatch sulla ROOT esistente, la funzione alza errore bloccante.</li>
+<li><strong>Normalizzazione della chiave</strong> (2026-07-18, brief-db-guard-sorgente-polimorfa
+  §2a): prima di idempotenza e insert, la chiave viene portata alla forma
+  canonica dettata da <code>config.sorgenti.key_selector</code>:</li>
+<li>tipo a chiave <code>id</code> + valore numerico → stoccato com'e' (<code>id::text</code>);</li>
+<li>tipo a chiave <code>id</code> + valore uuid → <strong>tradotto</strong> in <code>id::text</code> via
+    <code>target_table.uid</code> (i chiamanti storici BE restano intatti); se il target
+    non ha colonna <code>uid</code> o l'uuid non risolve → <code>E_SORG_NORM_NON_RISOLTA</code> (547);</li>
+<li>formato non conforme al selector → <code>E_SORG_FORMATO</code> (546);</li>
+<li>tipo non censito/non attivo → <code>E_SORG_CONF</code>.</li>
+<li>A valle, il guard <code>trgfn_guard_sorgente_polimorfa_testuale</code> sulla tabella
+  ri-valida formato ed esistenza (difesa in profondita' per i writer che
+  saltano la fn).</li>
 </ul>
 <hr />
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
