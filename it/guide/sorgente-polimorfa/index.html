@@ -3612,6 +3612,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="4. La convenzione chiave id vs uid (trappola da conoscere)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#4a-la-trappola-vera-colonne-che-sembrano-polimorfe-ma-non-lo-sono" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4a. ⚠️ La trappola vera: colonne che <em>sembrano</em> polimorfe ma non lo sono
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -5385,6 +5402,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="4. La convenzione chiave id vs uid (trappola da conoscere)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#4a-la-trappola-vera-colonne-che-sembrano-polimorfe-ma-non-lo-sono" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4a. ⚠️ La trappola vera: colonne che <em>sembrano</em> polimorfe ma non lo sono
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -5489,6 +5523,68 @@ meccanismo collega un <strong>DDT</strong> (basta cambiare tipo) senza nuove col
 completa + spiegazione dei <strong>due meccanismi</strong> (polimorfo vs colonne tipizzate dirette
 come <code>ddt.sorgente_uid</code>/<code>resi.sorgente_uid</code> che sono <code>uuid</code> a sé):
 <a href="../../dbzero/config/tabelle/sorgenti/">config.sorgenti — §Convenzione chiave sorgente</a>.</p>
+<h3 id="4a-la-trappola-vera-colonne-che-sembrano-polimorfe-ma-non-lo-sono">4a. ⚠️ La trappola vera: colonne che <em>sembrano</em> polimorfe ma non lo sono<a class="headerlink" href="#4a-la-trappola-vera-colonne-che-sembrano-polimorfe-ma-non-lo-sono" title="Permanent link">&para;</a></h3>
+<p>Il punto che fa sbagliare più spesso <strong>non è</strong> <code>key_selector</code> in sé — quello è
+scritto e chiaro. È che esistono colonne chiamate <code>sorgente_tipo_id</code> /
+<code>sorgente_uid</code> <strong>fuori</strong> da questo meccanismo, che quindi <strong>non sono
+normalizzate</strong> e non seguono <code>key_selector</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Dove</th>
+<th>Tipo</th>
+<th>Cosa contiene davvero</th>
+<th>Dentro il meccanismo?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pratiche.pratiche_sorgenti</code></td>
+<td>TEXT</td>
+<td>chiave <strong>canonica</strong> per <code>key_selector</code></td>
+<td>✅ sì (guard)</td>
+</tr>
+<tr>
+<td><code>vendite.commesse_sorgenti</code></td>
+<td>TEXT</td>
+<td>chiave <strong>canonica</strong> per <code>key_selector</code></td>
+<td>✅ sì (guard + normalizzazione in <code>fn_link_commessa_sorgente</code>)</td>
+</tr>
+<tr>
+<td><code>vendite.commesse_attivita</code></td>
+<td>TEXT</td>
+<td><strong>l'<code>uid</code> del documento, sempre</strong> — anche per i tipi a chiave <code>id</code></td>
+<td>❌ no</td>
+</tr>
+<tr>
+<td><code>vendite.attivita_fatturabili</code></td>
+<td>UUID</td>
+<td><code>md5(segment_key)</code>, con tipo <code>COMMESSA</code></td>
+<td>❌ no (idempotenza del pull)</td>
+</tr>
+<tr>
+<td><code>vendite.ddt</code>, <code>vendite.resi</code></td>
+<td>UUID</td>
+<td>uid del padre</td>
+<td>❌ no (colonna tipizzata diretta)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Come si riconosce chi è dentro</strong>: la Query 1 di §5 (elenco dei trigger guard).
+Se una tabella non compare lì, <strong>non dare per scontata la forma della chiave</strong>:
+vai a leggere la funzione che fa l'INSERT.</p>
+<p><strong>La regola che chiude il dubbio</strong>: la convenzione di <code>sorgente_uid</code> la
+determina <strong>chi scrive</strong>, non chi chiama. <code>fn_link_commessa_sorgente</code> riceve un
+uid e scrive <code>id::text</code>; <code>fn_upsert_commessa_attivita</code> riceve lo stesso uid e lo
+scrive tale e quale. Guardare il chiamante (il push, che passa sempre l'uid)
+porta a concludere «è sempre l'uid» e a scrivere query che non trovano nulla,
+<strong>in silenzio</strong>.</p>
+<blockquote>
+<p>Caso concreto: <code>commesse_sorgenti</code> e <code>commesse_attivita</code> sono popolate dallo
+stesso push, hanno colonne omonime, e per lo <strong>stesso ordine</strong> contengono
+valori <strong>diversi</strong> (<code>id::text</code> vs <code>uid::text</code>). Nessuna delle due è
+sbagliata; sbagliato è dedurre l'una dall'altra.</p>
+</blockquote>
 <h2 id="5-stato-attuale-di-utilizzo-non-e-una-lista-scritta-qui">5. Stato attuale di utilizzo — <strong>NON è una lista scritta qui</strong><a class="headerlink" href="#5-stato-attuale-di-utilizzo-non-e-una-lista-scritta-qui" title="Permanent link">&para;</a></h2>
 <p>Una lista a mano invecchierebbe. Lo stato reale è già nel database: <strong>interrogalo</strong>.</p>
 <p><strong>Chi USA la macchina</strong> (tabelle con il guard) — sempre aggiornato:</p>

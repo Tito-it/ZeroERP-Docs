@@ -5243,6 +5243,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#non-ri-spedisce-la-quota-dichiarata-definitiva-rev-2026-07-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Non ri-spedisce la quota dichiarata definitiva (rev 2026-07-26)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5278,7 +5289,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(rev 2026-07-13)</p>
+<p>(rev 2026-07-26)</p>
 <p><strong>Funzione madre atomica</strong> (<code>SECURITY INVOKER</code>) che genera il <strong>DDT di ri-spedizione</strong> per un reso
 CONFERMATO e chiude l'aggancio duro con la coda di ri-consegna.</p>
 <p>Firma: <code>fn_genera_ddt_riconsegna(p_reso_id, p_righe jsonb DEFAULT NULL, p_data date)</code>.
@@ -5288,7 +5299,9 @@ CONFERMATO e chiude l'aggancio duro con la coda di ri-consegna.</p>
 <li>Guard: reso in stato CONFERMATO (<code>E_RESO_NON_CONFERMATO</code>).</li>
 <li>Nuovo <strong>DDT DRAFT</strong> con denormalizzati dal DDT origine. Se il reso è <strong>order-backed</strong> (righe con
    <code>ordine_riga_id</code>) la sorgente è <code>ORDINE_VENDITA</code> (+ <code>uid</code> ordine); altrimenti <strong>standalone</strong>.</li>
-<li>Per ogni riga <em>ri-consegna</em> con copertura residua (<code>quantità resa − Σ già ri-spedito</code>): crea la
+<li>Per ogni riga <em>ri-consegna</em> con copertura residua — dal 2026-07-26 letta dall'helper unico
+   <a href=".././fn_resi_riga_residuo_riconsegna/"><code>fn_resi_riga_residuo_riconsegna</code></a>,
+   cioè <code>quantità resa − Σ ri-spedito − Σ rinunciato</code>: crea la
    <code>ddt_righe</code> (copia articolo/UoM/qta) e inserisce la riga-ponte <code>resi_righe_riconsegne</code> → <strong>chiude
    la voce di coda</strong>.</li>
 <li>Se la riga reso ha <code>ordine_riga_id</code>: inserisce anche <code>ordini_righe_fulfillment</code> → <strong>richiude il
@@ -5299,6 +5312,17 @@ CONFERMATO e chiude l'aggancio duro con la coda di ri-consegna.</p>
 <p>Idempotenza per copertura (righe già coperte saltate); niente ri-consegna pendente →
 <code>E_RESO_NESSUNA_RICONSEGNA_PENDENTE</code> (rollback della testata DDT orfana). Funziona anche per lo
 standalone: la coda è agganciata al DDT, non all'ordine.</p>
+<h3 id="non-ri-spedisce-la-quota-dichiarata-definitiva-rev-2026-07-26">Non ri-spedisce la quota dichiarata definitiva (rev 2026-07-26)<a class="headerlink" href="#non-ri-spedisce-la-quota-dichiarata-definitiva-rev-2026-07-26" title="Permanent link">&para;</a></h3>
+<p>Da quando esiste la chiusura ri-consegna
+(<a href=".././fn_chiudi_riconsegna_reso/"><code>fn_chiudi_riconsegna_reso</code></a>), il
+residuo che questa funzione legge è <strong>al netto delle rinunce</strong>. Su una riga da 10 con 7
+dichiarati definitivi, una richiesta di 10 viene troncata a 3; se tutto è rinunciato la riga
+viene saltata fino a <code>E_RESO_NESSUNA_RICONSEGNA_PENDENTE</code>.</p>
+<p>Il guard del ponte avrebbe comunque bloccato l'INSERT: la differenza è che ora la
+<strong>quantità è corretta in partenza</strong>, invece di essere una proposta che il guard rifiuta a
+valle di un DDT già creato. Difesa in profondità che resta, più correttezza a monte.</p>
+<p>Le due funzioni sono le <strong>due uscite della stessa attività</strong>: la merce torna al cliente,
+oppure no.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

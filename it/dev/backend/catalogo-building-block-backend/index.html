@@ -4794,6 +4794,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#vendite-emissione-fattura-mirata-per-gruppo-fatturabile-appsvendite" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Vendite — Emissione fattura mirata per gruppo fatturabile (<code>apps/vendite/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#vendite-lineage-documenti-pannello-passaggi-appsvendite" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5823,6 +5834,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Vendite — Filtri liste documenti (<code>apps/vendite/api/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vendite-emissione-fattura-mirata-per-gruppo-fatturabile-appsvendite" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Vendite — Emissione fattura mirata per gruppo fatturabile (<code>apps/vendite/</code>)
       </span>
     </span>
   </a>
@@ -7509,6 +7531,44 @@ fiscale (ROUND 2 per aliquota, DPR 633/72 art. 21) vive nelle viste DB
 <td><code>extract_doc_list_filters</code></td>
 <td><code>_list_filters_helpers.py</code></td>
 <td>Estrae dalla query string i filtri lista comuni dei documenti vendita (list + export): <code>stato_codice_interno</code> → kwarg <code>stato_codice</code>, <code>billing_account_id</code>, <code>data_da</code>/<code>data_a</code> → <code>data_al</code>, e <code>utility_id</code> con <code>with_utility=True</code>. NESSUN default temporale backend (il default <code>data_da</code> anno-1 lo applica la UI). Estratto 2026-07-13 (regola del 2 alla 3ª copia, ok Tid): unifica gli <code>_extract_list_filters</code> di views_ordini/views_ddt/views_resi (ordini/ddt con utility, resi senza; le code resi derivano rimuovendo <code>stato_codice</code>).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="vendite-emissione-fattura-mirata-per-gruppo-fatturabile-appsvendite">Vendite — Emissione fattura mirata per gruppo fatturabile (<code>apps/vendite/</code>)<a class="headerlink" href="#vendite-emissione-fattura-mirata-per-gruppo-fatturabile-appsvendite" title="Permanent link">&para;</a></h2>
+<p>Perimetro ristretto del giro di fatturazione (brief-be-fe-emissione-fattura-mirata, 2026-07-27). Il pezzo non ovvio: <strong>il criterio non è un parametro di chiamata ma uno stato del lotto</strong> — gli step della pipeline ricevono solo <code>lotto_id</code> e ricostruiscono tutto dal <code>LottoContext</code>, quindi un criterio passato "allo step" non esiste e un rerun lo perderebbe, allargando in silenzio il perimetro. Assenza di gruppi = comportamento del giro schedulato, bit-identico.</p>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parse_gruppi</code></td>
+<td><code>_fatturazione_job_helpers.py</code></td>
+<td>Normalizza/valida la lista dei gruppi fatturabili: strip + dedup con ordine preservato, cap <code>MAX_GRUPPI_EMISSIONE_MIRATA</code> (200). <code>None</code> = nessun perimetro; <strong>lista vuota RIFIUTATA</strong> (ambigua fra «fattura niente» e «fattura tutto»: indovinare male significa giro di massa). Elemento non stringa/vuoto → errore parlante, mai una chiave spazzatura che filtra zero righe senza dirlo.</td>
+</tr>
+<tr>
+<td><code>gruppi_digest</code></td>
+<td><code>_fatturazione_job_helpers.py</code></td>
+<td>Digest stabile (sha256, 12 hex) dell'INSIEME dei gruppi, per la chiave di business della coda. Ordinamento prima dell'hash: lo stesso insieme in ordine diverso è lo stesso lavoro. Senza gruppi ritorna stringa vuota → chiave del giro di massa invariata. Senza questo, due emissioni mirate stesso mese/scope con gruppi diversi cadrebbero sullo stesso job vivo e la seconda verrebbe <strong>assorbita in silenzio</strong>.</td>
+</tr>
+<tr>
+<td><code>LottoContext.gruppi</code> + <code>set_lotto_gruppi</code></td>
+<td><code>pipeline_repository.py</code></td>
+<td>Lettura/scrittura del perimetro su <code>vendite.fatturazione_lotti_gruppi</code>. <code>array_agg</code> su zero righe ritorna NULL, non array vuoto: la distinzione «nessuna riga → <code>None</code> → nessuna restrizione» È la convenzione DB (un array vuoto significherebbe «nessun gruppo ammesso», il contrario).</td>
+</tr>
+<tr>
+<td><code>LottoPipelineParams.gruppi</code> → <code>_resolve_lotto</code></td>
+<td><code>pipeline_runner.py</code></td>
+<td>Scrive il perimetro <strong>nella stessa transazione</strong> in cui crea il lotto, e <strong>solo alla creazione</strong>: su lotto esistente (rerun / avanza step del <code>LottoDrawer</code>) il criterio è già a DB e va riprodotto, non riscritto.</td>
+</tr>
+<tr>
+<td>corsia <code>mirata</code></td>
+<td><code>fatturazione_driver_service.py</code></td>
+<td><code>('MASSIVO', None, 'EMESSA')</code>: filtro di corsia <strong>assente</strong> di proposito — la lista dei gruppi non conosce la corsia, quindi mostra anche quelli di commesse a fatturazione immediata; filtrare li renderebbe selezionabili a video e produttivi di zero lotti in silenzio. Non è fra le <code>modalita_disponibili()</code> (choices del cron): senza gruppi degenererebbe in un giro di massa su entrambe le corsie, ed è un <code>ValueError</code> fail-fast. <code>summary&#91;"lotti"&#93;</code> = estratto compatto dei lotti prodotti (sono N, non uno: tipi doc fiscale diversi → terne diverse).</td>
 </tr>
 </tbody>
 </table>

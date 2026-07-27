@@ -6103,7 +6103,7 @@ pilastri concreti, <strong>non</strong> sul system prompt.</p>
 <h3 id="42-row-level-security-pilastro-2">4.2 Row-Level Security — <em>(pilastro 2)</em><a class="headerlink" href="#42-row-level-security-pilastro-2" title="Permanent link">&para;</a></h3>
 <p>Le tabelle sensibili (<code>vendite.fatture</code>, <code>vendite.fatturazione_lotti</code>, ...) hanno <strong>RLS attiva</strong>: la connessione applicativa filtra le righe in base al contesto operatore (GUC <code>app.*</code> dal JWT). Quindi un tool di lettura disponibile <strong>non</strong> espone righe che l'operatore non vedrebbe nella UI. E' la difesa per-riga che il filtro-catalogo (grossolano, per-area) da solo non da'.</p>
 <h3 id="43-conferma-sulle-scritture-pilastro-3">4.3 Conferma sulle scritture — <em>(pilastro 3)</em><a class="headerlink" href="#43-conferma-sulle-scritture-pilastro-3" title="Permanent link">&para;</a></h3>
-<p>Ogni operazione che modifica dati passa da preview + conferma esplicita. I parametri sono ripresi dallo <strong>stato server</strong> della conversazione (il client non puo' alterarli tra preview e conferma). I permessi vanno <strong>ri-verificati a execution-time</strong>, non solo alla preview (vedi <code>../dev/work-done/analisi-sicurezza-aggiornata.md</code> §2: ri-check in corso di introduzione).</p>
+<p>Ogni operazione che modifica dati passa da preview + conferma esplicita. I parametri sono ripresi dallo <strong>stato server</strong> della conversazione (il client non puo' alterarli tra preview e conferma). I permessi sono <strong>ri-verificati a execution-time</strong>, non solo alla preview: il ri-check e' stato introdotto in <code>preview</code> e in <code>_execute_confirmation</code> il 2026-06-26 (P1 di analisi-sicurezza-aggiornata.md (<code>docs/it/dev/work-done/analisi-sicurezza-aggiornata.md</code>) §2 — Step 2 applicato), chiudendo la finestra TOCTOU fra offerta del catalogo ed esecuzione.</p>
 <h3 id="44-trattamento-dei-dati-dal-db-igiene-non-difesa-principale">4.4 Trattamento dei dati dal DB — <em>(igiene, NON difesa principale)</em><a class="headerlink" href="#44-trattamento-dei-dati-dal-db-igiene-non-difesa-principale" title="Permanent link">&para;</a></h3>
 <p>I dati dei tool arrivano al modello come <code>tool_result</code>. <strong>Questo non e' una protezione contro la prompt injection</strong>: per il modello, <code>tool_result</code> e system prompt sono lo stesso flusso; un finto comando dentro una nota cliente arriva comunque. E' <strong>igiene</strong> — riduce l'injection <em>diretta</em> e le <em>invenzioni</em> (istruire a copiare alla lettera CF/PIVA/importi). Cio' che protegge davvero da una nota avvelenata e' che il modello, anche se dirottato, puo' solo invocare strumenti permessi (§4.1), vede solo righe sue (§4.2) e non scrive senza conferma (§4.3).</p>
 <h3 id="45-niente-vie-di-esfiltrazione">4.5 Niente vie di esfiltrazione<a class="headerlink" href="#45-niente-vie-di-esfiltrazione" title="Permanent link">&para;</a></h3>
@@ -6111,7 +6111,7 @@ pilastri concreti, <strong>non</strong> sul system prompt.</p>
 <h3 id="46-dominio-chiuso-non-e-una-barriera-di-sicurezza">4.6 Dominio chiuso — <em>(non e' una barriera di sicurezza)</em><a class="headerlink" href="#46-dominio-chiuso-non-e-una-barriera-di-sicurezza" title="Permanent link">&para;</a></h3>
 <p>L'assistente risponde solo a domande relative a ZeroERP. Riduce la superficie di abuso ma <strong>non</strong> va considerato una difesa: non contarci.</p>
 <h3 id="47-audit-come-rilevamento">4.7 Audit come rilevamento<a class="headerlink" href="#47-audit-come-rilevamento" title="Permanent link">&para;</a></h3>
-<p>Ogni interazione e' loggata in <code>dbops.ai_query_log</code> (input, strumenti+parametri, risposta, provider, modello, token, durata; <code>request_id</code> correla con <code>request_log</code>; scritture marcate <code>confirmed: true</code>). Oltre alla tracciabilita', e' il modo per <strong>accorgersi di comportamenti anomali</strong>: per le scritture confermate (e in futuro MCP/profilo supporto) il logging deve diventare <strong>affidabile</strong> (un fallimento genera alert), non best-effort.</p>
+<p>Ogni interazione e' loggata in <code>dbops.ai_query_log</code> (input, strumenti+parametri, risposta, provider, modello, token, durata; <code>request_id</code> correla con <code>request_log</code>; scritture marcate <code>confirmed: true</code>). Oltre alla tracciabilita', e' il modo per <strong>accorgersi di comportamenti anomali</strong>. Per le <strong>scritture confermate</strong> il logging e' stato reso affidabile il 2026-06-26 (P2 di analisi-sicurezza-aggiornata.md (<code>docs/it/dev/work-done/analisi-sicurezza-aggiornata.md</code>), Step 2 applicato): un fallimento non passa piu' in silenzio. Per le sole <strong>letture</strong> il best-effort resta accettabile. Quando arriveranno MCP e profilo supporto, quegli accessi ricadono nella prima categoria, non nella seconda.</p>
 <h3 id="48-cosa-non-e-una-difesa">4.8 Cosa NON e' una difesa<a class="headerlink" href="#48-cosa-non-e-una-difesa" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Mettere i dati nel <code>tool_result</code> <strong>non</strong> blocca l'injection.</li>
@@ -6288,13 +6288,13 @@ pilastri concreti, <strong>non</strong> sul system prompt.</p>
 </tr>
 <tr>
 <td><code>AI_MODEL</code></td>
-<td><code>claude-sonnet-4-20250514</code></td>
-<td>Modello LLM da usare</td>
+<td><code>claude-opus-5</code></td>
+<td>Modello LLM da usare (dal 2026-07-26; sostituisce <code>claude-sonnet-4-20250514</code>, ritirato il 15-06-2026)</td>
 </tr>
 <tr>
 <td><code>AI_MAX_TOKENS</code></td>
-<td><code>4096</code></td>
-<td>Limite token risposta</td>
+<td><code>16000</code></td>
+<td>Limite token risposta. ⚠️ Su Opus 5 il <strong>thinking e' attivo per default</strong> e questo limite copre thinking + testo <strong>insieme</strong>: un valore basso (il precedente 4096) tronca la risposta a meta'. Non abbassarlo senza aver verificato l'effetto</td>
 </tr>
 <tr>
 <td><code>AI_CONVERSATION_TTL</code></td>
@@ -6322,6 +6322,14 @@ pilastri concreti, <strong>non</strong> sul system prompt.</p>
 </ul>
 <hr />
 <h2 id="9-evoluzione-prevista">9. Evoluzione prevista<a class="headerlink" href="#9-evoluzione-prevista" title="Permanent link">&para;</a></h2>
+<p><strong>Decisione bloccante prima della produzione — perimetro dei dati.</strong> Con <code>AI_PROVIDER=anthropic</code> o
+<code>mistral</code>, ogni <code>tool_result</code> invia <strong>dati reali di clienti</strong> a un fornitore esterno nell'esercizio
+ordinario, e <code>dbops.ai_query_log.input_text</code> conserva in chiaro le domande degli operatori. La scelta del
+provider di produzione (esterno con DPA, opzione EU, o modello self-hosted) e le sue implicazioni di
+trattamento vanno decise <strong>prima</strong> della prima installazione, non dopo: e' il requisito R7 di
+analisi-diagnostica-produzione-senza-accesso-db.md (<code>docs/it/dev/work-in-progress/analisi-diagnostica-produzione-senza-accesso-db.md</code>)
+(§5.6), che osserva come non abbia senso progettare la minimizzazione sul canale diagnostico lasciando
+aperto quello ordinario. Non e' un'evoluzione facoltativa come le voci sotto.</p>
 <p>Le attivita' di evoluzione previste sono:</p>
 <ul>
 <li><strong>RAG con pgvector</strong> — ricerca semantica nella documentazione operativa (quando il contesto statico non basta)</li>

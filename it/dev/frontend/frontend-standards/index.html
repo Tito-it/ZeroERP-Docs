@@ -10967,8 +10967,9 @@ distinzione si gioca sul <strong>chrome, non sulla tinta</strong>.</p>
   i <strong>dati veri</strong> dentro la riga (codici, Tag stato). Se un ramo/stato va
   segnalato, farlo con icona + label esplicita, non con <code>opacity</code>.</li>
 </ul>
-<p>Primo consumatore: <code>LineagePassaggiPanel</code> (pannello "Passaggi" dei drawer
-documento) — frecce direzione e <code>↩</code> ramo inverso come glifi muted.</p>
+<p>Primo consumatore: <code>LineagePassaggiContenuto</code> (corpo "Passaggi", in dialog dai
+chip di <code>DocumentoCollegamentiBar</code>) — frecce direzione e <code>↩</code> ramo inverso come
+glifi muted.</p>
 <h3 id="iconografia-di-dominio-base-documento-overlay-tipo">Iconografia di dominio — base documento + overlay-tipo<a class="headerlink" href="#iconografia-di-dominio-base-documento-overlay-tipo" title="Permanent link">&para;</a></h3>
 <p>Le icone delle entità vendite (preventivi, offerte, ordini, ddt, resi,
 contratti, fatture) sono <strong>icone composite</strong> definite in <code>main.css</code> come
@@ -11515,6 +11516,29 @@ con quella regola e la propaga. Il sub-drawer resta agnostico.</p>
 applica automaticamente <code>.app-escape</code> a tutti i suoi pulsanti. Non filtrare la lista actions
 per <code>isReadonly</code> (allineato a <code>ContrattoDrawer.drawerActions</code> / <code>PreventiviDrawer.drawerActions</code>):
 la sicurezza e' garantita dal BE che rifiuta i comandi senza permesso.</p>
+<p><strong>Azioni di processo su selezione righe → dialog, non pannello in coda</strong> (2026-07-25,
+decisione Tid). Le attività che generano un documento a valle selezionando righe
+(evasione ordine → DDT, smistamento preventivo → ordine/commessa, crea reso da DDT,
+ri-spedizione reso) si aprono da un <strong>pulsante nella <code>DrawerActionsBar</code></strong> — con l'icona
+del documento che si genera (<code>NAV_ICONS.DDT</code>, <code>NAV_ICONS.RESI</code>, <code>MANAGE_ICONS.SEND</code>) e
+<code>kind: 'manage'</code> — e vivono in un <code>AppDialog</code> dedicato. Non più come pannello sempre
+montato in fondo al drawer: allungava il contenuto e faceva la fetch delle righe anche a
+chi non stava lavorando quel processo.</p>
+<p>Regole del dialog d'azione:</p>
+<ul>
+<li><strong>fetch lazy</strong> su <code>watch(&#91;visible, id&#93;)</code> — all'apertura e a <strong>ogni riapertura</strong> (i
+  residui devono essere freschi dopo un'azione appena eseguita), mai al mount;</li>
+<li><strong><code>:readonly</code> esplicito</strong> = il readonly PURO del chiamante (permessi/split/superseded),
+  NON quello combinato col lock-di-stato: il dialog è lanciato da un drawer post-DRAFT
+  <code>app-readonly</code> e senza override <code>FormFooter</code> erediterebbe <code>readonly=true</code> nascondendo il
+  pulsante di conferma — è la stessa ragione per cui il pannello, quando viveva nel
+  drawer, stava in <code>app-escape</code> (vedi <code>AppDialog.readonly</code>);</li>
+<li><strong><code>:close-only</code></strong> quando non c'è nulla da fare (readonly puro o nessuna riga
+  lavorabile): il dialog resta consultabile come consuntivo;</li>
+<li><strong>chiusura a conferma riuscita</strong>, con emit al drawer padre che ricarica detail e
+  capability. Un lavoro parziale si riprende riaprendo il dialog.</li>
+</ul>
+<p>Riferimento: <code>DdtResoDialog</code>, <code>OrdineEvasioneDialog</code>, <code>PreventiviSmistamentoDialog</code>.</p>
 <p><strong>Esempi nel codice</strong>:</p>
 <table>
 <thead>

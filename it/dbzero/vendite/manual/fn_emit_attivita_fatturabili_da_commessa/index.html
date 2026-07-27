@@ -5254,6 +5254,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#emissione-mirata-p_gruppi-rev-2026-07-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Emissione mirata: <code>p_gruppi</code> (rev 2026-07-27)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5317,6 +5328,49 @@ Esegue il pull da <code>commesse_attivita</code> verso <code>attivita_fatturabil
 <li><code>skipped_rows</code></li>
 </ul>
 <hr />
+<hr />
+<h3 id="emissione-mirata-p_gruppi-rev-2026-07-27">Emissione mirata: <code>p_gruppi</code> (rev 2026-07-27)<a class="headerlink" href="#emissione-mirata-p_gruppi-rev-2026-07-27" title="Permanent link">&para;</a></h3>
+<p>Parametro <code>text&#91;&#93;</code>, default <code>NULL</code>. Restringe l'emissione ai soli <strong>gruppi
+fatturabili</strong> richiesti — la chiave arriva da
+<a href="../../funzioni/fn_build_gruppo_fatturabile_key/"><code>fn_build_gruppo_fatturabile_key</code></a>,
+mai ricostruita a mano.</p>
+<table>
+<thead>
+<tr>
+<th>Valore</th>
+<th>Comportamento</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NULL</code> <em>(default)</em></td>
+<td>nessuna restrizione: <strong>identico</strong> al comportamento storico</td>
+</tr>
+<tr>
+<td><code>'{}'</code></td>
+<td>richiesta vuota → zero righe</td>
+</tr>
+<tr>
+<td><code>{...}</code></td>
+<td>solo le righe di quei gruppi; chiave inesistente → zero righe, <strong>nessun errore</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Il problema che chiude.</strong> Questa funzione cicla <em>tutte</em> le righe <code>NON_EMESSA</code>
+della commessa e mette <code>stato_emissione='EMESSA'</code> su ognuna. La commessa è
+multi-sorgente: chiedere «fattura solo il preventivo» e far girare il pull non
+filtrato porterebbe fuori da «Da emettere» anche le righe del contratto,
+trasformandole in attività fatturabili orfane.</p>
+<p>⚠️ <strong>Filtrare qui NON basta.</strong> Le attività fatturabili <strong>già esistenti</strong> — residui
+di un giro interrotto, di un reset a bozza o del giro schedulato — le filtra
+<a href="../../funzioni/fn_select_attivita_fatturabili/"><code>fn_select_attivita_fatturabili</code></a>.
+I due filtri lavorano su assi diversi e servono entrambi.</p>
+<blockquote>
+<p><strong>Firma cambiata</strong>: la versione a 3 argomenti è stata droppata nello stesso
+changeSet. Un parametro con default su <code>RETURNS TABLE</code> crea un overload
+ambiguo, e ogni chiamata che omette <code>p_gruppi</code> fallirebbe con <em>function is not
+unique</em>.</p>
+</blockquote>
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>

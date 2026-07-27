@@ -5287,6 +5287,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#emissione-mirata-p_gruppi-rev-2026-07-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Emissione mirata: <code>p_gruppi</code> (rev 2026-07-27)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5448,6 +5459,21 @@ produce <strong>terne distinte</strong>, una per utility, ciascuna destinata a u
 <span class="c1">-- -&gt; (emittente, tipo_doc, utility, competenza_mese=max, total_candidate) per ogni terna</span>
 </code></pre></div>
 <hr />
+<hr />
+<h3 id="emissione-mirata-p_gruppi-rev-2026-07-27">Emissione mirata: <code>p_gruppi</code> (rev 2026-07-27)<a class="headerlink" href="#emissione-mirata-p_gruppi-rev-2026-07-27" title="Permanent link">&para;</a></h3>
+<p>Parametro <code>text&#91;&#93;</code>, default <code>NULL</code>. La discovery restituisce <strong>solo le terne dei
+gruppi richiesti</strong>.</p>
+<p><strong>Perché serve anche qui.</strong> Il driver crea <strong>un lotto per terna</strong> restituita.
+Senza il filtro, un'emissione mirata su un solo preventivo farebbe comunque
+nascere un lotto per ogni terna con lavoro pronto nel perimetro: quei lotti
+girerebbero pull e select (entrambi filtrati), non troverebbero nulla e
+resterebbero lì. Non un errore di correttezza — la fattura sarebbe giusta — ma
+lotti vuoti, task run, log e segnalazioni per lavoro che nessuno ha chiesto.</p>
+<p><strong>Un gruppo può restare su più terne</strong>, ed è corretto: <code>tipo_doc_fiscale_id</code> sta
+sulla <strong>riga</strong> (<code>commesse_attivita</code>), non sulla testata del documento, quindi un
+gruppo con righe di tipo diverso produce N lotti. La funzione le restituisce
+tutte — ed è il motivo per cui l'esito verso il backend è una <strong>lista</strong> di
+<code>lotto_id</code>, non uno solo.</p>
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>

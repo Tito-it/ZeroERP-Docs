@@ -5281,6 +5281,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#get-dashboard-competenzagruppi" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>GET /dashboard-competenza/gruppi/</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#get-dashboard-competenzaerrori" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5335,6 +5346,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Drill-down per commessa (aggregato)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gruppi-fatturabili" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Gruppi fatturabili
       </span>
     </span>
   </a>
@@ -5481,6 +5503,23 @@ emittente è DB-side via GUC nella vista): <code>commesse/</code> fa <code>GROUP
 <li>Il <code>count</code> dell'envelope è il <strong>numero di commesse distinte</strong> nel perimetro
   (non di attività).</li>
 </ul>
+<h3 id="get-dashboard-competenzagruppi"><code>GET /dashboard-competenza/gruppi/</code><a class="headerlink" href="#get-dashboard-competenzagruppi" title="Permanent link">&para;</a></h3>
+<p>Elenco dei <strong>gruppi fatturabili</strong> (emissione mirata, 2026-07-27).</p>
+<ul>
+<li><code>competenza_mese</code> (obbligatorio, date ISO, normalizzato al 1°).</li>
+<li><code>stadio</code> (opzionale, whitelist come sopra). Il cockpit usa <code>DA_EMETTERE</code>.</li>
+<li><code>tipo_gruppo</code> (opzionale, <strong>assente = tutti</strong>): filtro «tipo
+  documento/sorgente». Valori = <code>config.sorgenti.codice_interno</code>
+  (<code>PREVENTIVO</code>, <code>ORDINE_VENDITA</code>, <code>CONTRATTO</code>, <code>DDT_VENDITA</code>, …) oppure
+  <code>ONERI_COMMESSA</code> per le righe manuali senza documento. <strong>Nessuna whitelist
+  Python</strong>: il vocabolario è estensibile lato DB e una lista parallela si
+  disallineerebbe al primo tipo aggiunto; il valore è un bind param e le voci
+  valide del perimetro le dichiara il blocco <code>tipi</code> della risposta.</li>
+<li><code>order_by</code> / <code>order_dir</code> (opzionali): whitelist <code>riferimento</code> | <code>tipo_gruppo</code> |
+  <code>cliente_display</code> | <code>commessa_codice</code> | <code>n_attivita</code> | <code>valore</code> (default,
+  DESC) | <code>data_attivita_max</code>; tiebreak stabile su <code>gruppo_key</code>.</li>
+<li><code>page</code> / <code>page_size</code> (opzionali): paginazione standard.</li>
+</ul>
 <h3 id="get-dashboard-competenzaerrori"><code>GET /dashboard-competenza/errori/</code><a class="headerlink" href="#get-dashboard-competenzaerrori" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>competenza_mese</code> (opzionale, date ISO, normalizzato al 1°): assente = errori
@@ -5557,6 +5596,38 @@ commessa_attivita_id</code> — colonna e direzione <strong>whitelistate</strong
 preservato). Ordinamento: default <code>valore_tot DESC NULLS LAST, commessa_codice,
 commessa_id</code>; con <code>order_by</code>/<code>order_dir</code> colonna <strong>aggregata</strong> whitelistata +
 stesso tiebreak.</p>
+<h3 id="gruppi-fatturabili">Gruppi fatturabili<a class="headerlink" href="#gruppi-fatturabili" title="Permanent link">&para;</a></h3>
+<p>Envelope paginato standard <strong>più</strong> la chiave <code>riepilogo</code> — i totali di TUTTO il
+perimetro, non della pagina: <code>n_gruppi</code>, <code>n_attivita</code>, <code>valore</code>,
+<code>n_gruppi_oneri</code>. Vengono dal DB
+(<code>vw_dash_competenza_gruppi_riepilogo</code> <strong>aggrega</strong> la vista di dettaglio, quindi
+i due numeri non possono divergere); sommare le righe della pagina corrente lato
+client produrrebbe un parziale con l'aria di un totale.</p>
+<p>Ogni riga: <code>gruppo_key</code>, <code>tipo_gruppo</code> (<code>codice_interno</code> della sorgente, oppure
+<code>ONERI_COMMESSA</code>), <code>area_documento</code>, <code>riferimento</code> (numero leggibile del
+documento, o la commessa per gli oneri), <code>commessa_id/commessa_codice</code>,
+<code>cliente_display</code>, <code>stadio</code>, <code>n_attivita</code>, <code>valore</code>, <code>ha_oneri</code>,
+<code>data_attivita_min</code> / <code>data_attivita_max</code>.</p>
+<p>Il blocco <strong><code>tipi</code></strong> è la <em>facet</em> del filtro: le voci realmente presenti nel
+perimetro con il conteggio (<code>tipo_gruppo</code>, <code>area_documento</code>, <code>n_gruppi</code>,
+<code>n_attivita</code>), ordinate per numerosità.</p>
+<blockquote>
+<p>⚠️ <strong>Tre blocchi, due perimetri diversi, ed è voluto.</strong> <code>results</code> e
+<code>riepilogo</code> <strong>seguono</strong> <code>tipo_gruppo</code> (i totali riconciliano la lista che
+l'utente sta guardando); <code>tipi</code> <strong>no</strong> — deve mostrare tutte le voci anche
+quando una è selezionata, altrimenti scegliendo «Preventivi» le altre
+sparirebbero dalla tendina e non si potrebbe più cambiare idea.</p>
+<p>⚠️ <strong>Perché la facet e non un lookup su <code>config.sorgenti</code>.</strong> Quella tabella
+ha 15 righe, di cui 5 <code>*_RIGA</code> con <code>scope = ROW_VALIDATOR</code> più
+<code>FATTURA</code>/<code>ATTIVITA</code>/<code>RESO_VENDITA</code>: sorgenti che non possono mai essere un
+gruppo fatturabile — offrire opzioni da zero risultati è peggio di nessun
+filtro. E soprattutto <strong>non contiene <code>ONERI_COMMESSA</code></strong>, che è un valore
+sintetico della vista: proprio il caso che si vuole poter isolare.</p>
+<p>⚠️ <strong>La <code>gruppo_key</code> è un contratto, non un'etichetta</strong>: è la stessa stringa
+che <code>POST /vendite/fatturazione/run/</code> accetta nel campo <code>gruppi</code>. Non va
+costruita, derivata o normalizzata dal client — la costruisce
+<code>vendite.fn_build_gruppo_fatturabile_key</code>, unica fonte di verità.</p>
+</blockquote>
 <h3 id="errori-vivi">Errori vivi<a class="headerlink" href="#errori-vivi" title="Permanent link">&para;</a></h3>
 <p>Envelope paginato standard; ogni riga: <code>tipo_evento</code>
 (<code>TASK_ERRORE | FATTURA_CRITICA</code>), <code>competenza_mese</code>, <code>lotto_id/lotto_codice/
@@ -5594,6 +5665,9 @@ tiebreaker deterministico su chiavi naturali (la union non ha PK).</p>
   <code>docs/it/dbzero/vendite/manual/vw_dash_competenza_mensile.md</code></li>
 <li><code>vendite.vw_dash_competenza_errori</code> — doc:
   <code>docs/it/dbzero/vendite/manual/vw_dash_competenza_errori.md</code></li>
+<li><code>vendite.vw_dash_competenza_gruppi</code> + <code>vw_dash_competenza_gruppi_riepilogo</code>
+  (emissione mirata) — doc:
+  <code>docs/it/dbzero/vendite/manual/vw_dash_competenza_gruppi.md</code></li>
 <li><code>config.stati_doc_fiscale</code> (decode etichetta + ordine breakdown 3a)</li>
 <li><code>catalogo.articoli</code> (decode articolo nel drill-down)</li>
 <li>Indice <code>ix_attivita_fatturabili_competenza_mese</code> (migration <code>20260706-14</code>)</li>
@@ -5608,6 +5682,9 @@ tiebreaker deterministico su chiavi naturali (la union non ha PK).</p>
   tutti con mock (CI-safe).</li>
 <li>FE (Fase 1): rotta <code>/vendite/dashboard-competenza</code>
   (<code>DashboardCompetenzaView.vue</code>, store <code>dashboardCompetenza.js</code>).</li>
+<li><strong>Emissione mirata (2026-07-27)</strong>: aggiunto <code>gruppi/</code> sopra le viste
+  <code>20260727-18/19</code>. Additivo: i quattro endpoint preesistenti sono invariati.
+  Brief: <code>dev/work-in-progress/brief-be-fe-emissione-fattura-mirata.md</code>.</li>
 </ul>
 
 

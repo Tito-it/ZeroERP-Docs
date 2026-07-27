@@ -5256,6 +5256,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="1. Giro «Fattura competenza» (C-3, non bloccante)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-bis-emissione-mirata-gruppi-2026-07-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1-bis. Emissione mirata (<code>gruppi</code>, 2026-07-27)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -5418,9 +5435,43 @@ richiedono <code>Idempotency-Key: &lt;uuid&gt;</code> (header). Area funzionale:
 <h3 id="1-giro-fattura-competenza-c-3-non-bloccante">1. Giro «Fattura competenza» (C-3, non bloccante)<a class="headerlink" href="#1-giro-fattura-competenza-c-3-non-bloccante" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>POST /api/v1/vendite/fatturazione/run/</code> · permesso <code>genera_fatture_lotti</code></li>
-<li>Body: <code>{ "competenza_mese": "YYYY-MM-DD" &#91;, "fino_a_stato": "&lt;codice&gt;"&#93; }</code></li>
+<li>Body: <code>{ "competenza_mese": "YYYY-MM-DD" \[, "fino_a_stato": "&lt;codice&gt;"\]
+  \[, "gruppi": ["&lt;gruppo_key&gt;", …\]] }</code></li>
 <li>Corsia <strong>differita</strong>: si ferma a <strong>EMESSA</strong> (D-1), perimetro cumulativo
   <code>competenza ≤ M</code>. Scope emittente <strong>catturato</strong> all'accodamento.</li>
+</ul>
+<h4 id="1-bis-emissione-mirata-gruppi-2026-07-27">1-bis. Emissione mirata (<code>gruppi</code>, 2026-07-27)<a class="headerlink" href="#1-bis-emissione-mirata-gruppi-2026-07-27" title="Permanent link">&para;</a></h4>
+<p>Lo stesso endpoint, con <code>gruppi</code> valorizzato, fattura <strong>solo</strong> i gruppi
+fatturabili indicati — un documento sorgente (PRV-0012, CTR-0007…) oppure gli
+oneri di una commessa. Un solo verbo, due perimetri: il processo è identico
+(invariante I-1), cambia solo cosa entra.</p>
+<ul>
+<li>Le chiavi arrivano da <code>GET /vendite/dashboard-competenza/gruppi/</code> e <strong>non si
+  costruiscono a mano</strong>: le produce <code>vendite.fn_build_gruppo_fatturabile_key</code>.</li>
+<li>Corsia <strong><code>mirata</code></strong>: a differenza della differita <strong>non filtra per corsia</strong>
+  (<code>p_fatturazione_immediata = NULL</code>). Non è una svista — la lista dei gruppi
+  non conosce la corsia, quindi mostra anche i gruppi di commesse a
+  fatturazione immediata: filtrare li renderebbe selezionabili a video e
+  produttivi di <strong>zero lotti, in silenzio</strong>. La selezione esplicita
+  dell'operatore è un perimetro più preciso dell'instradamento automatico.
+  Fermata a EMESSA invariata (gate fiscale I-7).</li>
+<li><strong>Il criterio è uno stato del lotto, non un parametro</strong>: il driver scrive le
+  righe di <code>vendite.fatturazione_lotti_gruppi</code> nella <strong>stessa transazione</strong> in
+  cui crea il lotto. Da lì in poi vive nel <code>LottoContext</code>, quindi un <em>rerun</em> o
+  un <em>avanza step</em> dal <code>LottoDrawer</code> riproduce lo stesso perimetro invece di
+  allargarlo.</li>
+<li><strong>Idempotenza</strong>: la chiave di <em>business</em> della coda include un digest
+  dell'insieme dei gruppi — senza, due emissioni mirate sullo stesso mese e
+  scope con gruppi diversi cadrebbero sullo stesso job vivo e la seconda
+  verrebbe assorbita in silenzio. Senza <code>gruppi</code> il digest è vuoto: la chiave
+  del giro di massa resta identica a prima.</li>
+<li>Validazione: <code>gruppi</code> non-lista, elemento non stringa/vuoto, lista vuota
+  (ambigua fra «niente» e «tutto») o oltre 200 elementi → <strong>400</strong>
+  <code>E_VALIDATION_INPUT</code>.</li>
+<li><strong>L'esito è una LISTA di lotti</strong>: <code>result.lotti = [{lotto_id,
+  tipo_doc_fiscale_id, competenza_mese}, …]</code>. Un gruppo con righe di
+  <code>tipo_doc_fiscale</code> diverso finisce in terne — e quindi lotti — diversi. Il FE
+  offre N «vai al lotto», non uno.</li>
 </ul>
 <h3 id="2-polling-stato-job-c-3">2. Polling stato job (C-3)<a class="headerlink" href="#2-polling-stato-job-c-3" title="Permanent link">&para;</a></h3>
 <ul>
@@ -5547,6 +5598,12 @@ richiedono <code>Idempotency-Key: &lt;uuid&gt;</code> (header). Area funzionale:
   <code>vendite.fn_accoda_stampe_lotto(p_lotto_id)</code>. Drenata da <code>draina_coda_stampa</code>.</li>
 <li><strong>Pipeline</strong>: <code>vendite.fatturazione_lotti</code>, <code>vendite.fatture</code>,
   <code>config.stati_doc_fiscale</code> (EMESSA/DEFINITIVA), <code>maintenance.job_run_log</code>.</li>
+<li><strong>Emissione mirata</strong>: <code>vendite.fatturazione_lotti_gruppi</code> (perimetro del
+  lotto), <code>vendite.fn_build_gruppo_fatturabile_key</code> (unica fonte della chiave) e
+  il parametro <code>p_gruppi</code> di <code>fn_list_emittibili_lane</code>,
+  <code>fn_list_commesse_emittibili</code>, <code>fn_emit_attivita_fatturabili_da_commessa</code>,
+  <code>fn_select_attivita_fatturabili</code>. Assenza di righe/<code>NULL</code> = nessuna
+  restrizione = comportamento del giro schedulato.</li>
 <li><strong>RLS operatore</strong> su <code>fatturazione_lotti</code>/<code>fatture</code> (policy
   <code>rls_*_ef_whitelist</code>, GUC <code>app.current_user_id</code> + <code>app.ruolo_applicativo</code>).</li>
 </ul>
@@ -5557,6 +5614,10 @@ read-side non si tocca). Deploy worker: systemd timer su <code>draina_coda_lavor
 §16. Contratto coda + design: <code>docs/it/dev/work-in-progress/brief-design-coda-lavori-generica.md</code>;
 guide funzionali <code>docs/it/guide/gestione-code-di-lavoro.md</code> +
 <code>analisi-tracciamento-processi-e-job.md</code>.</p>
+<p><strong>Emissione mirata (2026-07-27)</strong>: additiva su <code>fatturazione/run/</code>. Senza
+<code>gruppi</code> il comportamento — corsia, chiave di dedup, esito — è <strong>bit-identico</strong>
+a prima. Substrato DB <code>20260727-10..19</code>; brief BE/FE
+<code>dev/work-in-progress/brief-be-fe-emissione-fattura-mirata.md</code>.</p>
 
 
 

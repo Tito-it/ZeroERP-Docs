@@ -5244,6 +5244,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sorgente_uid-qui-non-e-la-chiave-canonica-polimorfa" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ <code>sorgente_uid</code> qui NON è la chiave canonica polimorfa
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#utilizzo-previsto" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5339,6 +5350,54 @@ segmentazione idempotente (<code>segment_key</code>) e stato approvazione/emissi
 <li><code>ONERE</code></li>
 <li><code>RETTIFICA</code></li>
 </ul>
+<hr />
+<h3 id="sorgente_uid-qui-non-e-la-chiave-canonica-polimorfa">⚠️ <code>sorgente_uid</code> qui NON è la chiave canonica polimorfa<a class="headerlink" href="#sorgente_uid-qui-non-e-la-chiave-canonica-polimorfa" title="Permanent link">&para;</a></h3>
+<p>Trappola verificata il 27-07-2026. La coppia <code>(sorgente_tipo_id, sorgente_uid)</code>
+su questa tabella <strong>assomiglia</strong> all'aggancio polimorfo di
+<a href="../commesse_sorgenti/"><code>commesse_sorgenti</code></a> e di <code>pratiche_sorgenti</code>, ma
+<strong>non segue la stessa convenzione</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Tabella</th>
+<th>Cosa contiene <code>sorgente_uid</code></th>
+<th>Chi lo garantisce</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>commesse_sorgenti</code></td>
+<td>chiave <strong>canonica</strong> secondo <code>config.sorgenti.key_selector</code> (<code>id::text</code> per ordini/contratti/DDT, <code>uid::text</code> per preventivi/offerte)</td>
+<td><code>fn_link_commessa_sorgente</code>, che <strong>normalizza in scrittura</strong></td>
+</tr>
+<tr>
+<td><strong><code>commesse_attivita</code></strong></td>
+<td><strong>l'<code>uid</code> del documento, sempre</strong> — per tutte le sorgenti, anche quelle con <code>key_selector = 'id'</code></td>
+<td><strong>nessuno</strong>: <code>fn_upsert_commessa_attivita</code> scrive il valore ricevuto senza tradurlo</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Perché</strong>: tutte le <code>fn_list_&lt;sorgente&gt;_da_pushare</code> proiettano
+<code>&lt;tabella&gt;.uid::text</code>. Quel valore viene scritto qui <strong>grezzo</strong>, mentre
+<code>fn_link_commessa_sorgente</code> lo traduce prima di scriverlo su
+<code>commesse_sorgenti</code>. Le due tabelle vengono popolate nello stesso push e per lo
+stesso documento contengono <strong>valori diversi</strong>.</p>
+<p><strong>Non è un errore da bonificare</strong>: è una convenzione autonoma, già usata da
+consumatori vivi — es. <code>vw_dash_fatturazione_contratti</code> fa
+<code>JOIN ... AND ca.sorgente_uid = c.uid::text</code>. Normalizzare questa colonna
+romperebbe quei join.</p>
+<p><strong>Regola pratica per chi scrive query</strong>:</p>
+<ul>
+<li>per interrogare <strong><code>commesse_attivita</code></strong> → usa <strong>l'uid</strong> del documento;</li>
+<li>per interrogare <strong><code>commesse_sorgenti</code></strong> → usa la <strong>chiave canonica</strong>
+  (risolvila da <code>config.sorgenti.key_selector</code>, non darla per scontata);</li>
+<li><strong>non dedurre l'una dall'altra per analogia</strong>: la somiglianza dei nomi di
+  colonna è precisamente ciò che induce l'errore.</li>
+</ul>
+<p>Il meccanismo polimorfo e il suo perimetro sono descritti in
+<a href="../../../../guide/sorgente-polimorfa/">guida sorgente polimorfa</a>: questa tabella sta
+<strong>fuori</strong> da quel perimetro (nessun guard <code>trgfn_guard_sorgente_polimorfa_*</code>
+agganciato).</p>
 <hr />
 <h3 id="utilizzo-previsto">Utilizzo previsto<a class="headerlink" href="#utilizzo-previsto" title="Permanent link">&para;</a></h3>
 <ul>

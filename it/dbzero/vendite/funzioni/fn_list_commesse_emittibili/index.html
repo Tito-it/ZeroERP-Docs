@@ -5265,6 +5265,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#emissione-mirata-p_gruppi-rev-2026-07-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Emissione mirata: <code>p_gruppi</code> (rev 2026-07-27)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5342,6 +5353,28 @@ Elenca le commesse candidate all'emissione verso <code>attivita_fatturabili</cod
 <span class="p">);</span>
 </code></pre></div>
 <hr />
+<hr />
+<h3 id="emissione-mirata-p_gruppi-rev-2026-07-27">Emissione mirata: <code>p_gruppi</code> (rev 2026-07-27)<a class="headerlink" href="#emissione-mirata-p_gruppi-rev-2026-07-27" title="Permanent link">&para;</a></h3>
+<p>Parametro <code>text&#91;&#93;</code>, default <code>NULL</code>. Restringe alle commesse che contengono
+almeno una riga di un gruppo richiesto.</p>
+<p><strong>Perché.</strong> Questa è la discovery dello step di <em>pull</em>: il task cicla commessa
+per commessa con un savepoint ciascuna. Senza filtro, un'emissione mirata su un
+preventivo farebbe comunque il giro di tutte le commesse emittibili del
+perimetro — savepoint, chiamata all'emit (già filtrato), zero righe. Nessun
+danno ai dati, ma un log che dice «ho lavorato 40 commesse» per un'operazione
+che ne riguardava una sola è fuorviante quando poi si va a leggere cos'è
+successo.</p>
+<p>⚠️ <strong>Non sostituisce il filtro per riga dentro l'emit.</strong> Qui si sceglie <em>quali
+commesse</em> visitare, lì <em>quali righe</em> emettere. Una commessa multi-sorgente che
+contiene sia il preventivo richiesto sia il contratto non richiesto passa
+comunque il filtro: sarà l'emit a prendere solo le righe giuste.</p>
+<p>Con <code>p_gruppi</code> valorizzato anche <code>total_non_emesse</code> segue il filtro: è il numero
+di righe che l'emit lavorerà davvero su quella commessa.</p>
+<blockquote>
+<p><strong>Prerequisito di entrambe le discovery</strong>: la commessa deve essere in uno
+stato <strong>emittibile</strong> (<code>stati_commessa.emittibile = true</code>). È il criterio 1,
+valutato prima di ogni filtro di perimetro.</p>
+</blockquote>
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>

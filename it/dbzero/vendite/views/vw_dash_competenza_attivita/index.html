@@ -5265,6 +5265,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#colonne-di-gruppo-fatturabile-rev-2026-07-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Colonne di gruppo fatturabile (rev 2026-07-27)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5383,6 +5394,30 @@ dimensione dei <strong>recuperi tardivi</strong>. L'asse è la competenza <stron
 <li>Test: <code>db/pgtap/vendite/test-vw-dash-competenza-v1.sql</code>.</li>
 </ul>
 <hr />
+<hr />
+<h3 id="colonne-di-gruppo-fatturabile-rev-2026-07-27">Colonne di gruppo fatturabile (rev 2026-07-27)<a class="headerlink" href="#colonne-di-gruppo-fatturabile-rev-2026-07-27" title="Permanent link">&para;</a></h3>
+<p>Aggiunte <strong>in coda</strong> quattro colonne: <code>sorgente_tipo_id</code>, <code>sorgente_uid</code>,
+<code>tipo_movimento</code>, <code>gruppo_key</code>.</p>
+<p><code>gruppo_key</code> viene da
+<a href="../../funzioni/fn_build_gruppo_fatturabile_key/"><code>fn_build_gruppo_fatturabile_key</code></a>,
+la <strong>stessa</strong> funzione usata dai filtri <code>p_gruppi</code> dell'emissione: le chiavi
+mostrate sono esattamente quelle che l'emissione accetta.</p>
+<p>Questa vista è la base di
+<a href=".././vw_dash_competenza_gruppi/"><code>vw_dash_competenza_gruppi</code></a>,
+che da qui eredita <strong>scope emittente</strong> e <strong>coerenza dei conteggi con la card</strong>.</p>
+<p>⚠️ <strong>Due vincoli su ogni futura modifica</strong>:</p>
+<ol>
+<li><code>CREATE OR REPLACE VIEW</code> ammette solo l'<strong>aggiunta di colonne in fondo</strong>: non
+   si possono rinominare, riordinare o eliminare quelle esistenti. L'ordine
+   attuale è di fatto immutabile;</li>
+<li><code>WITH (security_invoker=on)</code> va <strong>ri-specificato ogni volta</strong>: la reloption
+   non compare in <code>pg_get_viewdef</code> e PostgreSQL la azzera in silenzio,
+   trasformando la vista in <code>security_definer</code> di fatto e aprendo un buco nello
+   scope emittente su tutte le dashboard di competenza.</li>
+</ol>
+<p><strong>Fail-closed senza GUC</strong>: <code>script.fn_get_emittenti_scope_sr_ids(NULL)</code>
+restituisce l'array <strong>vuoto</strong>, non <code>NULL</code>, quindi senza <code>app.current_user_id</code>
+nessuna riga passa. Da tenere presente scrivendo test.</p>
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>

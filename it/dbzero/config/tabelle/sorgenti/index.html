@@ -5374,6 +5374,22 @@
 <p><strong>non modificabile</strong> dopo la creazione (vedi trigger <code>trg_sorgenti_a10_upd_lock_columns</code>).</p>
 </li>
 <li>
+<p><strong>Area documentale</strong> (<code>area</code>) — <em>aggiunta 27-07-2026</em>:</p>
+</li>
+<li>
+<p>area corrispondente alla sorgente: <code>PREVENTIVI</code>, <code>ORDINI</code>, <code>CONTRATTI</code>, <code>DDT</code>, <code>OFFERTE</code>, <code>COMMESSE</code>;</p>
+</li>
+<li>è la chiave con cui <code>vendite.vw_dash_fatturazione_documenti</code> — e le sei viste per-sorgente che la compongono — etichetta i documenti. Serve a tradurre un riferimento tecnico nel <strong>numero leggibile</strong> che l'operatore riconosce;</li>
+<li><strong><code>NULL</code> = la sorgente non è un documento sfogliabile</strong> (<code>ATTIVITA</code>, <code>ATTIVITA_CONSUMI</code>, <code>FATTURA</code>, <code>RESO_VENDITA</code>): non hanno una scheda nel cockpit di fatturazione. I consumatori usano <code>LEFT JOIN</code>, così un riferimento senza area non sparisce dagli elenchi;</li>
+<li><code>CHECK</code> non-vuota: <code>''</code> sarebbe indistinguibile da <code>NULL</code> a occhio ma si comporterebbe diversamente nel join (matcherebbe nulla invece di saltare);</li>
+<li>⚠️ <strong>non è fra le colonne lock</strong>, a differenza di <code>categoria</code>. La categoria è strutturale — classifica il tipo di entità e cambia il comportamento; l'area è una mappa di <strong>presentazione</strong> verso un altro vocabolario, che può legittimamente aver bisogno di correzione se una vista di dashboard cambia etichetta.</li>
+</ul>
+<blockquote>
+<p><strong>Perché questa colonna esiste.</strong> Prima del 27-07-2026 il vocabolario «area» <strong>non esisteva come dato</strong>: la stringa era scritta a mano dentro ciascuna delle sei viste per-sorgente (<code>'PREVENTIVI'::varchar AS area</code> in <code>vw_dash_fatturazione_preventivi</code>, e così via). Alla sesta occorrenza è stato estratto qui, accanto agli altri attributi che descrivono la sorgente. La bonifica delle sei viste, che possono leggerla da qui, è una rifinitura separata.</p>
+<p>Riferimento: <code>brief-db-emissione-fattura-per-documento-sorgente</code> decisione D-5.</p>
+</blockquote>
+<ul>
+<li>
 <p><strong>Descrizione</strong> (<code>descrizione</code>):</p>
 </li>
 <li>

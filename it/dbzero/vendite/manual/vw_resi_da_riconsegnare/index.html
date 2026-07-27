@@ -5277,7 +5277,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(rev 2026-07-13)</p>
+<p>(rev 2026-07-26)</p>
 <p><strong>Coda di lavoro</strong> delle righe reso <em>per ri-consegna</em> confermate ancora da ri-spedire. Alimenta
 l'azione <code>fn_genera_ddt_riconsegna</code>. Si <strong>auto-svuota</strong> man mano che la copertura raggiunge la
 quantità resa.</p>
@@ -5285,9 +5285,44 @@ quantità resa.</p>
 <ul>
 <li>Grana = <strong>riga reso</strong>. Filtro <code>stato = CONFERMATO</code> <strong>AND <code>tipi_reso.riapre_residuo = true</code></strong>
   (data-driven) AND copertura incompleta (<code>qta_residua &gt; 0</code>).</li>
-<li>Espone la <strong>copertura residua</strong> (<code>qta_resa − Σ resi_righe_riconsegne.qta</code>) e lo <strong><code>stato_riconsegna</code>
-  DERIVATO</strong> (<code>DA_RICONSEGNARE / PARZIALE / COMPLETATA</code>) come colonna virtuale — nessuna colonna di
-  stato fisica.</li>
+<li>Espone la <strong>copertura residua</strong> — dal 2026-07-26 calcolata dall'helper unico
+  <a href="../../funzioni/fn_resi_riga_residuo_riconsegna/"><code>fn_resi_riga_residuo_riconsegna</code></a>,
+  cioè <code>qta_resa − Σ riconsegnate − Σ rinunciate</code> — e lo <strong><code>stato_riconsegna</code> DERIVATO</strong>
+  come colonna virtuale (nessuna colonna di stato fisica):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>stato</th>
+<th>significato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DA_RICONSEGNARE</code></td>
+<td>nulla lavorato</td>
+</tr>
+<tr>
+<td><code>PARZIALE</code></td>
+<td>qualcosa lavorato, residuo ancora &gt; 0</td>
+</tr>
+<tr>
+<td><code>RINUNCIATA</code></td>
+<td>residuo 0 <strong>con</strong> almeno una rinuncia: chiusa definitivamente</td>
+</tr>
+<tr>
+<td><code>COMPLETATA</code></td>
+<td>residuo 0 <strong>senza</strong> rinunce: tutto ri-spedito</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Le righe chiuse escono da sole dalla coda</strong> (rev 2026-07-26): una quota dichiarata
+  definitiva porta il residuo a 0 e la <code>WHERE</code> la esclude. Era il punto della slice — prima
+  restava in elenco indistinguibile da una lavorabile.
+  ⚠️ Per questo <code>RINUNCIATA</code> e <code>COMPLETATA</code> non si vedono <em>interrogando la coda</em>: restano
+  per chi legge la vista per <code>resi_riga_id</code> (es. il consuntivo in dialog).</li>
+<li>Espone <code>qta_rinunciata</code> accanto a <code>qta_riconsegnata</code>: consuntivo delle due uscite.</li>
 <li>Coda <strong>per-reso, agganciata al DDT</strong> → funziona anche per i resi standalone (senza ordine).</li>
 <li><strong><code>security_invoker=on</code></strong> + RLS sulla base; espone <code>emittente_fiscale_id</code> per il filtro BE.</li>
 </ul>

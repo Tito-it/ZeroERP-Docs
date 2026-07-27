@@ -5232,6 +5232,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#perche-conta-anche-le-rinunce-rev-2026-07-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Perché conta anche le rinunce (rev 2026-07-26)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5265,15 +5276,26 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(rev 2026-07-13)</p>
+<p>(rev 2026-07-26)</p>
 <p><code>BEFORE INSERT/UPDATE</code> sul ponte <code>vendite.resi_righe_riconsegne</code>. Due regole + lock:</p>
 <ol>
 <li>la riga reso referenziata deve essere di tipo <strong>ri-consegna</strong> (<code>tipi_reso.riapre_residuo = true</code>)
    → <code>E_RESO_RICONSEGNA_TIPO_NON_VALIDO</code>;</li>
-<li><strong>non si ri-spedisce più di quanto reso</strong>: Σ <code>qta</code> sulla stessa <code>resi_riga</code> ≤ quantità resa
-   → <code>E_RESO_RICONSEGNA_SUPERA_RESO</code>;</li>
-<li>lock <code>FOR UPDATE</code> serializzante (riga reso + gruppo riconsegne).</li>
+<li><strong>non si ri-spedisce più di quanto reso</strong>, al netto anche delle quote <strong>rinunciate</strong>:
+   <code>Σ riconsegnate + Σ rinunciate ≤ quantità resa</code> → <code>E_RESO_RICONSEGNA_SUPERA_RESO</code>;</li>
+<li>lock <code>FOR UPDATE</code> serializzante (riga reso + <strong>entrambi</strong> i ponti).</li>
 </ol>
+<h3 id="perche-conta-anche-le-rinunce-rev-2026-07-26">⚠️ Perché conta anche le rinunce (rev 2026-07-26)<a class="headerlink" href="#perche-conta-anche-le-rinunce-rev-2026-07-26" title="Permanent link">&para;</a></h3>
+<p>Le due uscite di una riga reso — ri-spedire al cliente e dichiarare la quota <strong>definitiva</strong>
+(<a href="../../tabelle/resi_righe_rinunce/"><code>resi_righe_rinunce</code></a>) — <strong>consumano la stessa
+copertura</strong>. Finché questo guard sommava solo le ri-consegne, su una riga da 10 con 7
+rinunciati vedeva ancora residuo 10 e lasciava ri-spedire 10: <code>Σric + Σrin = 17 &gt; 10</code>,
+invariante violato <strong>dal lato opposto</strong>.</p>
+<p>L'invariante <code>quantita ≥ Σric + Σrin</code> va quindi presidiato <strong>simmetricamente</strong>: qui e nel
+gemello <a href="../../funzioni/trgfn_resi_rinunce_guard/"><code>trgfn_resi_rinunce_guard</code></a>.
+Presidiare un solo lato non basta.</p>
+<p>Il <code>FOR UPDATE</code> su <code>resi_righe</code> (la <strong>riga padre</strong>) è ciò che serializza rinuncia e
+ri-consegna concorrenti: nessun advisory lock serve.</p>
 
 
 

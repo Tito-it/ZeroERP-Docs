@@ -5287,6 +5287,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#fatturazione_immediata-dalla-costante-alla-colonna-rev-2026-07-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>fatturazione_immediata</code>: dalla costante alla colonna (rev 2026-07-27)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5443,6 +5454,25 @@ la signature al client Python <code>CommesseRepository.fetch_pushable_rows</code
 <span class="p">);</span>
 </code></pre></div>
 <hr />
+<hr />
+<h3 id="fatturazione_immediata-dalla-costante-alla-colonna-rev-2026-07-27"><code>fatturazione_immediata</code>: dalla costante alla colonna (rev 2026-07-27)<a class="headerlink" href="#fatturazione_immediata-dalla-costante-alla-colonna-rev-2026-07-27" title="Permanent link">&para;</a></h3>
+<p>Fino al 2026-07-27 questa funzione proiettava la <strong>costante <code>FALSE</code></strong> nello slot
+<code>fatturazione_immediata</code>: il contratto della <code>RETURNS TABLE</code> era simmetrico a
+quello dei preventivi, ma il <strong>dato</strong> no. Conseguenza pratica: un contratto non
+poteva mai finire sulla corsia immediata.</p>
+<p>Dal changeset <code>20260727-05</code> il valore è letto dalla <strong>colonna reale</strong>
+<code>vendite.contratti.fatturazione_immediata</code> (aggiunta da <code>20260727-02</code>). Il valore proiettato qui viaggia fino a
+<code>fn_get_or_create_commessa</code>, dove è <strong>parte della chiave di dedup</strong>: è così che
+il flag separa fisicamente le due corsie (commesse distinte → lotti distinti →
+<code>GIORNALIERO</code> che numera da solo <em>vs</em> <code>MASSIVO</code> che si ferma a <code>EMESSA</code>).</p>
+<p>⚠️ <strong><code>prezzo_bloccato</code> NON è stato toccato</strong> e non va toccato: qui vale
+<code>(cr.prezzo_unitario IS NOT NULL)</code>, indipendente dal flag. L'accoppiamento
+<code>prezzo_bloccato = COALESCE(fatturazione_immediata, false)</code> esiste <strong>solo</strong> in
+<code>fn_list_preventivi_da_pushare</code>. Copiare qui quella riga cambierebbe in silenzio
+il comportamento di pricing.</p>
+<p>Presidio a valle: dopo il push il flag non è più modificabile sul documento
+(<a href="../../funzioni/trgfn_guard_fatturazione_immediata_immutabile/"><code>trgfn_guard_fatturazione_immediata_immutabile</code></a>).</p>
+<p>Brief: <code>brief-db-emissione-fattura-per-documento-sorgente</code> PARTE B (step B3).</p>
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>

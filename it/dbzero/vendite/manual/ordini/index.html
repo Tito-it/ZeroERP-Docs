@@ -5386,6 +5386,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#corsia-di-fatturazione-fatturazione_immediata-27-07-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Corsia di fatturazione: <code>fatturazione_immediata</code> (27-07-2026)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5718,6 +5729,47 @@ la provenienza è tracciata da una coppia di colonne tipizzate dedicate:</p>
 <h3 id="ruolo-nel-sistema">Ruolo nel sistema<a class="headerlink" href="#ruolo-nel-sistema" title="Permanent link">&para;</a></h3>
 <p><code>vendite.ordini</code> è la <strong>base operativa</strong> del ciclo vendite: raccoglie tutte le informazioni contrattuali e logistiche preliminari alla spedizione e alla fatturazione.<br />
 Assicura la <strong>tracciabilità completa</strong> del flusso commerciale e costituisce un <strong>ponte naturale</strong> tra la fase commerciale, logistica e amministrativa del gestionale.</p>
+<hr />
+<h3 id="corsia-di-fatturazione-fatturazione_immediata-27-07-2026">Corsia di fatturazione: <code>fatturazione_immediata</code> (27-07-2026)<a class="headerlink" href="#corsia-di-fatturazione-fatturazione_immediata-27-07-2026" title="Permanent link">&para;</a></h3>
+<p>Colonna <code>boolean NOT NULL DEFAULT false</code> aggiunta dalla slice di simmetria del
+flag (brief <code>brief-db-emissione-fattura-per-documento-sorgente</code> PARTE B,
+migration <code>20260727-01</code>). Prima esisteva <strong>solo</strong> su <code>vendite.preventivi</code>: le altre
+sorgenti esponevano il campo nel contratto delle <code>fn_list_*_da_pushare</code> ma con
+valore costante <code>FALSE</code>, quindi <strong>solo un preventivo poteva essere fatturato
+subito</strong> — non per una scelta di dominio, ma per un buco di modello.</p>
+<table>
+<thead>
+<tr>
+<th>Valore</th>
+<th>Corsia</th>
+<th>Arriva a</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>true</code></td>
+<td>immediata (lotto <code>GIORNALIERO</code>)</td>
+<td><code>DEFINITIVA</code> — numera da sola</td>
+</tr>
+<tr>
+<td><code>false</code> <em>(default)</em></td>
+<td>differita (lotto <code>MASSIVO</code>)</td>
+<td><code>EMESSA</code> — la numerazione è un atto separato</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Si stabilisce PRIMA del push.</strong> Il valore viene letto una sola volta, da
+<code>vendite.fn_list_ordini_da_pushare</code>, e propagato alla commessa dove è <strong>parte della chiave di dedup</strong> di
+<code>fn_get_or_create_commessa</code>. Dopo il push è inerte, e la modifica è respinta
+dal guard
+<a href="../../funzioni/trgfn_guard_fatturazione_immediata_immutabile/"><code>trgfn_guard_fatturazione_immediata_immutabile</code></a>
+(<code>E_FATT_IMMEDIATA_NON_MODIFICABILE</code>). Il caso «cambio idea dopo» è coperto
+dall'<strong>emissione mirata per gruppo fatturabile</strong>, non da questo flag.</p>
+<p>⚠️ <strong>Non governa <code>prezzo_bloccato</code>.</strong> L'accoppiamento
+<code>prezzo_bloccato = COALESCE(fatturazione_immediata, false)</code> esiste <strong>solo sui
+preventivi</strong>: qui i due valori sono indipendenti e vanno tenuti tali.</p>
+<p>Il default <code>false</code> garantisce che l'aggiunta della colonna <strong>non cambi la corsia
+di nessun documento esistente</strong>.</p>
 
 
 

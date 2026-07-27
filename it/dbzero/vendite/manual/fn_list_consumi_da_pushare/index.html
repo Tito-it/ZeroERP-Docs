@@ -5287,6 +5287,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#perche-qui-fatturazione_immediata-resta-la-costante-false-rev-2026-07-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Perché qui <code>fatturazione_immediata</code> resta la costante <code>FALSE</code> (rev 2026-07-27)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5422,6 +5433,33 @@ fn_emit_attivita_fatturabili_da_commessa → attivita_fatturabili x N
 <span class="p">);</span>
 </code></pre></div>
 <hr />
+<hr />
+<h3 id="perche-qui-fatturazione_immediata-resta-la-costante-false-rev-2026-07-27">Perché qui <code>fatturazione_immediata</code> resta la costante <code>FALSE</code> (rev 2026-07-27)<a class="headerlink" href="#perche-qui-fatturazione_immediata-resta-la-costante-false-rev-2026-07-27" title="Permanent link">&para;</a></h3>
+<p>Le altre tre <code>fn_list_*_da_pushare</code> (ordini, contratti, DDT) hanno smesso il
+2026-07-27 di proiettare la costante <code>FALSE</code> su <code>fatturazione_immediata</code>,
+sostituendola con la colonna reale del documento. <strong>Questa no, ed è voluto.</strong></p>
+<p><strong>Decisione D-6</strong> (brief <code>brief-db-emissione-fattura-per-documento-sorgente</code>,
+confermata da Tid il 2026-07-27): un consumo è una <strong>misura</strong> — una lettura di
+contatore — non un accordo commerciale. La scelta «questo cliente si fattura
+subito» appartiene al <strong>contratto</strong> che governa la fornitura, non alla singola
+lettura. Un flag anche qui significherebbe lo stesso interruttore in <strong>due
+posti</strong>, con la possibilità concreta che dicano cose opposte (contratto
+differito + consumo immediato) e nessuna regola che stabilisca chi vince.</p>
+<p>I consumi seguono quindi <strong>sempre la corsia differita</strong>; la corsia immediata si
+ottiene, dove serve, marcando il contratto.</p>
+<p><code>vendite.attivita_consumi</code> <strong>non ha</strong> la colonna, e non ha il guard di
+immutabilità. Un pgTAP (<code>test-fatturazione-immediata-simmetria-sorgenti-v1.sql</code>,
+caso 11) verifica che continui a non averla: se qualcuno la aggiungesse «per
+simmetria», il test obbliga a ridiscutere la decisione invece di subirla.</p>
+<blockquote>
+<p>Reversibile a costo basso: se un domani servisse davvero, la colonna si
+aggiunge con lo stesso pattern di <code>20260727-01/02/03</code> e questa funzione la
+legge come le altre tre.</p>
+</blockquote>
+<p>⚠️ <strong>Nota</strong>: la funzione proietta <strong>due</strong> costanti <code>FALSE</code>. La seconda è
+<code>prezzo_bloccato</code>, e vale per suo conto: un consumo non porta prezzo dalla
+sorgente (<code>prezzo_snapshot</code> è <code>NULL</code>), quindi non c'è nulla da bloccare — il
+prezzo lo risolve il pricing a valle. Le due costanti non sono correlate.</p>
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>

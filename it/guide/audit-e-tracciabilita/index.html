@@ -6092,8 +6092,24 @@ su ogni INSERT e UPDATE. Il valore di <code>user_insert</code> / <code>user_upda
 l'utente di sistema PostgreSQL ma <strong>l'utente applicativo JWT reale</strong>, reso
 disponibile tramite il GUC <code>app.jwt_user</code> impostato dal middleware Django
 ad ogni request autenticata.</p>
-<p>Per i dettagli sull'implementazione del GUC e della catena middleware si rimanda
-al brief tecnico interno dedicato all'audit JWT utente.</p>
+<p><strong><code>app.jwt_user</code> non è più solo.</strong> Dopo il refactor multi-face auth i GUC propagati
+a ogni request autenticata sono <strong>cinque</strong> — <code>app.jwt_user</code>, <code>app.current_user_id</code>,
+<code>app.current_identita_id</code>, <code>app.ruolo_applicativo</code>, <code>app.soggetto_ruolo_id</code> — e non
+servono solo all'audit: la <strong>RLS</strong> delle tabelle sensibili risolve lo scope emittente
+proprio a partire da questi valori. Due invarianti conseguenti:</p>
+<ul>
+<li><code>JwtAuditMiddleware.process_request</code> <strong>azzera i 5 GUC all'inizio di ogni richiesta
+  <code>/api/</code></strong>, prima che l'auth class li ripopoli, in modo <strong>fail-closed</strong>: se il reset
+  fallisce la richiesta non viene servita (500 <code>E_GUC_RESET_FAILED</code>). Chiude il leak
+  cross-request sulle connessioni persistenti;</li>
+<li>una connessione del percorso richiesta che gira su un ruolo <code>BYPASSRLS</code> viene
+  rifiutata (500 <code>E_DB_ROLE_UNSAFE</code>): il bypass è ammesso solo ai canali di sistema
+  headless (<code>system_process_context</code>).</li>
+</ul>
+<p>Contratto completo e semantica per GUC: <a href="../contratto-guc-app/">contratto-guc-app.md</a> e
+<a href="../risorse-umane-e-accessi/">risorse-umane-e-accessi.md</a> sezione GUC. Conseguenze lato
+API (liste filtrate, 404 su dettaglio fuori scope): <a href="../../dev/api/">api.md</a> sezione
+"Scope emittente".</p>
 <h3 id="23-transaction-id">2.3 Transaction ID<a class="headerlink" href="#23-transaction-id" title="Permanent link">&para;</a></h3>
 <p>Ogni INSERT e UPDATE su tabelle operative genera un <code>tx_id UUID</code>, assegnato dal
 trigger <a href="../../dbzero/dbops/funzioni/trgfn_tx_id_managed/"><code>trgfn_tx_id_managed</code></a>. Il <code>tx_id</code> vale per l'intera transazione PostgreSQL:

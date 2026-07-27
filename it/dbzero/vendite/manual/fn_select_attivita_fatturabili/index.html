@@ -5276,6 +5276,45 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#emissione-mirata-p_gruppi-il-punto-critico-della-slice-rev-2026-07-27" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ Emissione mirata: <code>p_gruppi</code> — il punto critico della slice (rev 2026-07-27)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⭐ Emissione mirata: p_gruppi — il punto critico della slice (rev 2026-07-27)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#come-e-perche-cosi" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Come, e perché così
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-update-of-a-invariante-da-non-rompere" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ <code>FOR UPDATE OF a</code> — invariante da non rompere
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5371,6 +5410,38 @@ La funzione <strong><code>vendite.fn_select_attivita_fatturabili()</code></stron
 <span class="p">);</span>
 </code></pre></div>
 <hr />
+<hr />
+<h3 id="emissione-mirata-p_gruppi-il-punto-critico-della-slice-rev-2026-07-27">⭐ Emissione mirata: <code>p_gruppi</code> — il punto critico della slice (rev 2026-07-27)<a class="headerlink" href="#emissione-mirata-p_gruppi-il-punto-critico-della-slice-rev-2026-07-27" title="Permanent link">&para;</a></h3>
+<p>Parametro <code>text&#91;&#93;</code>, default <code>NULL</code>, stessa semantica delle altre funzioni della
+catena (<code>NULL</code> = nessuna restrizione, <code>'{}'</code> = zero righe, chiave inesistente =
+zero righe senza errore).</p>
+<p><strong>La falla che chiude.</strong> Questa funzione seleziona e blocca le attività su cui
+il lotto costruirà le righe fattura, filtrando per approvato, non fatturato, non
+sospesa, non lockata, <code>posticipa_al</code>, competenza, tipo doc, BA, utility,
+emittente, valuta, area. <strong>Nessuno di questi criteri sa nulla della sorgente.</strong></p>
+<p>Conseguenza senza il filtro: un lotto mirato al gruppo A rastrella qualunque
+attività fatturabile <strong>già esistente</strong> e non ancora consumata del gruppo B nello
+stesso perimetro. I residui non sono un caso di scuola — nascono da un giro
+interrotto fra pull e generazione righe, da un reset a bozza, o dal giro
+schedulato che ha fatto pull senza completare.</p>
+<p>Il risultato sarebbe una fattura <strong>corretta nella forma e sbagliata nel
+perimetro</strong>: l'errore peggiore, perché silenzioso.</p>
+<h4 id="come-e-perche-cosi">Come, e perché così<a class="headerlink" href="#come-e-perche-cosi" title="Permanent link">&para;</a></h4>
+<p>Il legame attività → documento <strong>non è</strong> su <code>attivita_fatturabili</code>: lì
+<code>sorgente_tipo_id</code>/<code>sorgente_uid</code> sono rioccupati dall'idempotenza del pull
+(sorgente <code>COMMESSA</code> + hash md5 della <code>segment_key</code>) e resta solo
+<code>sorgente_origine_tipo_id</code>, cioè il <em>tipo</em> di origine. Sopravvive però
+<code>commessa_attivita_id</code> <strong>NOT NULL</strong>: l'identità è recuperabile con un <strong>JOIN</strong>
+alla riga di commessa.</p>
+<p>Da qui la scelta di <strong>non denormalizzare</strong>: nessuna colonna nuova su una tabella
+calda, nessun backfill, nessun drift possibile fra valore copiato e sorgente. Il
+join si aggiunge <strong>solo</strong> quando <code>p_gruppi</code> è valorizzato: il giro schedulato
+non paga nulla, né in forma né in piano d'esecuzione.</p>
+<h4 id="for-update-of-a-invariante-da-non-rompere">⚠️ <code>FOR UPDATE OF a</code> — invariante da non rompere<a class="headerlink" href="#for-update-of-a-invariante-da-non-rompere" title="Permanent link">&para;</a></h4>
+<p>Anche in presenza del join, il lock resta ristretto ad <code>attivita_fatturabili</code>.
+Estenderlo a <code>commesse_attivita</code> serializzerebbe il giro di fatturazione con le
+operazioni di commessa (approvazioni, oneri): un deadlock che oggi non esiste.
+La rev 2026-06-19 aveva introdotto <code>OF a</code> proprio per restringerlo.</p>
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>
