@@ -5585,8 +5585,8 @@ fatturazione.</p>
 <p>Flusso in dettaglio:</p>
 <ol>
 <li><code>fn_build_fattura_key</code>: usa <code>COALESCE(ba.parent_account_id, a.billing_account_id)</code> per risolvere al padre</li>
-<li><code>fn_group_attivita_fatturabili</code>: estrae <code>a.billing_account_id</code> (figlio) come <code>dest_billing_account_id</code></li>
-<li><code>fn_generate_fatture_righe</code>: inserisce <code>dest_billing_account_id</code> nelle righe fattura</li>
+<li><code>FattureRigheService._build_group_key</code> (backend): estrae <code>a.billing_account_id</code> (figlio) come <code>dest_billing_account_id</code> e lo mette nella chiave di raggruppamento</li>
+<li><code>FattureRigheService.generate_fatture_righe</code> (backend): inserisce <code>dest_billing_account_id</code> nelle righe fattura</li>
 <li><code>trgfn_fatture_righe_guard_normalize</code>: fallback — se <code>dest_billing_account_id</code> e NULL, eredita da <code>fatture.billing_account_id</code></li>
 </ol>
 <p>La risoluzione al padre e <strong>incondizionata</strong>: se <code>parent_account_id</code> e valorizzato, la fattura va al padre. Se non si vuole aggregare un figlio al padre, la soluzione e <strong>non impostare <code>parent_account_id</code></strong> (non serve un flag separato).</p>

@@ -5423,6 +5423,89 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#azione-annulla-riga-manuale-di-commessa" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Azione ANNULLA — riga MANUALE di commessa
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Azione ANNULLA — riga MANUALE di commessa">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Scopo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#input_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Input
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Output
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regole_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Regole
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#effetti-a-valle-nessun-filtro-nuovo-da-scrivere" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Effetti a valle (nessun filtro nuovo da scrivere)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dipendenze-db_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dipendenze DB
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -5600,6 +5683,140 @@ Dashboard Competenza mostra (stessa vista del drill-down, WYSIWYG). Verbo
 <ul>
 <li><code>vendite.vw_dash_competenza_attivita</code> (read, selezione popolazione)</li>
 <li><code>vendite.fn_approva_commessa_attivita</code> (write, per commessa)</li>
+</ul>
+<hr />
+<h2 id="azione-annulla-riga-manuale-di-commessa">Azione ANNULLA — riga MANUALE di commessa<a class="headerlink" href="#azione-annulla-riga-manuale-di-commessa" title="Permanent link">&para;</a></h2>
+<h3 id="scopo_3">Scopo<a class="headerlink" href="#scopo_3" title="Permanent link">&para;</a></h3>
+<p>Togliere dal giro una <strong>voce manuale</strong> (tipicamente un onere) caricata per
+errore — causale sbagliata, importo sbagliato, doppio click. Fino al 2026-07-28
+non c'era rimedio: nessun DELETE, l'onere di storno negativo è vietato per
+costruzione (<code>fn_aggiungi_onere_commessa</code> rifiuta <code>importo &lt;= 0</code>) e la
+variazione prezzo eccezionale esige <code>prezzo &gt; 0</code> — una penale da 500 € inserita
+per sbaglio poteva diventare da 1 €, <strong>non sparire</strong>.</p>
+<p>La riga <strong>non si cancella</strong>: passa a <code>stato_emissione = 'ANNULLATA'</code>, il terzo
+valore del CHECK già onorato da tutte le porte a valle. È il libro giornale:
+annullare senza cancellare, con il motivo tracciato. Nessun «ripristina» — se
+serve, si ricarica l'onere.</p>
+<p>Brief: <code>docs/it/dev/work-done/brief-annullamento-righe-manuali-commessa.md</code>.</p>
+<h3 id="input_3">Input<a class="headerlink" href="#input_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Metodo: <code>POST</code></li>
+<li>Path: <code>/api/v1/vendite/commesse/&lt;commessa_id&gt;/attivita/&lt;att_id&gt;/annulla/</code></li>
+<li>Header: <code>Authorization: Bearer &lt;token&gt;</code> + <code>Idempotency-Key</code> (obbligatoria)</li>
+<li>Permesso: azione di processo <strong><code>carica_voce_manuale</code></strong> — lo <strong>stesso</strong> della
+  porta oneri (decisione Tid): chi può caricare una voce manuale può annullarla,
+  nessun permesso dedicato.</li>
+<li>Body JSON:</li>
+<li><code>motivo</code> (string, <strong>obbligatorio</strong>, max 500) — l'annullamento è
+    irreversibile e l'unica traccia del <em>perché</em> è l'evento di log.</li>
+</ul>
+<h3 id="output_3">Output<a class="headerlink" href="#output_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>200</code>: <code>{ "data": { "commessa_id": 42, "attivita_id": 501, "stato_emissione": "ANNULLATA", "motivo": "causale sbagliata" } }</code></li>
+<li><code>400</code>: <code>E_RIGA_COMMESSA_MOTIVO_OBBLIGATORIO</code> — motivo assente, vuoto o oltre i 500 caratteri</li>
+<li><code>403</code>: azione di processo non abilitata</li>
+<li><code>404</code>: <code>E_COMMESSA_ATTIVITA_NOT_FOUND</code> — riga inesistente <strong>oppure non
+  appartenente alla commessa dell'URL</strong> (nessun leak fra i due casi)</li>
+<li><code>409</code>: <code>E_RIGA_COMMESSA_GIA_ANNULLATA</code> / <code>E_RIGA_COMMESSA_NON_MANUALE</code> /
+  <code>E_RIGA_COMMESSA_GIA_EMESSA</code> / <code>E_VENDITE_VARIAZIONE_PREZZO_NON_AMMESSA</code>
+  (commessa non più modificabile)</li>
+</ul>
+<h3 id="regole_3">Regole<a class="headerlink" href="#regole_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>View <code>ApiCommessaAttivitaAnnulla</code> → service <code>annulla_attivita_manuale</code> →
+  <code>CommesseRepository.annulla_attivita</code> → madre DB.</li>
+<li><strong>Scoping riga↔commessa esplicito</strong>: il service rilegge la riga con
+  <code>_get_attivita_pricing_or_raise(commessa_id, attivita_id)</code>, la cui <code>WHERE</code>
+  filtra su entrambi gli id. Senza, il <code>commessa_id</code> dell'URL sarebbe decorativo
+  e si annullerebbe la riga di un altro cliente indovinando un intero.
+  <strong>La RLS non copre il buco</strong>, ma non perché sia dormiente: la policy
+  <code>rls_commesse_attivita_ef_whitelist</code> <strong>si applica</strong> all'app (<code>zeroerp_app</code> non
+  è owner della tabella — l'owner è <code>titodb</code> — e non ha <code>BYPASSRLS</code>; <code>NO FORCE</code>
+  esenta il solo owner). Risponde però a una domanda <strong>diversa</strong>: «l'operatore è
+  nella whitelist dell'emittente di questa commessa?», non «questa riga
+  appartiene alla commessa nell'URL?». Un operatore autorizzato sull'emittente X
+  può quindi ancora colpire la riga di un'<strong>altra</strong> commessa dello stesso
+  emittente: il guard applicativo è l'unico che chiude quel caso.</li>
+<li><strong>Guard «commessa modificabile»</strong> (data-driven su <code>stati_commessa.modificabile</code>):
+  annullare una riga <em>è</em> modificare la commessa, come le tre azioni prezzo
+  sorelle. Vive nel BE e <strong>non</strong> scende nella madre — il gemello
+  <code>fn_aggiungi_onere_commessa</code> non fa quel lookup.</li>
+<li><strong>Ordine dei guard</strong>, identico a quello della madre e non indifferente:</li>
+<li><em>già annullata</em> — una riga <code>ANNULLATA</code> è per costruzione manuale, quindi in
+     testa non toglie il posto a una diagnosi migliore. Codice <strong>dedicato</strong>:
+     dire «è entrata nella catena di fatturazione» a chi ha cliccato due volte è
+     un'informazione <strong>falsa</strong>, e lo manda a cercare una fattura che non esiste.</li>
+<li><em>non manuale</em> — <strong>prima</strong> di «già emessa» perché è l'<strong>identità</strong> della
+     riga, non una sua condizione: a una riga da push dire «già emessa»
+     suggerisce che, se non lo fosse, si potrebbe annullare (falso — il rimedio
+     è a monte, sul documento).</li>
+<li><em>già emessa</em> — la riga ha già generato un'<code>attivita_fatturabili</code>:
+     annullarla qui la lascerebbe orfana in viaggio verso la fattura.</li>
+<li>Discriminante di «riga manuale» = <strong><code>sorgente_tipo_id IS NULL</code></strong> (sourceless),
+  la stessa definizione con cui <code>fn_build_gruppo_fatturabile_key</code> costruisce il
+  gruppo <code>MAN:&lt;commessa_id&gt;</code>. <strong>Non</strong> <code>tipo_movimento = 'ONERE'</code> (è la natura del
+  movimento, non l'origine: il CHECK ammette già <code>RETTIFICA</code>) né
+  <code>segment_key LIKE 'MAN:%'</code> (i prefissi sono una convenzione di leggibilità,
+  non un contratto). ⚠️ Il giorno che nasce un <strong>secondo</strong> tipo di riga
+  sourceless questo perimetro va <strong>riletto</strong>, non dato per buono: <code>carica_voce_manuale</code>
+  lo coprirebbe automaticamente.</li>
+<li>I guard applicativi arrivano prima nel caso normale, ma <strong>la madre resta
+  l'ultima parola</strong>: sotto <code>SELECT ... FOR UPDATE</code> intercetta le corse (due
+  annullamenti simultanei, un'emissione concorrente) che la rilettura
+  applicativa non vede. I suoi codici sono tradotti 1:1 dal service
+  (<code>_ANNULLA_DB_ERROR_MARKERS</code>), mai appiattiti su <code>E_DATABASE</code>.</li>
+<li>Nessun <code>transaction.atomic()</code>: una sola <code>SELECT</code> di funzione madre = unità
+  atomica per costruzione (UPDATE + evento di log insieme).</li>
+</ul>
+<h3 id="effetti-a-valle-nessun-filtro-nuovo-da-scrivere">Effetti a valle (nessun filtro nuovo da scrivere)<a class="headerlink" href="#effetti-a-valle-nessun-filtro-nuovo-da-scrivere" title="Permanent link">&para;</a></h3>
+<p><code>ANNULLATA</code> era già onorato ovunque conti — è questa la ragione per cui il
+lavoro DB è stato <em>una funzione</em> e non «colonna + backfill + filtri»:</p>
+<table>
+<thead>
+<tr>
+<th>Dove</th>
+<th>Effetto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fn_emit_attivita_fatturabili_da_commessa</code></td>
+<td>filtra <code>NON_EMESSA</code> → <strong>mai in fattura</strong></td>
+</tr>
+<tr>
+<td><code>fn_list_commesse_emittibili</code> / <code>fn_list_emittibili_lane</code></td>
+<td>nessuna terna, nessun lotto</td>
+</tr>
+<tr>
+<td><code>vw_dash_competenza_attivita</code> / <code>vw_dash_competenza_gruppi</code></td>
+<td>sparisce dal cockpit</td>
+</tr>
+<tr>
+<td><code>vw_dash_fatturazione_commesse</code></td>
+<td>idem</td>
+</tr>
+<tr>
+<td><code>fn_approva_commessa_attivita</code></td>
+<td>filtra <code>NON_EMESSA</code> → <strong>non ri-approvabile</strong> (il «nessun ripristina» è strutturale)</td>
+</tr>
+<tr>
+<td><code>script.fn_check_commessa_chiudibile</code></td>
+<td>annullare <strong>sblocca la chiusura</strong> della commessa, prima incastrata fra il guard di uscita e un onere non togliibile</td>
+</tr>
+<tr>
+<td><code>fn_get_commessa_stato</code></td>
+<td><code>total_approvate</code>/<code>total_non_approvate</code>/<code>total_non_emesse</code>/<code>total_prezzo_da_riallineare</code> escludono le annullate; <code>total_attivita</code> resta il conteggio <strong>fisico</strong> (la riga esiste)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dipendenze-db_3">Dipendenze DB<a class="headerlink" href="#dipendenze-db_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>vendite.fn_annulla_commessa_attivita(p_commessa_attivita_id, p_motivo) → bigint</code>
+  — madre: <code>FOR UPDATE</code> + guard + <code>UPDATE stato_emissione</code> + evento
+  <code>RIGA_MANUALE_ANNULLATA</code> su <code>vendite.commesse_attivita_log</code></li>
+<li><code>config.messaggi_errore</code> ids <strong>564-567</strong> (i quattro codici sopra)</li>
+<li><code>vendite.commesse_attivita.stato_emissione</code> — CHECK a tre valori
+  (<code>NON_EMESSA</code> / <code>EMESSA</code> / <code>ANNULLATA</code>): <strong>nessuna colonna nuova</strong></li>
 </ul>
 
 

@@ -5233,10 +5233,71 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#flusso-di-costruzione" class="md-nav__link">
+  <a href="#la-firma-normalizzata" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Flusso di Costruzione
+        🔑 La firma normalizzata
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔑 La firma normalizzata">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#il-flag-unique-e-fuori-dalla-chiave-di-raggruppamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Il flag UNIQUE è fuori dalla chiave di raggruppamento
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-non-e-un-duplicato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Cosa NON è un duplicato
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-questa-view-non-puo-vedere" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⛔ Cosa questa view non può vedere
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#colonne-e-descrizione" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Colonne e Descrizione
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempi-di-utilizzo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Esempi di Utilizzo
       </span>
     </span>
   </a>
@@ -5282,53 +5343,123 @@
 <h2 id="documentazione-concettuale-view-dbopsvw_duplicate_indexes">📘 Documentazione Concettuale – View <code>dbops.vw_duplicate_indexes</code><a class="headerlink" href="#documentazione-concettuale-view-dbopsvw_duplicate_indexes" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p>Approfondimento funzioni:   </p>
-<p><a href="../../views/vw_fk_senza_indice/">dbops.vw_fk_senza_indice</a> <br />
-<a href="../../views/vw_fk_con_indice_missing_policy/">dbops.vw_fk_con_indice_missing_policy</a>     </p>
+<p>Approfondimento funzioni:  </p>
+<p><a href="../../views/vw_indici_ridondanti_prefisso/">dbops.vw_indici_ridondanti_prefisso</a><br />
+<a href="../../views/vw_fk_senza_indice/">dbops.vw_fk_senza_indice</a><br />
+<a href="../../views/vw_fk_con_indice_missing_policy/">dbops.vw_fk_con_indice_missing_policy</a>  </p>
 </blockquote>
-<p>La view <strong><code>dbops.vw_duplicate_indexes</code></strong> identifica gli <strong>indici duplicati</strong> all’interno dello stesso schema e tabella, cioè quegli indici che coprono esattamente lo stesso insieme di colonne (<code>cols</code>). La view è <strong>limitata agli schemi presenti in <code>dbops.automation_scope</code></strong>; per ciascun gruppo di colonne con più indici restituisce i nomi degli indici coinvolti e il numero totale di occorrenze.</p>
+<p>La view <strong><code>dbops.vw_duplicate_indexes</code></strong> identifica gli <strong>indici duplicati esatti</strong> all'interno dello stesso schema e tabella: quelli che, a parità di tutto ciò che conta, sono <strong>intercambiabili</strong>. È <strong>limitata agli schemi presenti in <code>dbops.automation_scope</code></strong>.</p>
+<p>Per ciascun gruppo restituisce i nomi degli indici coinvolti, quale tenere e quali eliminare.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 10-01-26)
-* <strong>Individuare indici ridondanti</strong>
-  Scoprire indici che hanno lo stesso set di colonne e possono quindi essere unificati o rimossi.
-* <strong>Ottimizzazione dello storage e delle performance</strong>
-  Ridurre overhead di manutenzione e migliorare le prestazioni di scrittura eliminando duplicazioni.
-* <strong>Governance della struttura</strong>
-  Supportare analisi periodiche per mantenere lo schema pulito e coerente.</p>
+<p>(latest review 27-07-26)</p>
+<ul>
+<li><strong>Individuare indici realmente ridondanti</strong>
+  Scoprire indici intercambiabili, di cui tutti tranne uno possono essere rimossi.</li>
+<li><strong>Ottimizzazione dello storage e delle performance</strong>
+  Ridurre overhead di manutenzione e migliorare le prestazioni di scrittura: ogni indice in più costa una scrittura a ogni <code>INSERT</code>, <code>UPDATE</code> e <code>DELETE</code>.</li>
+<li><strong>Governance della struttura</strong>
+  Supportare analisi periodiche per mantenere lo schema pulito e coerente.</li>
+</ul>
 <hr />
-<h3 id="flusso-di-costruzione">Flusso di Costruzione<a class="headerlink" href="#flusso-di-costruzione" title="Permanent link">&para;</a></h3>
-<ol>
-<li>
-<p><strong>CTE <code>index_cols</code></strong></p>
-</li>
-<li>
-<p>Estrae da <code>pg_index</code> le informazioni sugli indici:</p>
+<h3 id="la-firma-normalizzata">🔑 La firma normalizzata<a class="headerlink" href="#la-firma-normalizzata" title="Permanent link">&para;</a></h3>
+<p>Il raggruppamento avviene per <strong>firma</strong>: la definizione dell'indice (<code>pg_get_indexdef</code>) privata di</p>
 <ul>
-<li><code>index_oid</code>, <code>schema_name</code>, <code>table_name</code>, <code>index_name</code></li>
-<li>Flag <code>is_unique</code>, <code>is_primary</code></li>
-<li>Array <code>cols</code> con i nomi delle colonne indicizzate (ordinati).</li>
-<li>Filtra fuori gli indici primari (<code>indisprimary</code>) e considera solo gli indici di tipo <code>i</code>.</li>
-<li><strong>Aggregazione e raggruppamento</strong></li>
+<li>il <strong>nome</strong>,</li>
+<li>la clausola <code>WITH (...)</code> dei parametri di storage,</li>
+<li>la clausola <code>TABLESPACE</code>.</li>
 </ul>
-</li>
-<li>
-<p>Raggruppa per <code>schema_name</code>, <code>table_name</code> e <code>cols</code>.</p>
-</li>
-<li>
-<p>Calcola:</p>
-<ul>
-<li><code>duplicate_index_names</code>: array dei nomi degli indici che condividono le colonne.</li>
-<li><code>count_of_indexes</code>: conteggio degli indici nel gruppo.</li>
-<li>Applica <code>HAVING count(*) &gt; 1</code> per ottenere solo i gruppi con più di un indice.</li>
-</ul>
-</li>
-</ol>
+<p>Resta tutto ciò che determina <strong>quali query l'indice sa servire</strong>: metodo di accesso, colonne ed espressioni, classe di operatori, collation, <code>ASC</code>/<code>DESC</code>, <code>NULLS FIRST</code>/<code>LAST</code>, <code>NULLS NOT DISTINCT</code>, <code>INCLUDE</code>, predicato. Due indici con la stessa firma sono equivalenti per definizione.</p>
+<h4 id="il-flag-unique-e-fuori-dalla-chiave-di-raggruppamento">Il flag UNIQUE è fuori dalla chiave di raggruppamento<a class="headerlink" href="#il-flag-unique-e-fuori-dalla-chiave-di-raggruppamento" title="Permanent link">&para;</a></h4>
+<p>Deliberatamente. Un btree non-unique identico a un <code>UNIQUE</code> ha una firma che differisce solo per quel flag, ma è ridondante al 100%: la UNIQUE serve le stesse query <strong>e in più</strong> impone un vincolo. Metterlo nella chiave lo avrebbe reso invisibile.</p>
+<p>Il flag è usato invece per <strong>ordinare</strong> il gruppo, così <code>indice_da_tenere</code> è sempre la UNIQUE quando c'è.</p>
+<hr />
+<h3 id="cosa-non-e-un-duplicato">⚠️ Cosa NON è un duplicato<a class="headerlink" href="#cosa-non-e-un-duplicato" title="Permanent link">&para;</a></h3>
+<p>Fino al 27-07-2026 la view raggruppava per il solo array di colonne, e segnalava <strong>19 gruppi di cui 16 falsi positivi</strong>. Ecco i tre modi in cui sbagliava, oggi tutti risolti:</p>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>Perché non sono duplicati</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GIN <code>trgm</code> e btree sulla stessa colonna</td>
+<td>servono query diverse: <code>ILIKE '%x%'</code> contro uguaglianza e ordinamento</td>
+</tr>
+<tr>
+<td>Due UNIQUE parziali disgiunte</td>
+<td><code>WHERE stato='BOZZA'</code> e <code>WHERE stato='PUBBLICATA'</code> convivono legittimamente</td>
+</tr>
+<tr>
+<td>Un indice con colonne-espressione</td>
+<td>il join su <code>pg_attribute</code> scartava gli <code>attnum = 0</code>, e un indice a 5 colonne di cui 4 <code>COALESCE(...)</code> veniva letto come indice a <strong>una</strong> colonna</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="cosa-questa-view-non-puo-vedere">⛔ Cosa questa view non può vedere<a class="headerlink" href="#cosa-questa-view-non-puo-vedere" title="Permanent link">&para;</a></h3>
+<p>La <strong>ridondanza per prefisso</strong>: un indice su <code>(a)</code> reso inutile da uno su <code>(a, b)</code>. Non è un duplicato — le colonne differiscono — quindi nessun affinamento di questa view potrà mai catturarlo.</p>
+<p>Serve la view sorella <a href="../../views/vw_indici_ridondanti_prefisso/">vw_indici_ridondanti_prefisso</a>. <strong>Le due si usano insieme.</strong></p>
+<hr />
+<h3 id="colonne-e-descrizione">Colonne e Descrizione<a class="headerlink" href="#colonne-e-descrizione" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema_name</code>, <code>table_name</code></td>
+<td>Dove si trova il gruppo</td>
+</tr>
+<tr>
+<td><code>index_columns</code></td>
+<td>Colonne chiave, espressioni comprese</td>
+</tr>
+<tr>
+<td><code>metodo</code></td>
+<td>Metodo di accesso (<code>btree</code>, <code>gin</code>, <code>gist</code>, …)</td>
+</tr>
+<tr>
+<td><code>predicato</code></td>
+<td>Predicato <code>WHERE</code> dell'indice parziale, <code>NULL</code> se totale</td>
+</tr>
+<tr>
+<td><code>duplicate_index_names</code></td>
+<td>Nomi degli indici del gruppo, UNIQUE per primo</td>
+</tr>
+<tr>
+<td><code>count_of_indexes</code></td>
+<td>Quanti indici nel gruppo</td>
+</tr>
+<tr>
+<td><code>indice_da_tenere</code></td>
+<td>Quello da conservare</td>
+</tr>
+<tr>
+<td><code>indici_da_droppare</code></td>
+<td>Tutti gli altri</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="esempi-di-utilizzo">Esempi di Utilizzo<a class="headerlink" href="#esempi-di-utilizzo" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">-- cosa tenere e cosa togliere, già pronto</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">indice_da_tenere</span><span class="p">,</span><span class="w"> </span><span class="n">indici_da_droppare</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_duplicate_indexes</span><span class="p">;</span>
+</code></pre></div>
+<blockquote>
+<p>⚠️ Prima di droppare, verificare in <a href="../../views/vw_indici_ridondanti_prefisso/">vw_indici_ridondanti_prefisso</a> se l'indice è governato dall'automazione FK (<code>origine = 'AUTOMAZIONE_FK'</code>): in quel caso un <code>DROP</code> secco verrebbe annullato al primo <code>migrate</code> successivo, e serve prima portare a <code>false</code> il flag <code>consentito</code> in <code>dbops.fk_index_policy</code>.</p>
+</blockquote>
 <hr />
 <h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Riduzione di ridondanze</strong>: facilita la rimozione di indici duplicati per liberare spazio e ridurre costi di manutenzione.</li>
-<li><strong>Chiarezza</strong>: fornisce un elenco immediato dei gruppi di indici da esaminare.</li>
+<li><strong>Riduzione di ridondanze</strong>: individua indici davvero eliminabili, senza falsi allarmi.</li>
+<li><strong>Chiarezza</strong>: <code>indice_da_tenere</code> e <code>indici_da_droppare</code> dicono l'azione, non solo il problema.</li>
 <li><strong>Automazione</strong>: utile in script di auditing o pulizia periodica.</li>
 </ul>
 <hr />

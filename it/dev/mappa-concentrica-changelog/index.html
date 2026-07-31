@@ -5214,6 +5214,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#26-luglio-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        26 luglio 2026
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#12-luglio-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5379,6 +5390,115 @@ per non gonfiare il documento principale.</p>
 test UI o working tree non ancora consolidato, lo stato resta esplicitamente marcato come tale.</p>
 </blockquote>
 <hr />
+<h2 id="26-luglio-2026">26 luglio 2026<a class="headerlink" href="#26-luglio-2026" title="Permanent link">&para;</a></h2>
+<p><strong>Anello 3 (vendite) — Resi di vendita: il documento di rientro merce.</strong> Sesto
+documento del ciclo attivo, nato dal DDT: testata + righe <strong>senza valori
+economici</strong> (articolo, quantità, tipo reso, motivo — il ramo nota di credito è
+slice successiva), editabili solo in DRAFT, con <strong>conferma</strong> (riapre il residuo
+dell'ordine, ri-proietta lo stato ordine, flip DDT→RESO se totale), <strong>annullo</strong>
+come storno, <strong>ri-consegna</strong> (<code>fn_genera_ddt_riconsegna</code>: nuovo DDT di
+ri-spedizione, parziale e multipla) e due <strong>code di lavoro</strong> configurabili (da
+accreditare / da ri-consegnare); azioni data-driven da
+<code>script.fn_available_actions_reso</code>. A chiusura della slice, la <strong>rinuncia alla
+ri-consegna</strong>: un reso per ri-spedizione può essere reso <strong>DEFINITIVO</strong> —
+altrimenti una ri-consegna parziale o mai eseguita lascia l'ordine
+<code>PARZIALMENTE_EVASO</code> per sempre, senza alcuna via d'uscita in-app. Vedi
+brief-db-resi-vendita.md (<code>docs/it/dev/work-done/brief-db-resi-vendita.md</code>),
+brief-be-fe-resi-vendita.md (<code>docs/it/dev/work-done/brief-be-fe-resi-vendita.md</code>),
+brief-db-chiusura-riconsegna-reso-definitivo.md (<code>docs/it/dev/work-done/brief-db-chiusura-riconsegna-reso-definitivo.md</code>).</p>
+<p><strong>Anello 3 (vendite) — Fatturazione di DDT e resi rifondata a contatore.</strong>
+<code>config.tipi_reso.riapre_residuo</code> era un flag <strong>logistico</strong> (la merce torna
+indietro per sempre, oppure verrà rispedita) che decideva anche cosa succedeva
+ai <strong>soldi</strong>: due domande diverse su una colonna sola. La fatturazione passa a
+un <strong>contatore di merce</strong> per riga d'ordine (spedito − reso), che chiude due bug
+di <strong>doppia fatturazione</strong> a monte invisibili alle dashboard — le mostravano
+come transito legittimo — estende le lenti Situazione aperta e Backlog a DDT e
+resi e porta la <strong>coda accrediti sui fatti</strong>, con quantità. Decisioni DL-19..28
+del design a due lenti. Vedi
+brief-db-fatturazione-ddt-resi.md (<code>docs/it/dev/work-done/brief-db-fatturazione-ddt-resi.md</code>),
+brief-be-fe-ddt-resi-dashboard.md (<code>docs/it/dev/work-done/brief-be-fe-ddt-resi-dashboard.md</code>).</p>
+<p><strong>Anello 3 (vendite) — Quantità immutabili sulla commessa + porta oneri.</strong> Le
+quantità già fatturate diventano <strong>immutabili</strong> (guard su <code>commesse_attivita</code> e
+<code>attivita_fatturabili</code>, codici 550/551). Sopra questa base si apre la <strong>porta
+oneri</strong>: vocabolario <code>config.causali_onere</code>, modello <strong>articolo↔causale 1:1</strong>
+(<code>catalogo.articoli.causale_onere_id</code>) — un articolo <em>è</em> un onere perché ha una
+causale collegata, così <strong>ogni onere porta la propria IVA</strong> — e madre
+<code>fn_aggiungi_onere_commessa</code> che scrive la riga SOURCELESS con il proprio log
+(codici 552-554). Corretta anche una <strong>race</strong> sul progressivo <code>segment_key</code>
+degli oneri manuali: due operatori concorrenti ricevevano entrambi 200 OK e un
+dato spariva in silenzio (codice 557 → 409). Vedi
+brief-db-immutabilita-quantita-e-porta-oneri.md (<code>docs/it/dev/work-in-progress/brief-db-immutabilita-quantita-e-porta-oneri.md</code>),
+brief-be-fe-immutabilita-quantita-e-porta-oneri.md (<code>docs/it/dev/work-done/brief-be-fe-immutabilita-quantita-e-porta-oneri.md</code>),
+brief-db-race-segment-key-onere.md (<code>docs/it/dev/work-done/brief-db-race-segment-key-onere.md</code>).</p>
+<p><strong>Anello 3 (vendite) — Cockpit processi fatturazione: dalle lenti all'azione.</strong>
+Le tre lenti (Competenza, Backlog, Situazione aperta) smettono di essere solo
+una fotografia: dalla Dashboard Competenza si <strong>agisce</strong> con tre verbi —
+«Fattura adesso» (giro on-demand su singolo lotto o su perimetro), «Rendi
+definitive», stampa e ristampa massiva (l'invio SDI resta fuori). Il punto
+architetturale è la <strong>stampa massiva senza tenere il lock del registro fiscale
+durante il rendering</strong>: la stampa diventa un task che <strong>accoda</strong>
+(<code>vendite.fatture_stampa_coda</code> + <code>fn_accoda_stampe_lotto</code>) e il render vive in
+un <strong>worker che drena la coda</strong>, con la numerazione garantita in fase di stampa
+da un backstop idempotente. La <strong>fattura diventa il 6° dominio del motore
+documentale</strong>. Completano il quadro il <strong>guard di uscita commessa</strong> — chiudere o
+annullare una commessa con righe ancora fatturabili era perdita <strong>irreversibile</strong>
+di fatturato, invisibile alla dashboard — e le <strong>capabilities con motivo</strong> su
+ogni azione di stato. Guida operativa:
+<a href="../../guide/cruscotti-fatturazione/">cruscotti-fatturazione.md</a> §7. Vedi
+brief-design-gestione-processi-fatturazione.md (<code>docs/it/dev/work-done/brief-design-gestione-processi-fatturazione.md</code>),
+brief-db-processi-fatturazione-cockpit.md (<code>docs/it/dev/work-done/brief-db-processi-fatturazione-cockpit.md</code>),
+brief-be-fe-processi-fatturazione.md (<code>docs/it/dev/work-done/brief-be-fe-processi-fatturazione.md</code>),
+brief-db-guard-uscita-commessa-e-capabilities.md (<code>docs/it/dev/work-done/brief-db-guard-uscita-commessa-e-capabilities.md</code>).</p>
+<p><strong>Anello 0 (dbops) — Coda lavori generica <code>dbops.coda_lavori</code>.</strong> Regola del 2
+applicata a livello architetturale: <code>vendite.fatture_stampa_coda</code> (1ª coda)
+stava per essere seguita da una seconda tabella-coda per il giro fatturazione
+on-demand. Invece di <strong>una tabella per batch</strong> si estrae una <strong>coda di job
+generica</strong> DB-native, transazionale e senza broker — la fondazione asincrona
+dell'ERP — con worker che drena e primo consumatore reale il giro on-demand.
+Guida operativa:
+<a href="../../guide/gestione-code-di-lavoro/">gestione-code-di-lavoro.md</a>. Vedi
+brief-design-coda-lavori-generica.md (<code>docs/it/dev/work-done/brief-design-coda-lavori-generica.md</code>),
+brief-db-coda-lavori-generica.md (<code>docs/it/dev/work-done/brief-db-coda-lavori-generica.md</code>).</p>
+<p><strong>Anello 1 (<code>ui</code>) — Dashboard home a card KPI configurabili.</strong> Lo schema <code>ui</code>
+acquisisce il secondo consumatore dopo le liste: catalogo widget, composizione
+della home e <strong>preferenza utente</strong>, risolti da <code>ui.fn_resolve_dashboard_config</code>
+con filtro sui permessi dell'operatore. Stesso impianto a cascata delle liste
+configurabili (sistema → profilo → emittente → utente). Vedi
+brief-db-dashboard-home.md (<code>docs/it/dev/work-done/brief-db-dashboard-home.md</code>),
+brief-be-fe-dashboard-home.md (<code>docs/it/dev/work-done/brief-be-fe-dashboard-home.md</code>).</p>
+<p><strong>Anello 3 (vendite) — Lineage documenti: colonna lista + pannello «Passaggi».</strong>
+Grafo di genealogia dei documenti di vendita (<code>vw_documento_lineage_nodi</code> /
+<code>archi</code>, <code>fn_documento_lineage</code>) esposto come pannello «Passaggi» nei 6 drawer
+documento e come colonne <strong>pratica / fase / transito</strong> nelle 5 liste: da un
+documento si risale a monte e si scende a valle senza uscire dal drawer. Vedi
+brief-db-lineage-documenti-vendite.md (<code>docs/it/dev/work-done/brief-db-lineage-documenti-vendite.md</code>),
+brief-be-fe-lineage-documenti-vendite.md (<code>docs/it/dev/work-done/brief-be-fe-lineage-documenti-vendite.md</code>).</p>
+<p><strong>Qualità di modello — guard sorgente polimorfa, coerenza <code>tx_id</code>, RLS
+commesse.</strong> Tre interventi di igiene strutturale: (1) il <strong>guard sulla sorgente
+polimorfa</strong> esisteva ma <strong>non era agganciato a nulla</strong> — agganciato, dati
+bonificati, catena di popolamento corretta e convenzione documentata
+(<a href="../../guide/sorgente-polimorfa/">sorgente-polimorfa.md</a>); i 13 pgTAP che ne
+dipendevano sono stati bonificati (rossi della suite 131 → 111); (2) <strong>coerenza
+<code>tx_id</code></strong>: mai pubblicare nella GUC un id non registrato — il difetto bloccava
+ogni ambiente <strong>senza</strong> canale di log (CI compresa), e ora la CI esercita il
+caso peggiore invece di aggirarlo con un bypass; (3) <strong>RLS scope emittente
+estesa a <code>vendite.commesse</code> e <code>commesse_attivita</code></strong>, che chiude le scritture
+della famiglia commesse raggiungibili cross-emittente e completa l'ondata
+operatori. Vedi
+brief-db-guard-sorgente-polimorfa.md (<code>docs/it/dev/work-done/brief-db-guard-sorgente-polimorfa.md</code>),
+brief-db-bonifica-pgtap-sorgente-polimorfa.md (<code>docs/it/dev/work-done/brief-db-bonifica-pgtap-sorgente-polimorfa.md</code>),
+brief-db-coerenza-tx-id-non-registrato.md (<code>docs/it/dev/work-done/brief-db-coerenza-tx-id-non-registrato.md</code>),
+brief-db-rls-commesse.md (<code>docs/it/dev/work-done/brief-db-rls-commesse.md</code>).</p>
+<p><strong>Trasversale (frontend) — radici i18n uniformi e chiusura residui PrimeVue 3.</strong>
+21 radici i18n piatte riportate sotto le rispettive aree, radici morte rimosse,
+guard <code>--strict-roots</code> pulito e parità it/en integra: un indirizzo i18n
+inesistente non produce un errore, non mostra <strong>nulla</strong> — il difetto è
+invisibile, e l'archivio aveva due stili di sistemazione conviventi scelti a
+caso. In parallelo chiusi i residui PrimeVue 3 (<code>TabView</code>→<code>Tabs</code>,
+<code>InputSwitch</code>→<code>ToggleSwitch</code>) e corretto lo standard che ancora li prescriveva:
+era debito che <strong>faceva scrivere codice nuovo sbagliato</strong>. Vedi
+brief-i18n-radici-uniformi.md (<code>docs/it/dev/work-done/brief-i18n-radici-uniformi.md</code>),
+brief-fe-migrazione-primevue4-tabs.md (<code>docs/it/dev/work-done/brief-fe-migrazione-primevue4-tabs.md</code>).</p>
 <h2 id="12-luglio-2026">12 luglio 2026<a class="headerlink" href="#12-luglio-2026" title="Permanent link">&para;</a></h2>
 <p><strong>Anello 3 (vendite) — Indirizzi documento UX v2 (building block cross-dominio).</strong>
 Nuovo BB condiviso per gli indirizzi dei documenti di vendita: una sezione inline
@@ -5481,9 +5601,9 @@ Hardening commesse→fatturazione: <strong>normalize + guard <code>tipo_doc_fisc
 compositi multi-sorgente, capability azioni stato commessa (<code>fn_available_actions_commessa</code>),
 pull commessa→<code>attivita_fatturabili</code> agganciata agli step DRAFT. La <strong>pipeline fatturazione
 passa da "operativa (manuale)" a batch automatico end-to-end</strong>. Vedi
-piano-fix-stato-fattura-pipeline-per-step.md (<code>docs/it/dev/work-in-progress/piano-fix-stato-fattura-pipeline-per-step.md</code>),
-brief-db-emittibili-lane-tipo-doc-fiscale.md (<code>docs/it/dev/work-in-progress/brief-db-emittibili-lane-tipo-doc-fiscale.md</code>),
-brief-db-guard-tipo-doc-attivita.md (<code>docs/it/dev/work-in-progress/brief-db-guard-tipo-doc-attivita.md</code>).</p>
+piano-fix-stato-fattura-pipeline-per-step.md (<code>docs/it/dev/work-done/piano-fix-stato-fattura-pipeline-per-step.md</code>),
+brief-db-emittibili-lane-tipo-doc-fiscale.md (<code>docs/it/dev/work-done/brief-db-emittibili-lane-tipo-doc-fiscale.md</code>),
+brief-db-guard-tipo-doc-attivita.md (<code>docs/it/dev/work-done/brief-db-guard-tipo-doc-attivita.md</code>).</p>
 <h2 id="13-19-giugno-2026">13-19 giugno 2026<a class="headerlink" href="#13-19-giugno-2026" title="Permanent link">&para;</a></h2>
 <p>Anello 2 (pratiche): estensioni workflow v2 del motore (validato sul primo consumatore,
 vendite). Arco completo del periodo:</p>
@@ -5512,11 +5632,11 @@ vendite). Arco completo del periodo:</p>
   gating del permesso di assegnazione.</li>
 </ul>
 <p>Vedi analisi-pratiche-workflow-v2.md (<code>docs/it/dev/work-done/analisi-pratiche-workflow-v2.md</code>),
-brief-design-esito-configurabile-flussi.md (<code>docs/it/dev/work-in-progress/brief-design-esito-configurabile-flussi.md</code>),
-brief-db-assegnazione-flusso.md (<code>docs/it/dev/work-in-progress/brief-db-assegnazione-flusso.md</code>),
-brief-design-coda-lavoro-mie-attivita.md (<code>docs/it/dev/work-in-progress/brief-design-coda-lavoro-mie-attivita.md</code>).</p>
+brief-design-esito-configurabile-flussi.md (<code>docs/it/dev/work-done/brief-design-esito-configurabile-flussi.md</code>),
+brief-db-assegnazione-flusso.md (<code>docs/it/dev/work-done/brief-db-assegnazione-flusso.md</code>),
+brief-design-coda-lavoro-mie-attivita.md (<code>docs/it/dev/work-done/brief-design-coda-lavoro-mie-attivita.md</code>).</p>
 <h2 id="11-giugno-2026">11 giugno 2026<a class="headerlink" href="#11-giugno-2026" title="Permanent link">&para;</a></h2>
-<p>Anello 3 (vendite): <strong>ordini di vendita</strong> sviluppati end-to-end DB+BE+FE (CRUD, conferma, stato EVASO, stampa PDF, conversione preventivo/offerta→ordine, univocita' offerta→contratto XOR ordine); <strong>pratica PREVENTIVI</strong> eseguita end-to-end come primo consumatore reale del motore <code>pratiche</code> (handler <code>CONFERMA_VENDITA</code>, split per natura merce→ordine / servizi→commessa, smistamento riga-per-riga, commesse multi-sorgente) → Anello 2 <code>pratiche</code> passa a <strong>validata con primo consumatore</strong>; workflow pratiche v2 (ripetibilita', bivi condizionali, lenti contesto, guard chiusura). Vedi analisi-pratiche-workflow-v2.md (<code>docs/it/dev/work-done/analisi-pratiche-workflow-v2.md</code>) e analisi-ordini-vendita.md (<code>docs/it/dev/work-in-progress/analisi-ordini-vendita.md</code>).</p>
+<p>Anello 3 (vendite): <strong>ordini di vendita</strong> sviluppati end-to-end DB+BE+FE (CRUD, conferma, stato EVASO, stampa PDF, conversione preventivo/offerta→ordine, univocita' offerta→contratto XOR ordine); <strong>pratica PREVENTIVI</strong> eseguita end-to-end come primo consumatore reale del motore <code>pratiche</code> (handler <code>CONFERMA_VENDITA</code>, split per natura merce→ordine / servizi→commessa, smistamento riga-per-riga, commesse multi-sorgente) → Anello 2 <code>pratiche</code> passa a <strong>validata con primo consumatore</strong>; workflow pratiche v2 (ripetibilita', bivi condizionali, lenti contesto, guard chiusura). Vedi analisi-pratiche-workflow-v2.md (<code>docs/it/dev/work-done/analisi-pratiche-workflow-v2.md</code>) e analisi-ordini-vendita.md (<code>docs/it/dev/work-done/analisi-ordini-vendita.md</code>).</p>
 <h2 id="29-maggio-2026">29 maggio 2026<a class="headerlink" href="#29-maggio-2026" title="Permanent link">&para;</a></h2>
 <p>Anello 3 (vendite): contratti passati al modello unificato (drop modalità A/B/C, eccezioni <code>tipo_eccezione</code>, snapshot versione listino all'attivazione, lock post-attivazione, stato ANNULLATO); nuovo documento <strong>offerte commerciali</strong> (proposta di condizioni quadro → push 1:1 a contratto) sviluppato DB+BE+FE con generazione PDF e allegati; componenti BoM compositi estesi a offerte; valuta su documenti vendite. Vedi <a href="../../guide/gestione-offerte-commerciali/">Gestione Offerte commerciali</a> e <a href="../../guide/gestione-contratti/">Gestione Contratti</a>.</p>
 <h2 id="aggiornamenti-ricostruiti-dal-26-aprile-all11-giugno-2026">Aggiornamenti ricostruiti dal 26 aprile all'11 giugno 2026<a class="headerlink" href="#aggiornamenti-ricostruiti-dal-26-aprile-all11-giugno-2026" title="Permanent link">&para;</a></h2>

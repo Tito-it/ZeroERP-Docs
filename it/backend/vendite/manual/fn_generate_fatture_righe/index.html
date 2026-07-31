@@ -5322,8 +5322,13 @@
 <h1 id="fn_generate_fatture_righe-django">fn_generate_fatture_righe (Django)<a class="headerlink" href="#fn_generate_fatture_righe-django" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
 <p>Generare in Django le righe fattura a partire da <code>attivita_fatturabili</code> lockate sul lotto.</p>
+<blockquote>
+<p>⚠️ <strong>Il nome e<code>quello dell'entrypoint Python** (</code>pipeline_service.fn_generate_fatture_righe<code>),
+**non** di una funzione SQL. La funzione DB omonima **non esiste piu</code></strong>: rimossa
+il 2026-07-28 col changeset <code>20260728-21</code>.</p>
+</blockquote>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
-<p>La logica di <code>vendite.fn_generate_fatture_righe()</code> e<code>stata portata in:
+<p>La logica di <code>vendite.fn_generate_fatture_righe()</code> (funzione DB <strong>rimossa</strong>) e<code>stata portata in:
 -</code>apps/vendite/services/fatture_righe_service.py<code>(</code>generate_fatture_righe<code>)
 -</code>apps/vendite/services/pipeline_service.py<code>(</code>fn_generate_fatture_righe`)</p>
 <h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
@@ -5357,9 +5362,17 @@
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Stato attuale: migrazione logica completata lato Python.</li>
-<li>La funzione SQL puo<code>restare per compatibilita</code> storica/transitoria.</li>
+<li>Stato attuale: migrazione logica completata lato Python (dal 2026-02-03, commit <code>ece04a5ff</code>).</li>
+<li>**La funzione SQL e<code>stata RIMOSSA** il 2026-07-28 (changeset</code>20260728-21<code>),
+  insieme a</code>vendite.fn_group_attivita_fatturabili`.</li>
 </ul>
+<p>⚠️ Qui prima si leggeva: <em>«la funzione SQL puo<code>restare per compatibilita</code>
+  storica/transitoria»</em>. Quella frase e<code>costata una giornata di sviluppo DB: il
+  2026-07-28 due requisiti di aggregazione (changeset</code>-12<code>e</code>-15<code>) sono stati
+  scritti, testati e applicati **sulla funzione SQL**, cioe</code> su codice che
+  nessuno esegue — senza alcun sintomo, perche<code>il trigger dell'importo funziona
+  per qualunque scrittore. Il percorso vivo e</code> <strong>solo</strong> questo servizio Python.
+  Storia completa: <code>docs/it/dev/work-in-progress/brief-db-ritiro-generatore-righe-fattura-sql.md</code>.</p>
 
 
 

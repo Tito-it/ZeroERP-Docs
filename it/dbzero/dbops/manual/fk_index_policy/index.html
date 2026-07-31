@@ -5233,6 +5233,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#le-colonne-che-contano" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔑 Le colonne che contano
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#la-policy-e-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚖️ La policy è OPT-IN
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vincoli" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5247,7 +5269,7 @@
   <a href="#uso-e-casi-doro" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Uso e Casi d’Oro
+        Uso e Casi d'Oro
       </span>
     </span>
   </a>
@@ -5255,10 +5277,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#esempio-di-utilizzo" class="md-nav__link">
+  <a href="#come-si-modifica" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Esempio di Utilizzo
+        Come si modifica
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esempi-di-utilizzo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Esempi di Utilizzo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#miglioramento-suggerito-non-ancora-implementato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        💡 Miglioramento suggerito, non ancora implementato
       </span>
     </span>
   </a>
@@ -5292,9 +5336,49 @@
 
 <h2 id="documentazione-concettuale-tabella-dbopsfk_index_policy">📚 Documentazione concettuale - Tabella <code>dbops.fk_index_policy</code><a class="headerlink" href="#documentazione-concettuale-tabella-dbopsfk_index_policy" title="Permanent link">&para;</a></h2>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 16-01-26)
-La tabella <strong><code>dbops.fk_index_policy</code></strong> definisce una <strong>policy centralizzata</strong> per la gestione degli index sulle foreign key, consentendo di abilitare o disabilitare la creazione/uso di indici per specifici vincoli referenziali.</p>
+<p>(latest review 27-07-26)
+La tabella <strong><code>dbops.fk_index_policy</code></strong> definisce una <strong>policy centralizzata</strong> per la gestione degli indici sulle foreign key: una riga per vincolo, un flag che dice se l'indice deve esistere, e il comando che lo crea.</p>
+<p>È l'unico posto da cui gli indici FK devono nascere e morire. Chi li crea o li droppa a mano si trova l'automazione che disfa il lavoro al <code>migrate</code> successivo.</p>
 <hr />
+<h3 id="le-colonne-che-contano">🔑 Le colonne che contano<a class="headerlink" href="#le-colonne-che-contano" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Cosa contiene</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema_name</code>, <code>table_name</code>, <code>constraint_name</code></td>
+<td>Chiave primaria: identificano il vincolo FK</td>
+</tr>
+<tr>
+<td><code>consentito</code></td>
+<td><code>true</code> = l'indice deve esistere, <code>false</code> = deve <strong>non</strong> esistere</td>
+</tr>
+<tr>
+<td><code>dll_command</code></td>
+<td>Il DDL <strong>eseguibile</strong> che crea l'indice</td>
+</tr>
+<tr>
+<td><code>generated_by_script</code></td>
+<td><code>true</code> se la riga nasce da <code>fn_seed_fk_index_policy()</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong><code>dll_command</code> non è un campo note.</strong> Contiene SQL che <code>apply_fk_index_policy()</code> esegue alla lettera con <code>EXECUTE</code>, e da cui estrae il nome dell'indice — il <strong>sesto token</strong> — per il <code>DROP</code>. Una descrizione in italiano al suo posto produce, con <code>consentito = true</code>, un errore di sintassi a ogni <code>migrate</code>.</p>
+<p>Per lo stesso motivo <strong>non lasciare mai <code>dll_command</code> a NULL</strong>: <code>format('%I', NULL)</code> solleva <em>«i valori vuoti non possono essere formattati come un identificativo SQL»</em>, e poiché <code>apply_fk_index_policy()</code> gira <code>runAlways</code> in <code>90_end</code>, <strong>ogni deploy si bloccherebbe</strong>.</p>
+</blockquote>
+<p>Perché il sesto token corrisponda al nome, il comando deve avere questa forma esatta:</p>
+<div class="highlight"><pre><span></span><code>CREATE  INDEX  IF  NOT  EXISTS  &lt;nome_indice&gt;  ON  &lt;schema&gt;.&lt;tabella&gt;(&lt;colonne&gt;);
+   1      2     3   4     5          6
+</code></pre></div>
+<hr />
+<h3 id="la-policy-e-opt-in">⚖️ La policy è OPT-IN<a class="headerlink" href="#la-policy-e-opt-in" title="Permanent link">&para;</a></h3>
+<p><code>fn_populate_fk_index_policy()</code> registra le FK nuove con <code>consentito = false</code>. <strong>Perché l'indice nasca serve un seed esplicito</strong> che porti il flag a <code>true</code>: senza, l'automazione non crea nulla.</p>
+<p>Su una tabella nuova, quindi, l'automazione da sola non produce gli indici FK: chi crea la tabella deve prevedere il seed.</p>
 <hr />
 <h3 id="vincoli">Vincoli<a class="headerlink" href="#vincoli" title="Permanent link">&para;</a></h3>
 <table>
@@ -5316,65 +5400,59 @@ La tabella <strong><code>dbops.fk_index_policy</code></strong> definisce una <st
 </tbody>
 </table>
 <hr />
-<h3 id="uso-e-casi-doro">Uso e Casi d’Oro<a class="headerlink" href="#uso-e-casi-doro" title="Permanent link">&para;</a></h3>
+<h3 id="uso-e-casi-doro">Uso e Casi d'Oro<a class="headerlink" href="#uso-e-casi-doro" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Controllo centralizzato</strong>: gestire in un unico punto l’abilitazione o meno degli indici sui vincoli referenziali, evitando di creare indici non necessari o ridondanti.</li>
-<li><strong>Ottimizzazione delle performance</strong>: disabilitare index su FK poco usati per ridurre overhead in scrittura, o forzare index su FK critici per migliorare le join.</li>
-<li><strong>Audit e documentazione</strong>: con la colonna <code>dll_command</code> si tiene traccia delle motivazioni alla base delle scelte, facilitando review e manutenzione.</li>
-<li><strong>Integrazione con script di DBOps</strong>: gli script di deployment possono leggere questa tabella e generare dinamicamente DDL <code>CREATE INDEX</code> o <code>DROP INDEX</code> per applicare la policy.</li>
+<li><strong>Controllo centralizzato</strong>: gestire in un unico punto l'abilitazione o meno degli indici sui vincoli referenziali, evitando di creare indici non necessari o ridondanti.</li>
+<li><strong>Ottimizzazione delle performance</strong>: disabilitare indici su FK già coperte da una UNIQUE più larga per ridurre overhead in scrittura, o abilitarli su FK critiche per migliorare join e <code>DELETE</code> a cascata.</li>
+<li><strong>Bonifica reversibile</strong>: portando a <code>false</code> una riga, l'indice viene rimosso ma il <code>dll_command</code> resta. Se un domani la UNIQUE coprente sparisse, basta rimettere <code>true</code> e l'indice torna, con lo stesso nome di prima.</li>
+<li><strong>Guardia permanente</strong>: con <code>consentito = false</code> l'automazione <strong>ridroppa</strong> l'indice se qualcuno lo ricrea fuori Liquibase.</li>
+<li><strong>Integrazione con script di DBOps</strong>: <a href="../../funzioni/apply_fk_index_policy/">apply_fk_index_policy</a> legge questa tabella a ogni <code>migrate</code> e nel job settimanale.</li>
 </ul>
 <hr />
-<h3 id="esempio-di-utilizzo">Esempio di Utilizzo<a class="headerlink" href="#esempio-di-utilizzo" title="Permanent link">&para;</a></h3>
+<h3 id="come-si-modifica">Come si modifica<a class="headerlink" href="#come-si-modifica" title="Permanent link">&para;</a></h3>
+<p><strong>In un changeSet, con CSV più <code>loadUpdateData</code></strong> — la forma usata da tutti i seed di questa tabella. La chiave primaria è <code>schema_name,table_name,constraint_name</code>, quindi la stessa riga aggiorna o inserisce:</p>
+<div class="highlight"><pre><span></span><code>schema_name,table_name,constraint_name,consentito,dll_command,generated_by_script,user_insert,data_insert
+anagrafiche,soggetti_ruoli,fk_soggetti_anagrafiche,false,CREATE INDEX IF NOT EXISTS ix_anagrafiche_soggetti_ruoli_soggetto_id ON anagrafiche.soggetti_ruoli(soggetto_id);,true,titodb,2026-01-16 11:59:34+01
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">loadUpdateData</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">relativeToChangelogFile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">../sql/dbops/fk_index_policy_&lt;descrizione&gt;.csv</span>
+<span class="w">    </span><span class="nt">tableName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fk_index_policy</span>
+<span class="w">    </span><span class="nt">schemaName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dbops</span>
+<span class="w">    </span><span class="nt">primaryKey</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;schema_name,table_name,constraint_name&quot;</span>
+</code></pre></div>
+<blockquote>
+<p>Nota su questa riga reale: la FK <code>fk_soggetti_anagrafiche</code> su <code>anagrafiche.soggetti_ruoli</code> è a <code>false</code> perché già coperta per prefisso da <code>uq_soggetto_ruolo</code>. Il <code>dll_command</code> resta valorizzato — è ciò che rende la decisione reversibile.</p>
+</blockquote>
+<hr />
+<h3 id="esempi-di-utilizzo">Esempi di Utilizzo<a class="headerlink" href="#esempi-di-utilizzo" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Disabilitare index su un vincolo</strong></li>
+<li><strong>Vedere cosa l'automazione farebbe</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span><span class="p">(</span>
-<span class="w">  </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">consentito</span><span class="p">,</span>
-<span class="w">  </span><span class="n">dll_command</span>
-<span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;soggetti_ruoli&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;fk_soggetti_anagrafiche&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="k">false</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;FK su soggetti_ruoli non usata frequentemente, evita overhead in insert&#39;</span>
-<span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="k">constraint_name</span><span class="p">,</span><span class="w"> </span><span class="n">consentito</span><span class="p">,</span><span class="w"> </span><span class="n">dll_command</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">schema_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;vendite&#39;</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="k">constraint_name</span><span class="p">;</span>
 </code></pre></div>
 <ol>
-<li><strong>Abilitare index su un vincolo critico</strong></li>
+<li><strong>Trovare le righe che stanno mantenendo in vita un indice ridondante</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span><span class="p">(</span>
-<span class="w">  </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">consentito</span>
-<span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;dbops&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;audit_logs&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;fk_logs_user_id&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="k">true</span>
-<span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_indici_ridondanti_prefisso</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">origine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;AUTOMAZIONE_FK&#39;</span><span class="p">;</span>
 </code></pre></div>
+<p>La colonna <code>policy_constraint_name</code> indica la riga da portare a <code>false</code>.</p>
 <ol>
-<li><strong>Script di applicazione policy</strong></li>
+<li><strong>Applicare la policy</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Pseudocodice PL/pgSQL per applicare la policy:</span>
-<span class="k">DO</span><span class="w"> </span><span class="err">$$</span>
-<span class="k">DECLARE</span>
-<span class="w">  </span><span class="n">rec</span><span class="w"> </span><span class="n">RECORD</span><span class="p">;</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="n">rec</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span><span class="w"> </span><span class="n">LOOP</span>
-<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="n">consentito</span><span class="w"> </span><span class="k">THEN</span>
-<span class="w">      </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;CREATE INDEX IF NOT EXISTS ix_%I_%I ON %I.%I USING btree ((%I))&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">rec</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">,</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">);</span>
-<span class="w">    </span><span class="k">ELSE</span>
-<span class="w">      </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;DROP INDEX IF EXISTS ix_%I_%I&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">);</span>
-<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
-<span class="k">END</span><span class="err">$$</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">CALL</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_fk_index_policy</span><span class="p">();</span>
 </code></pre></div>
+<blockquote>
+<p>Non scrivere script <code>DO $$ ... $$</code> che ricostruiscono la logica di applicazione: la procedura ufficiale contiene due guardie — non crea ciò che è già coperto, non droppa ciò che sostiene un vincolo — che una copia artigianale non avrebbe.</p>
+</blockquote>
+<hr />
+<h3 id="miglioramento-suggerito-non-ancora-implementato">💡 Miglioramento suggerito, non ancora implementato<a class="headerlink" href="#miglioramento-suggerito-non-ancora-implementato" title="Permanent link">&para;</a></h3>
+<p><code>dll_command</code> è <strong>nullable</strong> e senza <code>CHECK</code> di forma. Una riga inserita a mano senza comando, o con un testo libero, rompe <code>apply_fk_index_policy()</code> a ogni <code>migrate</code>. Un <code>NOT NULL</code> più un <code>CHECK (dll_command ~ '^CREATE INDEX IF NOT EXISTS ')</code> renderebbe impossibile l'errore all'origine, invece di lasciarlo emergere in fase di deploy.</p>
+<hr />
 <blockquote>
 <p><strong>“Utilizzare <code>fk_index_policy</code> consente di adattare dinamicamente la presenza di indici su foreign key per ottimizzare scritture e letture, centralizzando le decisioni e mantenendo tracciabilità.”</strong></p>
 </blockquote>

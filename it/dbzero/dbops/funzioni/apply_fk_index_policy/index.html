@@ -5244,6 +5244,45 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#le-due-guardie-in-dettaglio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Le due guardie in dettaglio
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Le due guardie in dettaglio">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guardia-1-non-creare-cio-che-e-gia-coperto" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Guardia 1 — non creare ciò che è già coperto
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guardia-2-non-rimuovere-cio-che-non-e-solo-un-acceleratore" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Guardia 2 — non rimuovere ciò che non è solo un acceleratore
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#invocazione" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5293,44 +5332,73 @@
 <h2 id="documentazione-concettuale-procedura-dbopsapply_fk_index_policy">📘 Documentazione Concettuale – Procedura <code>dbops.apply_fk_index_policy()</code><a class="headerlink" href="#documentazione-concettuale-procedura-dbopsapply_fk_index_policy" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p>Approfondimento Tabelle:   </p>
-<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>      </p>
-<p>Approfondimento funzioni :    </p>
-<p><a href=".././fn_populate_fk_index_policy/">dbops.fn_populate_fk_index_policy</a>  <br />
-<a href="../../views/vw_fk_senza_indice/">dbops.vw_fk_senza_indice</a>    </p>
+<p>Approfondimento Tabelle:  </p>
+<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>  </p>
+<p>Approfondimento funzioni :  </p>
+<p><a href=".././fn_populate_fk_index_policy/">dbops.fn_populate_fk_index_policy</a><br />
+<a href=".././fn_seed_fk_index_policy/">dbops.fn_seed_fk_index_policy</a><br />
+<a href="../../views/vw_fk_senza_indice/">dbops.vw_fk_senza_indice</a><br />
+<a href="../../views/vw_indici_ridondanti_prefisso/">dbops.vw_indici_ridondanti_prefisso</a>  </p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest update 16-01-26)
-Applicare in modo automatico le regole di indicizzazione definite nella tabella <code>dbops.fk_index_policy</code>:   </p>
+<p>(latest update 27-07-26)
+Applicare in modo automatico le regole di indicizzazione definite nella tabella <code>dbops.fk_index_policy</code>:  </p>
 <ul>
-<li><strong>Creare</strong> gli indici sulle foreign key contrassegnate come <code>consentito = true</code>.</li>
-<li><strong>Rimuovere</strong> gli indici non più approvati (<code>consentito = false</code>).</li>
+<li><strong>Creare</strong> gli indici sulle foreign key contrassegnate come <code>consentito = true</code>, <strong>se ancora servono</strong>.</li>
+<li><strong>Rimuovere</strong> gli indici non più approvati (<code>consentito = false</code>), <strong>se togliere quell'indice è un'operazione innocua</strong>.</li>
 </ul>
+<p>Le due condizioni in grassetto sono le <strong>guardie</strong> introdotte il 27-07-2026: senza di esse la procedura eseguiva alla lettera qualunque cosa trovasse in tabella, e un flag sbagliato bastava a produrre un indice ridondante o, nel caso peggiore, a rimuovere un vincolo.</p>
 <hr />
 <h3 id="descrizione-del-flusso">Descrizione del Flusso<a class="headerlink" href="#descrizione-del-flusso" title="Permanent link">&para;</a></h3>
 <ol>
+<li><strong>Fotografia delle FK scoperte</strong>
+   Prima del ciclo, legge <strong>una sola volta</strong> <code>dbops.vw_fk_senza_indice</code> e ne conserva le chiavi in un array. La view è costosa e le righe di policy sono centinaia: valutarla dentro il ciclo significherebbe rieseguirla per ognuna.</li>
 <li><strong>Scansione</strong>
    Itera su ogni riga di <code>dbops.fk_index_policy</code> (schema, tabella, constraint, comando).</li>
-<li><strong>Creazione</strong>
-   Se <code>rec.consentito = true</code>, esegue direttamente il SQL in <code>rec.dll_command</code> (tipicamente un <code>CREATE INDEX …</code>).</li>
-<li><strong>Rimozione</strong>
-   Se <code>rec.consentito = false</code>, estrae il nome dell’indice dal sesto token di <code>dll_command</code> e invoca:</li>
+<li><strong>Creazione — con guardia</strong>
+   Se <code>rec.consentito = true</code>, esegue <code>rec.dll_command</code> <strong>solo se</strong> la FK figura ancora nella fotografia, cioè è davvero priva di copertura. Altrimenti salta e incrementa il contatore dei saltati.</li>
+<li><strong>Rimozione — con guardia</strong>
+   Se <code>rec.consentito = false</code>, estrae il nome dell'indice dal sesto token di <code>dll_command</code> e, <strong>prima</strong> di rimuoverlo, verifica che non sia un <code>UNIQUE</code>, una <code>PRIMARY KEY</code>, un indice a supporto di un constraint o la <code>REPLICA IDENTITY</code> della tabella. Se lo è, <strong>rifiuta</strong> con <code>RAISE WARNING</code> e prosegue. Altrimenti:</li>
 </ol>
 <p><div class="highlight"><pre><span></span><code><span class="k">DROP</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="o">&lt;</span><span class="k">schema</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="n">index_name</span><span class="o">&gt;</span><span class="p">;</span>
 </code></pre></div>
-4. <strong>Fine</strong>
-   Continua fino all’ultima riga, garantendo che la policy definita in tabella sia sempre rispettata.</p>
+5. <strong>Riepilogo</strong>
+   A fine ciclo emette un <code>RAISE NOTICE</code>:</p>
+<div class="highlight"><pre><span></span><code>apply_fk_index_policy: creati=2, saltati_perche_gia_coperti=145, droppati=577, drop_rifiutati=0
+</code></pre></div>
+<hr />
+<h3 id="le-due-guardie-in-dettaglio">Le due guardie in dettaglio<a class="headerlink" href="#le-due-guardie-in-dettaglio" title="Permanent link">&para;</a></h3>
+<h4 id="guardia-1-non-creare-cio-che-e-gia-coperto">Guardia 1 — non creare ciò che è già coperto<a class="headerlink" href="#guardia-1-non-creare-cio-che-e-gia-coperto" title="Permanent link">&para;</a></h4>
+<p>Una FK già servita da una <code>UNIQUE</code> più larga, o da un indice parziale <code>WHERE colonna IS NOT NULL</code>, <strong>non riceve un indice dedicato nemmeno con <code>consentito = true</code></strong>.</p>
+<p>Il motivo è che la policy poggia su un flag booleano, e un flag può essere rimesso a <code>true</code> per errore — una modifica sbagliata, un CSV rigenerato, un merge. Senza guardia, quell'errore rigenerava silenziosamente le ridondanze appena bonificate, al primo passaggio del job settimanale. Con la guardia, girare l'interruttore per sbaglio non produce più nulla.</p>
+<blockquote>
+<p>⚠️ <strong>L'auto-riparazione resta intatta.</strong> Se un indice governato dalla policy viene cancellato a mano, la FK ricompare in <code>vw_fk_senza_indice</code> e al giro successivo viene ricreata. La guardia non congela lo stato: verifica il bisogno reale, ogni volta.</p>
+</blockquote>
+<h4 id="guardia-2-non-rimuovere-cio-che-non-e-solo-un-acceleratore">Guardia 2 — non rimuovere ciò che non è solo un acceleratore<a class="headerlink" href="#guardia-2-non-rimuovere-cio-che-non-e-solo-un-acceleratore" title="Permanent link">&para;</a></h4>
+<p>Il ramo <code>consentito = false</code> esegue <code>DROP INDEX</code> sul nome estratto dal comando. Se quel nome appartenesse a un <code>UNIQUE</code>, a una <code>PRIMARY KEY</code>, a un indice a supporto di un constraint o alla <code>REPLICA IDENTITY</code>, un semplice flag avrebbe tolto un <strong>vincolo di integrità</strong> o rotto la replica.</p>
+<p><strong>Warning e non eccezione.</strong> La procedura gira <code>runAlways</code> in <code>90_end</code> a ogni <code>migrate</code> e nel job settimanale: sollevare un errore bloccherebbe ogni deploy finché qualcuno non interviene, e il costo di un indice di troppo è incomparabilmente minore di quello di una pipeline ferma. Il warning finisce nel log di <code>maintenance.fn_run_and_log</code>.</p>
+<blockquote>
+<p>La difesa è ridondante per scelta: anche <a href="../../views/vw_fk_con_indice_missing_policy/">vw_fk_con_indice_missing_policy</a> impedisce che righe pericolose entrino in policy. Ma questa guardia sta nel punto in cui il <code>DROP</code> viene davvero eseguito, ed è l'unica che regge anche a un <code>INSERT</code> fatto a mano nella tabella.</p>
+</blockquote>
 <hr />
 <h3 id="invocazione">Invocazione<a class="headerlink" href="#invocazione" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">CALL</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_fk_index_policy</span><span class="p">();</span>
 </code></pre></div>
+<p>Chiamata automaticamente da:</p>
+<ul>
+<li>il changeSet <code>90_end/20250626-31</code> (<code>runAlways: true</code>) — a ogni <code>migrate</code>;</li>
+<li><code>maintenance.proc_apply_fk_index_policy_job()</code> — job pgAgent settimanale, con logging e lock.</li>
+</ul>
 <hr />
 <h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Centralizzazione</strong>: tutte le regole di indicizzazione FK risiedono in un’unica tabella.</li>
+<li><strong>Centralizzazione</strong>: tutte le regole di indicizzazione FK risiedono in un'unica tabella.</li>
 <li><strong>Automazione</strong>: evita script manuali di <code>CREATE/DROP INDEX</code>, riducendo errori e incongruenze.</li>
-<li><strong>Flessibilità</strong>: modificando la colonna <code>consentito</code> si abilita o disabilita subito l’indice, senza alterare codice.</li>
+<li><strong>Flessibilità</strong>: modificando la colonna <code>consentito</code> si abilita o disabilita subito l'indice, senza alterare codice.</li>
+<li><strong>Idempotenza rispetto al bisogno</strong>: non crea ciò che sarebbe superfluo, quindi eseguirla più volte non accumula ridondanze.</li>
+<li><strong>Sicurezza</strong>: nessun flag può togliere un vincolo di integrità.</li>
+<li><strong>Osservabilità</strong>: il riepilogo finale dice cosa è stato fatto in quel giro.</li>
 <li><strong>Integrazione CI/CD</strong>: è chiamata in un changeSet <code>90-end</code> per assicurarsi che, a ogni deploy, la policy sia applicata.</li>
 </ul>
 <hr />

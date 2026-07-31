@@ -19,7 +19,7 @@
     
     
       
-        <title>Fn group attivita fatturabili - Zero ERP Documentation</title>
+        <title>⚙️ Funzione fn_snapshot_indirizzi_lotto - Zero ERP Documentation</title>
       
     
     
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#documentazione-concettuale-funzione-venditefn_group_attivita_fatturabili" class="md-skip">
+        <a href="#funzione-fn_snapshot_indirizzi_lotto" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -97,7 +97,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Fn group attivita fatturabili
+              ⚙️ Funzione fn_snapshot_indirizzi_lotto
             
           </span>
         </div>
@@ -5187,11 +5187,8 @@
                     
                     
                     
+                      
                     
-                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-                      <div class="md-sidebar-button__wrapper">
-                        <label class="md-sidebar-button" for="__toc"></label>
-                      </div>
                     
                   
                   <div class="md-sidebar__inner">
@@ -5202,75 +5199,8 @@
   
   
   
+    
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Indice
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#documentazione-concettuale-funzione-venditefn_group_attivita_fatturabili" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        📘 Documentazione Concettuale – Funzione <code>vendite.fn_group_attivita_fatturabili</code>
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Funzione vendite.fn_group_attivita_fatturabili">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#scopo-principale" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        🎯 Scopo Principale
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#regole-principali" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Regole principali
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Output
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#esempio" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Esempio
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
   
 </nav>
                   </div>
@@ -5288,51 +5218,169 @@
   
 
 
-  <h1 id="__skip">Fn group attivita fatturabili</h1>
-
-<h2 id="documentazione-concettuale-funzione-venditefn_group_attivita_fatturabili">📘 Documentazione Concettuale – Funzione <code>vendite.fn_group_attivita_fatturabili</code><a class="headerlink" href="#documentazione-concettuale-funzione-venditefn_group_attivita_fatturabili" title="Permanent link">&para;</a></h2>
-<blockquote>
-<p>👀 <strong>Vedi anche</strong></p>
-<p><strong>Approfondimento tabelle:</strong></p>
-<p>• <a href="../../tabelle/attivita_fatturabili/">vendite.attivita_fatturabili</a> <br />
-• <a href="../../../catalogo/tabelle/articoli/">catalogo.articoli</a> <br />
-• <a href="../../tabelle/articolo_regole_fatturazione/">vendite.articolo_regole_fatturazione</a>   </p>
-<p><strong>Approfondimento funzioni:</strong></p>
-<p>• <a href="../../funzioni/fn_generate_fatture_righe/">vendite.fn_generate_fatture_righe</a> <br />
-</p>
-</blockquote>
-<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 07-02-2026)<br />
-(Deprecate-trasferite in django)<br />
-La funzione <strong><code>vendite.fn_group_attivita_fatturabili()</code></strong> costruisce la
-<strong>chiave di aggregazione riga</strong> a partire da una riga di <code>attivita_fatturabili</code>.</p>
-<hr />
-<h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>dest_billing_account_id</code> usa il BA reale (mai il parent).</li>
-<li><code>uom_id</code> deriva da attivita (fallback su articolo).</li>
-<li><code>iva_id</code> deriva dall’articolo.</li>
-<li>Regole di aggregazione/arrotondamento da <code>vendite.articolo_regole_fatturazione</code>
-  (fallback ai valori standard se assenti).</li>
-<li>Se l’intervallo <code>competenza_dal/competenza_al</code> e<code>significativo (diverso da</code>data_attivita` o con range &gt; 0), viene incluso nella chiave di aggregazione.</li>
-</ul>
-<hr />
-<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
-<p>Ritorna un <strong>jsonb</strong> con:</p>
-<ul>
-<li>chiave riga (<code>articolo_id</code>, <code>dest_billing_account_id</code>, <code>uom_id</code>, <code>prezzo_unitario</code>, <code>iva_id</code>)</li>
-<li><code>competenza_dal/competenza_al</code> quando rilevanti</li>
-<li>regole (<code>visibilita_componenti</code>, <code>calcolo_qta_padre</code>, <code>arrotondamenti</code>)</li>
-</ul>
-<hr />
-<h3 id="esempio">Esempio<a class="headerlink" href="#esempio" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_group_attivita_fatturabili</span><span class="p">(</span><span class="mi">12345</span><span class="p">);</span>
+<h1 id="funzione-fn_snapshot_indirizzi_lotto">⚙️ Funzione <code>fn_snapshot_indirizzi_lotto</code><a class="headerlink" href="#funzione-fn_snapshot_indirizzi_lotto" title="Permanent link">&para;</a></h1>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">fn_snapshot_indirizzi_lotto</span><span class="p">(</span><span class="n">p_lotto_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span><span class="w"> </span><span class="n">p_batch_size</span><span class="w"> </span><span class="nb">integer</span><span class="p">)</span>
 </code></pre></div>
-<p><strong>Nota pratica</strong></p>
-<ul>
-<li>Se <code>competenza_dal = competenza_al = data_attivita</code> → l’intervallo <strong>non</strong> entra in chiave.</li>
-<li>Se <code>competenza_dal &lt;&gt; competenza_al</code> <strong>oppure</strong> diverso da <code>data_attivita</code> → intervallo <strong>incluso</strong>.</li>
-</ul>
+<p><strong>Definizione completa:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_snapshot_indirizzi_lotto</span><span class="p">(</span><span class="n">p_lotto_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span><span class="w"> </span><span class="n">p_batch_size</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="mi">1000</span><span class="p">)</span>
+<span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="k">TABLE</span><span class="p">(</span><span class="n">fatture_count</span><span class="w"> </span><span class="nb">integer</span><span class="p">,</span><span class="w"> </span><span class="n">inserted_rows</span><span class="w"> </span><span class="nb">integer</span><span class="p">,</span><span class="w"> </span><span class="n">updated_rows</span><span class="w"> </span><span class="nb">integer</span><span class="p">,</span><span class="w"> </span><span class="n">skipped_rows</span><span class="w"> </span><span class="nb">integer</span><span class="p">,</span><span class="w"> </span><span class="n">failed_rows</span><span class="w"> </span><span class="nb">integer</span><span class="p">)</span>
+<span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
+<span class="k">AS</span><span class="w"> </span><span class="err">$</span><span class="k">function</span><span class="err">$</span>
+<span class="c1">-- Scopo: eseguire lo snapshot degli indirizzi su tutte le fatture</span>
+<span class="c1">--        lavorabili di un lotto, senza che una fattura definitiva</span>
+<span class="c1">--        o una fattura difettosa fermino le altre.</span>
+<span class="c1">-- Uso:   task snapshot_indirizzi_lotto dello step DRAFT.</span>
+<span class="k">DECLARE</span>
+<span class="w">    </span><span class="n">v_ids</span><span class="w">           </span><span class="nb">BIGINT</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">];</span>
+<span class="w">    </span><span class="n">v_slice</span><span class="w">         </span><span class="nb">BIGINT</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">];</span>
+<span class="w">    </span><span class="n">v_fattura_id</span><span class="w">    </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span><span class="p">.</span><span class="n">id</span><span class="o">%</span><span class="k">TYPE</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_start</span><span class="w">         </span><span class="nb">INTEGER</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_end</span><span class="w">           </span><span class="nb">INTEGER</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_max</span><span class="w">           </span><span class="nb">INTEGER</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_batch_size</span><span class="w">    </span><span class="nb">INTEGER</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_fatture_count</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_inserted</span><span class="w">      </span><span class="nb">INTEGER</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_updated</span><span class="w">       </span><span class="nb">INTEGER</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_skipped</span><span class="w">       </span><span class="nb">INTEGER</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_failed</span><span class="w">        </span><span class="nb">INTEGER</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_tmp_ins</span><span class="w">       </span><span class="nb">INTEGER</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_tmp_upd</span><span class="w">       </span><span class="nb">INTEGER</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_err_msg</span><span class="w">       </span><span class="nb">TEXT</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_err_state</span><span class="w">     </span><span class="nb">TEXT</span><span class="p">;</span>
+<span class="k">BEGIN</span>
+<span class="w">    </span><span class="c1">-- ===== Guard parametri =====</span>
+<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">p_lotto_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">p_lotto_id</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">            </span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;fn_snapshot_indirizzi_lotto&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;E_PARAMETRO_INVALIDO&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;parametro&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;p_lotto_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;valore&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_lotto_id</span><span class="p">),</span>
+<span class="w">            </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;p_lotto_id obbligatorio e &gt; 0&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">p_batch_size</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">p_batch_size</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
+<span class="w">            </span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;fn_snapshot_indirizzi_lotto&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;E_PARAMETRO_INVALIDO&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;parametro&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;p_batch_size&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;valore&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_batch_size</span><span class="p">),</span>
+<span class="w">            </span><span class="k">NULL</span><span class="p">::</span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;p_batch_size obbligatorio e &gt; 0&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">v_batch_size</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">p_batch_size</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">-- ===== Chi si lavora e chi no, in una sola lettura =====</span>
+<span class="w">    </span><span class="c1">-- La soglia e&#39; la stessa del guard di congelamento montato in</span>
+<span class="w">    </span><span class="c1">-- 1.2: oltre EMESSA lo snapshot e&#39; definitivo. Filtrare QUI e&#39;</span>
+<span class="w">    </span><span class="c1">-- diverso da provarci e riprendersi: non si tenta nemmeno la</span>
+<span class="w">    </span><span class="c1">-- scrittura, quindi non si sveglia il guard.</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">array_agg</span><span class="p">(</span><span class="n">lf</span><span class="p">.</span><span class="n">fattura_id</span><span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">lf</span><span class="p">.</span><span class="n">fattura_id</span><span class="p">)</span>
+<span class="w">               </span><span class="n">FILTER</span><span class="w"> </span><span class="p">(</span><span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;DRAFT&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;EMESSA&#39;</span><span class="p">)),</span>
+<span class="w">           </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+<span class="w">               </span><span class="n">FILTER</span><span class="w"> </span><span class="p">(</span><span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">                          </span><span class="k">OR</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;DRAFT&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;EMESSA&#39;</span><span class="p">))</span>
+<span class="w">      </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_ids</span><span class="p">,</span><span class="w"> </span><span class="n">v_skipped</span>
+<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatturazione_lotti_fatture</span><span class="w"> </span><span class="n">lf</span>
+<span class="w">      </span><span class="k">JOIN</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lf</span><span class="p">.</span><span class="n">fattura_id</span>
+<span class="w">      </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_doc_fiscale</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">stato_doc_fiscale_id</span>
+<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">lf</span><span class="p">.</span><span class="n">lotto_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_lotto_id</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">v_skipped</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">v_skipped</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_ids</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">        </span><span class="c1">-- Nessuna fattura lavorabile: puo&#39; essere un lotto vuoto</span>
+<span class="w">        </span><span class="c1">-- (nulla da dire) o un lotto tutto definitivo (da dire).</span>
+<span class="w">        </span><span class="k">IF</span><span class="w"> </span><span class="n">v_skipped</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">            </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_log_pipeline_fase</span><span class="p">(</span>
+<span class="w">                </span><span class="n">p_lotto_id</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Snapshot indirizzi&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;I&#39;</span><span class="p">,</span>
+<span class="w">                </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;Nessuna fattura lavorabile: %s gia&#39;&#39; oltre EMESSA, snapshot definitivo.&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_skipped</span><span class="p">),</span>
+<span class="w">                </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;task&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;snapshot_indirizzi_lotto&#39;</span><span class="p">,</span>
+<span class="w">                                   </span><span class="s1">&#39;skipped&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_skipped</span><span class="p">));</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">RETURN</span><span class="w"> </span><span class="n">QUERY</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">v_skipped</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">RETURN</span><span class="p">;</span>
+<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">v_max</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">array_length</span><span class="p">(</span><span class="n">v_ids</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">-- ===== Giro a batch, come il fratello IVA =====</span>
+<span class="w">    </span><span class="n">WHILE</span><span class="w"> </span><span class="n">v_start</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">v_max</span><span class="w"> </span><span class="n">LOOP</span>
+<span class="w">        </span><span class="n">v_end</span><span class="w">   </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">LEAST</span><span class="p">(</span><span class="n">v_start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">v_batch_size</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">v_max</span><span class="p">);</span>
+<span class="w">        </span><span class="n">v_slice</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_ids</span><span class="err">\</span><span class="p">[</span><span class="n">v_start</span><span class="p">:</span><span class="n">v_end</span><span class="err">\</span><span class="p">];</span>
+
+<span class="w">        </span><span class="k">FOR</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="mi">1</span><span class="p">..</span><span class="n">array_length</span><span class="p">(</span><span class="n">v_slice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="n">LOOP</span>
+<span class="w">            </span><span class="n">v_fattura_id</span><span class="w">    </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_slice</span><span class="err">\</span><span class="p">[</span><span class="n">i</span><span class="err">\</span><span class="p">];</span>
+<span class="w">            </span><span class="n">v_fatture_count</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_fatture_count</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="w">            </span><span class="k">BEGIN</span>
+<span class="w">                </span><span class="k">SELECT</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">inserted_rows</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">updated_rows</span>
+<span class="w">                  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_tmp_ins</span><span class="p">,</span><span class="w"> </span><span class="n">v_tmp_upd</span>
+<span class="w">                  </span><span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_snapshot_indirizzi_fattura</span><span class="p">(</span><span class="n">v_fattura_id</span><span class="p">)</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+
+<span class="w">                </span><span class="n">v_inserted</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_inserted</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">v_tmp_ins</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">                </span><span class="n">v_updated</span><span class="w">  </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_updated</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">v_tmp_upd</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+
+<span class="w">                </span><span class="c1">-- Ritiro della PROPRIA segnalazione precedente:</span>
+<span class="w">                </span><span class="c1">-- il problema di ieri e&#39; risolto, quindi la</span>
+<span class="w">                </span><span class="c1">-- bandiera va abbassata. Senza, un rilancio dello</span>
+<span class="w">                </span><span class="c1">-- step lascerebbe la fattura in ERRORE per</span>
+<span class="w">                </span><span class="c1">-- sempre. Il filtro su meta-&gt;&gt;&#39;source&#39; e&#39;</span>
+<span class="w">                </span><span class="c1">-- essenziale: si ritira solo cio&#39; che questo task</span>
+<span class="w">                </span><span class="c1">-- ha alzato, mai la segnalazione di un altro.</span>
+<span class="w">                </span><span class="c1">-- Il resto lo fa da solo il trigger AFTER UPDATE</span>
+<span class="w">                </span><span class="c1">-- su fatture_log, che ricalcola critical e</span>
+<span class="w">                </span><span class="c1">-- stato_esecuzione dai soli log attivi.</span>
+<span class="w">                </span><span class="k">UPDATE</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture_log</span><span class="w"> </span><span class="n">fl</span>
+<span class="w">                   </span><span class="k">SET</span><span class="w"> </span><span class="n">disabilitato</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">TRUE</span>
+<span class="w">                 </span><span class="k">WHERE</span><span class="w"> </span><span class="n">fl</span><span class="p">.</span><span class="n">fattura_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_fattura_id</span>
+<span class="w">                   </span><span class="k">AND</span><span class="w"> </span><span class="n">fl</span><span class="p">.</span><span class="n">disabilitato</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">FALSE</span>
+<span class="w">                   </span><span class="k">AND</span><span class="w"> </span><span class="n">fl</span><span class="p">.</span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;C&#39;</span>
+<span class="w">                   </span><span class="k">AND</span><span class="w"> </span><span class="n">fl</span><span class="p">.</span><span class="n">meta</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;source&#39;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;fn_snapshot_indirizzi_lotto&#39;</span><span class="p">;</span>
+
+<span class="w">            </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">raise_exception</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">                </span><span class="c1">-- Solo gli errori di dominio (P0001) finiscono</span>
+<span class="w">                </span><span class="c1">-- qui: un guasto di sistema ha altro SQLSTATE e</span>
+<span class="w">                </span><span class="c1">-- deve continuare a salire. Vedi testata.</span>
+<span class="w">                </span><span class="k">GET</span><span class="w"> </span><span class="n">STACKED</span><span class="w"> </span><span class="k">DIAGNOSTICS</span>
+<span class="w">                    </span><span class="n">v_err_msg</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="k">MESSAGE_TEXT</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">v_err_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">RETURNED_SQLSTATE</span><span class="p">;</span>
+
+<span class="w">                </span><span class="n">v_failed</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_failed</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="w">                </span><span class="c1">-- Marcatura critical: e&#39; cio&#39; che impedisce a</span>
+<span class="w">                </span><span class="c1">-- questa fattura di diventare EMESSA, mentre le</span>
+<span class="w">                </span><span class="c1">-- altre del lotto proseguono.</span>
+<span class="w">                </span><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture_log</span><span class="w"> </span><span class="p">(</span>
+<span class="w">                            </span><span class="n">fattura_id</span><span class="p">,</span><span class="w"> </span><span class="n">data_ora</span><span class="p">,</span><span class="w"> </span><span class="n">messaggio</span><span class="p">,</span>
+<span class="w">                            </span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">disabilitato</span><span class="p">,</span><span class="w"> </span><span class="n">meta</span><span class="p">)</span>
+<span class="w">                </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="n">v_fattura_id</span><span class="p">,</span><span class="w"> </span><span class="n">now</span><span class="p">(),</span>
+<span class="w">                        </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;Snapshot indirizzi non riuscito: %s&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_err_msg</span><span class="p">),</span>
+<span class="w">                        </span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">FALSE</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">jsonb_build_object</span><span class="p">(</span>
+<span class="w">                            </span><span class="s1">&#39;task&#39;</span><span class="p">,</span><span class="w">     </span><span class="s1">&#39;snapshot_indirizzi_lotto&#39;</span><span class="p">,</span>
+<span class="w">                            </span><span class="s1">&#39;lotto_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">p_lotto_id</span><span class="p">,</span>
+<span class="w">                            </span><span class="s1">&#39;sqlstate&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_err_state</span><span class="p">,</span>
+<span class="w">                            </span><span class="s1">&#39;source&#39;</span><span class="p">,</span><span class="w">   </span><span class="s1">&#39;fn_snapshot_indirizzi_lotto&#39;</span><span class="p">));</span>
+<span class="w">            </span><span class="k">END</span><span class="p">;</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">v_start</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">v_end</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">-- ===== Una nota sola, a fine giro, per i documenti chiusi =====</span>
+<span class="w">    </span><span class="k">IF</span><span class="w"> </span><span class="n">v_skipped</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span>
+<span class="w">        </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_log_pipeline_fase</span><span class="p">(</span>
+<span class="w">            </span><span class="n">p_lotto_id</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Snapshot indirizzi&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;I&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;%s fatture non toccate perche&#39;&#39; oltre EMESSA: snapshot gia&#39;&#39; definitivo.&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_skipped</span><span class="p">),</span>
+<span class="w">            </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;task&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;snapshot_indirizzi_lotto&#39;</span><span class="p">,</span>
+<span class="w">                               </span><span class="s1">&#39;skipped&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_skipped</span><span class="p">,</span>
+<span class="w">                               </span><span class="s1">&#39;lavorate&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_fatture_count</span><span class="p">));</span>
+<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="n">QUERY</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">v_fatture_count</span><span class="p">,</span><span class="w"> </span><span class="n">v_inserted</span><span class="p">,</span><span class="w"> </span><span class="n">v_updated</span><span class="p">,</span><span class="w"> </span><span class="n">v_skipped</span><span class="p">,</span><span class="w"> </span><span class="n">v_failed</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+<span class="err">$</span><span class="k">function</span><span class="err">$</span>
+
+<span class="k">COMMENT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_snapshot_indirizzi_lotto</span><span class="p">(</span><span class="n">p_lotto_id</span><span class="w"> </span><span class="nb">bigint</span><span class="p">,</span><span class="w"> </span><span class="n">p_batch_size</span><span class="w"> </span><span class="nb">integer</span><span class="p">)</span>
+<span class="k">IS</span><span class="w"> </span><span class="s1">&#39;Wrapper di lotto dello snapshot indirizzi, sulla forma di vendite.fn_ricalcola_riepiloghi_iva_lotto (batch + chiamata per-fattura) ma con due comportamenti diversi, entrambi voluti. (1) Le fatture oltre EMESSA si FILTRANO prima di scrivere (D-F esteso agli indirizzi): per un documento definitivo questo task non ha lavoro da fare — lo snapshot e&#39;&#39; stato preso in bozza ed e&#39;&#39; quello definitivo — quindi il giro non si ferma, non e&#39;&#39; fallito, le altre fatture ricevono il loro lavoro completo e resta una sola nota informativa di lotto. Il fratello IVA non filtra: con lui una sola fattura definitiva ucciderebbe il lotto. (2) Il fallimento di UNA fattura non uccide il giro: sotto-blocco BEGIN/EXCEPTION per fattura (schema gia&#39;&#39; in uso in fn_batch_upsert_commessa_attivita), la fattura difettosa viene marcata &#39;&#39;C&#39;&#39; su fatture_log — che e&#39;&#39; cio&#39;&#39; che le impedisce di diventare EMESSA — e il giro prosegue, cosi&#39;&#39; l&#39;&#39;operatore vede TUTTI i clienti incompleti in una volta invece di scoprirne uno per esecuzione. Si cattura raise_exception (P0001), non others: gli errori di dominio arrivano tutti come P0001 da fn_log_and_raise_error, mentre un guasto di sistema (permesso negato, funzione inesistente, deadlock) ha altro SQLSTATE e deve salire. Ritorna cinque contatori — fatture_count, inserted_rows, updated_rows, skipped_rows, failed_rows — perche&#39;&#39; con tre un giro tutto definitivo, un giro gia&#39;&#39; allineato e un giro con fatture rotte si leggerebbero identici. (3) Quando lo snapshot di una fattura riesce, il task RITIRA le proprie segnalazioni critiche precedenti su quella fattura (disabilitato = true, filtrando su meta-&gt;&gt;&#39;&#39;source&#39;&#39;): serve perche&#39;&#39; la via d&#39;&#39;uscita voluta e&#39;&#39; «si rilancia lo stesso step», e senza il ritiro la fattura resterebbe in ERRORE per un problema gia&#39;&#39; risolto. Solo le proprie: spegnere la segnalazione di un altro task equivarrebbe a dichiarare risolto cio&#39;&#39; che non si e&#39;&#39; guardato. Il ricalcolo di critical/stato_esecuzione lo fa da se&#39;&#39; il trigger AFTER UPDATE su fatture_log. piano-db-satelliti-fattura Fase 2.2.&#39;</span><span class="p">;</span>
+</code></pre></div>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

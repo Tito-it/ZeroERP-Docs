@@ -5233,6 +5233,56 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#quando-una-fk-si-considera-coperta" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔑 Quando una FK si considera coperta
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔑 Quando una FK si considera coperta">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#perche-un-parziale-where-colonna-is-not-null-copre" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Perché un parziale <code>WHERE colonna IS NOT NULL</code> copre
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#perche-ogni-altro-predicato-viene-rifiutato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Perché ogni altro predicato viene rifiutato
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-e-cambiato-il-27-07-2026-e-perche-conta" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Cosa è cambiato il 27-07-2026, e perché conta
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#colonne-e-descrizione" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5293,21 +5343,73 @@
 <h2 id="documentazione-concettuale-view-dbopsvw_fk_senza_indice">📘 Documentazione Concettuale – View <code>dbops.vw_fk_senza_indice</code><a class="headerlink" href="#documentazione-concettuale-view-dbopsvw_fk_senza_indice" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p>Approfondimento Tabelle:   </p>
-<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>      </p>
-<p>Approfondimento funzioni:   </p>
-<p><a href=".././fn_populate_fk_index_policy/">dbops.fn_populate_fk_index_policy</a> <br />
-<a href="../../views/vw_fk_con_indice_missing_policy/">dbops.vw_fk_senza_indice</a> <br />
-<a href="../../views/vw_duplicate_indexes/">dbops.vw_duplicate_indexes</a>     </p>
+<p>Approfondimento Tabelle:  </p>
+<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>  </p>
+<p>Approfondimento funzioni:  </p>
+<p><a href="../../funzioni/fn_populate_fk_index_policy/">dbops.fn_populate_fk_index_policy</a><br />
+<a href="../../funzioni/apply_fk_index_policy/">dbops.apply_fk_index_policy</a><br />
+<a href="../../views/vw_fk_con_indice_missing_policy/">dbops.vw_fk_con_indice_missing_policy</a><br />
+<a href="../../views/vw_indici_ridondanti_prefisso/">dbops.vw_indici_ridondanti_prefisso</a>  </p>
 <p>Catalogo dei vincoli FK in PostgreSQL (<code>pg_constraint</code>, <code>pg_class</code>, <code>pg_namespace</code>)</p>
 </blockquote>
-<p>La view <strong><code>dbops.vw_fk_senza_indice</code></strong> elenca tutte le foreign key definite <strong>solo negli schemi presenti in <code>dbops.automation_scope</code></strong> che <strong>non hanno un indice associato</strong> sulle colonne di riferimento, suggerendo lo statement <code>CREATE INDEX</code> corrispondente e rispettando eventuali eccezioni definite in <code>dbops.fk_index_policy</code>. La view considera anche i <strong>vincoli UNIQUE</strong> esistenti: se una FK e<code>gia</code> coperta da un <code>UNIQUE</code> con le stesse colonne, non viene proposta.</p>
+<p>La view <strong><code>dbops.vw_fk_senza_indice</code></strong> elenca le foreign key definite <strong>solo negli schemi presenti in <code>dbops.automation_scope</code></strong> che <strong>non hanno alcun indice in grado di servirle</strong>, suggerendo lo statement <code>CREATE INDEX</code> corrispondente e rispettando le eccezioni definite in <code>dbops.fk_index_policy</code>.</p>
+<p>Il punto delicato di questa view non è trovare le FK: è decidere <strong>quando una FK si considera coperta</strong>. La risposta è cambiata il 27-07-2026, ed è il motivo per cui il database aveva accumulato decine di indici inutili.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 16-01-26)
-* Individuare automaticamente vincoli di integrità referenziale (FK) privi di indice, potenziali colli di bottiglia nelle operazioni di JOIN e DELETE.
-* Fornire suggerimenti di creazione indice coerenti, facilitando l’ottimizzazione delle performance.
-* Applicare eventuali policy di esclusione gestite in <code>dbops.fk_index_policy</code>.</p>
+<p>(latest review 27-07-26)</p>
+<ul>
+<li>Individuare vincoli di integrità referenziale (FK) privi di indice, potenziali colli di bottiglia nelle operazioni di <code>JOIN</code> e <code>DELETE</code>.</li>
+<li>Fornire suggerimenti di creazione indice coerenti, facilitando l'ottimizzazione delle performance.</li>
+<li>Applicare le policy di esclusione gestite in <code>dbops.fk_index_policy</code>.</li>
+<li>Fare da <strong>guardia</strong> ad <code>apply_fk_index_policy()</code>, che crea un indice solo se la FK compare ancora qui.</li>
+</ul>
+<hr />
+<h3 id="quando-una-fk-si-considera-coperta">🔑 Quando una FK si considera coperta<a class="headerlink" href="#quando-una-fk-si-considera-coperta" title="Permanent link">&para;</a></h3>
+<p>Non serve un indice <strong>dedicato</strong>. Il trigger di integrità referenziale esegue</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">figlio</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">fkcol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="mi">1</span><span class="w"> </span><span class="k">FOR</span><span class="w"> </span><span class="k">SHARE</span><span class="p">;</span>
+</code></pre></div>
+<p>e qualunque btree sappia servire quella ricerca va bene. La FK è quindi coperta quando esiste un btree <strong>valido e pronto</strong> tale che:</p>
+<ol>
+<li><strong>Copertura per prefisso</strong> — le colonne della FK coincidono, <strong>come insieme</strong>, con le sue prime N colonne chiave. Un indice su <code>(contratto_id, riga_nr)</code> copre la FK su <code>contratto_id</code>, perché <code>contratto_id</code> è in testa.
+   Il confronto è insiemistico e non posizionale: il controllo filtra per uguaglianza su <em>tutte</em> le colonne della FK, quindi qualunque loro permutazione in testa all'indice funziona.</li>
+<li><strong>Predicato assente, oppure soli <code>IS NOT NULL</code> sulle colonne della FK</strong> — vedi sotto.</li>
+<li>Le colonne del prefisso devono essere <strong>colonne vere</strong>, non espressioni: se in testa c'è un <code>COALESCE(...)</code>, il planner non può usarlo per un'uguaglianza sulla colonna sottostante.</li>
+</ol>
+<h4 id="perche-un-parziale-where-colonna-is-not-null-copre">Perché un parziale <code>WHERE colonna IS NOT NULL</code> copre<a class="headerlink" href="#perche-un-parziale-where-colonna-is-not-null-copre" title="Permanent link">&para;</a></h4>
+<p>Perché <code>$1</code> <strong>non è mai nullo</strong>: una riga figlia con FK nulla non ha padre da verificare, e il trigger non parte nemmeno. La condizione <code>fkcol = $1</code> implica quindi <code>fkcol IS NOT NULL</code>, il planner PostgreSQL sa dimostrarlo e usa l'indice parziale senza problemi.</p>
+<blockquote>
+<p>Su una foreign key nullabile un indice parziale così <strong>non è un ripiego: è strettamente migliore</strong> di uno totale, perché non indicizza righe che nessuno cercherà mai.</p>
+</blockquote>
+<h4 id="perche-ogni-altro-predicato-viene-rifiutato">Perché ogni altro predicato viene rifiutato<a class="headerlink" href="#perche-ogni-altro-predicato-viene-rifiutato" title="Permanent link">&para;</a></h4>
+<p>Un indice con, per dire, <code>WHERE ruolo_link = 'ROOT'</code> <strong>non</strong> copre la FK: il controllo referenziale deve poter trovare qualsiasi riga figlia, anche non-ROOT. La view rifiuta quindi ogni predicato che non sia una congiunzione di soli <code>&lt;colonna della FK&gt; IS NOT NULL</code>, <strong>anche nei casi in cui di fatto coprirebbe</strong>.</p>
+<p>È una scelta deliberata: l'errore possibile diventa segnalare come scoperta una FK coperta — un indice di troppo — e mai il contrario, cioè lasciare una FK davvero scoperta credendola a posto.</p>
+<hr />
+<h3 id="cosa-e-cambiato-il-27-07-2026-e-perche-conta">⚠️ Cosa è cambiato il 27-07-2026, e perché conta<a class="headerlink" href="#cosa-e-cambiato-il-27-07-2026-e-perche-conta" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Prima</th>
+<th>Adesso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Copertura per <strong>uguaglianza esatta</strong> dell'array di colonne</td>
+<td>Copertura per <strong>prefisso</strong></td>
+</tr>
+<tr>
+<td><code>fk_cols</code> alfabetico confrontato con colonne d'indice <strong>posizionali</strong></td>
+<td>Entrambi i lati ordinati allo stesso modo</td>
+</tr>
+<tr>
+<td><strong>Qualsiasi</strong> indice contava, anche parziale o non valido</td>
+<td>Solo btree validi; predicato assente o soli <code>IS NOT NULL</code></td>
+</tr>
+</tbody>
+</table>
+<p>La regola dell'uguaglianza esatta faceva risultare scoperte le FK già servite da una <code>UNIQUE</code> più larga. Venivano registrate in <code>fk_index_policy</code> e l'automazione ci piantava sopra un indice gemello: <strong>27 dei 48 indici ridondanti</strong> censiti il 27-07-2026 sono nati così.</p>
+<p>Il difetto speculare era altrettanto serio: non guardando <code>indpred</code>, un indice <strong>parziale</strong> veniva contato come copertura. Due foreign key risultavano a posto quando non lo erano, e ogni <code>DELETE</code> sulla tabella padre faceva seq scan sulla figlia.</p>
+<hr />
 <h3 id="colonne-e-descrizione">Colonne e Descrizione<a class="headerlink" href="#colonne-e-descrizione" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -5331,32 +5433,30 @@
 </tr>
 <tr>
 <td><code>fk_cols</code></td>
-<td>Elenco delle colonne coinvolte nella FK</td>
+<td>Elenco delle colonne coinvolte nella FK (ordine alfabetico)</td>
 </tr>
 <tr>
 <td><code>create_index_suggestion</code></td>
-<td>Statement SQL suggerito per creare l’indice su queste colonne</td>
+<td>Statement SQL suggerito, nella forma <code>ix_&lt;tabella&gt;_&lt;colonne&gt;</code></td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h3 id="esempi-di-utilizzo">Esempi di Utilizzo<a class="headerlink" href="#esempi-di-utilizzo" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Verificare FK senza indice</strong>:</li>
+<li><strong>Verificare le FK senza indice</strong>:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
-<span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_fk_senza_indice</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_fk_senza_indice</span><span class="p">;</span>
 </code></pre></div>
 <ol>
-<li><strong>Creare l’indice suggerito</strong> (per la prima riga restituita):</li>
+<li><strong>Portare le FK trovate sotto il governo dell'automazione</strong> — la policy è OPT-IN, quindi <code>fn_populate_fk_index_policy()</code> le registra con <code>consentito = false</code> e serve un seed esplicito per portarle a <code>true</code>:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">DO</span><span class="w"> </span><span class="err">$$</span><span class="w"> </span><span class="k">DECLARE</span><span class="w"> </span><span class="n">rec</span><span class="w"> </span><span class="n">RECORD</span><span class="p">;</span><span class="w"> </span><span class="k">BEGIN</span>
-<span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">create_index_suggestion</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">rec</span>
-<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_fk_senza_indice</span>
-<span class="w">   </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">  </span><span class="k">EXECUTE</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="n">create_index_suggestion</span><span class="p">;</span>
-<span class="k">END</span><span class="w"> </span><span class="err">$$</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">();</span>
+<span class="c1">-- poi, in 80_data, un CSV + loadUpdateData che porta a true le righe volute</span>
 </code></pre></div>
+<blockquote>
+<p>⚠️ <strong>Non eseguire a mano il <code>create_index_suggestion</code>.</strong> Gli indici FK nascono da <code>apply_fk_index_policy()</code> in <code>90_end</code>, mai da un <code>CREATE INDEX</code> scritto a mano: un indice creato fuori dalla policy non è governato da nessuno e riappare in <a href="../../views/vw_fk_con_indice_missing_policy/">vw_fk_con_indice_missing_policy</a>.</p>
+</blockquote>
 <ol>
 <li><strong>Escludere esplicitamente un vincolo tramite policy</strong>:</li>
 </ol>
@@ -5368,8 +5468,10 @@
 <h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Miglioramento performance</strong>: individuazione rapida di join e delete lenti dovuti a FK senza indice.</li>
-<li><strong>Automazione</strong>: suggerimenti pronti all’uso per l’ottimizzazione.</li>
-<li><strong>Governance</strong>: rispetto di policy aziendali per eccezioni a indice automatico.</li>
+<li><strong>Nessun falso allarme</strong>: una FK servita da una UNIQUE più larga o da un parziale <code>IS NOT NULL</code> non compare, quindi non genera indici inutili.</li>
+<li><strong>Automazione</strong>: suggerimenti pronti all'uso, consumati da <code>fn_populate_fk_index_policy()</code>.</li>
+<li><strong>Governance</strong>: rispetto delle policy per le eccezioni all'indice automatico.</li>
+<li><strong>Sicurezza</strong>: usata come guardia da <code>apply_fk_index_policy()</code>, impedisce che un <code>consentito</code> rimesso a <code>true</code> per errore rigeneri ridondanze.</li>
 </ul>
 <hr />
 <blockquote>

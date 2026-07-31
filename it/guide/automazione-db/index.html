@@ -3983,10 +3983,65 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#72-flusso-operativo" class="md-nav__link">
+  <a href="#72-quando-una-fk-si-considera-coperta" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7.2 Flusso operativo
+        7.2 Quando una FK si considera coperta
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-la-policy-e-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.3 La policy è OPT-IN
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-flusso-operativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.4 Flusso operativo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#75-le-due-guardie-di-apply_fk_index_policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.5 Le due guardie di <code>apply_fk_index_policy()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#76-il-dll_command-deve-nominare-lindice-che-esiste" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.6 Il <code>dll_command</code> deve nominare l'indice che esiste
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#77-indici-ridondanti" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.7 Indici ridondanti
       </span>
     </span>
   </a>
@@ -6432,10 +6487,65 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#72-flusso-operativo" class="md-nav__link">
+  <a href="#72-quando-una-fk-si-considera-coperta" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7.2 Flusso operativo
+        7.2 Quando una FK si considera coperta
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-la-policy-e-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.3 La policy è OPT-IN
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-flusso-operativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.4 Flusso operativo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#75-le-due-guardie-di-apply_fk_index_policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.5 Le due guardie di <code>apply_fk_index_policy()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#76-il-dll_command-deve-nominare-lindice-che-esiste" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.6 Il <code>dll_command</code> deve nominare l'indice che esiste
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#77-indici-ridondanti" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7.7 Indici ridondanti
       </span>
     </span>
   </a>
@@ -7222,7 +7332,7 @@ EXCLUDE viene droppato per errore (es. da un refactor), la passata notturna lo
 <p>Gli indici sulle chiavi esterne sono fondamentali per le performance. Il framework centralizza la governance degli indici FK nella tabella <code>dbops.fk_index_policy</code>, evitando la creazione manuale e garantendo naming coerente.</p>
 <h3 id="71-componenti">7.1 Componenti<a class="headerlink" href="#71-componenti" title="Permanent link">&para;</a></h3>
 <p><strong>Tabella policy:</strong> <a href="../../dbzero/dbops/tabelle/fk_index_policy/">dbops.fk_index_policy</a>
-Ogni riga rappresenta una FK con un flag <code>consentito</code> (l'indice deve esistere?) e il <code>ddl_command</code> per crearlo/rimuoverlo.</p>
+Ogni riga rappresenta una FK con un flag <code>consentito</code> (l'indice deve esistere?) e il <code>dll_command</code> per crearlo/rimuoverlo.</p>
 <p><strong>View di supporto:</strong></p>
 <table>
 <thead>
@@ -7233,16 +7343,20 @@ Ogni riga rappresenta una FK con un flag <code>consentito</code> (l'indice deve 
 </thead>
 <tbody>
 <tr>
-<td><a href="../../dbzero/dbops/views/vw_fk_con_indice_missing_policy/">vw_fk_con_indice_missing_policy</a></td>
-<td>FK con indice esistente ma senza riga in policy</td>
+<td><a href="../../dbzero/dbops/views/vw_fk_senza_indice/">vw_fk_senza_indice</a></td>
+<td>FK realmente prive di copertura (vedi 7.2)</td>
 </tr>
 <tr>
-<td><a href="../../dbzero/dbops/views/vw_fk_senza_indice/">vw_fk_senza_indice</a></td>
-<td>FK senza indice (considerando anche UNIQUE)</td>
+<td><a href="../../dbzero/dbops/views/vw_fk_con_indice_missing_policy/">vw_fk_con_indice_missing_policy</a></td>
+<td>FK con un indice <strong>dedicato</strong> ma senza riga in policy</td>
 </tr>
 <tr>
 <td><a href="../../dbzero/dbops/views/vw_duplicate_indexes/">vw_duplicate_indexes</a></td>
-<td>Indici duplicati per schema/tabella</td>
+<td>Indici duplicati esatti (stessa firma completa)</td>
+</tr>
+<tr>
+<td><a href="../../dbzero/dbops/views/vw_indici_ridondanti_prefisso/">vw_indici_ridondanti_prefisso</a></td>
+<td>Indici le cui colonne sono la testa di un altro indice</td>
 </tr>
 </tbody>
 </table>
@@ -7274,7 +7388,19 @@ Ogni riga rappresenta una FK con un flag <code>consentito</code> (l'indice deve 
 </tr>
 </tbody>
 </table>
-<h3 id="72-flusso-operativo">7.2 Flusso operativo<a class="headerlink" href="#72-flusso-operativo" title="Permanent link">&para;</a></h3>
+<h3 id="72-quando-una-fk-si-considera-coperta">7.2 Quando una FK si considera coperta<a class="headerlink" href="#72-quando-una-fk-si-considera-coperta" title="Permanent link">&para;</a></h3>
+<p>Non serve un indice <strong>dedicato</strong>. Il controllo di integrità referenziale esegue <code>WHERE fkcol = $1</code>, e qualsiasi btree che sappia servire quella ricerca va bene. La FK è quindi coperta quando esiste un btree valido tale che:</p>
+<ul>
+<li>le colonne della FK coincidono, <strong>come insieme</strong>, con le sue prime N colonne chiave — cioè per <strong>prefisso</strong>. Un indice su <code>(contratto_id, riga_nr)</code> copre la FK su <code>contratto_id</code>;</li>
+<li>il predicato è assente, <strong>oppure</strong> è una congiunzione di soli <code>&lt;colonna della FK&gt; IS NOT NULL</code>. Quest'ultimo caso vale perché <code>$1</code> non è mai nullo — una riga con FK nulla non ha padre da verificare — quindi <code>fkcol = $1</code> implica <code>fkcol IS NOT NULL</code>, e il planner lo dimostra. Su una FK nullabile un parziale così è <strong>migliore</strong> di un indice totale, non peggiore.</li>
+</ul>
+<p>Ogni altro predicato viene rifiutato, anche quando di fatto coprirebbe: l'errore possibile è segnalare come scoperta una FK coperta, mai il contrario.</p>
+<blockquote>
+<p>⚠️ Fino al 2026-07-27 la copertura era valutata pretendendo l'<strong>uguaglianza esatta</strong> dell'elenco di colonne. Le FK già servite da una UNIQUE più larga risultavano scoperte e l'automazione ci piantava sopra un indice gemello: 27 dei 48 indici ridondanti censiti in quella data sono nati così.</p>
+</blockquote>
+<h3 id="73-la-policy-e-opt-in">7.3 La policy è OPT-IN<a class="headerlink" href="#73-la-policy-e-opt-in" title="Permanent link">&para;</a></h3>
+<p><code>fn_populate_fk_index_policy()</code> registra le FK nuove con <code>consentito=false</code>. <strong>Perché l'indice nasca serve un seed esplicito</strong> che porti il flag a <code>true</code>: senza, l'automazione non crea nulla. Il seed va in <code>80_data</code> come CSV più <code>loadUpdateData</code>, mai come SQL inline.</p>
+<h3 id="74-flusso-operativo">7.4 Flusso operativo<a class="headerlink" href="#74-flusso-operativo" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>1. Seed     → registra le FK gia indicizzate
 2. Populate → registra le FK mancanti
 3. Apply    → crea/rimuove indici secondo la policy
@@ -7288,8 +7414,28 @@ Ogni riga rappresenta una FK con un flag <code>consentito</code> (l'indice deve 
 <span class="c1">-- 3. Apply</span>
 <span class="k">CALL</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_fk_index_policy</span><span class="p">();</span>
 </code></pre></div>
-<p><strong>Job schedulabile:</strong> <code>maintenance.proc_apply_fk_index_policy_job()</code> (con logging e lock).</p>
-<p><strong>Regola operativa:</strong> non creare indici FK manualmente. Se servono, usa la policy e il naming coerente, poi registra in <code>fk_index_policy</code>.</p>
+<p><code>apply</code> è invocata a ogni <code>migrate</code> da <code>90_end</code> (<code>runAlways: true</code>) e dal job settimanale.</p>
+<p><strong>Job schedulabile:</strong> <code>maintenance.proc_apply_fk_index_policy_job()</code> (con logging e lock). Invocata con <code>true</code> esegue anche il <code>populate</code>.</p>
+<h3 id="75-le-due-guardie-di-apply_fk_index_policy">7.5 Le due guardie di <code>apply_fk_index_policy()</code><a class="headerlink" href="#75-le-due-guardie-di-apply_fk_index_policy" title="Permanent link">&para;</a></h3>
+<p>La policy poggia su un flag booleano, e un flag può essere girato per errore. Le guardie servono a rendere innocuo l'errore, non a impedirlo.</p>
+<ol>
+<li><strong>Con <code>consentito=true</code> crea solo se la FK figura ancora in <code>vw_fk_senza_indice</code>.</strong> Una FK già coperta non riceve un indice dedicato nemmeno a flag <code>true</code>: un <code>true</code> rimesso per sbaglio non può rigenerare ridondanze già bonificate. L'auto-riparazione resta intatta — se l'indice viene cancellato a mano, la FK ricompare nella view e al giro dopo viene ricreato.</li>
+<li><strong>Con <code>consentito=false</code> rifiuta il <code>DROP</code></strong>, con <code>RAISE WARNING</code>, se il nome estratto dal comando appartiene a un UNIQUE, a una PK, a un indice a supporto di un constraint o alla <code>REPLICA IDENTITY</code>. Un flag non deve poter togliere un vincolo di integrità.</li>
+</ol>
+<p>Si sceglie il warning e non l'eccezione perché la procedura gira a ogni <code>migrate</code>: un errore bloccherebbe la pipeline, e un indice di troppo costa incomparabilmente meno. A fine ciclo viene emesso un <code>RAISE NOTICE</code> con creati / saltati / droppati / rifiutati.</p>
+<h3 id="76-il-dll_command-deve-nominare-lindice-che-esiste">7.6 Il <code>dll_command</code> deve nominare l'indice che esiste<a class="headerlink" href="#76-il-dll_command-deve-nominare-lindice-che-esiste" title="Permanent link">&para;</a></h3>
+<p><code>fn_seed_fk_index_policy()</code> porta sotto governo le FK che hanno già un indice, leggendo <code>vw_fk_con_indice_missing_policy</code>. Due regole rendono l'operazione sicura:</p>
+<ul>
+<li>il comando registrato punta al <strong>nome reale</strong> dell'indice trovato. Se ne sintetizza uno diverso, <code>apply</code> crea un secondo indice gemello sotto quel nome — è esattamente così che un indice già rimosso è ricomparso mesi dopo senza alcun changeSet;</li>
+<li>si registrano <strong>solo indici dedicati</strong> alla FK: colonne uguali a quelle della FK, non UNIQUE, non PK, non <code>REPLICA IDENTITY</code>, non a supporto di un constraint, totali. Il ramo <code>consentito=false</code> esegue <code>DROP INDEX</code> su quel nome, e deve poter togliere solo un acceleratore. Le FK coperte da un indice più largo non si registrano: non c'è nulla da governare.</li>
+</ul>
+<h3 id="77-indici-ridondanti">7.7 Indici ridondanti<a class="headerlink" href="#77-indici-ridondanti" title="Permanent link">&para;</a></h3>
+<p>Vedi <code>docs/it/linee-guida-sql.md</code> §8.6 per il dettaglio. In sintesi, due viste per due nozioni distinte:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_duplicate_indexes</span><span class="p">;</span><span class="w">            </span><span class="c1">-- duplicati esatti</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_indici_ridondanti_prefisso</span><span class="p">;</span><span class="w">   </span><span class="c1">-- ridondanti per prefisso</span>
+</code></pre></div>
+<p>La colonna <code>origine</code> della seconda dice <strong>come</strong> si rimuove: <code>AUTOMAZIONE_FK</code> richiede <code>consentito=false</code> più il <code>DROP</code> esplicito, <code>MANUALE</code> un <code>DROP INDEX</code> in changeSet.</p>
+<p><strong>Regola operativa:</strong> non creare né droppare indici FK manualmente. Si agisce sulla policy e ci pensa <code>apply_fk_index_policy()</code>. Un <code>DROP</code> senza flag verrebbe annullato al primo <code>migrate</code> successivo.</p>
 <hr />
 <h2 id="8-generazione-automatica-codicinumeri">8. Generazione automatica codici/numeri<a class="headerlink" href="#8-generazione-automatica-codicinumeri" title="Permanent link">&para;</a></h2>
 <p>Questa parte del framework gestisce la <strong>generazione automatica di codici o numeri</strong> sulle tabelle applicative. Quando una tabella ha bisogno di un codice progressivo (es. numero fattura, codice articolo), il framework lo genera tramite configurazione dichiarativa e trigger.</p>

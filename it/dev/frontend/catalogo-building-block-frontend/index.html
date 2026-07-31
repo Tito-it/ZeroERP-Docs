@@ -4743,6 +4743,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#drawer-fattura-consultazione-2026-07-29-brief-be-fe-drawer-fattura" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Drawer fattura — consultazione (2026-07-29, brief-be-fe-drawer-fattura)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#building-block-componenti-bom-shared-srcvendite_sharedcomponenti" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6226,6 +6237,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#drawer-fattura-consultazione-2026-07-29-brief-be-fe-drawer-fattura" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Drawer fattura — consultazione (2026-07-29, brief-be-fe-drawer-fattura)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#building-block-componenti-bom-shared-srcvendite_sharedcomponenti" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6538,6 +6560,11 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><strong>Fetch di testata dei cruscotti con guard anti-race (estratto 2026-07-07, regola del 2, ok Tid).</strong> <code>useDashRiepilogo(fetchFn, onData) → {fetchRiepilogo, invalidate}</code>: tag/isCurrent via <code>useFetchVersion</code>, unwrap <code>res.data.data</code>, <code>onData</code> applica i campi allo stato del caller; <code>invalidate()</code> per reset/logout. Complementare a <code>usePagedDashFetch</code> (sezioni paginate). Consumer: store <code>dashboardBacklog</code> (classi), <code>dashboardAperto</code> (aree+fasi), <code>dashboardCompetenza</code> (aggregata per anno).</td>
 </tr>
 <tr>
+<td><code>sintesiScadenze</code> / <code>useScadenzeSintesi</code></td>
+<td><code>useScadenzeSintesi.js</code></td>
+<td><strong>Sintesi di un piano rate</strong> (2026-07-29): da <code>&#91;{numero_rata, data_scadenza, importo}&#93;</code> a <code>{prossima, indice, count, totale, tuttePassate, rate}</code>. Regola in un posto solo: prossima = prima con <code>data_scadenza &gt;= oggi</code>; se tutte passate, l'<strong>ultima</strong> per data (descrive lo stato del piano) + flag. Ordina per data (non per <code>numero_rata</code>), scarta le rate senza data, <code>indice</code> 1-based per il display <code>2/3</code>. <code>sintesiScadenze(list, oggi?)</code> è <strong>pura</strong> (parametro <code>oggi</code> per i test, nessun test runner FE oggi); <code>useScadenzeSintesi(ref)</code> è il wrapper <code>computed</code>. ⚠️ <strong>Semantica temporale, non di pagamento</strong>: «prossima da incassare» NON è calcolabile — gli incassi (<code>pagamenti.vendite_movimenti</code>) sono legati alla fattura e non alla rata, e <code>fatture_scadenze</code> non ha stato di pagamento; il residuo esiste solo per fattura (<code>pagamenti.fn_get_saldo_fattura</code>). Non derivarne stati "insoluto" né colorazioni di sollecito.</td>
+</tr>
+<tr>
 <td><code>useKeyboardShortcuts</code></td>
 <td><code>useKeyboardShortcuts.js</code></td>
 <td>Registra shortcut globali (disabilita su input/textarea)</td>
@@ -6700,7 +6727,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>useListaConfigurabilePage</code></td>
 <td><code>useListaConfigurabilePage.js</code></td>
-<td><strong>Scaffolding pagine lista (2026-06-02, estrazione regola del 2).</strong> Centralizza ciò che le SearchTable basate su <code>&lt;ListaConfigurabile&gt;</code> (clienti/soggetti/fornitori/contratti) ripetevano identico: <code>useSearchTable</code>, ref alla lista (<code>listaRef</code>/<code>dirty</code>/<code>colonneNuove</code>/<code>configReady</code>), wiring export (<code>useFileDownload</code>+<code>ExportDialog</code>: <code>exportDialogVisible</code>/<code>exportLoading</code>/<code>onExportConfirm</code>), <code>onConfigLoaded</code> (allinea <code>store.filters.limit</code>), le 4 <code>pageActions</code> standard (reload/personalizza/export/new) e <code>tablePage</code> (pagina 1-based con guard <code>rows&gt;0</code>). API: <code>useListaConfigurabilePage(store, { exportFn, getExportParams, newTooltipKey, onNew, searchTableOptions, extraActions? })</code>. <code>getExportParams</code> è lazy (invocata al click export → può riferire <code>searchText</code>/ref filtri definiti dopo il destructuring). Il componente mantiene solo filtri, slot <code>cell-*</code>, <code>buildRowActions</code> e <code>onRowClick</code>. ~70 righe/lista rimosse.</td>
+<td><strong>Scaffolding pagine lista (2026-06-02, estrazione regola del 2).</strong> Centralizza ciò che le SearchTable basate su <code>&lt;ListaConfigurabile&gt;</code> (clienti/soggetti/fornitori/contratti) ripetevano identico: <code>useSearchTable</code>, ref alla lista (<code>listaRef</code>/<code>dirty</code>/<code>colonneNuove</code>/<code>configReady</code>), wiring export (<code>useFileDownload</code>+<code>ExportDialog</code>: <code>exportDialogVisible</code>/<code>exportLoading</code>/<code>onExportConfirm</code>), <code>onConfigLoaded</code> (allinea <code>store.filters.limit</code>), le <code>pageActions</code> standard (reload/personalizza sempre; <strong>export solo se passi <code>exportFn</code>, new solo se passi <code>onNew</code></strong> — 2026-07-31: prima erano incondizionate e i caller senza "Nuovo" filtravano a mano lo stesso <code>filter(a =&gt; a.key !== 'new')</code> in 3 file, mentre senza <code>exportFn</code> restava un pulsante che apriva un dialog inerte) e <code>tablePage</code> (pagina 1-based con guard <code>rows&gt;0</code>). API: <code>useListaConfigurabilePage(store, { exportFn, getExportParams, newTooltipKey, onNew, searchTableOptions, extraActions? })</code>. <code>getExportParams</code> è lazy (invocata al click export → può riferire <code>searchText</code>/ref filtri definiti dopo il destructuring). Il componente mantiene solo filtri, slot <code>cell-*</code>, <code>buildRowActions</code> e <code>onRowClick</code>. ~70 righe/lista rimosse.</td>
 </tr>
 <tr>
 <td><code>useListaEmptyStateFetch</code></td>
@@ -7742,12 +7769,27 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 <tr>
 <td><code>NoteDrawer</code></td>
 <td><code>NoteDrawer.vue</code></td>
-<td><strong>Building block note partizionate (2026-05-19).</strong> Drawer riusabile cross-dominio per CRUD note su qualunque partizione <code>vendite.note_*</code> (preventivo, contratto, e in prospettiva ordini/DDT/fatture/AF). Pattern formMode (lista DataTable + form sotto, scope-ambito/posizione/seq decorati come Tag e colonne). Props: <code>visible</code>, <code>apiClient</code> (oggetto da <code>makeNotesApi(...)</code>), <code>title</code>, <code>supportsRiga</code> (abilita select RIGA nel form), <code>righeOptions</code> (array <code>{value, label}</code> per popolare il select riga). Default applicativi minimi (anchor_tipo/posizione governati dal BE); operatore tocca: testo (Textarea markdown), stile (<code>LookupSelect rel="config.note_stili"</code>), riga opzionale, switch visibile + solo_stampa. Watch reattivo a <code>&#91;visible, apiClient&#93;</code> per ricaricare quando il padre cambia parent id. Page size <code>PAGE_SIZE_DEFAULT=200</code> (cap BE).</td>
+<td><strong>Building block note partizionate (2026-05-19).</strong> Drawer riusabile cross-dominio per CRUD note su qualunque partizione <code>vendite.note_*</code> (preventivo, contratto, e in prospettiva ordini/DDT/fatture/AF). Pattern formMode (lista DataTable + form sotto, scope-ambito/posizione/seq decorati come Tag e colonne). Props: <code>visible</code>, <code>apiClient</code> (oggetto da <code>makeNotesApi(...)</code>), <code>title</code>, <code>supportsRiga</code> (abilita select RIGA nel form), <code>righeOptions</code> (array <code>{value, label}</code> per popolare il select riga). Default applicativi minimi (anchor_tipo/posizione governati dal BE); operatore tocca: testo (Textarea markdown), stile (<code>LookupSelect rel="config.note_stili"</code>), riga opzionale, switch visibile + solo_stampa. Watch reattivo a <code>&#91;visible, apiClient&#93;</code> per ricaricare quando il padre cambia parent id. Page size <code>PAGE_SIZE_DEFAULT=200</code> (cap BE). <strong>Evento <code>saved(total)</code></strong> (2026-07-29): porta il TOTALE note del documento dopo create/update/delete — il drawer lo conosce già dalla lista appena ricaricata (<code>useNote.total</code>), così un padre può aggiornare un badge counter <strong>senza una seconda chiamata</strong>. Payload additivo: i consumer che ignorano l'argomento non cambiano.</td>
 </tr>
 <tr>
 <td><code>PreventivoNoteDrawer</code> / <code>ContrattoNoteDrawer</code></td>
 <td><code>PreventivoNoteDrawer.vue</code> / <code>ContrattoNoteDrawer.vue</code></td>
-<td>Wrapper thin (~30 righe) sul building block <code>NoteDrawer</code>. Costruiscono <code>makeNotesApi('/vendite/preventivi/&lt;id&gt;')</code> o <code>'/vendite/contratti/&lt;id&gt;'</code> via computed (reattivo a cambio id padre) + adapter righe -&gt; opzioni select <code>{value:id, label:"&lt;codice_articolo&gt; — &lt;descrizione&gt;"}</code>. Aggiungere un nuovo dominio note = clonare 30 righe e cambiare 4 token (basePath + titolo i18n).</td>
+<td>Wrapper thin (~30 righe) sul building block <code>NoteDrawer</code>. Costruiscono <code>makeNotesApi('/vendite/preventivi/&lt;id&gt;')</code> o <code>'/vendite/contratti/&lt;id&gt;'</code> via computed (reattivo a cambio id padre) + adapter righe -&gt; opzioni select <code>{value:id, label:"&lt;codice_articolo&gt; — &lt;descrizione&gt;"}</code>. Aggiungere un nuovo dominio note = clonare 30 righe e cambiare 4 token (basePath + titolo i18n). Il boilerplate comune è poi confluito in <code>VenditeNoteDrawer</code> (sotto).</td>
+</tr>
+<tr>
+<td><code>VenditeNoteDrawer</code> + wrapper di dominio</td>
+<td><code>VenditeNoteDrawer.vue</code></td>
+<td>Building block intermedio sopra <code>NoteDrawer</code> per i documenti vendite: costruisce <code>makeNotesApi('/vendite/&lt;dominio&gt;/&lt;id&gt;')</code>, adatta righe → opzioni select (campi label parametrici <code>codeField</code>/<code>descField</code>) e <strong>scarta le righe senza <code>id</code></strong> (righe sintetiche delle viste di esposizione, es. KIT_PADRE di <code>vw_fattura_righe_esposte</code>: non esistono in tabella e non reggono la FK <code>target_riga_id</code>). Wrapper thin per dominio: <code>OffertaNoteDrawer</code>, <code>OrdineNoteDrawer</code>, <code>DdtNoteDrawer</code>, <code>FatturaNoteDrawer</code> (2026-07-29, sesto dominio).</td>
+</tr>
+<tr>
+<td><code>ScadenzeSintesi</code></td>
+<td><code>ScadenzeSintesi.vue</code></td>
+<td><strong>Valore "scadenza" per la scheda di un documento</strong> (2026-07-29): prossima rata <strong>per data</strong> + chip posizionale (<code>2/3</code>) che apre il piano completo in <code>Popover</code> (rata/data/importo + totale). Due ingressi per vivere in contesti diversi: <code>scadenze</code> (array completo → caso drawer, popover attivo) <strong>oppure</strong> <code>prossima-data</code> + <code>count</code> già risolti dal BE (caso lista, dove non si spedisce il piano rate di ogni riga: conteggio testuale, dettaglio aprendo il documento). ⚠️ Semantica <strong>temporale</strong>, mai «da incassare» — vedi <code>useScadenzeSintesi</code>. Consumer: <code>FatturaDrawer</code>.</td>
+</tr>
+<tr>
+<td><code>RiepilogoIvaTable</code></td>
+<td><code>RiepilogoIvaTable.vue</code></td>
+<td>Tabella riepilogo IVA aggregato cross-documento (shape standard viste riepilogo: <code>iva_*</code>, <code>natura_codice</code>, <code>esigibilita</code>, <code>imponibile</code>, <code>imposta</code>, <code>arrotondamento</code>). Label aliquota corretta per gli esenti (natura come sottotitolo), footer di quadratura, riga totale documento. Props opzionali: <code>showArrotondamento</code> (diagnostica), <code>showEsigibilita</code> (fatture: decodifica I/D/S FatturaPA via i18n, 2026-07-29), <code>showSubtitle</code>. Consumer: <code>PreventiviDrawer</code>, <code>OrdiniDrawer</code>, <code>DdtDrawer</code>, <code>FatturaDrawer</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -8173,6 +8215,33 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 </tr>
 </tbody>
 </table>
+<h3 id="drawer-fattura-consultazione-2026-07-29-brief-be-fe-drawer-fattura">Drawer fattura — consultazione (2026-07-29, brief-be-fe-drawer-fattura)<a class="headerlink" href="#drawer-fattura-consultazione-2026-07-29-brief-be-fe-drawer-fattura" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FatturaDrawer</code></td>
+<td><code>FatturaDrawer.vue</code></td>
+<td>Drawer di <strong>consultazione</strong> della fattura (documento a video: header con numero/data emissione etichettati + stato e utility; schede Cliente e Documento affiancate in <code>form-grid-2col</code>, con la scadenza resa da <code>ScadenzeSintesi</code>; righe da <code>vw_fattura_righe_esposte</code> con kit rientrati; <code>RiepilogoIvaTable</code> e, in chiusura, i totali documento in <code>app-doc-totali</code>). Sola lettura per costruzione — nessun verbo di modifica; azioni: «Vedi stampa» (anteprima PDF on-the-fly), archivio documenti (<code>PdfDocumentiSorgenteDialog</code>), note <strong>con badge counter</strong> (init dal payload <code>contatori.note</code>, refresh dal <code>saved(total)</code> del sub-drawer: zero round-trip in entrambi i casi). Readonly/blocked livello <strong>oggetto</strong> (<code>READONLY_MODELS.FATTURA</code>, speculare al <code>model_permission</code> BE). Registrato in <code>documentoDrawers</code> (chiave <code>FATTURA</code>): apribile da LottoDrawer, tappe Passaggi, drill-down cruscotti.</td>
+</tr>
+<tr>
+<td><code>getFatturaDettaglio</code></td>
+<td><code>api/fatture.js</code></td>
+<td>Client API <code>GET /vendite/fatture/&lt;id&gt;/</code> — documento completo + <code>contatori</code> dei badge in un round-trip (stessi lettori del contesto PDF). 404 unificato inesistente/fuori scope.</td>
+</tr>
+<tr>
+<td><code>FatturaNoteDrawer</code></td>
+<td><code>FatturaNoteDrawer.vue</code></td>
+<td>Wrapper thin su <code>VenditeNoteDrawer</code> (dominio <code>fatture</code>), vedi sezione Drawer core.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="building-block-componenti-bom-shared-srcvendite_sharedcomponenti">Building block Componenti BoM shared (<code>src/vendite/_shared/componenti/</code>)<a class="headerlink" href="#building-block-componenti-bom-shared-srcvendite_sharedcomponenti" title="Permanent link">&para;</a></h3>
 <p>Famiglia di 3 building block riusabili dalle 4 sorgenti documento composito (preventivi, contratti, ordini, ddt) + listini bundle. Modello unificato 2026-05-13 (padre = SUM figli × coeff_qta). Estratti in Fase H 2026-05-14 per evitare duplicazione cross-sorgente.</p>
 <table>
@@ -8234,7 +8303,7 @@ resi) come sezione in coda al contenuto (Fase A brief lineage, 2026-07-15).</p>
 <tr>
 <td><code>DocumentoDrawerHost</code> + <code>documentoDrawers.js</code> + <code>useDocumentoDrawer</code></td>
 <td><code>DocumentoDrawerHost.vue</code></td>
-<td><strong>Apri-un-documento-in-drawer, per id.</strong> Host cross-dominio che apre "a comando" il drawer di dettaglio del documento (chiave registry + id) impilato, come <code>PraticaDrawer</code>. <code>documentoDrawers.js</code> mappa le <strong>8 chiavi</strong> (<code>DOCUMENTO_DRAWER_TIPI</code>: 6 documenti + COMMESSA leggero + COMMESSA_GESTIONE) → drawer con <strong>import dinamico</strong>: rompe il ciclo di import (i drawer importano <code>DocumentoCollegamentiBar</code>) e code-splitta i drawer. Il chunk e' atteso e il componente RISOLTO montato nascosto PRIMA di aprire (con <code>defineAsyncComponent</code> il figlio nasceva gia' visibile → bug "primo click apre vuoto"). Gestisce prop id a nome variabile per dominio + <code>mode='edit'</code> (Reso/Commessa senza <code>mode</code>). <code>SORGENTE_DRAWER_TIPI</code> = sottoinsieme con un <code>config.sorgenti.codice_interno</code> (per chi parte da un tipo sorgente, es. lineage) e <code>isTappaApribile(row)</code> = la regola UNICA "questa tappa si apre" (id di dominio risolto + tipo con drawer), usata da chi rende il link; l'apertura la ri-guarda <code>apri()</code>, che è no-op su chiave ignota — i caller non ripetono il test. <code>useDocumentoDrawer(onClose?)</code> → <code>{visible, tipo, id, apri(tipo,id), onVisibleChange}</code>: stato di apertura (estratto 2026-07-25 alla 3a copia) con hook di refresh alla chiusura per i cruscotti. Props host: <code>visible</code> (v-model), <code>tipoCodice</code>, <code>docId</code>. <strong>Promosso 2026-07-25 da <code>_shared/lineage/</code></strong> (regola del 2, ok Tid): consumer = tappe <code>LineagePassaggiContenuto</code> + azione "apri documento" dei drill-down <code>SituazioneApertaView</code>/<code>DashboardBacklogView</code>.</td>
+<td><strong>Apri-un-documento-in-drawer, per id.</strong> Host cross-dominio che apre "a comando" il drawer di dettaglio del documento (chiave registry + id) impilato, come <code>PraticaDrawer</code>. <code>documentoDrawers.js</code> mappa le <strong>9 chiavi</strong> (<code>DOCUMENTO_DRAWER_TIPI</code>: 7 documenti — FATTURA inclusa dal 2026-07-29 col drawer di consultazione — + COMMESSA leggero + COMMESSA_GESTIONE) → drawer con <strong>import dinamico</strong>: rompe il ciclo di import (i drawer importano <code>DocumentoCollegamentiBar</code>) e code-splitta i drawer. Il chunk e' atteso e il componente RISOLTO montato nascosto PRIMA di aprire (con <code>defineAsyncComponent</code> il figlio nasceva gia' visibile → bug "primo click apre vuoto"). Gestisce prop id a nome variabile per dominio + <code>mode='edit'</code> (Reso/Commessa senza <code>mode</code>). <code>SORGENTE_DRAWER_TIPI</code> = sottoinsieme con un <code>config.sorgenti.codice_interno</code> (per chi parte da un tipo sorgente, es. lineage) e <code>isTappaApribile(row)</code> = la regola UNICA "questa tappa si apre" (id di dominio risolto + tipo con drawer), usata da chi rende il link; l'apertura la ri-guarda <code>apri()</code>, che è no-op su chiave ignota — i caller non ripetono il test. <code>useDocumentoDrawer(onClose?)</code> → <code>{visible, tipo, id, apri(tipo,id), onVisibleChange}</code>: stato di apertura (estratto 2026-07-25 alla 3a copia) con hook di refresh alla chiusura per i cruscotti. Props host: <code>visible</code> (v-model), <code>tipoCodice</code>, <code>docId</code>. <strong>Promosso 2026-07-25 da <code>_shared/lineage/</code></strong> (regola del 2, ok Tid): consumer = tappe <code>LineagePassaggiContenuto</code> + azione "apri documento" dei drill-down <code>SituazioneApertaView</code>/<code>DashboardBacklogView</code>.</td>
 </tr>
 <tr>
 <td><code>CommessaDrawer</code> (lineage)</td>
@@ -8348,7 +8417,7 @@ tre cloni <code>*PdfButton.vue</code>.</p>
 <tr>
 <td><code>SORGENTE_CODES</code></td>
 <td><code>constants.js</code></td>
-<td>Enum codici sorgente documentale (<code>PREVENTIVO</code>/<code>CONTRATTO</code>/<code>OFFERTA_COMMERCIALE</code>/<code>ORDINE_VENDITA</code>), allineati al registry BE e a <code>config/constants/documentiContextBuilders.js</code> (whitelist editor template, voci <code>registered:true</code>).</td>
+<td>Enum codici sorgente documentale (<code>PREVENTIVO</code>/<code>CONTRATTO</code>/<code>OFFERTA_COMMERCIALE</code>/<code>ORDINE_VENDITA</code>/<code>DDT_VENDITA</code>/<code>FATTURA</code>), allineati al registry BE e a <code>config/constants/documentiContextBuilders.js</code> (whitelist editor template, voci <code>registered:true</code>).</td>
 </tr>
 </tbody>
 </table>

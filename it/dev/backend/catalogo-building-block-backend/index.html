@@ -6617,9 +6617,14 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td>Factory <code>(area_funzionale, parent_path_param, service_factory, target_tipo, model_permission?) -&gt; (ListCreateView, DetailView)</code>. Le view derivano da <code>DomainAPIView</code>; serializer drf-spectacular inline univoci per target_tipo. URL pattern uniforme <code>/&lt;area&gt;/&lt;entita&gt;/&lt;parent_id&gt;/note/&#91;&lt;note_id&gt;/&#93;</code>. Query param <code>?target_riga_id=</code> per filtrare note di una riga; body <code>target_riga_id</code> per CREATE di nota-di-riga. Idempotency-Key obbligatoria sui POST.</td>
 </tr>
 <tr>
+<td><code>vendite.db.note_repositories</code></td>
+<td><code>note_repositories.py</code></td>
+<td><strong>Istanze</strong> del repo per le 6 partizioni note del ciclo attivo (<code>NOTE_REPO_PREVENTIVO</code>/<code>_CONTRATTO</code>/<code>_OFFERTA</code>/<code>_ORDINE</code>/<code>_DDT</code>/<code>_FATTURA</code>), singleton-friendly. Estratte da <code>api/note_views.py</code> il 2026-07-29: i parametri di partizione sono un fatto di <strong>accesso ai dati</strong>, e da quando <code>vendite_service.get_fattura_dettaglio</code> conta le note per il badge del drawer servono anche a un service — che non può importare da <code>api/</code> senza invertire i layer. Punto unico: aggiungere un dominio note = una istanza qui.</td>
+</tr>
+<tr>
 <td><code>vendite.api.note_views</code></td>
 <td><code>note_views.py</code></td>
-<td>Cablaggio dominio: 2 istanze repo (PREVENTIVO + CONTRATTO) + service factories + 4 view via factory. Aggiungere ordini/DDT/fatture/AF = ~10 righe clonate.</td>
+<td>Cablaggio dominio dei <strong>6 domini</strong>: service factory (per-request) + 12 view via <code>make_note_views</code>, sui repo importati da <code>db/note_repositories</code>. Aggiungere un dominio = una factory + una coppia di view.</td>
 </tr>
 <tr>
 <td>Codici errore <code>E_NOTA_*</code></td>
@@ -6628,13 +6633,22 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 </tr>
 </tbody>
 </table>
-<p><strong>Endpoint cablati (Fase 2+3, 2026-05-19):</strong></p>
+<p><strong>Endpoint cablati</strong> — i <strong>6 domini del ciclo attivo</strong>, tutti dalla stessa
+factory (<code>GET/POST</code> sulla lista, <code>GET/PATCH/DELETE</code> sul dettaglio):</p>
 <ul>
-<li><code>GET/POST   /api/v1/vendite/preventivi/&lt;id&gt;/note/</code></li>
-<li><code>GET/PATCH/DELETE /api/v1/vendite/preventivi/&lt;id&gt;/note/&lt;note_id&gt;/</code></li>
-<li><code>GET/POST   /api/v1/vendite/contratti/&lt;id&gt;/note/</code></li>
-<li><code>GET/PATCH/DELETE /api/v1/vendite/contratti/&lt;id&gt;/note/&lt;note_id&gt;/</code></li>
+<li><code>/api/v1/vendite/preventivi/&lt;id&gt;/note/&#91;&lt;note_id&gt;/&#93;</code> (Fase 2+3, 2026-05-19)</li>
+<li><code>/api/v1/vendite/contratti/&lt;id&gt;/note/&#91;&lt;note_id&gt;/&#93;</code> (Fase 2+3, 2026-05-19)</li>
+<li><code>/api/v1/vendite/offerte/&lt;id&gt;/note/&#91;&lt;note_id&gt;/&#93;</code></li>
+<li><code>/api/v1/vendite/ordini/&lt;id&gt;/note/&#91;&lt;note_id&gt;/&#93;</code></li>
+<li><code>/api/v1/vendite/ddt/&lt;id&gt;/note/&#91;&lt;note_id&gt;/&#93;</code></li>
+<li><code>/api/v1/vendite/fatture/&lt;id&gt;/note/&#91;&lt;note_id&gt;/&#93;</code> (2026-07-28, drawer fattura)</li>
 </ul>
+<p>Il sesto cablaggio ha confermato la promessa del BB: partizione
+<code>vendite.note_fatture</code> e trigger di validazione già a DB, <code>"FATTURA"</code> già in
+<code>TARGET_TIPI_AMMESSI</code> → <strong>~15 righe di sola configurazione, zero migration</strong>.
+⚠️ Caveat specifico fatture: le righe <code>KIT_PADRE</code> di <code>vw_fattura_righe_esposte</code>
+sono sintetiche (<code>id</code> NULL) e non possono reggere la FK <code>target_riga_id</code> — il
+wrapper FE le esclude dal select riga.</p>
 <p><strong>Parametro di sistema</strong> <code>NOTE_DEFAULT_STILE</code> in <code>config.parameters</code> (default <code>'DEFAULT'</code>, chiave naturale di <code>config.note_stili.codice_interno</code>): alimenta il fallback <code>id_stile</code> quando il payload non lo specifica. Vantaggi della chiave naturale vs id intero: stabilità (codice_interno è lockato dal trigger DB), autodescrittivo nei log, niente accoppiamento con FK-surrogate registry.</p>
 <p><strong>Compatibilità catalogo</strong>: <code>catalogo.note_articoli</code> è una tabella standalone (NON partizione di <code>vendite.note</code>), schema identico ma con <code>target_id</code> UUID. Il building block è tecnicamente compatibile, ma <code>catalogo_bom_repository</code> ha già il suo CRUD note funzionante: la migrazione al building block partizionato è futuro lavoro (fuori scope iniziale 2026-05-19).</p>
 <hr />
@@ -7635,7 +7649,7 @@ preventivi/offerte/ordini/ddt/contratti (design
 <tr>
 <td><code>IndirizziDocumentoRepositoryMixin</code></td>
 <td><code>_indirizzi_repo_mixin.py</code></td>
-<td>CRUD <code>*_indirizzi</code> + tipi ammessi per ambito + <code>snapshot_from_origine</code> (<code>script.fn_snapshot_indirizzo</code>) + <code>get_soggetto_ruolo_documento</code> (guard ownership). 4 attributi di classe (tabella indirizzi, FK, ambito, tabella documento).</td>
+<td>CRUD <code>*_indirizzi</code> + tipi ammessi per ambito + <code>snapshot_from_origine</code> (<code>script.fn_snapshot_indirizzo</code>, flusso picker) + <code>get_ancora_indirizzi_documento</code> → coppia <code>(soggetto_ruolo, istanza_utility)</code> in una query, con <code>get_soggetto_ruolo_documento</code> che vi delega (guard ownership). <strong>Dal 2026-07-31</strong> la <strong>risoluzione dall'anagrafica</strong> non è più in Python: <code>resolve_indirizzo_documento(*, soggetto_ruolo_id, istanza_utility_id, tipo_codice)</code> delega a <code>script.fn_resolve_indirizzo_documento</code>, unica implementazione della catena a due layer <strong>RUOLO → SOGGETTO</strong> con <strong>precedenza all'istanza</strong> del documento (prima i due metodi <code>find_indirizzo_ruolo_per_tipi</code>/<code>find_snapshot_soggetto_per_tipi</code> la replicavano qui, e ordinando <code>istanza_utility_id NULLS FIRST</code> preferivano l'indirizzo <strong>generico</strong>: correzione, non refactor — rilievo C-14c del piano DB satelliti fattura). 5 attributi di classe: tabella indirizzi, FK, ambito, tabella documento, <code>_indirizzi_doc_sr_column</code> (soggetto_ruolo nativo, opz.) e <code>_indirizzi_doc_istanza_column</code> (istanza nativa: la dichiarano i soli <strong>precontrattuali</strong> — preventivi/offerte/contratti; gli esecutivi la ricavano da <code>ba.istanza_utility_id</code>). Collaudo: <code>smoke-indirizzi-documento-catena.py</code> (9 casi) + <code>tests/services/test_indirizzi_documento_helpers.py</code> (9 test).</td>
 </tr>
 <tr>
 <td><code>IndirizziDocumentoConfig</code> + helpers</td>

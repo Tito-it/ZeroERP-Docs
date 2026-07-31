@@ -5266,10 +5266,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#logiche-di-calcolo-indicative" class="md-nav__link">
+  <a href="#logiche-di-calcolo-come-funziona-davvero" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Logiche di calcolo (indicative)
+        Logiche di calcolo — <strong>come funziona davvero</strong>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kit-ed-esposizione-in-fattura" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Kit ed esposizione in fattura
       </span>
     </span>
   </a>
@@ -5368,33 +5379,67 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 22-01-2026)
-<code>vendite.fatture_righe</code> contiene le <strong>righe economiche</strong> di una fattura: descrizione, articolo (opzionale), UoM, quantità, prezzo, sconti, IVA e <strong>importi congelati</strong> (<em>snapshot</em>) al momento della generazione. Ogni riga è ordinata tramite <code>riga_nr</code> ed è collegata a una testata <code>vendite.fatture</code> (FK <code>fattura_id</code>). Supporta la <strong>destinazione a BA diverso</strong> dalla testata e l’idempotenza di import riga‑per‑riga.</p>
+<p>(latest review <strong>28-07-2026</strong> — revisione sostanziale, vedi ⚠️ in fondo alla sezione)
+<code>vendite.fatture_righe</code> contiene le <strong>righe economiche</strong> di una fattura: descrizione, articolo (opzionale), UoM, quantità, prezzo, sconti, IVA e <strong>imponibile congelato</strong> (<em>snapshot</em>) al momento della generazione. Ogni riga è ordinata tramite <code>riga_nr</code> ed è collegata a una testata <code>vendite.fatture</code> (FK <code>fattura_id</code>). Supporta la <strong>destinazione a BA diverso</strong> dalla testata.</p>
 <p>Obiettivi principali:</p>
 <ul>
-<li>Conservare <strong>valori definitivi</strong> (imponibile, imposta, totale) per garantire riproducibilità documentale nel tempo.</li>
+<li>Conservare il <strong>valore definitivo</strong> della riga per garantire riproducibilità documentale nel tempo.</li>
+<li>Essere il <strong>dettaglio</strong> della fattura: una riga rappresenta l'<strong>aggregazione di 1..n attività fatturabili</strong>, che vi puntano tramite <code>attivita_fatturabili.fattura_riga_id</code>.</li>
 <li>Permettere <strong>override di IVA e attributi fiscali</strong> (esigibilità, split payment) a livello riga.</li>
 <li>Mantenere riferimenti all’<strong>articolo di catalogo</strong> e all’<strong>unità di misura</strong> utilizzata per il calcolo.</li>
-<li>Supportare <strong>tracciabilità di origine</strong> (sorgente_tipo / sorgente_uid / sorgente_riga) per import e riconciliazioni.</li>
 </ul>
+<blockquote>
+<p>⚠️ <strong>Questo manuale è stato corretto il 2026-07-28, e vale la pena sapere perché.</strong>
+La versione precedente descriveva tre colonne di importo (<code>imponibile_riga</code>,
+<code>imposta_riga</code>, <code>totale_riga</code>) con le loro formule, e classificava il trigger
+che avrebbe dovuto calcolarle come <em>«opzionale»</em> in una sezione di roadmap.
+Quel trigger non è mai stato scritto, mentre il backend dava per fatto che il
+DB calcolasse gli importi: risultato, <strong>ogni fattura del sistema è rimasta a
+0,00 € fino al 2026-07-28</strong>. Il documento citava inoltre una colonna
+<code>iva_perc</code> che sulla riga non esiste.
+Chi legge questa pagina la usa come specifica: da qui in avanti descrive <strong>cosa
+il database fa</strong>, non cosa potrebbe fare.
+Storia completa: <code>brief-fix-importi-riga-fattura-zero.md</code>.</p>
+</blockquote>
 <hr />
 <h3 id="collocazione-nel-flusso">Collocazione nel flusso<a class="headerlink" href="#collocazione-nel-flusso" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Popolamento</strong>: generazione da attività fatturabili, ordini, contratti o input manuale; calcolo <code>imponibile_riga</code>, <code>imposta_riga</code>, <code>totale_riga</code> con snapshot delle regole (incluse <code>iva_perc</code>, <code>iva_natura</code>).</li>
-<li><strong>Ordinamento</strong>: assegnazione <code>riga_nr</code> progressivo per fattura; vincolo unico <code>(fattura_id, riga_nr)</code>.</li>
-<li><strong>Totali testata</strong>: la somma delle righe alimenta i campi <code>imponibile_tot</code>, <code>imposta_tot</code>, e convergono nei riepiloghi IVA.</li>
-<li><strong>Controlli</strong>: normalizzazione/guard tramite trigger <code>trg_fatture_righe_ins_upd_norm_guard</code> (coerenze su quantità/prezzo/IVA/UoM/sconti, e allineamento campi snapshot).</li>
+<li>
+<p><strong>Popolamento</strong>: lo fa il <strong>backend</strong>, non il DB — <code>FattureRigheService.generate_fatture_righe</code> (<code>apps/vendite/services/fatture_righe_service.py</code>), invocato dal task <code>generate_fatture_righe</code> della pipeline. <strong>Aggrega</strong> le attività fatturabili del lotto per chiave di raggruppamento — <code>_build_group_key</code>: articolo · BA destinatario · UoM · <strong>prezzo unitario</strong> · IVA · competenza · istanza di kit — e produce <strong>una riga per gruppo</strong>. Le <em>n</em> attività del gruppo vengono collegate alla riga con <code>fattura_riga_id</code>.</p>
+<p>⚠️ Esisteva una funzione SQL gemella (<code>vendite.fn_generate_fatture_righe</code>), <strong>ritirata il 2026-07-28</strong> col changeset <code>20260728-21</code>: non era in esercizio dal 2026-02-03, e averla lasciata «per compatibilità storica» è costato una giornata di sviluppo su codice morto. Vedi <code>brief-db-ritiro-generatore-righe-fattura-sql.md</code>.</p>
+</li>
+<li>
+<p><strong>Calcolo dell'importo</strong>: NON lo fa chi scrive la riga. Lo calcola il trigger <code>trg_fatture_righe_a20_importo_ins_upd</code> a ogni <code>INSERT</code>/<code>UPDATE</code> — vedi <em>Logiche di calcolo</em>.</p>
+</li>
+<li><strong>Ordinamento</strong>: <code>riga_nr</code> progressivo per fattura, assegnato con ordinamento <strong>deterministico</strong> dei gruppi; vincolo unico <code>(fattura_id, riga_nr)</code>.</li>
+<li><strong>Totali testata</strong>: la somma delle righe alimenta i riepiloghi IVA e da lì <code>imponibile_tot</code>, <code>imposta_tot</code>, <code>totale_doc</code>, <code>totale_a_pagare</code>.</li>
+<li><strong>Congelamento</strong>: superata la soglia <code>DRAFT</code>/<code>EMESSA</code>, il guard <code>trg_fatture_righe_a10_guard_congelamento_ins_upd_dlt</code> respinge <code>INSERT</code>, <code>UPDATE</code> <strong>e</strong> <code>DELETE</code>. La riga diventa uno snapshot fiscale intoccabile.</li>
+<li><strong>Normalizzazione</strong>: <code>trg_fatture_righe_guard_normalize_ins_upd</code> eredita il BA destinatario dalla testata e allinea lo snapshot <code>iva_natura</code>.</li>
 </ol>
 <hr />
 <h3 id="campi-chiave-semantica">Campi chiave (semantica)<a class="headerlink" href="#campi-chiave-semantica" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Identità e collegamenti</strong>: <code>fattura_id</code> (testata), <code>riga_nr</code> (ordine), <code>articolo_id</code> (opzionale), <code>uom_id</code> (unità misura), <code>dest_billing_account_id</code> (attribuzione economica a BA figlio).</li>
 <li><strong>Dati merce/servizio</strong>: <code>descrizione</code>, <code>qta</code> , <code>prezzo_unitario</code> , <code>sconto_percentuale</code> (0–100, default 0). Per q.ta e prezzo leggere le note contenute nel documento</li>
-<li><strong>IVA e fiscali</strong>: <code>iva_id</code> (aliquota), <code>iva_perc</code>, <code>iva_natura</code> (snapshot), <code>esigibilita</code> (I|D|S), <code>split_payment</code>.</li>
-<li><strong>Importi congelati</strong>: <code>imponibile_riga</code>, <code>imposta_riga</code>, <code>totale_riga</code> (sempre valorizzati al closing della riga).</li>
+<li><strong>IVA e fiscali</strong>: <code>iva_id</code> (aliquota), <code>iva_natura</code> (snapshot), <code>esigibilita</code> (I|D|S), <code>split_payment</code>.</li>
+<li><strong>Importo congelato</strong>: <code>imponibile_riga</code> — <code>NOT NULL</code>, <strong>calcolato dal DB</strong>, mai da chi scrive la riga. Un valore passato dall'esterno viene <strong>sovrascritto</strong>.</li>
+<li><strong>Snapshot kit</strong> (<code>NULL</code> sulle righe non-kit, tutti valorizzati insieme sulle righe di kit): <code>kit_key</code> (identità dell'<strong>istanza</strong> di kit), <code>kit_esposto_in_fattura</code>, <code>kit_articolo_padre_id</code>, <code>kit_descrizione_padre</code>. Vedi <em>Kit ed esposizione</em>.</li>
 <li><strong>Governance</strong>: <code>meta</code> (JSONB, NOT NULL), <code>storicizza</code>, <code>tx_id</code>, audit <code>data_*</code>/<code>user_*</code>.</li>
-<li><strong>Idempotenza import</strong>: <code>sorgente_tipo_id</code>, <code>sorgente_uid</code>, <code>sorgente_riga</code> con <strong>unique parziale</strong> su (sorgente_tipo_id, sorgente_uid).</li>
+<li><strong>Tracciabilità di origine</strong>: <code>sorgente_tipo_id</code>, <code>sorgente_uid</code>, <code>sorgente_riga</code> con <strong>unique parziale</strong> su (sorgente_tipo_id, sorgente_uid). ⚠️ Sulle righe prodotte dall'aggregazione sono <strong>NULL</strong>: con <em>n</em> attività di sorgenti diverse non esiste una sorgente singola da dichiarare, e sceglierne una sarebbe una bugia. La tracciabilità passa da <code>attivita_fatturabili.fattura_riga_id</code>.</li>
 </ul>
+<blockquote>
+<p>❌ <strong><code>imposta_riga</code> e <code>totale_riga</code> NON esistono più</strong> (rimosse il 2026-07-28).
+L'imposta di riga non esiste nel regime italiano: l'IVA si liquida per aliquota
+in <code>vendite.fatture_riepiloghi_iva</code>, ed è così che il modello è nato. Erano
+colonne persistite e mai scritte, e non erano nemmeno calcolabili dalla riga —
+l'aliquota dipende dallo stato dell'emittente, che sulla riga non c'è.
+⚠️ <code>totale_riga</code> resta un nome vivo <strong>altrove</strong>: è la colonna calcolata
+(<code>imponibile + imposta</code>) delle viste di riepilogo IVA di ordini, DDT e
+preventivi. Omonimia, non la stessa cosa.</p>
+<p>❌ <strong><code>iva_perc</code> non è mai esistita</strong> su questa tabella: il manuale precedente la
+citava per errore. L'aliquota si risolve da <code>iva_id</code> con
+<code>config.fn_get_aliquota_iva(iva_id, stato_emittente_id)</code>.</p>
+</blockquote>
 <hr />
 <h3 id="vincoli-indici-e-coerenze">Vincoli, indici e coerenze<a class="headerlink" href="#vincoli-indici-e-coerenze" title="Permanent link">&para;</a></h3>
 <ul>
@@ -5405,7 +5450,8 @@
 <li>
 <p><code>chk_fatture_righe_sconto</code> → <code>sconto_percentuale</code> 0..100 (rinominato da <code>chk_fatture_righe_sconto_perc</code>, unificazione 2026-06-05).</p>
 </li>
-<li><code>chk_fatr_iva_perc</code> → iva_perc 0..100 (se valorizzato).</li>
+<li><code>chk_fatture_righe_kit_coerente</code> → o la riga <strong>non è</strong> di kit (tutte le colonne <code>kit_*</code> NULL), o lo è per intero (chiave, flag ed articolo padre valorizzati). Una riga con metadati a metà sarebbe indistinguibile da una riga normale per la vista di esposizione, e sparirebbe dal raggruppamento senza un fiato.</li>
+<li>~~<code>chk_fatr_iva_perc</code>~~ → <strong>non esiste</strong>: il manuale precedente lo citava insieme alla colonna <code>iva_perc</code>, che su questa tabella non c'è mai stata.</li>
 <li>
 <p><strong>UNIQUE</strong>:</p>
 </li>
@@ -5416,15 +5462,116 @@
 <li><strong>INDICI operativi</strong>: per ricerche su fattura, IVA, BA destinatario.</li>
 </ul>
 <hr />
-<h3 id="logiche-di-calcolo-indicative">Logiche di calcolo (indicative)<a class="headerlink" href="#logiche-di-calcolo-indicative" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Base</strong>:
-  <code>imponibile_riga = round(qta * prezzo_unitario * (1 - sconto_percentuale/100), dec_importi)</code>
-  <code>imposta_riga    = round(imponibile_riga * (iva_perc/100), dec_importi)</code>
-  <code>totale_riga     = imponibile_riga + imposta_riga</code></li>
-<li><strong>Rounding</strong>: usare le funzioni centralizzate del modulo vendite (decimali/metodo) per coerenza con testata e policy articolo.</li>
-<li><strong>Override fiscali</strong>: <code>iva_id</code> guida la natura/percentuale; <code>iva_perc</code>/<code>iva_natura</code> <strong>devono essere snapshot</strong> coerenti al momento di emissione.</li>
-</ul>
+<h3 id="logiche-di-calcolo-come-funziona-davvero">Logiche di calcolo — <strong>come funziona davvero</strong><a class="headerlink" href="#logiche-di-calcolo-come-funziona-davvero" title="Permanent link">&para;</a></h3>
+<p><strong>L'importo lo calcola il database</strong>, con il trigger
+<code>trg_fatture_righe_a20_importo_ins_upd</code>, a ogni <code>INSERT</code> e <code>UPDATE</code>:</p>
+<div class="highlight"><pre><span></span><code>imponibile_riga = arrotonda(
+      qta × prezzo_unitario × (1 − COALESCE(sconto_percentuale,0)/100),
+      decimali,   ← vendite.articolo_regole_fatturazione.arrotondamento_importi_dec   (default 2)
+      metodo      ← vendite.articolo_regole_fatturazione.metodo_arrotondamento_importi (default HALF_UP)
+  )
+</code></pre></div>
+<p><strong>Le regole che tengono in piedi il calcolo</strong>, e cosa succede se saltano:</p>
+<table>
+<thead>
+<tr>
+<th>Regola</th>
+<th>Presidiata da</th>
+<th>Se salta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L'importo lo calcola il DB, mai chi scrive la riga</td>
+<td>trigger <code>a20</code></td>
+<td>importi arbitrari dall'esterno — è il difetto d'origine</td>
+</tr>
+<tr>
+<td>L'arrotondamento avviene <strong>una sola volta</strong>, sul risultato</td>
+<td>la formula: arrotonda il totale, mai gli addendi</td>
+<td>scarti da doppio arrotondamento</td>
+</tr>
+<tr>
+<td>Decimali e metodo vengono dalle regole <strong>dell'articolo</strong></td>
+<td>trigger + <code>script.fn_arrotonda_importo</code></td>
+<td>la fattura ignora la configurazione</td>
+</tr>
+<tr>
+<td>Un metodo non riconosciuto <strong>solleva</strong></td>
+<td><code>script.fn_arrotonda_importo</code></td>
+<td>default silenzioso: importo sbagliato che sembra giusto</td>
+</tr>
+<tr>
+<td>La somma delle quantità aggregate è <strong>esatta</strong></td>
+<td><code>numeric(18,6)</code> su addendi a 6 decimali</td>
+<td>perdita di precisione a monte dell'importo</td>
+</tr>
+<tr>
+<td>Oltre <code>EMESSA</code> non si tocca nulla</td>
+<td>guard <code>a10</code></td>
+<td>una fattura emessa cambia valore dopo l'emissione</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong><code>arrotondamento_quantita_dec</code> non si applica MAI alla quantità aggregata</strong>
+di una riga: è una regola della <strong>singola attività</strong>, a monte. Arrotondare la
+somma perderebbe precisione dove nessuno la cerca — a monte dell'importo.</p>
+<p><strong>L'arrotondamento è in un punto solo</strong>: <code>script.fn_arrotonda_importo(valore,
+decimali, metodo)</code>, con vocabolario unico per tutto il modello — <code>UP</code> (allontana
+da zero), <code>DOWN</code> (avvicina a zero), <code>HALF_UP</code>, <code>HALF_DOWN</code>.</p>
+<p>⚠️ <strong>Non confondere con l'arrotondamento del TOTALE A PAGARE</strong>, che segue la
+configurazione <strong>emittente-utility</strong> in <code>fn_ricalcola_totali_fattura</code> e ha un
+saldo riportato fra documenti. Sono <strong>due regole distinte</strong>: quella di riga è
+per articolo, quella del totale è per emittente.</p>
+<p><strong>Conseguenza attesa, non un difetto</strong>: con le righe arrotondate al centesimo,
+<code>fatture_riepiloghi_iva.arrotondamento</code> risulta <strong>sempre zero</strong> — se le righe
+sono esatte al centesimo non c'è scarto da conservare.</p>
+<hr />
+<h3 id="kit-ed-esposizione-in-fattura">Kit ed esposizione in fattura<a class="headerlink" href="#kit-ed-esposizione-in-fattura" title="Permanent link">&para;</a></h3>
+<p>Un articolo composito (kit) <strong>non arriva in fattura come riga unica</strong>: il push lo
+espande e in commessa entrano <strong>solo i componenti</strong>, mai il padre. È il modello
+unificato componenti BoM del 2026-05-13, ed è voluto.</p>
+<p>Di conseguenza <code>fatture_righe</code> conserva <strong>sempre tutte le righe componente</strong>, con
+articolo, quantità e prezzo propri: è il <strong>dettaglio</strong>. Il raggruppamento per la
+presentazione è una <strong>rappresentazione</strong>, prodotta dalla vista
+<code>vendite.vw_fattura_righe_esposte</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Contenuto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kit_key</code></td>
+<td>identità dell'<strong>istanza</strong> di kit (prefisso del <code>segment_key</code>, senza la parte <code>#CMP</code>). Non l'articolo padre: lo stesso kit può comparire due volte sulla stessa fattura da righe sorgente diverse</td>
+</tr>
+<tr>
+<td><code>kit_esposto_in_fattura</code></td>
+<td>snapshot di <code>catalogo.articoli_componenti.esposto_in_fattura</code> per <strong>quella</strong> componente</td>
+</tr>
+<tr>
+<td><code>kit_articolo_padre_id</code></td>
+<td>dal <code>meta</code> dell'attività (<code>componente_di</code>), già risolto dal push</td>
+</tr>
+<tr>
+<td><code>kit_descrizione_padre</code></td>
+<td>congelata per poterla stampare senza risalire a monte</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong><code>esposto_in_fattura</code> è la regola</strong>, non
+<code>articolo_regole_fatturazione.visibilita_componenti</code> — quest'ultima non era
+applicata da nessuno ed è stata <strong>rimossa</strong> dal modello il 2026-07-28.</p>
+<p><strong>Congelamento senza meccanismi aggiuntivi</strong>: lo snapshot sta sulla riga, e le
+righe oltre <code>EMESSA</code> sono già intoccabili per effetto del guard <code>a10</code>. Quindi
+cambiare la distinta <strong>non tocca</strong> le fatture emesse, mentre rigenerare una
+fattura (reset lotto) rilegge il flag corrente — e l'esposizione cambia, com'è
+giusto.</p>
+<p>⚠️ <strong>La vista vale per OGNI uscita</strong>: PDF, XML SDI, portale. Non è «la vista di
+stampa»: se il PDF mostrasse il kit raggruppato e l'XML trasmettesse i
+componenti, avremmo due uscite dello stesso documento con dettagli diversi.</p>
 <hr />
 <h3 id="esempi-duso-query-applicative">Esempi d’uso (query applicative)<a class="headerlink" href="#esempi-duso-query-applicative" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- 1) Righe con imponibile &gt; 0 per una fattura</span>
@@ -5434,24 +5581,36 @@
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">imponibile_riga</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">riga_nr</span><span class="p">;</span>
 
-<span class="c1">-- 2) Somma righe → totali testata</span>
-<span class="k">SELECT</span><span class="w"> </span>
-<span class="w">  </span><span class="k">SUM</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">imponibile_riga</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">imponibile</span><span class="p">,</span>
-<span class="w">  </span><span class="k">SUM</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">imposta_riga</span><span class="p">)</span><span class="w">    </span><span class="k">AS</span><span class="w"> </span><span class="n">imposta</span><span class="p">,</span>
-<span class="w">  </span><span class="k">SUM</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">totale_riga</span><span class="p">)</span><span class="w">     </span><span class="k">AS</span><span class="w"> </span><span class="n">totale</span>
+<span class="c1">-- 2) Somma righe. L&#39;IMPOSTA NON SI SOMMA DALLE RIGHE: si liquida per aliquota</span>
+<span class="c1">--    nei riepiloghi, che sono l&#39;unica fonte corretta per imposta e totale.</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">imponibile_riga</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">imponibile</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture_righe</span><span class="w"> </span><span class="n">r</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">fattura_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">fattura_id</span><span class="p">;</span>
 
-<span class="c1">-- 3) Idempotenza import righe</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">id</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture_righe</span><span class="w"> </span><span class="n">r</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">sorgente_tipo_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">src_tipo</span>
-<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">sorgente_uid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">src_uid</span><span class="p">;</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">ri</span><span class="p">.</span><span class="n">imponibile</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">imponibile</span><span class="p">,</span>
+<span class="w">       </span><span class="k">SUM</span><span class="p">(</span><span class="n">ri</span><span class="p">.</span><span class="n">imposta</span><span class="p">)</span><span class="w">    </span><span class="k">AS</span><span class="w"> </span><span class="n">imposta</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture_riepiloghi_iva</span><span class="w"> </span><span class="n">ri</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">ri</span><span class="p">.</span><span class="n">fattura_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">fattura_id</span><span class="p">;</span>
+
+<span class="c1">-- 3) Il DETTAGLIO di una riga: le attività che la compongono.</span>
+<span class="c1">--    Con l&#39;aggregazione una riga può nascere da n attività.</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">quantita</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">prezzo_unitario</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">commessa_attivita_id</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">attivita_fatturabili</span><span class="w"> </span><span class="n">a</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">fattura_riga_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">riga_id</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">;</span>
+
+<span class="c1">-- 4) Il documento COME VA RAPPRESENTATO (PDF, SDI, portale).</span>
+<span class="c1">--    Mai leggere fatture_righe direttamente per produrre un&#39;uscita: i kit</span>
+<span class="c1">--    vanno esposti secondo lo snapshot, e questa vista lo fa.</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">tipo_riga</span><span class="p">,</span><span class="w"> </span><span class="n">riga_nr</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">,</span><span class="w"> </span><span class="n">qta</span><span class="p">,</span><span class="w"> </span><span class="n">prezzo_unitario</span><span class="p">,</span><span class="w"> </span><span class="n">imponibile</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_fattura_righe_esposte</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">fattura_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">fattura_id</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">ordinamento</span><span class="p">,</span><span class="w"> </span><span class="n">livello</span><span class="p">,</span><span class="w"> </span><span class="n">riga_nr</span><span class="p">;</span>
 </code></pre></div>
 <hr />
 <h3 id="best-practice-operative">Best practice operative<a class="headerlink" href="#best-practice-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Snapshot completo</strong>: valorizzare sempre  <code>iva_natura</code>, <code>imponibile_riga</code>, <code>imposta_riga</code>, <code>totale_riga</code> al termine del calcolo riga.</li>
+<li>⚠️ <strong>NON valorizzare <code>imponibile_riga</code></strong>: lo calcola il trigger, e un valore passato dall'esterno viene sovrascritto in silenzio. Se scrivendo codice o una fixture ti serve fornirlo per far tornare un conto, il calcolo si è rotto — è il segnale, non la soluzione.</li>
 <li><strong>Progressivo riga</strong>: assegnare <code>riga_nr</code> in modo <strong>contiguo</strong> e consolidato prima della numerazione della fattura.</li>
 <li><strong>Override BA</strong>: usare <code>dest_billing_account_id</code> solo quando necessario (es. ripartizioni o refatturazioni intra‑BA).</li>
 <li><strong>Validazioni</strong>: bloccare quantità negative e prezzi negativi a livello applicativo (qui sono consentiti consetiti tutti i valori).</li>
@@ -5460,8 +5619,17 @@
 <hr />
 <h3 id="osservazioni-possibili-migliorie">⚠️ Osservazioni &amp; possibili migliorie<a class="headerlink" href="#osservazioni-possibili-migliorie" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Calcolo automatico importi</strong>: opzionale trigger <code>BEFORE INSERT/UPDATE</code> per calcolare e arrotondare <code>imponibile_riga</code>, <code>imposta_riga</code>, <code>totale_riga</code> se non forniti.</li>
-<li><strong>Gestione bundle/kit</strong>: se servono righe descrittive non valorizzate, usare <code>qta = 0</code> e <code>totali = 0</code> con tipo riga in <code>meta</code>.</li>
+<li>✅ ~~<strong>Calcolo automatico importi</strong>: opzionale trigger <code>BEFORE INSERT/UPDATE</code> per calcolare e arrotondare gli importi se non forniti.~~
+   <strong>FATTO il 2026-07-28</strong> — e la parola «opzionale» è costata cara: il trigger
+   non è mai stato scritto, il backend lo dava per fatto, e ogni fattura del
+   sistema è rimasta a 0,00 € per mesi. Una regola scritta come facoltativa in
+   un manuale e assunta come presente nel codice a valle è il modo in cui un
+   buco sopravvive senza che nessuno menta.</li>
+<li>✅ ~~<strong>Gestione bundle/kit</strong>: se servono righe descrittive non valorizzate, usare <code>qta = 0</code> e <code>totali = 0</code> con tipo riga in <code>meta</code>.~~
+   <strong>Risolto diversamente</strong>: le righe descrittive non si simulano con quantità e
+   importi a zero, che sarebbero dati falsi. I componenti restano righe vere col
+   loro valore, e la <strong>rappresentazione</strong> li rende descrittivi sotto il padre —
+   vedi <em>Kit ed esposizione in fattura</em>.</li>
 </ol>
 <hr />
 <h3 id="note-progettuali">📘 Note progettuali<a class="headerlink" href="#note-progettuali" title="Permanent link">&para;</a></h3>

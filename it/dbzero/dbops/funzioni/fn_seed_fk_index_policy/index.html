@@ -5233,6 +5233,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#questa-funzione-ha-rigenerato-indici-gia-rimossi" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Questa funzione ha rigenerato indici già rimossi
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solo-indici-dedicati" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔒 Solo indici dedicati
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#parametri-di-input" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5303,22 +5325,39 @@
 
 <h2 id="documentazione-concettuale-funzione-dbopsfn_seed_fk_index_policy">📘 Documentazione Concettuale – Funzione <code>dbops.fn_seed_fk_index_policy()</code><a class="headerlink" href="#documentazione-concettuale-funzione-dbopsfn_seed_fk_index_policy" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p>👀 <strong>Vedi anche</strong> </p>
-<p>Approfondimento Tabelle:   </p>
-<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>      </p>
-<p>Approfondimento funzioni:   </p>
-<p><a href="../../manual/vw_fk_con_indice_missing_policy/">dbops.vw_fk_con_indice_missing_policy</a>  </p>
+<p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimento Tabelle:  </p>
+<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>  </p>
+<p>Approfondimento funzioni:  </p>
+<p><a href="../../views/vw_fk_con_indice_missing_policy/">dbops.vw_fk_con_indice_missing_policy</a><br />
+<a href=".././fn_populate_fk_index_policy/">dbops.fn_populate_fk_index_policy</a><br />
+<a href=".././apply_fk_index_policy/">dbops.apply_fk_index_policy</a>  </p>
 </blockquote>
-<p>La funzione <strong><code>dbops.fn_seed_fk_index_policy()</code></strong> popola automaticamente la tabella <code>dbops.fk_index_policy</code> con le foreign key <strong>già indicizzate</strong> ma <strong>non ancora presenti</strong> in policy, <strong>limitandosi agli schemi presenti in <code>dbops.automation_scope</code></strong>, marcandole come <code>consentito = true</code> e <code>generated_by_script = true</code>.</p>
+<p>La funzione <strong><code>dbops.fn_seed_fk_index_policy()</code></strong> popola <code>dbops.fk_index_policy</code> con le foreign key <strong>già indicizzate</strong> ma <strong>non ancora presenti</strong> in policy, <strong>limitandosi agli schemi presenti in <code>dbops.automation_scope</code></strong>, marcandole come <code>consentito = true</code> e <code>generated_by_script = true</code>.</p>
+<p>È l'operazione simmetrica di <a href=".././fn_populate_fk_index_policy/">fn_populate_fk_index_policy</a>: quella registra le FK <strong>scoperte</strong> (a <code>false</code>), questa quelle <strong>già coperte da un indice dedicato</strong> (a <code>true</code>), per portarle sotto il governo dell'automazione.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 16-01-26)
-* <strong>Sincronizzazione iniziale</strong>
-  Aggiunge in <code>fk_index_policy</code> tutte le FK con indice esistente rilevate in <code>vw_fk_con_indice_missing_policy</code>.
-* <strong>Automazione</strong>
-  Evita inserimenti manuali per policy già coperte da indice.
-* <strong>Flag di origine</strong>
-  Imposta <code>generated_by_script = true</code> per distinguere le righe create automaticamente.</p>
+<p>(latest review 27-07-26)</p>
+<ul>
+<li><strong>Sincronizzazione iniziale</strong>
+  Aggiunge in <code>fk_index_policy</code> le FK con indice dedicato rilevate in <code>vw_fk_con_indice_missing_policy</code>.</li>
+<li><strong>Automazione</strong>
+  Evita inserimenti manuali per policy già coperte da indice.</li>
+<li><strong>Flag di origine</strong>
+  Imposta <code>generated_by_script = true</code> per distinguere le righe create automaticamente.</li>
+</ul>
+<hr />
+<h3 id="questa-funzione-ha-rigenerato-indici-gia-rimossi">⚠️ Questa funzione ha rigenerato indici già rimossi<a class="headerlink" href="#questa-funzione-ha-rigenerato-indici-gia-rimossi" title="Permanent link">&para;</a></h3>
+<p>Non per un difetto suo — il codice non è cambiato — ma per un difetto della view che legge. Fino al 27-07-2026 <code>vw_fk_con_indice_missing_policy</code> costruiva il <code>create_index_suggestion</code> <strong>sintetizzando un nome</strong> invece di usare quello dell'indice trovato. La riga registrata da questa funzione conteneva quindi un comando che creava un <strong>secondo</strong> indice, gemello del primo ma con un altro nome, e <code>apply_fk_index_policy()</code> lo eseguiva.</p>
+<blockquote>
+<p>Un indice droppato a gennaio è ricomparso a luglio senza alcun changeSet, per questa catena: view → <code>fn_seed</code> → <code>apply</code>. Non era stato scritto a mano.</p>
+</blockquote>
+<p>Con la view corretta il comando nomina l'indice reale, quindi registrare una FK non ne crea più un secondo: con <code>IF NOT EXISTS</code>, l'esecuzione è un no-op.</p>
+<hr />
+<h3 id="solo-indici-dedicati">🔒 Solo indici dedicati<a class="headerlink" href="#solo-indici-dedicati" title="Permanent link">&para;</a></h3>
+<p>La view propone ora <strong>soltanto</strong> indici che la policy può legittimamente possedere: colonne chiave uguali a quelle della FK, non <code>UNIQUE</code>, non PK, non <code>REPLICA IDENTITY</code>, non a supporto di un constraint, totali, btree.</p>
+<p>Il motivo è che registrare una riga significa dare ad <code>apply_fk_index_policy()</code> il potere di <strong>droppare</strong> quell'indice, se un domani il flag passasse a <code>false</code>. <strong>Un flag booleano deve poter togliere solo un acceleratore, mai un vincolo di integrità.</strong></p>
+<p>Le FK coperte da un indice più largo o da una UNIQUE non vengono più proposte: non c'è nulla da governare.</p>
 <hr />
 <h3 id="parametri-di-input">Parametri di Input<a class="headerlink" href="#parametri-di-input" title="Permanent link">&para;</a></h3>
 <p>Questa funzione <strong>non</strong> richiede parametri: agisce su tutti i record presenti nella view <code>dbops.vw_fk_con_indice_missing_policy</code>.</p>
@@ -5335,25 +5374,32 @@
 <p><code>consentito = true</code></p>
 </li>
 <li><code>generated_by_script = true</code></li>
-<li>mantenere qualsiasi <code>note</code> o valore preesistente se già presente.</li>
+<li>non toccare le righe già presenti, quindi <strong>nessuna decisione già presa viene sovrascritta</strong>.</li>
 </ol>
+<blockquote>
+<p><code>DO NOTHING</code> è la ragione per cui una riga portata a <code>consentito = false</code> durante una bonifica non torna a <code>true</code> da sola. La rimozione resta stabile.</p>
+</blockquote>
 <hr />
 <h3 id="utilizzo">Utilizzo<a class="headerlink" href="#utilizzo" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Esegui il popolamento iniziale:</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_seed_fk_index_policy</span><span class="p">();</span>
 </code></pre></div>
-<p>Può essere integrata in un changeSet Liquibase con <code>runAlways: false</code> (solo esecuzione iniziale) per assicurare che tutte le FK con indice siano registrate in policy.</p>
+<p>Può essere integrata in un changeSet Liquibase con <code>runAlways: false</code> (solo esecuzione iniziale) per assicurare che tutte le FK con indice dedicato siano registrate in policy.</p>
+<blockquote>
+<p>⚠️ <strong>Non è chiamata dal job settimanale</strong>, che esegue invece <code>fn_populate_fk_index_policy()</code> più <code>apply</code>. Va lanciata consapevolmente: prima di farlo, conviene guardare cosa propone con <code>SELECT * FROM dbops.vw_fk_con_indice_missing_policy;</code>.</p>
+</blockquote>
 <hr />
 <h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Completezza</strong>: nessuna FK indicizzata resta scoperta da policy.</li>
+<li><strong>Completezza</strong>: nessuna FK con indice dedicato resta fuori dal governo della policy.</li>
 <li><strong>Tracciabilità</strong>: <code>generated_by_script</code> segnala le policy create automaticamente.</li>
-<li><strong>Semplicità</strong>: un’unica chiamata per inizializzare la policy.</li>
-<li><strong>Integrazione CI/CD</strong>: può essere collocata in uno step di migrazione finale senza duplicare record.</li>
+<li><strong>Nessun gemello</strong>: il comando registrato nomina l'indice che esiste già.</li>
+<li><strong>Sicurezza</strong>: nessuna riga registrata può portare <code>apply</code> a rimuovere un vincolo.</li>
+<li><strong>Semplicità</strong>: un'unica chiamata per inizializzare la policy.</li>
 </ul>
 <hr />
 <blockquote>
-<p><strong>“Con <code>fn_seed_fk_index_policy()</code> automatizziamo la scoperta e l’inclusione delle FK già indicizzate, mantenendo la policy sempre completa e allineata.”</strong></p>
+<p><strong>“Con <code>fn_seed_fk_index_policy()</code> automatizziamo la scoperta e l'inclusione delle FK già indicizzate, mantenendo la policy sempre completa e allineata.”</strong></p>
 </blockquote>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

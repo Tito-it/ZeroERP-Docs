@@ -5233,6 +5233,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#la-policy-e-opt-in-e-questa-funzione-da-sola-non-crea-nulla" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ La policy è OPT-IN, e questa funzione da sola non crea nulla
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-significa-senza-indice" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔑 Cosa significa "senza indice"
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#flusso-logico" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5244,10 +5266,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#funzione-sql" class="md-nav__link">
+  <a href="#utilizzo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        🔖 Funzione SQL
+        Utilizzo
       </span>
     </span>
   </a>
@@ -5255,10 +5277,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#utilizzo" class="md-nav__link">
+  <a href="#vantaggi-operativi" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Utilizzo
+        Vantaggi Operativi
       </span>
     </span>
   </a>
@@ -5293,86 +5315,48 @@
 <h2 id="documentazione-concettuale-funzione-dbopsfn_populate_fk_index_policy">📘 Documentazione Concettuale – Funzione <code>dbops.fn_populate_fk_index_policy()</code><a class="headerlink" href="#documentazione-concettuale-funzione-dbopsfn_populate_fk_index_policy" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p>Approfondimento Tabelle:   </p>
-<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>      </p>
-<p>Approfondimento view:   </p>
-<p><a href="../../manual/vw_fk_senza_indice/">dbops.vw_fk_senza_indice</a> </p>
+<p>Approfondimento Tabelle:  </p>
+<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>  </p>
+<p>Approfondimento view:  </p>
+<p><a href="../../views/vw_fk_senza_indice/">dbops.vw_fk_senza_indice</a><br />
+<a href=".././fn_seed_fk_index_policy/">dbops.fn_seed_fk_index_policy</a><br />
+<a href=".././apply_fk_index_policy/">dbops.apply_fk_index_policy</a>  </p>
 </blockquote>
 <p>La funzione <strong><code>dbops.fn_populate_fk_index_policy()</code></strong> esegue il popolamento automatico di <code>dbops.fk_index_policy</code> aggiungendo tutte le foreign key presenti in <code>dbops.vw_fk_senza_indice</code> che non hanno ancora un record in policy, impostando per ciascuna <code>consentito = false</code>.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>(latest review 27-07-26)</p>
 <ul>
 <li><strong>Coerenza iniziale</strong>
-  Garantire che ogni FK rilevata nella view senza indice abbia la propria entry di policy, evitando omissioni.</li>
+  Garantire che ogni FK rilevata senza copertura abbia la propria entry di policy, evitando omissioni.</li>
 <li><strong>Popolamento “a freddo”</strong>
-  Tutti i nuovi record vengono creati con <code>consentito = false</code>, lasciando in carico all’operatore la decisione di abilitare o meno l’indice.</li>
+  Tutti i nuovi record vengono creati con <code>consentito = false</code>, lasciando in carico all'operatore la decisione di abilitare o meno l'indice.</li>
 <li><strong>Automazione</strong>
-  Riduce il lavoro manuale di inserimento di policy per nuove FKs.</li>
+  Riduce il lavoro manuale di inserimento di policy per nuove FK.</li>
 </ul>
+<hr />
+<h3 id="la-policy-e-opt-in-e-questa-funzione-da-sola-non-crea-nulla">⚠️ La policy è OPT-IN, e questa funzione da sola non crea nulla<a class="headerlink" href="#la-policy-e-opt-in-e-questa-funzione-da-sola-non-crea-nulla" title="Permanent link">&para;</a></h3>
+<p>È il fraintendimento più costoso. <code>fn_populate_fk_index_policy()</code> <strong>registra</strong> la FK, non la indicizza: la riga nasce a <code>consentito = false</code>, e finché resta così <code>apply_fk_index_policy()</code> non crea nessun indice — anzi, esegue un <code>DROP INDEX IF EXISTS</code> sul nome previsto.</p>
+<p>Perché l'indice nasca serve un <strong>seed esplicito</strong> che porti il flag a <code>true</code>, in <code>80_data</code>, come CSV più <code>loadUpdateData</code>.</p>
+<blockquote>
+<p>Su una tabella nuova, quindi, l'automazione da sola <strong>non</strong> produce gli indici FK. Chi crea la tabella deve prevedere il seed dei flag.</p>
+</blockquote>
+<hr />
+<h3 id="cosa-significa-senza-indice">🔑 Cosa significa "senza indice"<a class="headerlink" href="#cosa-significa-senza-indice" title="Permanent link">&para;</a></h3>
+<p>Questa funzione non decide nulla: si limita a leggere <code>dbops.vw_fk_senza_indice</code>, che è dove vive la definizione di <strong>copertura</strong>. In sintesi, la FK è coperta se le sue colonne coincidono, come insieme, con le prime N colonne chiave di un btree valido, il cui predicato sia assente oppure una congiunzione di soli <code>&lt;colonna della FK&gt; IS NOT NULL</code>.</p>
+<p>Il dettaglio, e il motivo per cui la regola è cambiata il 27-07-2026, stanno nella <a href="../../views/vw_fk_senza_indice/">documentazione della view</a>.</p>
+<p>Conseguenza pratica: <strong>una FK già servita da una <code>UNIQUE</code> più larga non viene più registrata</strong>. Prima lo era, e l'automazione ci piantava sopra un indice gemello.</p>
 <hr />
 <h3 id="flusso-logico">Flusso Logico<a class="headerlink" href="#flusso-logico" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Lettura FKs senza policy</strong>
-   Seleziona dalla view <code>dbops.vw_fk_senza_indice</code> tutte le tuple <code>(schema_name, table_name, constraint_name)</code> non ancora presenti in <code>dbops.fk_index_policy</code>.</li>
+<li><strong>Lettura FK senza copertura</strong>
+   Seleziona da <code>dbops.vw_fk_senza_indice</code> tutte le tuple <code>(schema_name, table_name, constraint_name)</code> non ancora presenti in <code>dbops.fk_index_policy</code>.</li>
 <li><strong>Inserimento in <code>fk_index_policy</code></strong>
-   Per ciascuna riga, esegue:</li>
+   Per ciascuna riga inserisce <code>schema_name</code>, <code>table_name</code>, <code>constraint_name</code>, <code>consentito = false</code> e il <code>dll_command</code> preso da <code>create_index_suggestion</code>.</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span><span class="p">(</span>
-<span class="w">  </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">consentito</span><span class="p">,</span>
-<span class="w">  </span><span class="n">note</span>
-<span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="n">rec</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">rec</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">  </span><span class="n">rec</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">  </span><span class="k">false</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;Popolamento automatico: indice ix_&lt;table&gt;_&lt;constraint&gt; non ancora presente&#39;</span>
-<span class="p">);</span>
-</code></pre></div>
-<hr />
-<h3 id="funzione-sql">🔖 Funzione SQL<a class="headerlink" href="#funzione-sql" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">()</span>
-<span class="k">RETURNS</span><span class="w"> </span><span class="n">void</span>
-<span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
-<span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
-<span class="k">DECLARE</span>
-<span class="w">  </span><span class="n">rec</span><span class="w"> </span><span class="n">RECORD</span><span class="p">;</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="k">FOR</span><span class="w"> </span><span class="n">rec</span><span class="w"> </span><span class="k">IN</span>
-<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="k">constraint_name</span>
-<span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_fk_senza_indice</span>
-<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="p">(</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="k">constraint_name</span><span class="p">)</span>
-<span class="w">       </span><span class="k">NOT</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span>
-<span class="w">         </span><span class="k">SELECT</span><span class="w"> </span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="k">table_name</span><span class="p">,</span><span class="w"> </span><span class="k">constraint_name</span>
-<span class="w">           </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span>
-<span class="w">       </span><span class="p">)</span>
-<span class="w">  </span><span class="n">LOOP</span>
-<span class="w">    </span><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span><span class="p">(</span>
-<span class="w">      </span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">      </span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">      </span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">      </span><span class="n">consentito</span><span class="p">,</span>
-<span class="w">      </span><span class="n">note</span>
-<span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span>
-<span class="w">      </span><span class="n">rec</span><span class="p">.</span><span class="k">schema_name</span><span class="p">,</span>
-<span class="w">      </span><span class="n">rec</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">      </span><span class="n">rec</span><span class="p">.</span><span class="k">constraint_name</span><span class="p">,</span>
-<span class="w">      </span><span class="k">false</span><span class="p">,</span>
-<span class="w">      </span><span class="n">format</span><span class="p">(</span>
-<span class="w">        </span><span class="s1">&#39;Autopopulated: missing ix_%s_%s index&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">rec</span><span class="p">.</span><span class="k">table_name</span><span class="p">,</span>
-<span class="w">        </span><span class="n">rec</span><span class="p">.</span><span class="k">constraint_name</span>
-<span class="w">      </span><span class="p">)</span>
-<span class="w">    </span><span class="p">);</span>
-<span class="w">  </span><span class="k">END</span><span class="w"> </span><span class="n">LOOP</span><span class="p">;</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="err">$$</span><span class="p">;</span>
-
-<span class="k">COMMENT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">()</span><span class="w"> </span><span class="k">IS</span>
-<span class="w">  </span><span class="s1">&#39;Popola automaticamente dbops.fk_index_policy per tutte le FK senza indice, con consentito=false.&#39;</span><span class="p">;</span>
-</code></pre></div>
+<blockquote>
+<p>La definizione SQL corrente è riportata per intero nella sezione auto-generata qui sotto: <strong>fa fede quella</strong>, non una copia in questa pagina.</p>
+</blockquote>
 <hr />
 <h3 id="utilizzo">Utilizzo<a class="headerlink" href="#utilizzo" title="Permanent link">&para;</a></h3>
 <p>Essendo una <strong>funzione</strong> che restituisce <code>void</code>, puoi eseguirla direttamente con:</p>
@@ -5386,20 +5370,19 @@
 <span class="s">$$</span><span class="p">;</span>
 </code></pre></div>
 <blockquote>
-<p><strong>Nota:</strong> non usare <code>SELECT * FROM dbops.fn_populate_fk_index_policy()</code>, poiché la funzione non restituisce righe tabellari. Se preferisci invocarla con <code>CALL</code>, puoi convertirla in <strong>procedura</strong>:</p>
+<p><strong>Nota:</strong> non usare <code>SELECT * FROM dbops.fn_populate_fk_index_policy()</code>, poiché la funzione non restituisce righe tabellari.</p>
 </blockquote>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">PROCEDURE</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_population</span><span class="p">()</span>
-<span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
-<span class="k">BEGIN</span>
-<span class="w">  </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_populate_fk_index_policy</span><span class="p">();</span>
-<span class="k">END</span><span class="p">;</span>
-<span class="err">$$</span><span class="p">;</span>
-</code></pre></div>
-<p>E poi eseguire:</p>
-<div class="highlight"><pre><span></span><code><span class="k">CALL</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_population</span><span class="p">();</span>
-</code></pre></div>
+<p>È invocata automaticamente dal job pgAgent settimanale, tramite <code>maintenance.proc_apply_fk_index_policy_job(true)</code>, subito prima di <code>apply_fk_index_policy()</code>.</p>
+<hr />
+<h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Nessuna FK dimenticata</strong>: ogni vincolo senza copertura finisce in policy e diventa una decisione esplicita.</li>
+<li><strong>Nessun indice a sorpresa</strong>: il default <code>false</code> fa sì che nulla venga creato senza che qualcuno lo abbia voluto.</li>
+<li><strong>Idempotenza</strong>: rieseguirla non duplica righe né sovrascrive decisioni già prese.</li>
+</ul>
+<hr />
 <blockquote>
-<p><strong>“Esegui la funzione con <code>SELECT</code> o <code>PERFORM</code>: non è necessario usare <code>SELECT * FROM</code>. Converti in procedura se vuoi chiamare con <code>CALL</code>.”</strong></p>
+<p><strong>“Esegui la funzione con <code>SELECT</code> o <code>PERFORM</code>: non è necessario usare <code>SELECT * FROM</code>.”</strong></p>
 </blockquote>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

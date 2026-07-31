@@ -5233,6 +5233,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#questa-view-fabbricava-indici-duplicati" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Questa view fabbricava indici duplicati
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#si-propongono-solo-indici-dedicati" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔒 Si propongono solo indici DEDICATI
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#flusso-di-costruzione" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5282,56 +5304,106 @@
 <h2 id="documentazione-concettuale-view-dbopsvw_fk_con_indice_missing_policy">📘 Documentazione Concettuale – View <code>dbops.vw_fk_con_indice_missing_policy</code><a class="headerlink" href="#documentazione-concettuale-view-dbopsvw_fk_con_indice_missing_policy" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
-<p>Approfondimento Tabelle:   </p>
-<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>      </p>
-<p>Approfondimento funzioni:   </p>
-<p><a href="../../views/vw_fk_senza_indice/">dbops.vw_fk_senza_indice</a>  <br />
-<a href="../../views/vw_duplicate_indexes/">dbops.vw_duplicate_indexes</a>    </p>
+<p>Approfondimento Tabelle:  </p>
+<p><a href="../../tabelle/fk_index_policy/">dbops.fk_index_policy</a>  </p>
+<p>Approfondimento funzioni:  </p>
+<p><a href="../../views/vw_fk_senza_indice/">dbops.vw_fk_senza_indice</a><br />
+<a href="../../views/vw_duplicate_indexes/">dbops.vw_duplicate_indexes</a><br />
+<a href="../../funzioni/fn_seed_fk_index_policy/">dbops.fn_seed_fk_index_policy</a><br />
+<a href="../../funzioni/apply_fk_index_policy/">dbops.apply_fk_index_policy</a>  </p>
 </blockquote>
-<p>La view <strong><code>dbops.vw_fk_con_indice_missing_policy</code></strong> elenca tutte le <strong>foreign key</strong> che <strong>hanno un indice</strong> (prefisso <code>ix_</code>) ma <strong>non</strong> sono ancora gestite dalla tabella di policy <code>dbops.fk_index_policy</code>, limitandosi <strong>agli schemi presenti in <code>dbops.automation_scope</code></strong>. Per ciascuna FK, viene suggerito il comando SQL di creazione dell’indice.</p>
+<p>La view <strong><code>dbops.vw_fk_con_indice_missing_policy</code></strong> elenca le <strong>foreign key</strong> che <strong>hanno già un indice dedicato</strong> ma <strong>non</strong> sono ancora gestite dalla tabella di policy <code>dbops.fk_index_policy</code>, limitandosi <strong>agli schemi presenti in <code>dbops.automation_scope</code></strong>. Per ciascuna FK riporta il nome dell'indice trovato e il comando che lo ricrea.</p>
+<p>È la view che <code>fn_seed_fk_index_policy()</code> legge per <strong>portare sotto governo</strong> indici già esistenti, registrandoli con <code>consentito = true</code>.</p>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 16-01-26)
-* <strong>Identificare gli indici esistenti</strong>
-  Trova le FK già indicizzate che non dispongono di una policy dedicata.
-* <strong>Suggerimento DDL</strong>
-  Genera automaticamente la stringa <code>CREATE INDEX ...</code> per uniformare naming e struttura.
-* <strong>Supporto auditing e governance</strong>
-  Permette di scoprire eventuali indici non tracciati, inserendoli poi in <code>fk_index_policy</code>.</p>
+<p>(latest review 27-07-26)</p>
+<ul>
+<li><strong>Identificare gli indici esistenti</strong>
+  Trova le FK già indicizzate che non dispongono di una policy dedicata.</li>
+<li><strong>Suggerimento DDL fedele</strong>
+  Genera la stringa <code>CREATE INDEX ...</code> che ricrea <strong>quell'indice</strong>, con il suo nome reale.</li>
+<li><strong>Supporto auditing e governance</strong>
+  Permette di scoprire indici non tracciati e inserirli in <code>fk_index_policy</code>.</li>
+</ul>
+<hr />
+<h3 id="questa-view-fabbricava-indici-duplicati">⚠️ Questa view fabbricava indici duplicati<a class="headerlink" href="#questa-view-fabbricava-indici-duplicati" title="Permanent link">&para;</a></h3>
+<p>Fino al 27-07-2026 la view esponeva <code>index_name</code> — il nome <strong>reale</strong> dell'indice trovato — ma poi costruiva <code>create_index_suggestion</code> <strong>sintetizzando un nome diverso</strong>, con la vecchia convenzione <code>ix_&lt;schema&gt;_&lt;tabella&gt;_&lt;colonne&gt;</code> abbandonata mesi prima in favore di <code>ix_&lt;tabella&gt;_&lt;colonne&gt;</code>.</p>
+<p>La conseguenza: <code>fn_seed_fk_index_policy()</code> registrava in policy un comando che creava un <strong>secondo</strong> indice, identico al primo ma con un altro nome. Al primo <code>CALL apply_fk_index_policy()</code> l'indice gemello nasceva.</p>
+<blockquote>
+<p>È così che un indice rimosso a gennaio è ricomparso a luglio senza che alcun changeSet lo creasse. Non era stato scritto a mano: lo aveva rigenerato la catena view → <code>fn_seed</code> → <code>apply</code>.</p>
+</blockquote>
+<p>Adesso il comando usa il <strong>nome reale</strong> e le <strong>colonne nell'ordine reale</strong>: descrive l'indice che c'è, non uno inventato. Con <code>IF NOT EXISTS</code>, rieseguirlo è un no-op.</p>
+<hr />
+<h3 id="si-propongono-solo-indici-dedicati">🔒 Si propongono solo indici DEDICATI<a class="headerlink" href="#si-propongono-solo-indici-dedicati" title="Permanent link">&para;</a></h3>
+<p>Non basta che un indice copra la FK: deve essere un indice che la policy possa <strong>legittimamente possedere</strong>. Sono quindi esclusi gli indici che:</p>
+<table>
+<thead>
+<tr>
+<th>Esclusione</th>
+<th>Perché</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hanno colonne in più rispetto alla FK</td>
+<td>è un indice che serve anche ad altro; la policy non può rivendicarlo</td>
+</tr>
+<tr>
+<td>sono <code>UNIQUE</code> o <code>PRIMARY KEY</code></td>
+<td>impongono integrità, non sono solo acceleratori</td>
+</tr>
+<tr>
+<td>sostengono un constraint (<code>pg_constraint.conindid</code>)</td>
+<td>il <code>DROP</code> fallirebbe o porterebbe via il vincolo</td>
+</tr>
+<tr>
+<td>sono la <code>REPLICA IDENTITY</code></td>
+<td>droparli rompe la replica</td>
+</tr>
+<tr>
+<td>sono parziali o su espressioni</td>
+<td>la policy sa creare solo indici totali su colonne: se droppati, non saprebbe ricrearli uguali</td>
+</tr>
+</tbody>
+</table>
+<p>Il motivo è tutto nel ramo <code>consentito = false</code> di <code>apply_fk_index_policy()</code>, che estrae il nome dal comando ed esegue <code>DROP INDEX</code>. <strong>Un flag booleano deve poter togliere solo un acceleratore, mai un vincolo.</strong></p>
+<p>Un primo tentativo di correzione — far puntare il comando al nome reale, qualunque esso fosse — è stato scartato proprio per questo: produceva righe come</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">uq_fatture_r_iva_key</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture_riepiloghi_iva</span><span class="p">(</span><span class="n">fattura_id</span><span class="p">);</span>
+</code></pre></div>
+<p>innocue in creazione, letali con <code>consentito = false</code>.</p>
+<p>Le FK coperte da un indice più largo o da una <code>UNIQUE</code> semplicemente <strong>non si propongono più</strong>: non c'è nulla da governare, e un indice dedicato sarebbe ridondante. È la stessa nozione di copertura di <a href="../../views/vw_fk_senza_indice/">vw_fk_senza_indice</a>, applicata coerentemente.</p>
 <hr />
 <h3 id="flusso-di-costruzione">Flusso di Costruzione<a class="headerlink" href="#flusso-di-costruzione" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>CTE <code>fk_columns</code> e <code>fk_fields</code></strong>
-   Estrae schema, tabella, nome del vincolo FK e lista delle colonne coinvolte.</li>
-<li><strong>CTE <code>indexed_columns</code></strong>
-   Elenca gli indici esistenti sulle tabelle, raggruppando le colonne per ciascun indice.</li>
 <li><strong>CTE <code>fk_grouped</code></strong>
-   Raggruppa le colonne di ogni FK in array ordinate.</li>
-<li><strong>Join tra FK e indici</strong>
-   Seleziona le FK le cui colonne coincidono con un indice (array di colonne uguali).</li>
+   Estrae schema, tabella, nome del vincolo FK e l'insieme ordinato delle colonne coinvolte.</li>
+<li><strong>CTE <code>idx_dedicati</code></strong>
+   Elenca i soli indici che la policy può possedere: btree, validi, totali, senza <code>INCLUDE</code>, non unique, non PK, non replica identity, non a supporto di constraint.</li>
+<li><strong>Join tra FK e indici dedicati</strong>
+   Accoppia quando l'insieme delle colonne chiave dell'indice <strong>coincide</strong> con quello della FK.</li>
 <li><strong>Left join su <code>fk_index_policy</code></strong>
-   Filtra solo quelle FK <strong>senza</strong> entry in policy (<code>pol.constraint_name IS NULL</code>).</li>
+   Filtra solo le FK <strong>senza</strong> entry in policy (<code>pol.constraint_name IS NULL</code>).</li>
 <li>
-<p><strong>Output</strong>
-   Restituisce:</p>
+<p><strong>Output</strong></p>
 </li>
 <li>
 <p><code>schema_name</code>, <code>table_name</code>, <code>constraint_name</code></p>
 </li>
 <li><code>fk_cols</code> (array delle colonne FK)</li>
-<li><code>index_name</code> (nome indice esistente)</li>
+<li><code>index_name</code> (nome reale dell'indice esistente)</li>
 <li>
-<p><code>create_index_suggestion</code> con formato:</p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_</span><span class="o">&lt;</span><span class="k">schema</span><span class="o">&gt;</span><span class="n">_</span><span class="o">&lt;</span><span class="k">table</span><span class="o">&gt;</span><span class="n">_</span><span class="o">&lt;</span><span class="n">columns</span><span class="o">&gt;</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="o">&lt;</span><span class="k">schema</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="k">table</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&lt;</span><span class="n">columns</span><span class="o">&gt;</span><span class="p">);</span>
+<p><code>create_index_suggestion</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="o">&lt;</span><span class="n">index_name</span><span class="o">&gt;</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="o">&lt;</span><span class="k">schema</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="k">table</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&lt;</span><span class="n">colonne</span><span class="w"> </span><span class="n">nell</span><span class="err">&#39;</span><span class="n">ordine</span><span class="w"> </span><span class="n">reale</span><span class="o">&gt;</span><span class="p">);</span>
 </code></pre></div>
 </li>
 </ol>
 <hr />
 <h3 id="vantaggi-operativi">Vantaggi Operativi<a class="headerlink" href="#vantaggi-operativi" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Individuazione rapida</strong>: mostra subito le FK con indice esistente ma senza policy.</li>
+<li><strong>Individuazione rapida</strong>: mostra subito le FK con indice dedicato ma senza policy.</li>
 <li><strong>Governance</strong>: aiuta a mantenere <code>fk_index_policy</code> completa e aggiornata.</li>
-<li><strong>Coerenza naming</strong>: suggerimento DDL uniforme con prefisso <code>ix_</code>.</li>
+<li><strong>Nessun gemello</strong>: il comando nomina l'indice che esiste, quindi registrarlo non ne crea un secondo.</li>
+<li><strong>Sicurezza</strong>: nessuna riga registrata può portare <code>apply</code> a droppare un vincolo di integrità.</li>
 <li><strong>Automazione</strong>: integrabile in processi CI/CD o script di auditing.</li>
 </ul>
 <hr />
