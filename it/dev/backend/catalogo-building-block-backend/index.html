@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.52">
+      <meta name="generator" content="zensical-0.0.53">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.8b3b5a67.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.20815dad.min.css">
       
       
 
@@ -3260,6 +3260,8 @@
       
         
       
+        
+      
     
     
     
@@ -3501,6 +3503,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../guide/presidi-e-registri-del-debito/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Presidi e registri del debito
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../guide/sorgente-polimorfa/" class="md-nav__link">
         
   
@@ -3686,10 +3715,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_2_14" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_2_15" >
         
           
-          <label class="md-nav__link" for="__nav_7_2_14" id="__nav_7_2_14_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_2_15" id="__nav_7_2_15_label" tabindex="0">
             
   
   
@@ -3706,8 +3735,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_2_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_2_14">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_2_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2_15">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6276,6 +6305,16 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td>Eccezione applicativa standard (code, message, detail, hint, retryable)</td>
 </tr>
 <tr>
+<td><code>structured_db_error_code</code> / <code>db_error_code</code></td>
+<td><code>db_error_fields.py</code></td>
+<td><strong>Lettura unica del codice errore di dominio da un'eccezione DB</strong> (2026-08-05, brief-db-codice-errore-strutturato). <code>structured_db_error_code</code> legge <code>diag.constraint_name</code> <strong>solo su SQLSTATE <code>P0001</code></strong> (su una violazione di vincolo vera quel campo è il nome del vincolo: leggerlo scavalcherebbe <code>map_integrity_error</code> e darebbe 500 al posto di 409) e normalizza la <strong>stringa vuota a <code>None</code></strong> (un codice da espressione NULL arriva vuoto, non NULL). <code>db_error_code</code> aggiunge il ripiego a regex sul testo, che <strong>resta</strong> finché esistono i ~135 <code>RAISE EXCEPTION</code> diretti che non passano da <code>script.fn_log_and_raise_error</code>. Modulo senza dipendenze interne: lo importano <code>error_translator</code>, <code>error_manager</code> e <code>payload_helpers</code>, qualsiasi import verso quei moduli sarebbe un ciclo. Consumer: i <strong>4</strong> punti che prima riscrivevano l'estrazione ognuno a modo suo (<code>ErrorTranslator._from_database_error</code>, <code>translate_db_errors</code>, <code>ErrorManager.raise_from_database_error</code>, <code>pratiche_service._raise_known_db_error</code>). ⚠️ Nei due <code>raise_from_*</code> il codice dal campo è accettato <strong>solo se dichiarato</strong> dal chiamante: <code>message</code> vs <code>fallback_message</code> dipendono da «riconosciuto o no».</td>
+</tr>
+<tr>
+<td><code>db_diag</code></td>
+<td><code>db_error_fields.py</code></td>
+<td>Diagnostica psycopg dell'eccezione (<code>message_primary</code>/<code>_detail</code>/<code>_hint</code>), al posto del doppio <code>getattr(getattr(exc, "__cause__", None), "diag", None)</code> ripetuto nei domini.</td>
+</tr>
+<tr>
 <td><code>ErrorTranslator.to_api_error</code></td>
 <td><code>error_translator.py</code></td>
 <td>Converte eccezione in ApiError con policy applicata</td>
@@ -6283,7 +6322,47 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>ErrorPolicyRegistry.resolve</code></td>
 <td><code>error_policies.py</code></td>
-<td>Risolve policy errore (http_status, ui_action, user_message) da codice</td>
+<td>Risolve policy errore (http_status, ui_action, user_message) da codice. ⚠️ <strong>Dal 2026-08-07 non legge piu' un elenco, DERIVA</strong>: status e <code>ui_action</code> vengono dalla <code>classe</code> del codice (8 valori, gli stessi di <code>config.classi_errore</code>), non da 659 righe scritte a mano. ⚠️ Il codice non registrato che comincia per <code>E_</code> cade ancora sul ripiego <strong>400</strong>: e' il motivo per cui un codice senza classe «funziona» pur rispondendo la cosa sbagliata — e resta finche' il generatore non e' in servizio, perche' e' cio' che tiene in piedi i codici nuovi appena seminati dal DB. ⚠️ Una classe <strong>senza status</strong> (<code>AVVISO</code>) solleva <code>ClasseErroreSenzaStatus</code>: non ripiega. Ogni codice che il DB puo' nominare deve avere la sua classe — presidiato da <code>test_error_codes_db_policy_guardrail</code> (vedi sotto). Criteri di scelta (409 vs 400, quando spezzare un codice): <a href="../../api/">api.md §Tassonomia errori</a>.</td>
+</tr>
+<tr>
+<td><code>ErrorPolicyRegistry.has</code></td>
+<td><code>error_policies.py</code></td>
+<td>«Questo codice ha una policy dichiarata?» — cioe' «ha una classe?», senza il ripiego di <code>resolve</code>. Da usare nei presidi e in ogni confronto fra il registro e una fonte esterna: <code>resolve</code> non torna mai a vuoto, quindi non serve a rispondere a questa domanda.</td>
+</tr>
+<tr>
+<td><code>ErrorPolicyRegistry.classe_di</code></td>
+<td><code>error_policies.py</code></td>
+<td>La <strong>classe</strong> di un codice (<code>TECNICO</code>, <code>NON_TROVATO</code>, …) o <code>None</code>. E' il dato che distingue un <strong>guasto</strong> da un <strong>rifiuto legittimo</strong> — la domanda che l'osservabilita' su <code>dbops.error_log</code> non sa ancora fare (il 67% delle righe non e' attribuibile, e il rumore <em>sono</em> i rifiuti legittimi).</td>
+</tr>
+<tr>
+<td><code>ErrorPolicyRegistry.codici_registrati</code></td>
+<td><code>error_policies.py</code></td>
+<td>L'insieme dei codici con una classe. Per i presidi che <strong>contano</strong> il registro per accorgersi se la misura si e' degradata: una misura che si rompe rende un cancello silenziosamente verde.</td>
+</tr>
+<tr>
+<td><code>CLASSE_PER_CODICE</code> · <code>CODICI_RITIRATI</code></td>
+<td><code>error_policies_generated.py</code></td>
+<td><code>codice → classe</code>, <strong>689 voci</strong> (79 ritirate). ⛔ <strong>GENERATO — non si modifica a mano</strong>: la sorgente e' <code>config.vw_codici_errore_identita</code> e il commento sopra ogni voce e' la sua <code>note</code> a catalogo. Registrare un codice nuovo = chiedere al team DB il seed <strong>a catalogo</strong> con la sua classe, poi <code>manage.py genera_error_policies</code>. ⚠️ I ritirati <strong>restano e risolvono</strong> (il diario deve restare leggibile), ma nessun punto di chiamata nuovo deve nominarli: <code>CODICI_RITIRATI</code> e' la risposta a «questo codice si puo' usare?», che <strong><code>has()</code> non da' piu'</strong> — <code>has()</code> oggi dice «lo conosco», ed e' vero anche per un codice morto.</td>
+</tr>
+<tr>
+<td><code>genera_error_policies</code></td>
+<td><code>management/commands/genera_error_policies.py</code></td>
+<td>Il generatore del modulo sopra. <code>--check</code> non scrive e esce 1 se il file diverge dal catalogo (forma usata in CI, via <code>test_error_policies_divergenza_db</code>). ⚠️ Verifica il prodotto <strong>prima</strong> di scriverlo eseguendolo in uno spazio isolato: un file rotto qui impedisce l'avvio di Django e quindi anche del comando stesso — difetto gia' pagato alla prima esecuzione. ⛔ La sorgente e' la vista di <strong>identita'</strong>, mai <code>config.vw_codici_errore</code> (di revisione, una riga per codice+lingua: filtrarla per lingua perde in silenzio i codici senza messaggio).</td>
+</tr>
+<tr>
+<td><code>UI_ACTION_OVERRIDE</code></td>
+<td><code>error_ui_overrides.py</code></td>
+<td>Le <strong>176</strong> <code>ui_action</code> che non seguono il default della loro classe, <strong>con la ragione scritta accanto</strong>. ⚠️ Non e' un CSV e non deve diventarlo: sono decisioni con una motivazione, e su <code>DATO_ERRATO</code> il default e' 117 contro 117 — il discriminante e' <strong>dove manca il dato</strong>, non la classe.</td>
+</tr>
+<tr>
+<td><code>USER_MESSAGE_FALLBACK</code></td>
+<td><code>error_messages_fallback.py</code></td>
+<td>Il messaggio da mostrare <strong>quando quello del DB non e' arrivato</strong>. ⚠️ Non duplica <code>config.messaggi_errore</code>: e' la variante <strong>senza segnaposto</strong> — misurato, <code>%s</code> in <strong>371</strong> messaggi a catalogo e in <strong>0</strong> di questi.</td>
+</tr>
+<tr>
+<td><code>richiedi_db_provvisto</code></td>
+<td><code>tests/db_e2e.py</code></td>
+<td><strong>Prerequisito unico dei test che interrogano il DB vero</strong> (quello configurato, con lo schema Liquibase completo). Salta — non fallisce — su flag spenta (<code>ZEROERP_TEST_DB_E2E</code>), DB irraggiungibile, o schema assente perche' il runner ha creato un database usa-e-getta. ⚠️ Va chiamata da <code>setUpClass</code>, <strong>mai</strong> a import time: la prima versione usava <code>@skipUnless</code> con un probe valutato all'import e rendeva rossi 469 test di altre app. Se il tuo test presidia un oggetto specifico, verificane l'esistenza <strong>dopo</strong> questa chiamata e li' <strong>fallisci</strong>: schema presente + oggetto assente e' un difetto, non una condizione d'ambiente. Consumer: <code>test_db_error_fields</code> (3 e2e), <code>test_error_codes_db_policy_guardrail</code>.</td>
 </tr>
 <tr>
 <td><code>EmailDispatchService.send_email</code></td>
@@ -8242,7 +8321,7 @@ motore (direzione anelli: vendite→pratiche).</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.ed145cee.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       
