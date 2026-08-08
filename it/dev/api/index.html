@@ -1577,6 +1577,8 @@
       
         
       
+        
+      
     
     
     
@@ -1943,6 +1945,33 @@
     
   
   Script
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dbzero/shop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Shop
 
     
   </span>
@@ -8399,16 +8428,53 @@ diceva il contrario, ed è stata corretta: a zero righe droppare sarebbe
 <em>neutro</em> nel comportamento (il <code>NOT EXISTS</code> del controllo (B) non toglie nulla,
 il (C) è vero a vuoto), ma comprerebbe «meno codice» al prezzo di <strong>mettere mano
 al controllo (B)</strong>, cioè all'unica cosa che tiene la convenzione.</p>
-<p>La ragione che conta è però un'altra: la convenzione <strong>è già stata allargata una
-volta</strong>, da <code>^E_</code> a <code>^&#91;EW&#93;_</code> per far posto ai warning (<code>20260805-28</code>). Alla
-prossima eccezione legittima, con un registro c'è una riga datata che qualcuno
-legge; senza, l'unico posto è la regex — e allargare una regex è un diff di un
-carattere che non nota nessuno, applicato a tutti per sempre.</p>
-<p>⚠️ <strong>Se e quando servirà davvero come valvola</strong>, mancano due cose e vanno fatte
-allora, non prima: una colonna <code>motivo</code> (oggi la tabella registra <em>chi</em>, non
-<em>perché</em>) e la riscrittura del messaggio del controllo (B), che dichiara quella
-strada chiusa ai codici nuovi. Finché l'eccezione non arriva, la tabella vuota
-costa zero e il rubinetto resta chiuso.</p>
+<p>La seconda ragione è che il meccanismo <strong>serve alla prossima eredità</strong>: il
+progetto ne ha già assorbita una (57 codici) e ne assorbirà altre. Ricostruire
+tabella, CHECK e due controlli sotto la pressione di un'importazione è il momento
+in cui li si costruisce male.</p>
+<p>⛔ <strong>Non è però una «valvola per le eccezioni», e la distinzione è operativa.</strong>
+L'unica eccezione vera mai arrivata — la famiglia <code>W_</code> dei warning — <strong>non è
+finita nel registro: è stata allargata la convenzione</strong> (<code>20260805-28</code>), ed era
+la scelta giusta. Le tre strade sono diverse:</p>
+<table>
+<thead>
+<tr>
+<th>Cosa arriva</th>
+<th>Dove va</th>
+<th>Perché</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>una <strong>famiglia</strong> nuova con una semantica sua (<code>W_</code>)</td>
+<td>si <strong>allarga la regola</strong></td>
+<td>una famiglia dentro un registro di eccezioni si perde</td>
+</tr>
+<tr>
+<td>un codice <strong>ereditato</strong> da fuori, già storto</td>
+<td><strong>il registro</strong></td>
+<td>è debito: ha una data e deve calare</td>
+</tr>
+<tr>
+<td>un codice <strong>nuovo</strong> nato storto</td>
+<td>si <strong>corregge prima del merge</strong></td>
+<td>non è debito, è un difetto</td>
+</tr>
+</tbody>
+</table>
+<p>Per questo la tabella <strong>non ha una colonna <code>motivo</code></strong> e non deve averla:
+risponderebbe a «perché questa eccezione è legittima», che è la domanda della
+prima riga — quella che non passa di qui. Per il debito l'orologio c'è già ed è
+<code>data_registrazione</code>.</p>
+<p>⚠️ <strong>Nota sul perché la convenzione conta, corretta il 2026-08-08.</strong> Fino al B-5
+la ragione era «un codice fuori convenzione non trova policy e cade su
+<code>E_GENERICO</code>, cioè 500». <strong>Non è più così</strong>: <code>error_policies_generated.py</code> è
+generato dal catalogo e li contiene tutti, e <code>resolve()</code> cerca prima il nome
+esatto. La regola resta per due ragioni più strette — la <strong>finestra</strong> fra il
+migrate che crea il codice e il commit che rigenera il dizionario (lì a decidere
+400 invece di 500 resta il prefisso), e la <strong>separazione <code>E_</code>/<code>W_</code></strong>. Il
+messaggio del controllo (B) è stato riscritto di conseguenza: una regola che si
+spiega con un fatto scaduto insegna una cosa falsa a chi si fida.</p>
 <p>⚠️ Da non confondere con <code>dbops.codici_errore_senza_policy</code> (il registro del
 <em>terzo lato</em>, 141 → 0): è un'altra tabella, un altro mestiere, e anche quella
 resta.</p>
