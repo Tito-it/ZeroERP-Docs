@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -5291,6 +5291,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#che-cose-la-banda-e-perche-un-fondo-puo-essere-negativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ Che cos'è la «banda», e perché un fondo può essere negativo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#regole-principali" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5298,6 +5309,45 @@
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Regole principali">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#la-regola-non-e-scritta-qui-si-chiede" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ La regola non è scritta qui: si chiede
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#il-perimetro-dichiarato-adesso-e-quello-applicato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ✅ Il perimetro dichiarato adesso è quello applicato
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-e-caduto-e-cosa-lo-sostituisce" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ✅ Cosa è caduto, e cosa lo sostituisce
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -5354,31 +5404,134 @@
 <p><strong>Approfondimento tabelle:</strong></p>
 <p>• <a href="../../tabelle/fatture/">vendite.fatture</a><br />
 • <a href="../../tabelle/fatture_fondi_fattura_source/">vendite.fatture_fondi_fattura_source</a><br />
-• <a href="../../../pagamenti/tabelle/vendite_movimenti/">pagamenti.vendite_movimenti</a><br />
+• <a href="../../../anagrafiche/tabelle/emittenti_fiscali_utilities/">anagrafiche.emittenti_fiscali_utilities</a><br />
+• <a href="../../../pagamenti/tabelle/vendite_movimenti/">pagamenti.vendite_movimenti</a>  </p>
+<p><strong>Approfondimento funzioni:</strong></p>
+<p>• <a href="../../funzioni/fn_ricalcola_totali_fattura/">vendite.fn_ricalcola_totali_fattura</a> — è lei che <strong>scrive</strong> <code>minimo</code><br />
+• <a href="../../funzioni/fn_applica_fondi_fattura/">vendite.fn_applica_fondi_fattura</a><br />
 </p>
 </blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 12-02-2026)<br />
-La funzione <strong><code>vendite.fn_genera_fondi_fattura_source()</code></strong> genera record
-in <code>fatture_fondi_fattura_source</code> per fatture con <code>minimo = true</code>,
-e mantiene allineata la source in base al saldo documento.</p>
+<p>(latest review 15-08-2026)<br />
+La funzione <strong><code>vendite.fn_genera_fondi_fattura_source()</code></strong> crea in
+<code>fatture_fondi_fattura_source</code> i fondi delle fatture <strong>«di minimo»</strong>, cioè quelle
+il cui importo cade dentro la banda configurata per emittente × utility: sono i
+documenti che <strong>non si incassano da soli</strong> e il cui valore viene riportato sulla
+fattura successiva.</p>
+<hr />
+<h3 id="che-cose-la-banda-e-perche-un-fondo-puo-essere-negativo">⭐ Che cos'è la «banda», e perché un fondo può essere negativo<a class="headerlink" href="#che-cose-la-banda-e-perche-un-fondo-puo-essere-negativo" title="Permanent link">&para;</a></h3>
+<p>Le due soglie di <code>anagrafiche.emittenti_fiscali_utilities</code> —
+<code>minimo_soglia_min</code> e <code>minimo_soglia_max</code> — <strong>non sono un minimo e un tetto</strong>:
+sono i due capi di un intervallo <strong>che contiene lo zero</strong>. Esempio reale
+(<code>min = −500</code>, <code>max = +10</code>):</p>
+<div class="highlight"><pre><span></span><code>                −500 €              0              +10 €
+    ────────────────┼───────────────┼───────────────┼──────────────
+     RIMBORSO       │      F O N D O   F A T T U R A     │  PAGAMENTO
+     (credito       │  a credito  ·  a debito            │  ordinario
+      troppo grande)│  si riporta sulla fattura dopo     │  del cliente
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Totale della fattura</th>
+<th>Esito</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>sopra il massimo</strong></td>
+<td>pagamento ordinario del cliente: nessun fondo</td>
+</tr>
+<tr>
+<td>fra il massimo e <strong>zero</strong></td>
+<td>troppo piccola per essere incassata da sola → <strong>fondo a debito</strong></td>
+</tr>
+<tr>
+<td>fra zero e <strong>il minimo</strong></td>
+<td>credito troppo piccolo per un rimborso → <strong>fondo a credito</strong></td>
+</tr>
+<tr>
+<td><strong>sotto il minimo</strong></td>
+<td>credito importante → processo di <strong>rimborso</strong> (dominio <code>pagamenti</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>🔴 <strong>Ne segue che un fondo di importo negativo è normale, non un difetto</strong>: il
+capo inferiore della banda esiste apposta per riportare avanti dei crediti. Un
+filtro «solo importi positivi» spegnerebbe metà del meccanismo, e lo farebbe in
+silenzio — il fondo continuerebbe a funzionare nell'altro verso.</p>
+<p>⚠️ <strong>Il flag <code>minimo</code> non lo imposta questa funzione</strong>: lo <strong>riscrive</strong>
+<code>fn_ricalcola_totali_fattura</code> a ogni ricalcolo, confrontando <code>totale_a_pagare</code>
+con le due soglie. Qui si legge soltanto.</p>
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Parametri obbligatori (ID &gt; 0).</li>
-<li>Seleziona fatture con <code>minimo = true</code> nel perimetro BA/utility/tipo_doc/emittente/valuta.</li>
-<li>Inserisce nuove source con stato <code>DISPONIBILE</code> solo per fatture con saldo effettivo diverso da <code>0</code>.</li>
-<li>Se la source esiste gia` (non assegnata), aggiorna importo e stato:</li>
-<li><code>saldo_effettivo = 0</code> -&gt; <code>ANNULLATO</code></li>
-<li><code>saldo_effettivo &lt;&gt; 0</code> -&gt; <code>DISPONIBILE</code></li>
-<li>La funzione e` idempotente: riallinea i dati senza creare duplicati.</li>
-<li><code>saldo_effettivo</code> e` calcolato come:</li>
-<li><code>residuo_fattura (totale_a_pagare - movimenti)</code></li>
-<li>meno saldo contabile postabile (<code>vendite_contabili_righe_stati.is_postabile = true</code>).</li>
+<li>⭐ <strong>CREATE-ONLY dal 2026-08-15</strong>: non esiste più un ramo di aggiornamento. Il
+  fondo di una fattura <code>DEFINITIVA</code> è un <strong>atto</strong> — si scrive una volta con
+  l'importo letto in quel momento e non si ricalcola. Prima, ogni giro di
+  fatturazione riallineava l'importo delle source non assegnate, <strong>anche di
+  fatture già stampate</strong>.</li>
+<li>Inserisce in stato <code>DISPONIBILE</code> e <code>origine = 'AUTOMATICA'</code>.</li>
+<li>I <strong>cinque filtri di scope</strong> (billing account, <strong>utility</strong>, tipo doc fiscale,
+  emittente, valuta) dicono <em>quali</em> fatture guarda questa chiamata.</li>
 </ul>
+<h4 id="la-regola-non-e-scritta-qui-si-chiede">⭐ La regola non è scritta qui: si chiede<a class="headerlink" href="#la-regola-non-e-scritta-qui-si-chiede" title="Permanent link">&para;</a></h4>
+<p>Dal 2026-08-15 (sera) l'<strong>inviluppo</strong> — sorgente <code>DEFINITIVA</code>, dentro la banda,
+utility attribuita, atto unico, importo non nullo e <strong>corrispondenza</strong> col
+documento — non sta nel <code>WHERE</code> di questa funzione ma dentro
+<a href="../../funzioni/fn_fondo_fattura_proponibile/">fn_fondo_fattura_proponibile</a>,
+che viene chiamata in <code>LATERAL</code> e di cui si inserisce il risultato.</p>
+<p>La ragione è che <strong>lo stesso inviluppo serve all'elenco</strong>
+<a href="../../views/vw_fondi_fattura_da_decidere/">vw_fondi_fattura_da_decidere</a>:
+due copie della regola darebbero prima o poi due risposte diverse, e il divario
+si vedrebbe come un elenco che propone ciò che il giro notturno non crea.</p>
+<p>⚠️ <strong>Non c'è un pre-filtro su <code>minimo</code></strong> in questa funzione, benché costerebbe
+poco: sarebbe di nuovo un pezzo di regola in un secondo posto, e il giorno in cui
+l'inviluppo cambiasse continuerebbe a tagliare in silenzio. Lo scope riduce già i
+candidati a una manciata di documenti per chiamata. <em>(Nella vista invece il
+pre-filtro c'è, perché lì non esiste uno scope: è dichiarato lì.)</em></p>
+<h4 id="il-perimetro-dichiarato-adesso-e-quello-applicato">✅ Il perimetro dichiarato adesso è quello applicato<a class="headerlink" href="#il-perimetro-dichiarato-adesso-e-quello-applicato" title="Permanent link">&para;</a></h4>
+<p>Fino al 2026-08-15 la funzione riceveva <strong><code>p_utility_id</code> senza usarlo come
+filtro</strong>: lo <em>scriveva</em> soltanto sulla riga. Su un billing account con due
+utility, a ogni giro la stessa riga veniva rimarcata con la utility dello scope
+corrente — e siccome <code>fn_applica_fondi_fattura</code> filtra proprio su quella colonna,
+<strong>a quale fattura figlia finisse il fondo dipendeva dall'ordine dei giri</strong>.</p>
+<p>Adesso <code>utility_id</code> è nel filtro, con <code>=</code> e non <code>IS NOT DISTINCT FROM</code>: una
+fattura senza utility è un <strong>dato incompleto</strong> (BASE è una utility vera) e
+un'attribuzione non si indovina. Quel caso non sparisce nel nulla — lo mostra
+l'elenco, con motivo <code>UTILITY_NON_ATTRIBUIBILE</code>.</p>
+<p>ℹ️ Il legame fra sorgente e figlia usa <strong>la stessa chiave con cui si accorpano le
+attività in fattura</strong> (<code>fn_build_fattura_key</code>, <strong>nove</strong> elementi: vi rientrano
+anche reseller, registro, termine e modalità di pagamento). Il confronto si
+chiude dentro <code>fn_applica_fondi_fattura</code>, che ha entrambe le fatture.</p>
+<h4 id="cosa-e-caduto-e-cosa-lo-sostituisce">✅ Cosa è caduto, e cosa lo sostituisce<a class="headerlink" href="#cosa-e-caduto-e-cosa-lo-sostituisce" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Prima</th>
+<th>Adesso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nessun <strong>filtro di stato</strong>: anche una fattura <code>ANNULLATA</code> con <code>minimo = true</code> generava un fondo (<code>fn_get_saldo_fattura</code> non guarda lo stato)</td>
+<td>solo sorgenti <strong><code>DEFINITIVA</code></strong></td>
+</tr>
+<tr>
+<td>se la source esisteva, <strong>l'importo veniva riaggiornato</strong></td>
+<td>l'atto si scrive <strong>una volta sola</strong>, e il lock di colonna lo rende immutabile</td>
+</tr>
+<tr>
+<td>a saldo zero la source passava ad <strong><code>ANNULLATO</code></strong> da sola</td>
+<td>🔴 nessun automatismo la annulla più <strong>qui</strong>: la non-capienza si verifica <strong>al momento dell'applicazione</strong>, dove il denaro si muove davvero</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
-<p>Ritorna il numero totale di record modificati (<code>insert</code> + <code>update</code>).</p>
+<p>Ritorna il numero di source <strong>create</strong> (non più <code>insert</code> + <code>update</code>: gli update
+non esistono più).</p>
 <hr />
 <h3 id="esempio-duso">Esempio d’uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_genera_fondi_fattura_source</span><span class="p">(</span>
@@ -5450,7 +5603,7 @@ e mantiene allineata la source in base al saldo documento.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

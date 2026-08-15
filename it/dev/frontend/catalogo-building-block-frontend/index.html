@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -6475,7 +6475,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>useApiHandler</code></td>
 <td><code>useApiHandler.js</code></td>
-<td>Wrapper chiamate API con error handling automatico e stato loading</td>
+<td>Wrapper chiamate API con error handling automatico e stato loading. ⭐ <strong>Dal 2026-08-08 espone anche <code>campiErrati</code></strong>: i NOMI dei campi che il backend indica come da correggere (envelope <code>error.fields</code>), pronti da legare a <code>:invalid="campiErrati.includes('codice')"</code>. Non sostituisce la validazione client — copre le regole che stanno nel <strong>service</strong> e che il frontend non conosce. ⚠️ Si azzera a ogni <code>execute</code> (descrive l'ultimo errore, non la storia del drawer) e si popola anche in <code>silent</code>. Espone anche <code>azioneUi</code> (<code>ui_action</code>), che pero' <strong>nessun componente legge ancora</strong>. Legato da <strong>38 componenti / 136 binding</strong> (2026-08-08). Vedi frontend-standards §Gestione errori API.</td>
 </tr>
 <tr>
 <td><code>useLoading</code></td>
@@ -6791,6 +6791,11 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td><code>useListaEmptyStateFetch</code></td>
 <td><code>useListaEmptyStateFetch.js</code></td>
 <td><strong>Guardia empty-state lista (2026-06-03, estrazione regola del 2).</strong> Centralizza lo stato lista (<code>items</code>/<code>totalRecords</code>/<code>loading</code>/<code>hasSearched</code>) + il <code>fetchList</code> con la guardia "liste che partono vuote" (frontend-standards §"Empty state"): search &lt; 3 char ignorata, primo caricamento senza filtri resta vuoto, search svuotata torna vuoto — i 3 reset erano duplicati bit-per-bit in 3 store. API: <code>useListaEmptyStateFetch({ filters, hasActiveFilters(f)-&gt;bool, buildParams(f, searchTerm)-&gt;object, fetchPage(params)-&gt;axios })</code>. <code>buildParams</code> resta caller-owned perché la mappatura filtri→query diverge (preventivi <code>page/page_size</code>, offerte/ordini <code>limit/offset</code>; rename <code>data_a</code>→<code>validita_dal_max</code>/<code>data_al</code>; <code>solo_attiva</code>). Adottato dai 3 store-documento vendite "ricchi" (transizioni+righe+componenti): <code>useOfferteStore</code>, <code>usePreventiviStore</code>, <code>useOrdiniStore</code>. <strong>Modo <code>alwaysFetch</code></strong> (2026-06-05, B19): flag additivo (default <code>false</code>) che salta i guard empty-state e carica SEMPRE (liste che partono piene: admin/geo); il search &lt;3 char resta ignorato da <code>buildParams</code> → lista resta piena (no flash). <strong>Relazione con <code>createCrudStore</code></strong>: la factory unica (<code>startsEmpty</code> true/false → <code>alwaysFetch</code> false/true) <strong>delega sempre la guardia a questo composable</strong> → gate single-source. Layering: questo composable = primitiva gate; la factory ci costruisce sopra (param-builder 1:1 + limit/offset + extraActions).</td>
+</tr>
+<tr>
+<td><code>useListaAzioni</code></td>
+<td><code>useListaAzioni.js</code></td>
+<td><strong>Le due azioni di utility di ogni <code>&lt;ListaConfigurabile&gt;</code> — «Personalizza colonne» + «Esporta» — e lo stato che le governa</strong> (<code>dirty</code>/<code>colonneNuove</code>/<code>configReady</code>, dialog e download). Estratto 2026-08-15: vivevano dentro <code>useListaConfigurabilePage</code>, che pero' e' costruito su <code>useSearchTable</code> e pretende uno store «ricerca + sort + limit» — i tre cruscotti (situazione aperta, backlog, competenza) usano <code>usePagedDashFetch</code> e non potevano consumarlo, quindi le loro <strong>cinque</strong> liste erano rimaste senza personalizzazione ne' export. <code>useListaConfigurabilePage</code> ora lo consuma a sua volta: <strong>una sede sola</strong>, le 37 viste standard e i cruscotti producono azioni identiche. API: <code>useListaAzioni(listaGetter, { exportFn, getExportParams })</code> → <code>{ dirty, colonneNuove, configReady, exportDialogVisible, exportLoading, onExportConfirm, azioniLista }</code>. ⚠️ <code>listaGetter</code> e' una <strong>funzione</strong>, non un ref: una pagina con piu' liste (il cruscotto competenza ne ha tre) deve poter puntare a quella VISIBILE, altrimenti si personalizza una lista che l'operatore non sta guardando. ⚠️ Non tocca colonne ne' ordinamento a video: apre la modale (preferenza dell'operatore) e legge la config per l'export.</td>
 </tr>
 <tr>
 <td><code>useResponsiveColumns</code></td>
@@ -7438,6 +7443,14 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 <td>Nota muted «qui non c'e' niente da azionare» della <code>DrawerActionsBar</code> (prop <code>infoKey</code>): icona info + testo, <code>flex: 1 1 12rem</code> per andare a capo da sola invece di stringere i pulsanti</td>
 </tr>
 <tr>
+<td><code>app-dash-fermi</code></td>
+<td>Blocco lista delle tre dashboard (situazione aperta, backlog, competenza). ⚠️ <strong>Pavimento di altezza obbligatorio</strong> (<code>--app-dash-lista-min-h</code>, applicato via <code>:has(.lista-configurabile)</code> — gli empty-state restano a contenuto): e' un flex item comprimibile dentro <code>.app-dash-main</code>, e col pavimento a <strong>zero</strong> veniva schiacciato a 0px quando le card occupavano molte righe (schermo stretto). Poiche' <code>ListaConfigurabile</code> e' <code>height:100%</code> e la DataTable usa <code>scroll-height="flex"</code>, il corpo tabella calcolava 0 e a video restavano <strong>solo intestazione e paginatore</strong> — lista apparentemente vuota coi dati presenti (difetto 2026-08-15). Regola generale: un contenitore di <code>ListaConfigurabile</code> deve avere <strong>altezza definita e non azzerabile</strong>, altrimenti la lista sparisce senza errori</td>
+</tr>
+<tr>
+<td><code>app-menu-item-motivo</code></td>
+<td>Riga secondaria muted sotto la label nel popup kebab di <code>RowActionsMenu</code>: rende <strong>visibile</strong> il motivo di un'azione disabilitata dove il tooltip non arriva (il kebab e' la variante touch, e su touch non c'e' hover)</td>
+</tr>
+<tr>
 <td><code>app-drawer-action-wrap</code> / <code>app-drawer-action-badge</code></td>
 <td>Wrapper relative + badge counter sopra un pulsante <code>kind:'manage'</code> (es. counter righe)</td>
 </tr>
@@ -7796,7 +7809,7 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 <tr>
 <td><code>DrawerActionsBar</code></td>
 <td><code>DrawerActionsBar.vue</code></td>
-<td><strong>Refactor UI drawer 2026-05-21.</strong> Barra azioni di processo del drawer (sotto l'header), responsive CSS-first. Mirror di <code>PageActionsBar</code> per il contesto drawer + <code>kind:'state'</code> (transizioni <code>availableActions</code>) e <code>kind:'manage'</code> (sub-drawer con badge counter, es. "Gestisci righe (5)"). Desktop ≥1024px: <code>state</code>+<code>manage</code> inline con label, <code>secondary</code> nel kebab; touch/&lt;1024px: solo <code>primary</code> inline, tutto il resto nel kebab unico. Applica <code>class="app-escape"</code> automaticamente a tutti i bottoni (compatibilità modalità readonly AS/400). Props: <code>actions</code>, <code>disabled</code>, <code>menuTooltip</code>, <strong><code>infoKey</code></strong> (2026-08-04, brief vie d'uscita R3: chiave i18n emessa dal DB — <code>meta-&gt;&gt;'nessuna_azione_key'</code> degli stati doc via capability — che spiega perche' da questo stato non c'e' nessuna azione e cosa fare invece; risolta con <code>labelOrCode</code> fail-visible, resa come nota muted <code>.app-drawer-actions-info</code>. <strong>La barra compare anche a zero azioni</strong> se la chiave c'e': attenzione ai <code>v-if="drawerActions.length"</code> nei drawer, vanno estesi alla chiave. Distinta da <code>enabled:false</code>+<code>reasons</code>, che spiegano il singolo pulsante spento). Slot <code>#prefix</code>/<code>#suffix</code>. Schema azione: <code>{ key, kind: 'primary'\|'state'\|'manage'\|'secondary', label, icon, severity?, badge?, tooltip?, visible?, disabled?, hideWhenReadonly?, action?, command }</code>.</td>
+<td><strong>Refactor UI drawer 2026-05-21.</strong> Barra azioni di processo del drawer (sotto l'header), responsive CSS-first. Mirror di <code>PageActionsBar</code> per il contesto drawer + <code>kind:'state'</code> (transizioni <code>availableActions</code>) e <code>kind:'manage'</code> (sub-drawer con badge counter, es. "Gestisci righe (5)"). Desktop ≥1024px: <code>state</code>+<code>manage</code> inline con label, <code>secondary</code> nel kebab; touch/&lt;1024px: solo <code>primary</code> inline, tutto il resto nel kebab unico. Applica <code>class="app-escape"</code> automaticamente a tutti i bottoni (compatibilità modalità readonly AS/400). Props: <code>actions</code>, <code>disabled</code>, <code>menuTooltip</code>, <strong><code>infoKey</code></strong> (2026-08-04, brief vie d'uscita R3: chiave i18n emessa dal DB nel campo <strong><code>stato_info_key</code></strong> delle capability, seminata nel <code>meta</code> degli stati doc, che dice in che stato si trova il documento e cosa fare invece; risolta con <code>labelOrCode</code> fail-visible, resa come nota muted <code>.app-drawer-actions-info</code>. <strong>La barra compare anche a zero azioni</strong> se la chiave c'e': attenzione ai <code>v-if="drawerActions.length"</code> nei drawer, vanno estesi alla chiave. Distinta da <code>enabled:false</code>+<code>reasons</code>, che spiegano il singolo pulsante spento. ⚠️ <strong>Dal 2026-08-10</strong> la nota non e' piu' subordinata alla lista vuota — decisione §5 del test in-app, <code>20260810-04/-05/-06</code>: e' <strong>informazione di stato</strong> e convive con le azioni vive, da cui il rinome del campo da <code>nessuna_azione_key</code>. Il campo e' <strong>sempre presente</strong>, <code>null</code> quando non si applica: guardare il valore, non la chiave. La proprieta' nel <code>meta</code> resta <code>nessuna_azione_key</code> — asimmetria voluta, <code>check_i18n_keys.py</code> la trova per quel nome. ⚠️ <strong>Dal 2026-08-15</strong> il guard la cerca in <strong>ogni</strong> CSV di <code>80_data/sql</code> e non piu' nei soli <code>stati_doc_*</code>/<code>transizioni_stati_*</code>: <code>vendite.stati_commessa</code> non ha il segmento <code>doc</code> e le sue due chiavi non erano mai state guardate. <strong>Copertura testi</strong>: sette domini su otto, <code>lotto</code> dichiarato aperto — <code>config.stati_doc_fiscale</code> e' condivisa con le fatture e <code>fn_available_actions_fattura</code> non esiste). Slot <code>#prefix</code>/<code>#suffix</code>. Schema azione: <code>{ key, kind: 'primary'\|'state'\|'manage'\|'secondary', label, icon, severity?, badge?, tooltip?, visible?, disabled?, hideWhenReadonly?, action?, command }</code>.</td>
 </tr>
 <tr>
 <td><code>GenericConfigDrawer</code></td>
@@ -8029,7 +8042,7 @@ Il toggle e' gestito dallo store <code>useUiStore</code> (<code>isDark</code>, <
 <tr>
 <td><code>RowActionsMenu</code></td>
 <td><code>RowActionsMenu.vue</code></td>
-<td>Azioni di riga responsive. Props: <code>actions</code>, <code>row</code>, <code>tooltip</code>, <code>disabled</code>, <code>disableWhenInactive</code>. Se <code>row.attivo === false</code> o <code>row.is_active === false</code>, disabilita automaticamente le azioni operative salvo <code>allowWhenInactive: true</code> sulla singola azione (es. riattiva/storico/modifica quando la matita e' l'entrypoint del form).</td>
+<td>Azioni di riga responsive. Props: <code>actions</code>, <code>row</code>, <code>tooltip</code>, <code>disabled</code>, <code>disableWhenInactive</code>. Se <code>row.attivo === false</code> o <code>row.is_active === false</code>, disabilita automaticamente le azioni operative salvo <code>allowWhenInactive: true</code> sulla singola azione (es. riattiva/storico/modifica quando la matita e' l'entrypoint del form). ⚠️ <strong>Dal 2026-08-15 il <code>tooltip</code> di un'azione DISABILITATA e' reso anche nel kebab</strong>, come riga secondaria sotto la label (<code>.app-menu-item-motivo</code>), non piu' solo come tooltip del bottone inline: il kebab e' la variante <strong>touch</strong>, e su touch non esiste hover — l'azione appariva grigia e muta. Compare solo dove serve (azione disabilitata + <code>tooltip</code> diverso dalla <code>label</code>), quindi le voci senza motivo restano identiche. Vale per tutti i consumer che gia' passavano un motivo (download non disponibile, UoM non cancellabile, BoM non gestibile, gruppo non fatturabile…). Chi scrive un'azione disabilitata <strong>deve</strong> valorizzare <code>tooltip</code> col perche': e' l'unico canale che arriva su tutti i form factor.</td>
 </tr>
 <tr>
 <td><code>StatusPage</code></td>
@@ -8660,7 +8673,7 @@ Qui sono catalogati i pannelli e drawer della pagina admin.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

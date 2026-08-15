@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -5357,6 +5357,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#le-colonne-del-2026-08-15-display-gia-decodificato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🆕 Le colonne del 2026-08-15: display già decodificato
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#nota-per-chi-scrive-test" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5502,11 +5513,52 @@ ogni <code>CREATE OR REPLACE</code> che non la ripete. Perderla trasformerebbe l
 <code>security_definer</code> di fatto, aprendo un buco nello scope emittente. Un pgTAP la
 verifica (<code>test-vw-dash-competenza-gruppi-v1.sql</code>, caso 9).</p>
 <hr />
+<h3 id="le-colonne-del-2026-08-15-display-gia-decodificato">🆕 Le colonne del 2026-08-15: display già decodificato<a class="headerlink" href="#le-colonne-del-2026-08-15-display-gia-decodificato" title="Permanent link">&para;</a></h3>
+<p>Due colonne aggiunte con <code>20260815-25</code>, su richiesta del backend
+(brief-db-emittibilita-visibile-e-sbloccabile (<code>docs/it/dev/work-done/brief-db-emittibilita-visibile-e-sbloccabile</code>)
+§8.3 e §9 F3). Entrambe tolgono al repository una <strong>seconda risoluzione della
+stessa cosa</strong>, e nessuna delle due costa un JOIN nuovo.</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Da dove viene</th>
+<th>Perché in vista</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>commessa_stato_descrizione</code></td>
+<td><code>stati_commessa</code>, <code>COALESCE(descrizione, codice)</code></td>
+<td>A video va la descrizione. Un codice interno dentro una frase — <em>«The job order is in state BOZZA»</em> — è il sintomo che la decodifica è finita lato client. Il JOIN la vista lo faceva già per <code>emittibile</code> e <code>codice_interno</code></td>
+</tr>
+<tr>
+<td><code>documento_id</code></td>
+<td>la <strong>stessa</strong> LATERAL da cui esce <code>riferimento</code></td>
+<td>I drawer di dominio si aprono per <strong>id</strong>, e la vista esponeva solo codice e uid</td>
+</tr>
+</tbody>
+</table>
+<p>⭐ <strong>Il punto che rende <code>documento_id</code> non cosmetico.</strong> Finché l'id lo risolveva
+il repository con una LATERAL sua, <code>riferimento</code> (il codice, dalla vista) e
+<code>documento_id</code> (l'id, dal repository) potevano in linea di principio descrivere
+<strong>due documenti diversi</strong>, se un giorno l'<code>ORDER BY</code> fosse cambiato da una parte
+sola. Ora arrivano dalla stessa riga per costruzione: non è più una convenzione
+da mantenere a mano.</p>
+<p>ℹ️ <code>documento_id</code> è <code>NULL</code> per i gruppi <strong>sourceless</strong> (oneri di commessa,
+<code>area_documento</code> <code>NULL</code> → la LATERAL non produce righe). È corretto: quei gruppi
+un documento non ce l'hanno, e il frontend offre la sola commessa.</p>
+<p>ℹ️ <code>COALESCE</code> e non <code>descrizione</code> nuda: la colonna è nullable a catalogo, e un
+campo di <strong>display</strong> vuoto si legge come «non lo so» invece che come «manca il
+dato».</p>
+<hr />
 <h3 id="nota-per-chi-scrive-test">Nota per chi scrive test<a class="headerlink" href="#nota-per-chi-scrive-test" title="Permanent link">&para;</a></h3>
 <p>La vista base è <strong>fail-closed senza GUC</strong>:
 <code>script.fn_get_emittenti_scope_sr_ids(NULL)</code> restituisce l'array <strong>vuoto</strong> (non
 <code>NULL</code>), quindi senza <code>app.current_user_id</code> <strong>nessuna riga passa</strong>. Un test che
 non imposta la sessione misurerebbe zero <em>per il motivo sbagliato</em>.</p>
+<p>Le due colonne nuove sono presidiate dai casi 14-15 di
+<code>test-vw-dash-competenza-v1.sql</code>.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -5567,7 +5619,7 @@ non imposta la sessione misurerebbe zero <em>per il motivo sbagliato</em>.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

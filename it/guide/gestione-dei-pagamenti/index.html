@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -3380,6 +3380,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Fondi fattura: fatture_fondi_fattura_source">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quando-una-fattura-diventa-di-minimo-le-due-soglie" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Quando una fattura diventa "di minimo": le due soglie
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -5992,6 +6009,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Fondi fattura: fatture_fondi_fattura_source">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quando-una-fattura-diventa-di-minimo-le-due-soglie" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Quando una fattura diventa "di minimo": le due soglie
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -6366,6 +6400,15 @@ brief-incassi-riconciliazione-rate-promemoria.md (<code>docs/it/dev/work-in-prog
 <li><code>is_fondo_fattura</code> — identifica il centro per i movimenti automatici di fondo fattura</li>
 </ul>
 <p>Un centro non puo essere contemporaneamente di compensazione e di fondo fattura.</p>
+<blockquote>
+<p>⚠️ <strong>Questi due centri non sono cassa, e chi misura gli incassi deve saperlo.</strong>
+Un movimento su <code>is_fondo_fattura</code> o <code>is_compensazione</code> non e denaro arrivato:
+e denaro <strong>spostato</strong> da un documento a un altro. Per la domanda «questa
+fattura e ancora da pagare?» valgono tutti i movimenti — il trasferimento la
+salda davvero. Per la domanda «quanto e <strong>entrato</strong>?» quei centri vanno
+<strong>esclusi</strong>, altrimenti si conta come incasso qualcosa che non e mai transitato
+da una banca. E i due flag esistono anche per questo.</p>
+</blockquote>
 <p>Da un punto di vista tecnico:</p>
 <table>
 <thead>
@@ -7099,8 +7142,55 @@ brief-incassi-riconciliazione-rate-promemoria.md (<code>docs/it/dev/work-in-prog
 </blockquote>
 <hr />
 <h2 id="fondi-fattura-fatture_fondi_fattura_source">Fondi fattura: <code>fatture_fondi_fattura_source</code><a class="headerlink" href="#fondi-fattura-fatture_fondi_fattura_source" title="Permanent link">&para;</a></h2>
-<p>Il fondo fattura e un meccanismo automatico per gestire minimi e riaddebiti: quando una fattura genera un fondo (es. importo minimo non raggiunto), questo viene registrato come sorgente disponibile e poi applicato su una fattura figlia.</p>
+<p>Ci sono documenti che non conviene incassare da soli: una bolletta da pochi euro costa piu di quanto vale mandarla e riscuoterla, e un piccolo credito verso il cliente non giustifica un bonifico di rimborso. In questi casi l'importo non si perde e non si insegue: <strong>si riporta sulla fattura successiva</strong>. Quel riporto e il <strong>fondo fattura</strong>.</p>
 <p>La tabella vive nello schema <code>vendite</code> (non <code>pagamenti</code>) perche e strettamente legata al ciclo di fatturazione, ma il suo effetto si propaga nel dominio contabile tramite la sincronizzazione su testate e righe.</p>
+<h3 id="quando-una-fattura-diventa-di-minimo-le-due-soglie">Quando una fattura diventa "di minimo": le due soglie<a class="headerlink" href="#quando-una-fattura-diventa-di-minimo-le-due-soglie" title="Permanent link">&para;</a></h3>
+<p>A decidere quali documenti si riportano avanti sono <strong>due soglie</strong>, configurate
+per ogni coppia emittente x utility su
+<a href="../../dbzero/anagrafiche/tabelle/emittenti_fiscali_utilities/">anagrafiche.emittenti_fiscali_utilities</a>
+(<code>minimo_soglia_max</code> e <code>minimo_soglia_min</code>). Non sono "un minimo e un massimo"
+nel senso comune: sono i due capi di una fascia <strong>che passa per lo zero</strong>.</p>
+<p>Con una configurazione da +10 e -500 euro:</p>
+<table>
+<thead>
+<tr>
+<th>Totale della fattura</th>
+<th>Che cosa succede</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>sopra +10 €</strong></td>
+<td>il cliente paga normalmente. Nessun fondo</td>
+</tr>
+<tr>
+<td><strong>fra +10 € e 0</strong></td>
+<td>troppo piccola per essere incassata da sola → si riporta come <strong>addebito</strong> sulla fattura dopo</td>
+</tr>
+<tr>
+<td><strong>fra 0 e -500 €</strong></td>
+<td>credito troppo piccolo per un rimborso → si riporta come <strong>accredito</strong> sulla fattura dopo</td>
+</tr>
+<tr>
+<td><strong>sotto -500 €</strong></td>
+<td>credito importante: entra nel processo di <strong>rimborso</strong>, non nel fondo</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>Un fondo puo quindi essere negativo, ed e normale.</strong> Meta della fascia
+serve proprio a riportare avanti dei crediti — e non e una possibilita
+aggiunta dopo: il catalogo delle tipologie
+(<a href="../../dbzero/vendite/tabelle/tipi_fondi_fattura/">tipi_fondi_fattura</a>) parla di
+"addebiti/<strong>accrediti</strong>" fin dall'inizio.</p>
+<p>⚠️ <strong>Se le soglie non sono configurate, il meccanismo e spento</strong>: nessuna
+fattura diventa di minimo e nessun fondo viene creato. E la configurazione va
+messa <strong>completa</strong>: valorizzarne una sola e un errore, non una mezza
+attivazione.</p>
+</blockquote>
+<p>Il flag <code>minimo</code> sulla fattura non lo imposta una persona: lo <strong>ricalcola</strong>
+<code>vendite.fn_ricalcola_totali_fattura</code> a ogni ricalcolo dei totali, confrontando
+il totale da pagare con le due soglie.</p>
 <p>Da un punto di vista tecnico:</p>
 <table>
 <thead>
@@ -7218,8 +7308,21 @@ brief-incassi-riconciliazione-rate-promemoria.md (<code>docs/it/dev/work-in-prog
 </ul>
 <p>Il reset centralizzato in <code>vendite.fn_reset_fondi_fattura()</code> riporta i fondi <code>ASSEGNATO</code> a <code>DISPONIBILE</code> rimuovendo il <code>fattura_figlia_id</code>.</p>
 <blockquote>
-<p>Documentazione dettagliata: <a href="../../dbzero/vendite/tabelle/fatture_fondi_fattura_source/">vendite.fatture_fondi_fattura_source</a></p>
+<p>⚠️ <strong>Il reset e un'operazione tecnica sulla fattura figlia</strong> (il ritorno di un
+lotto in bozza), <strong>non una reazione ai pagamenti</strong>: nessun incasso riapre o
+chiude un fondo da solo.</p>
+<p>🟠 <strong>Due cose stanno per cambiare</strong> (piano in corso —
+brief-db-fondo-fattura… (<code>docs/it/dev/work-in-progress/brief-db-fondo-fattura-ricalcolo-e-governo</code>) §8):</p>
+<ul>
+<li>oggi il fondo di una fattura non ancora assegnato viene <strong>riallineato</strong> dai
+  giri di fatturazione successivi. Diventera fisso: <strong>una fattura definitiva ha
+  un fondo definitivo</strong>, che non si ricalcola piu;</li>
+<li>oggi il passaggio ad <code>ANNULLATO</code> per "documento sorgente gia saldato"
+  avviene <strong>da solo</strong>. Sparira: se nel frattempo la fattura di origine e stata
+  pagata, il fondo semplicemente <strong>non viene applicato</strong> e resta da guardare.</li>
+</ul>
 </blockquote>
+<p>Documentazione dettagliata: <a href="../../dbzero/vendite/tabelle/fatture_fondi_fattura_source/">vendite.fatture_fondi_fattura_source</a></p>
 <hr />
 <h2 id="funzioni">Funzioni<a class="headerlink" href="#funzioni" title="Permanent link">&para;</a></h2>
 <h3 id="fn_get_or_create_vendite_contabile"><code>fn_get_or_create_vendite_contabile</code><a class="headerlink" href="#fn_get_or_create_vendite_contabile" title="Permanent link">&para;</a></h3>
@@ -7677,7 +7780,7 @@ brief-incassi-riconciliazione-rate-promemoria.md (<code>docs/it/dev/work-in-prog
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

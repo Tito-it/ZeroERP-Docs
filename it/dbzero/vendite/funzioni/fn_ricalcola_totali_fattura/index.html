@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -5379,9 +5379,23 @@ applicando le regole di arrotondamento definite per <strong>emittente/utility</s
 <li>Aggiorna il saldo tecnico con <code>fn_set_arrotondamento_scope()</code>.</li>
 <li>Imposta <code>minimo = true</code> quando <code>totale_a_pagare</code> rientra nella soglia
   (<code>minimo_soglia_min</code>/<code>minimo_soglia_max</code>).</li>
-<li>Esegue la sincronizzazione contabile dei fondi assegnati alla fattura
-  (<code>fn_sync_contabili_fondo_fattura</code>).</li>
 </ul>
+<p>⭐ <strong>È qui che si decide se una fattura si riporta sulla successiva</strong>, e questa
+  è l'unica pagina in cui la regola è scritta per intero: le due soglie sono i
+  due capi di una <strong>banda che contiene lo zero</strong> (es. <code>−500</code> / <code>+10</code>), quindi ci
+  rientrano sia le fatture troppo piccole da incassare sia i <strong>crediti</strong> troppo
+  piccoli da rimborsare. Chi legge solo la doc del
+  <a href="../../tabelle/fatture_fondi_fattura_source/">fondo fattura</a> non la
+  trova, e ne deduce che un fondo sia sempre a debito.</p>
+<p>🔴 <strong>Attenzione a una configurazione a metà.</strong> La condizione è
+  <code>(soglia_min NON vuota E totale &gt;= soglia_min) E (soglia_max vuota O totale &lt;= soglia_max)</code>:
+  se manca <strong>il minimo</strong> il meccanismo è spento (corretto), ma se manca <strong>il
+  massimo</strong> la seconda condizione è vera per tutti e <strong>ogni</strong> fattura sopra il
+  minimo diventa «di minimo». Una configurazione incompleta oggi non chiude:
+  <strong>spalanca</strong>. È previsto un vincolo «entrambe o nessuna»
+  (piano (<code>docs/it/dev/work-in-progress/brief-db-fondo-fattura-ricalcolo-e-governo</code>) §8.2 D-0).
+* Esegue la sincronizzazione contabile dei fondi assegnati alla fattura
+  (<code>fn_sync_contabili_fondo_fattura</code>).</p>
 <hr />
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>Non ritorna valori. Aggiorna la testata fattura.</p>
@@ -5458,7 +5472,7 @@ applicando le regole di arrotondamento definite per <strong>emittente/utility</s
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

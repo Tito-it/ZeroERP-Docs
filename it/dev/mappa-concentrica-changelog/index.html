@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -5272,6 +5272,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#10-agosto-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        10 agosto 2026
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#26-luglio-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5448,6 +5459,132 @@ per non gonfiare il documento principale.</p>
 test UI o working tree non ancora consolidato, lo stato resta esplicitamente marcato come tale.</p>
 </blockquote>
 <hr />
+<h2 id="10-agosto-2026">10 agosto 2026<a class="headerlink" href="#10-agosto-2026" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>Copre il periodo <strong>27 luglio – 10 agosto</strong>. Due settimane dominate da due
+cantieri trasversali (<strong>la classe dei codici errore</strong> e <strong>i satelliti della
+fattura</strong>) e da un cambio di regime nei test: da qui in poi il pgTAP gira come
+l'applicazione.</p>
+</blockquote>
+<p><strong>Anello 0 + 1 — La classe dei codici errore: il significato dell'errore torna a
+catalogo.</strong> Il cantiere più grande del periodo (05→09 agosto, DB + BE conclusi).
+Prima, il significato di un errore viveva <strong>solo</strong> in un dizionario Python di
+659 voci scritte a mano: il catalogo DB non aveva il campo in cui la
+contraddizione si sarebbe vista. Ora un codice si registra <strong>a catalogo</strong> in
+<code>config.codici_errore</code> (<strong>690 voci</strong>) dichiarando <strong>che cosa è</strong> — la sua
+<code>classe</code>, dal vocabolario di <code>config.classi_errore</code> (<strong>10 valori</strong>) — e status
+HTTP e <code>ui_action</code> si <strong>derivano</strong>. Il modulo Python <code>error_policies_generated.py</code>
+è <strong>generato</strong> dal catalogo e presidiato in CI (<code>--check</code>). Tre conseguenze che
+valgono oltre il cantiere:</p>
+<ul>
+<li><strong>il codice viaggia in un campo strutturato</strong>, non nel testo: <code>SQLSTATE
+  P0001</code> con <code>CONSTRAINT</code> valorizzato = errore di dominio, letto in un solo punto
+  (<code>db_error_fields.py</code>) invece dei quattro che lo riscrivevano ognuno a modo
+  suo;</li>
+<li><strong>i due registri del debito sono a zero</strong>: <code>dbops.codici_errore_senza_policy</code>
+  (141 → 0 in tre giorni, 150 decisioni) e <code>dbops.messaggi_errore_codici_legacy</code>
+  (57 → 0). Restano entrambi, vuoti: un registro in pari non è un registro
+  inutile, ed è il posto dove atterra il prossimo codice;</li>
+<li><strong>l'envelope d'errore porta <code>fields</code></strong>, i nomi dei campi del form da
+  correggere — l'informazione senza la quale <code>ui_action: highlight_form_fields</code>
+  non era azionabile.</li>
+</ul>
+<p>Vedi brief-db-be-classe-codici-errore.md (<code>docs/it/dev/work-done/brief-db-be-classe-codici-errore.md</code>),
+piano-db-classe-codici-errore.md (<code>docs/it/dev/work-done/piano-db-classe-codici-errore.md</code>),
+piano-be-classe-codici-errore.md (<code>docs/it/dev/work-done/piano-be-classe-codici-errore.md</code>),
+brief-db-codice-errore-strutturato.md (<code>docs/it/dev/work-done/brief-db-codice-errore-strutturato.md</code>),
+brief-db-be-terzo-lato-presidio-codici.md (<code>docs/it/dev/work-done/brief-db-be-terzo-lato-presidio-codici.md</code>).</p>
+<p><strong>Anello 0 — 🔴 Il pgTAP gira come l'applicazione, ed entra in CI.</strong> Dal 7 agosto
+il runner di default è l'utente applicativo (<code>PGTAP_RUNNER=app</code>) e non più
+l'owner: <strong>le policy RLS sono esercitate a ogni corsa</strong>. Un rosso ora può essere
+un <strong>permesso</strong> o una <strong>policy</strong>, non solo una fixture, e una fixture che scrive
+dove l'applicazione non scrive non passa più. I 29 file che hanno davvero bisogno
+dell'owner sono marcati uno per uno <strong>con la ragione scritta</strong>. La suite entra
+anche in <strong>CI</strong> — sempre sulle PR verso <code>main</code>, sui push a <code>Tito-dev</code> solo se
+toccano <code>db/</code> o <code>scripts/</code> — con una baseline sua, perché il DB della CI è
+ricostruito da zero e quello di sviluppo ha dati veri: <strong>i rossi sono popolazioni
+diverse</strong>. Tre righe di preambolo diventano obbligatorie e presidiate da un
+cancello (<code>BEGIN</code>, contesto, <code>SET CONSTRAINTS ALL IMMEDIATE</code>): senza, un file
+diventa <strong>verde per sottrazione</strong>. Debito noto: <strong>86 rossi</strong> su <strong>442 file</strong>.
+Vedi brief-db-pgtap-runner-rls-baseline.md (<code>docs/it/dev/work-done/brief-db-pgtap-runner-rls-baseline.md</code>)
+e la guida <a href="../../guide/pgtap-come-si-scrive-un-test/">pgtap-come-si-scrive-un-test</a>.</p>
+<p><strong>Anello 0 — Presidio dei riferimenti morti (04 agosto).</strong> 34 difetti sanati e
+cancello in CI: un riferimento a un oggetto DB che non esiste più non arriva più
+al merge. ⚠️ Il guardrail gira <strong>dopo</strong> <code>manage.py migrate</code> — non spostarlo.
+Vedi brief-db-bonifica-riferimenti-morti.md (<code>docs/it/dev/work-done/brief-db-bonifica-riferimenti-morti.md</code>),
+brief-be-bonifica-riferimenti-morti.md (<code>docs/it/dev/work-done/brief-be-bonifica-riferimenti-morti.md</code>).</p>
+<p><strong>Anello 3 (vendite) — I satelliti della fattura: il documento si racconta per
+intero.</strong> Cantiere chiuso su tutte le fasi (29 luglio – 3 agosto). La fattura
+acquista ciò che le mancava per essere consultabile e stampabile senza risalire
+altrove:</p>
+<ul>
+<li><strong>piano rate</strong> (<code>vendite.fatture_scadenze</code>): generato nello step EMESSA dopo il
+  ricalcolo IVA, idempotente per costruzione (DELETE + INSERT), con lo <strong>snapshot
+  del termine</strong> in testata perché il documento si spieghi da sé. ⚠️ Non è uno
+  scadenzario: non esiste stato di pagamento della rata;</li>
+<li><strong>snapshot di intestazione e indirizzi</strong> congelati sul documento;</li>
+<li><strong>drawer di consultazione</strong>: testata decodificata + righe con kit risolti +
+  riepilogo IVA + piano rate <strong>in un round-trip</strong>, orchestrando gli <strong>stessi</strong>
+  lettori che alimentano il PDF — video e stampa raccontano lo stesso documento
+  per costruzione;</li>
+<li><strong>note fattura</strong>: sesto dominio del building block note partizionate,
+  ~15 righe di sola configurazione, zero migration;</li>
+<li><strong>ritiro del generatore di righe SQL</strong> e fix degli importi di riga a zero.</li>
+</ul>
+<p>Vedi piano-db-satelliti-fattura.md (<code>docs/it/dev/work-in-progress/piano-db-satelliti-fattura.md</code>),
+piano-be-fe-satelliti-fattura.md (<code>docs/it/dev/work-in-progress/piano-be-fe-satelliti-fattura.md</code>),
+brief-db-generazione-scadenze-fattura.md (<code>docs/it/dev/work-done/brief-db-generazione-scadenze-fattura.md</code>),
+brief-be-fe-drawer-fattura.md (<code>docs/it/dev/work-done/brief-be-fe-drawer-fattura.md</code>).</p>
+<p><strong>Anello 3 (vendite) — Emissione mirata e ritorno del lotto a DRAFT.</strong> Il giro di
+fatturazione accetta ora un perimetro ristretto ai <strong>gruppi fatturabili</strong> scelti
+(stesso verbo, stessa idempotenza: assente = giro di massa invariato), e il lotto
+può <strong>tornare a DRAFT</strong> (slice 6-A) per rifare un giro andato storto. Vedi
+brief-db-emissione-fattura-per-documento-sorgente.md (<code>docs/it/dev/work-done/brief-db-emissione-fattura-per-documento-sorgente.md</code>),
+brief-be-fe-emissione-fattura-mirata.md (<code>docs/it/dev/work-done/brief-be-fe-emissione-fattura-mirata.md</code>),
+piano-db-ritorno-lotto-a-draft.md (<code>docs/it/dev/work-done/piano-db-ritorno-lotto-a-draft.md</code>).</p>
+<p><strong>Anello 2 (documenti) — Ristampa fedele: il terzo percorso.</strong> Ri-renderizzare un
+documento <strong>com'era</strong> — versione di template pinnata, anche OBSOLETA, e
+<code>context_json</code> congelato — senza persistere nulla. È distinto dallo <strong>scarica
+originale</strong> (il file su storage) e dal <strong>genera nuovo documento</strong> (modello e dati
+di oggi, che fino ad allora si chiamava impropriamente «ristampa»). La fedeltà è
+dichiarata in header: byte diversi = fedele nel contenuto, non un errore. Vedi
+brief-ristampa-fedele-documenti.md (<code>docs/it/dev/work-done/brief-ristampa-fedele-documenti.md</code>).</p>
+<p><strong>Anello 1 (<code>ui</code>) — Le liste: il rapporto si è invertito.</strong> Il numero scomodo del
+piano — 14 liste sullo standard contro 71 con <code>DataTable</code> grezza — non c'è più:
+<strong>40 file montano il building block</strong>, il registro del presidio è a <strong>43/43</strong>, e
+il Gruppo A si è chiuso <strong>30/34</strong> il 3 agosto. I <strong>4 file rimasti sono fermi per
+decisione</strong> (cassetti senza endpoint paginato), non per debito.</p>
+<blockquote>
+<p>🚨 <strong>Ma il piano non è più tecnico.</strong> <code>primevue</code>, <code>@primeuix/themes</code> e
+<code>primeicons</code> erano <strong>MIT</strong> e passano tutti e tre alla <strong>licenza PrimeUI</strong>
+(community/commerciale, con chiave) dalla nuova major. ZeroErp è <strong>GPL v3
+pubblica</strong>. Non è un rischio di migrazione: è una <strong>decisione di licenza</strong>, e
+non la prende un piano operativo. Il lavoro tecnico resta valido e utile con
+qualunque esito.</p>
+</blockquote>
+<p>Vedi piano-migrazione-primevue-5.md (<code>docs/it/dev/work-in-progress/piano-migrazione-primevue-5.md</code>)
+§1-bis e consuntivo-personalizzazioni-liste-def.md (<code>docs/it/dev/work-done/consuntivo-personalizzazioni-liste-def.md</code>).</p>
+<p><strong>Anello 3 (<code>pagamenti</code>) — Si apre il cantiere delle contabili di pagamento
+(9-10 agosto).</strong> Rimisurato il terreno e prese le decisioni portanti. Due
+scoperte cambiano la scala del lavoro: <strong>nessuna funzione, in tutto il database,
+scrive <code>pagamenti.vendite_movimenti</code></strong> — il <em>posting</em> è documentato ma non
+implementato, quindi <code>fn_get_saldo_fattura</code> restituisce per costruzione sempre
+l'intero totale — e <strong>i cataloghi dello schema erano già seminati</strong> (la macchina
+a stati dell'abbinamento <code>DA_ABBINARE → ABBINATA → POSTATA</code> esiste da sempre a
+catalogo). Decisioni: l'abbinamento vive <strong>sulla riga contabile e arriva alla
+rata</strong>; lo stato della rata è <strong>derivato</strong>; il posting è una madre DB per testata
+contabile; <strong>lo storno non esiste come concetto</strong> — è una contabile con importi
+negativi, e la sicurezza sta in un controllo simmetrico <code>0 ≤ Σ ≤ importo</code>; il
+perimetro dei soldi non ancora attribuiti si deriva <strong>dal conto di incasso</strong>.
+Vedi brief-incassi-riconciliazione-rate-promemoria.md (<code>docs/it/dev/work-in-progress/brief-incassi-riconciliazione-rate-promemoria.md</code>)
+e, per il meccanismo dei fondi fattura da ripensare,
+brief-db-fondo-fattura-ricalcolo-e-governo.md (<code>docs/it/dev/work-in-progress/brief-db-fondo-fattura-ricalcolo-e-governo.md</code>).</p>
+<p><strong>Manutenzione.</strong> Bonifica indici: corrette le viste <code>dbops</code>, aggiunte guardie
+sull'<code>apply</code>, rimossi <strong>48 indici ridondanti</strong> (27 luglio). Commesse: permesso di
+cambio stato, <strong>annullamento delle righe manuali</strong> (non cancella: porta a
+<code>ANNULLATA</code> con motivo obbligatorio), guard di uscita. Lato BE, fan-out isolato
+con esito parziale.</p>
+<hr />
 <h2 id="26-luglio-2026">26 luglio 2026<a class="headerlink" href="#26-luglio-2026" title="Permanent link">&para;</a></h2>
 <p><strong>Anello 3 (vendite) — Resi di vendita: il documento di rientro merce.</strong> Sesto
 documento del ciclo attivo, nato dal DDT: testata + righe <strong>senza valori
@@ -5568,7 +5705,7 @@ CRUD (<code>/&lt;dominio&gt;/&lt;id&gt;/indirizzi/</code>) su <strong>tutti e 5 
 (preventivi/offerte/contratti/ordini/DDT) e <strong>auto-assegnazione</strong> dell'indirizzo
 di default (indirizzo di ruolo <code>CON</code>, fallback <code>FATT</code>) in create + fallback
 post-push. Pilota sul DDT, poi rollout ai 4 drawer. Vedi
-brief-design-indirizzi-documenti-vendita.md (<code>docs/it/dev/work-in-progress/brief-design-indirizzi-documenti-vendita.md</code>).</p>
+brief-design-indirizzi-documenti-vendita.md (<code>docs/it/dev/work-done/brief-design-indirizzi-documenti-vendita.md</code>).</p>
 <p><strong>Anello 3 (vendite) — Riepilogo IVA DDT + colonna Emittente lista.</strong> Vista
 derivata <code>vw_ddt_riepilogo_iva_dettaglio</code> (una riga per aliquota, righe con prezzo
 NULL escluse: un DDT di solo trasporto non ha riepilogo) esposta dal drawer via
@@ -5900,7 +6037,7 @@ prosegue nella tabella sopra.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

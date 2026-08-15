@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -4676,6 +4676,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fan-out-isolato-appscoreservicesfan_outpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Fan-out isolato (<code>apps/core/services/fan_out.py</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#coda-lavori-generica-appscoreservicescoda_lavori" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5734,6 +5745,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fan-out-isolato-appscoreservicesfan_outpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Fan-out isolato (<code>apps/core/services/fan_out.py</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#coda-lavori-generica-appscoreservicescoda_lavori" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6346,7 +6368,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>ErrorTranslator.to_api_error</code></td>
 <td><code>error_translator.py</code></td>
-<td>Converte eccezione in ApiError con policy applicata</td>
+<td>Converte eccezione in ApiError con policy applicata. ⭐ <strong>Dal 2026-08-08 porta anche <code>fields</code></strong>: i NOMI dei campi del form da correggere, presi dal <code>context</code> del <code>ServiceError</code> (convenzione <code>{"field": &lt;nome&gt;}</code>, gia' in 114 punti di chiamata). E' l'informazione senza la quale <code>ui_action = highlight_form_fields</code> non e' azionabile. ⚠️ Si legge <strong>solo</strong> la chiave <code>field</code>, mai tutte le chiavi del context — dentro ci sono <code>lotto_id</code>, <code>contratto_id</code>, <code>order_dir</code>, che non sono campi di un form — e mai il <strong>valore</strong>, che e' il dato dell'utente. ⚠️ <code>_apply_policy</code> costruisce un ApiError NUOVO: un campo non ricopiato li' sparisce, ed e' esattamente il punto in cui <code>fields</code> si perdeva prima di esistere.</td>
 </tr>
 <tr>
 <td><code>ErrorPolicyRegistry.resolve</code></td>
@@ -6624,9 +6646,19 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <td>Valida paginazione <strong>page-based</strong> (<code>page &gt;= 1</code>, <code>1 &lt;= page_size &lt;= 200</code>) e ritorna l'offset <code>(page-1)*page_size</code>; <code>error_code</code>/<code>function_name</code> parametrici. Estratto 2026-06-04 (regola del 2 — B3): unifica i <code>_validate_pagination</code> di vendite_service + tracciamento_service. ⚠️ convenzione <strong>page-based</strong>: per le liste <strong>offset-based</strong> usare <code>parse_list_params</code> (payload_validators).</td>
 </tr>
 <tr>
+<td><code>vincolo_violato</code></td>
+<td><code>payload_helpers.py</code></td>
+<td><strong>Il riconoscimento del vincolo DB violato</strong>, uno solo per tutto il progetto (2026-08-08). Match con <strong>word boundary</strong>: senza, <code>uq_foo</code> matcha anche <code>uq_foo_bar</code> e a decidere quale voce vince e' l'ordine del dizionario — cioe' il caso. ⚠️ Esiste perche' lo stesso riconoscimento era scritto <strong>due volte</strong>, e le due copie non erano identiche: <code>create_with_constraint_mapping</code> aveva ancora l'<code>in</code> nudo che <code>map_integrity_error</code> aveva gia' corretto, e niente legava le due. Chi traduce un <code>IntegrityError</code> usa questa, non riscrive il match.</td>
+</tr>
+<tr>
+<td><code>create_with_constraint_mapping</code></td>
+<td><code>anagrafiche/services/_validators.py</code></td>
+<td>Esegue una create mappando le violazioni UNIQUE su messaggi per-vincolo, con codice fisso <code>E_ANAG_DUPLICATO</code>. Valore della mappa: <code>messaggio</code> oppure <code>(messaggio, campo)</code> — il campo arriva al client in <code>error.fields</code>. ⚠️ <strong>Non e' un doppione di <code>map_integrity_error</code></strong>: la politica di ripiego e' opposta e voluta — senza match e senza <code>default_message</code> <strong>RILANCIA</strong> l'IntegrityError invece di mascherarlo. Condividono il riconoscimento (<code>vincolo_violato</code>), non la decisione.</td>
+</tr>
+<tr>
 <td><code>map_integrity_error</code></td>
 <td><code>payload_helpers.py</code></td>
-<td>Traduce <code>IntegrityError</code> in <code>ServiceError</code> via mappe <code>unique_constraints</code>/<code>fk_constraints</code> (frammento nome vincolo DB -&gt; <code>(error_code, message)</code>). Match case-insensitive. Fallback configurabile con <code>fallback_code</code>/<code>fallback_message</code></td>
+<td>Traduce <code>IntegrityError</code> in <code>ServiceError</code> via mappe <code>unique_constraints</code>/<code>fk_constraints</code> (frammento nome vincolo DB -&gt; <code>(error_code, message)</code>). Match case-insensitive. Fallback configurabile con <code>fallback_code</code>/<code>fallback_message</code>. ⭐ <strong>Dal 2026-08-08 la voce accetta un TERZO elemento: il CAMPO</strong> — <code>(codice, messaggio, "codice")</code> — che finisce nel context del solo vincolo che ha fatto match, arriva al client in <code>error.fields</code> e gli accende l'input. Sul duplicato e' il caso in cui serve di piu': form compilato bene, validazione client muta, e senza il campo l'operatore legge «esiste gia'» e deve indovinare quale. ⚠️ <strong>Il campo sta sulla VOCE, non sul <code>context</code> condiviso</strong>: una mappa con due vincoli su campi diversi deve dare quello che ha fatto match — un <code>field</code> comune accenderebbe l'input sbagliato, che manda a correggere un campo giusto. ⚠️ <strong>Si dichiara solo quando e' vero</strong>: un vincolo composto su colonne che l'operatore sceglie davvero non ha UN campo, e la tupla resta a due. Verificare che il nome sia una chiave del PAYLOAD, non solo una colonna DB — su <code>contratti.numero</code> e <code>fornitori.soggetto_ruolo_id</code> il controllo ha evitato due campi che nel form non esistono.</td>
 </tr>
 <tr>
 <td><code>translate_db_errors</code></td>
@@ -6732,6 +6764,43 @@ tiebreak. Test: <code>apps/core/tests/db/test_sql_order_helpers.py</code>.</p>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="fan-out-isolato-appscoreservicesfan_outpy">Fan-out isolato (<code>apps/core/services/fan_out.py</code>)<a class="headerlink" href="#fan-out-isolato-appscoreservicesfan_outpy" title="Permanent link">&para;</a></h2>
+<p>Il telaio del giro <em>scopri → lavora ogni item isolando l'errore → aggrega l'esito</em>. Estratto il 2026-08-09 con la regola del 2 (ok Tid, brief-be-fan-out-isolato-e-esito-parziale.md (<code>docs/it/dev/work-in-progress/brief-be-fan-out-isolato-e-esito-parziale.md</code>)): il pattern era scritto a mano in due siti di <code>vendite</code> <strong>con policy di aggregazione diverse</strong>, e la divergenza era un difetto vero — il pull da commessa dichiarava COMPLETATO un giro con rifiuti parziali, quindi al rilancio dello step le commesse rimaste indietro venivano saltate in silenzio.</p>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>run_fan_out</code></td>
+<td><code>fan_out.py</code></td>
+<td>Esegue <code>process(item)</code> su ogni item con <strong>un savepoint per item</strong> (<code>isola_in_transazione</code>, default True), cattura le eccezioni, logga lo stack una volta per tutte e restituisce l'esito aggregato. La <strong>discovery resta al chiamante</strong> (conosce i propri filtri di perimetro); <code>process</code> fallisce <strong>sollevando</strong> (nessun valore di ritorno interpretato come esito); il BB <strong>non decide</strong> cosa fare dell'esito — sollevare, marcare un <code>task_run</code>, scrivere un report è del dominio. <code>items</code> è materializzato in lista (serve <code>totale</code> prima di partire).</td>
+</tr>
+<tr>
+<td><code>on_success</code> (parametro di <code>run_fan_out</code>)</td>
+<td><code>fan_out.py</code></td>
+<td><code>on_success(item, risultato)</code> chiamato a <strong>savepoint già rilasciato</strong>: l'aggancio per gli effetti collaterali che valgono solo se l'item è atterrato, quando l'item <strong>successivo</strong> dipende da ciò che ha prodotto il precedente (caso reale: una cache di lookup condivisa). È la versione «durante il giro» di <code>esito.risultati</code>. ⚠️ <strong>Non è protetto</strong>: se solleva, il giro si interrompe — il lavoro dell'item è già committato e mascherare l'errore come «item fallito» direbbe una bugia. Ci si mettono registrazioni in memoria, non lavoro rischioso. Serve perché un rollback annulla le righe di database, <strong>non</strong> un <code>append</code> o una voce di dizionario: una cache popolata dentro il savepoint sopravvive al rollback e avvelena l'item gemello successivo (difetto reale corretto in <code>_process_rows</code>).</td>
+</tr>
+<tr>
+<td><code>FanOutEsito</code></td>
+<td><code>fan_out.py</code></td>
+<td>Esito a <strong>tre stati</strong>: <code>COMPLETATO</code> / <code>PARZIALE</code> / <code>ERRORE</code> (<code>esito</code>, <code>parziale</code>, <code>tutti_falliti</code>, <code>ok</code>, <code>falliti</code>, <code>messaggi_errore()</code>). Le tre parole non sono nuove: <code>CommessaPushOrchestrator._compute_stato</code> le usa da sempre — il BB le rende disponibili a tutti invece di lasciare che ogni chiamante ne reinventi due. <code>risultati</code> porta ciò che <code>process</code> ha restituito per gli item <strong>riusciti</strong>: serve ad applicare gli effetti collaterali «solo se è atterrato» <strong>fuori</strong> dal savepoint, dove un rollback non annullerebbe un <code>append</code>. ⚠️ Lista vuota = <strong>COMPLETATO</strong> («niente da fare» è un successo).</td>
+</tr>
+<tr>
+<td><code>FanOutRunLogger</code></td>
+<td><code>fan_out.py</code></td>
+<td>Diario del giro, opzionale e a metodi <strong>tutti facoltativi</strong>: <code>start(totale)</code> / <code>item_failed(item, indice, exc)</code> / <code>end(esito)</code>. Il BB sa <em>quando</em> chiamare, il chiamante sa <em>dove</em> scrivere (<code>event_log</code>, log di lotto, push log) — così <code>core</code> non prende dipendenze verso i domini. Un'eccezione <strong>dentro</strong> il logger non affonda il giro.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consumer</strong>: <code>PipelineStepExecutor._handle_pull_attivita_da_commessa_task</code> (con <code>_PullCommesseRunLogger</code> che scrive i motivi per-commessa sui log di lotto) e <code>BaseSourceHandler._process_rows</code> (fan-out sulle righe sorgente; la <strong>coda batch resta fuori dal BB</strong>, è una fase successiva al giro).</p>
+<p>⚠️ <strong>Chi NON lo usa, e perché</strong>: <code>CommessaPushOrchestrator._run_locked</code> è stato valutato e <strong>scartato</strong> (§F5 del brief). È un livello sopra — itera su handler che sono <em>essi stessi</em> fan-out — e ha due semantiche incompatibili: lì «fallito» significa «il report contiene errori» e non «ha sollevato», e sulla lista vuota risponde ERRORE (nessun handler risolto = configurazione sbagliata) invece di COMPLETATO. La motivazione è scritta nel docstring di <code>_compute_stato</code>: <strong>non appianare quelle differenze</strong>.</p>
+<p>⚠️ <strong>Confine con <code>QueueDrainEngine</code></strong> (sotto): se l'item deve essere ritrovato <strong>dopo</strong> il run è roba della coda (claim, ownership, backoff, retry); se basta <strong>riscoprirlo</strong>, è <code>run_fan_out</code>. Il confine è scritto in entrambi i file, ed è la ragione per cui i due motori restano distinti.</p>
 <hr />
 <h2 id="coda-lavori-generica-appscoreservicescoda_lavori">Coda lavori generica (<code>apps/core/services/coda_lavori/</code>)<a class="headerlink" href="#coda-lavori-generica-appscoreservicescoda_lavori" title="Permanent link">&para;</a></h2>
 <p>Motore della coda job DB-native <code>dbops.coda_lavori</code> (Fase C cockpit, brief design coda) + la UI di gestione code (brief <code>brief-be-fe-gestione-code-lavori-stampa</code>, 2026-07-21). Nessun broker: claim <code>FOR UPDATE SKIP LOCKED</code>, worker systemd <code>draina_coda_lavori</code>.</p>
@@ -7659,7 +7728,7 @@ esclusivi grazie al <code>UNIQUE (token_hash)</code>.</p>
 <tr>
 <td><code>PreventiviRepository</code> — Componenti BoM CASO A</td>
 <td><code>preventivi_repository.py</code></td>
-<td><strong>Refactor componenti 2026-05-11</strong>. Metodi su <code>vendite.preventivi_righe_componenti</code>: <code>init_componenti_riga(riga_id, emittente_sr_id, data)</code> wrapper su <code>fn_preventivo_riga_componenti_init</code> (idempotente: no-op se gia' presenti o articolo non composito CASO A); <code>list_componenti_riga(riga_id)</code> con JOIN articolo/uom/iva, filtro <code>attivo=TRUE</code>, ORDER BY ordine NULLS LAST + id tiebreaker; <code>get_componente(id)</code> lookup singolo arricchito; <code>update_componente(id, **kwargs)</code> con whitelist <code>_COMPONENTE_UPDATE_ALLOWED</code> (12 campi, esclude struttura immutabile <code>componente_id</code>/<code>articolo_componente_id</code>/<code>coeff_qta_snapshot</code>/<code>riga_preventivo_id</code>/<code>quantita</code>); <code>delete_componente(id)</code> soft delete; <code>purge_componenti_riga(riga_id)</code> hard delete tutti i componenti (per re-init service, distinto dal pattern soft <code>delete_*</code> del file). Trigger DB ricalcola <code>prezzo_unitario</code> padre come SUM(componenti × coeff_qta_snapshot). Brief: <code>docs/it/dev/work-done/brief-db-preventivi-righe-componenti-override.md</code>, piano: <code>docs/it/dev/work-in-progress/refactor-componenti.md</code>.</td>
+<td><strong>Refactor componenti 2026-05-11</strong>. Metodi su <code>vendite.preventivi_righe_componenti</code>: <code>init_componenti_riga(riga_id, emittente_sr_id, data)</code> wrapper su <code>fn_preventivo_riga_componenti_init</code> (idempotente: no-op se gia' presenti o articolo non composito CASO A); <code>list_componenti_riga(riga_id)</code> con JOIN articolo/uom/iva, filtro <code>attivo=TRUE</code>, ORDER BY ordine NULLS LAST + id tiebreaker; <code>get_componente(id)</code> lookup singolo arricchito; <code>update_componente(id, **kwargs)</code> con whitelist <code>_COMPONENTE_UPDATE_ALLOWED</code> (12 campi, esclude struttura immutabile <code>componente_id</code>/<code>articolo_componente_id</code>/<code>coeff_qta_snapshot</code>/<code>riga_preventivo_id</code>/<code>quantita</code>); <code>delete_componente(id)</code> soft delete; <code>purge_componenti_riga(riga_id)</code> hard delete tutti i componenti (per re-init service, distinto dal pattern soft <code>delete_*</code> del file). Trigger DB ricalcola <code>prezzo_unitario</code> padre come SUM(componenti × coeff_qta_snapshot). Brief: <code>docs/it/dev/work-done/brief-db-preventivi-righe-componenti-override.md</code>, modello: <code>docs/it/dev/manual/modello-componenti-bom.md</code>.</td>
 </tr>
 <tr>
 <td><code>_resolve_emittente_sr_id_or_raise</code> / <code>_resolve_emittente_sr_id_safe</code></td>
@@ -8180,6 +8249,11 @@ ai domini funzionali).</p>
 <td>DELETE idempotente. Solleva <code>E_UI_LISTA_NON_TROVATA</code> se la lista stessa non esiste (protezione anti-tampering URL).</td>
 </tr>
 <tr>
+<td><code>build_dash_export_response</code></td>
+<td><code>dash_export_helpers.py</code></td>
+<td><strong>Coda export delle liste dei CRUSCOTTI</strong> (situazione aperta, backlog, competenza — 2026-08-15). Sopra <code>build_export_response</code>, adatta la differenza di forma: gli export di dominio chiamano una <code>list_*</code> che ritorna <code>(results, total)</code>, mentre le <code>fn_dash_*</code> del service ritornano gia' l'<strong>envelope paginato</strong> (nascono per la dashboard). Invece di aggiungere una seconda firma a cinque funzioni si adatta qui, in un punto solo: chiama <code>fetch(page=1, page_size=EXPORT_MAX_ROWS+1, **filtri)</code>, sfila <code>results</code>/<code>count</code> e delega. Estratto alla PRIMA scrittura e non alla seconda perche' le liste servite sono <strong>cinque</strong>. API: <code>build_dash_export_response(request, *, lista_codice, fetch, filtri, filtri_label=None)</code>. ⚠️ Lo scope emittente non viaggia da qui: e' DB-side (RLS invoker + GUC commesse) come negli endpoint di lista gemelli — un export non deve vedere piu' della lista che copia. Consumatori: le 5 view <code>*Export</code> dei tre cruscotti.</td>
+</tr>
+<tr>
 <td><code>parse_export_format</code> / <code>build_export_response</code></td>
 <td><code>export_helpers.py</code></td>
 <td><strong>Coda invariante export liste (DEF-1, estrazione regola del 2 2026-06-02).</strong> <code>parse_export_format(request)</code> valida <code>?formato=csv\|xlsx</code> (solleva <code>E_UI_EXPORT_FORMAT_INVALID</code>). <code>build_export_response(request, *, lista_codice, results, total, filtri_applicati, fmt)</code> fa il guard limite (<code>E_UI_EXPORT_LIMIT_EXCEEDED</code>, cap <code>EXPORT_MAX_ROWS</code>), risolve le colonne dalla config runtime (<code>UiService.get_lista_config</code> + <code>UiRepository.list_colonne_by_codice</code> + <code>ListaExportService.select_colonne_visibili_da_config</code>), renderizza e ritorna <code>HttpResponse</code> con <code>Content-Disposition</code>. Le 4 view export (clienti/soggetti/fornitori/contratti) mantengono solo il parsing dei propri filtri + la chiamata al proprio service con <code>limit=EXPORT_MAX_ROWS+1</code> + <code>resolve_filtri_export_label</code>. <strong>Mock nei test</strong>: puntare <code>apps.ui.api.export_helpers.{UiService,UiRepository,ListaExportService}</code>, non il modulo view.</td>
@@ -8350,7 +8424,7 @@ motore (direzione anelli: vendite→pratiche).</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

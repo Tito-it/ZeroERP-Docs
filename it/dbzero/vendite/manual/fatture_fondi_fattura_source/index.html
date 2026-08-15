@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -5324,10 +5324,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#reset-per-tipologie-non-standard-wip" class="md-nav__link">
+  <a href="#storni-e-riapertura-per-tipologia-concetto-ritirato-2026-08-15" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Reset per tipologie non standard (WIP)
+        🔴 ~~Storni e riapertura per tipologia~~ — concetto ritirato (2026-08-15)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#i-presidi-e-da-dove-vengono-applicati-il-2026-08-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ✅ I presidi, e da dove vengono (applicati il 2026-08-15)
       </span>
     </span>
   </a>
@@ -5369,17 +5380,34 @@
 </p>
 </blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 11-02-2026)<br />
+<p>(latest review 15-08-2026)<br />
 <code>vendite.fatture_fondi_fattura_source</code> registra la <strong>sorgente</strong> dei fondi
 fattura derivati da documenti precedenti. Serve a garantire idempotenza e
 selezione deterministica dei fondi disponibili per l’addebito/accredito.</p>
+<blockquote>
+<p>⭐ <strong>Dal 2026-08-15 una riga è un ATTO, non un valore.</strong> Si compie una volta e
+non si riscrive: l'importo, la sorgente, il tipo e l'origine sono immutabili
+(<code>E_FONDO_ATTO_IMMUTABILE</code>), e ciò che non è più dovuto <strong>si annulla con una
+ragione</strong> invece di essere aggiornato. Prima di allora ogni giro di
+fatturazione riallineava l'importo delle source non assegnate — anche di
+fatture già stampate.</p>
+</blockquote>
 <hr />
 <h3 id="campi-chiave-semantica">Campi chiave (semantica)<a class="headerlink" href="#campi-chiave-semantica" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>fattura_sorgente_id</code>: fattura che genera il fondo.</li>
-<li><code>tipo_fondo_fattura_id</code>: tipologia fondo.</li>
-<li><code>importo</code>: valore del fondo.</li>
-<li><code>stato</code>: <code>DISPONIBILE</code> / <code>ASSEGNATO</code> / <code>ANNULLATO</code>.</li>
+<li><code>fattura_sorgente_id</code>: fattura che genera il fondo. <strong>Immutabile.</strong></li>
+<li><code>tipo_fondo_fattura_id</code>: tipologia fondo. <strong>Immutabile.</strong></li>
+<li><code>importo</code>: valore del fondo. <strong>Immutabile</strong>, e vincolato a <em>corrispondere</em> alla
+  sorgente (stesso segno del <code>totale_a_pagare</code>, non superiore in valore assoluto).</li>
+<li><code>stato</code>: <code>DISPONIBILE</code> / <code>ASSEGNATO</code> / <code>ANNULLATO</code> — vocabolario chiuso da
+  <code>CHECK</code> e cammino presidiato da un guard; <code>ANNULLATO</code> è <strong>terminale</strong>.</li>
+<li><code>origine</code>: <code>AUTOMATICA</code> / <code>MANUALE</code>. ⭐ Non dice <em>chi</em> ha creato il fondo: dice
+  <strong>quale regola si applica</strong>. L'atto automatico è <em>vincolato</em> dal guard di
+  corrispondenza, quello manuale è <em>governato</em> (motivo obbligatorio, e arriva dal
+  processo rimborsi di <code>pagamenti</code>). <strong>Immutabile.</strong></li>
+<li><code>motivo</code>: la ragione dell'atto, <strong>obbligatoria dove l'atto è straordinario</strong> —
+  su <code>MANUALE</code> e su ogni <code>ANNULLATO</code>. È il posto dove la ragione smette di essere
+  un testo di diario in <code>fatture_log</code> e diventa un dato interrogabile.</li>
 <li><code>fattura_figlia_id</code>: fattura che utilizza il fondo (opzionale).</li>
 <li><code>data_assegnazione</code>, <code>user_assegnazione</code>: audit assegnazione.</li>
 <li>Chiavi denormalizzate: <code>billing_account_id</code>, <code>utility_id</code>, <code>tipo_doc_fiscale_id</code>,
@@ -5388,28 +5416,95 @@ selezione deterministica dei fondi disponibili per l’addebito/accredito.</p>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li>La generazione e` vincolata alla <strong>fattura sorgente</strong>.</li>
+<li>La generazione è vincolata alla <strong>fattura sorgente</strong>, che deve rientrare nella
+  <strong>banda</strong> delle due soglie di <code>anagrafiche.emittenti_fiscali_utilities</code>
+  (<code>minimo_soglia_min</code> / <code>minimo_soglia_max</code>). La banda <strong>contiene lo zero</strong>:
+  ⭐ un <code>importo</code> <strong>negativo</strong> è quindi legittimo — è un credito riportato
+  avanti, non un difetto.</li>
 <li>L’applicazione avviene solo per record <code>DISPONIBILE</code>.</li>
-<li>In caso di storni, la policy di riapertura va gestita per tipologia fondo.</li>
-<li>La tabella e` pensata anche per scenari di <strong>compensazione</strong> tra insoluti
+<li>La tabella è pensata anche per scenari di <strong>compensazione</strong> tra insoluti
   e crediti cliente (tipici nei processi utilities).</li>
-<li>Stato <code>ANNULLATO</code>: usato quando la source non e<code>piu</code> eseguibile
-  (es. documento sorgente gia` saldato/compensato o reset bloccato da movimenti contabilizzati).</li>
+<li>Stato <code>ANNULLATO</code>: usato quando la source non è più eseguibile
+  (es. documento sorgente già saldato/compensato o reset bloccato da movimenti contabilizzati).</li>
 </ul>
 <h3 id="reset-e-riapertura">Reset e riapertura<a class="headerlink" href="#reset-e-riapertura" title="Permanent link">&para;</a></h3>
 <ul>
 <li>In caso di reset tecnico della fattura figlia, i fondi applicati vengono
   <strong>ripristinati</strong> a stato <code>DISPONIBILE</code> e la relazione con la fattura figlia
   viene rimossa.</li>
-<li>La logica di reset e<code>centralizzata in</code>vendite.fn_reset_fondi_fattura()`.</li>
+<li>La logica di reset è centralizzata in <code>vendite.fn_reset_fondi_fattura()</code>.</li>
+<li>⚠️ È un'operazione <strong>tecnica sulla figlia</strong> (ritorno del lotto in bozza),
+  <strong>non una reazione ai pagamenti</strong>: nessun incasso riapre o chiude un fondo.</li>
 </ul>
-<h3 id="reset-per-tipologie-non-standard-wip">Reset per tipologie non standard (WIP)<a class="headerlink" href="#reset-per-tipologie-non-standard-wip" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Alcune tipologie di fondo (es. canone RAI o altri addebiti esterni)
-  possono richiedere reset su <strong>tabelle dedicate</strong>.</li>
-<li>Per queste tipologie saranno previste funzioni specifiche di ripristino,
-  richiamate dal reset tecnico della fattura solo se applicabili.</li>
-</ul>
+<h3 id="storni-e-riapertura-per-tipologia-concetto-ritirato-2026-08-15">🔴 ~~Storni e riapertura per tipologia~~ — concetto ritirato (2026-08-15)<a class="headerlink" href="#storni-e-riapertura-per-tipologia-concetto-ritirato-2026-08-15" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>~~«In caso di storni, la policy di riapertura va gestita per tipologia fondo»~~
+e ~~«Reset per tipologie non standard (WIP): funzioni specifiche di
+ripristino»~~ <strong>non si faranno</strong>, per due ragioni indipendenti:</p>
+<ol>
+<li><strong>lo storno non esiste più come concetto</strong>: una correzione è una
+   contabile con importi negativi (cantiere incassi, decisione D3-d);</li>
+<li>una riapertura automatica sarebbe <strong>un automatismo che riscrive uno stato
+   in reazione a un pagamento</strong>, e sono stati esclusi tutti: <em>i fatti si
+   aggiungono, i saldi si leggono, le decisioni le prende una persona.</em></li>
+</ol>
+<p>Un fondo esistente <strong>resta com'è</strong>; se non è più giustificato, semplicemente
+<strong>non viene applicato</strong>.</p>
+</blockquote>
+<h3 id="i-presidi-e-da-dove-vengono-applicati-il-2026-08-15">✅ I presidi, e da dove vengono (applicati il 2026-08-15)<a class="headerlink" href="#i-presidi-e-da-dove-vengono-applicati-il-2026-08-15" title="Permanent link">&para;</a></h3>
+<p>Piano completo: brief-db-fondo-fattura… (<code>docs/it/dev/work-in-progress/brief-db-fondo-fattura-ricalcolo-e-governo</code>) §8.</p>
+<table>
+<thead>
+<tr>
+<th>Prima</th>
+<th>Adesso</th>
+<th>Chi lo fa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>l'importo di una source non assegnata veniva <strong>riallineato</strong> dai giri successivi</td>
+<td><strong>congelato</strong>: la sorgente <code>DEFINITIVA</code> ha un fondo definitivo</td>
+<td><code>trg_..._a10_lock_atto_upd</code></td>
+</tr>
+<tr>
+<td>la sorgente poteva essere in <strong>qualunque</strong> stato, <code>ANNULLATA</code> compresa</td>
+<td>solo sorgenti <strong><code>DEFINITIVA</code></strong>, e la generazione <strong>crea soltanto</strong></td>
+<td><code>fn_genera_fondi_fattura_source</code></td>
+</tr>
+<tr>
+<td>nessun vincolo impediva <strong>due fondi vivi</strong> sulla stessa sorgente</td>
+<td>un solo atto automatico vivo per (sorgente, tipo)</td>
+<td><code>uq_fondi_source_atto_vivo_automatico</code></td>
+</tr>
+<tr>
+<td><code>stato</code> era un <code>varchar</code> <strong>senza CHECK</strong>: il vocabolario viveva solo nelle funzioni</td>
+<td>vocabolario chiuso <strong>e</strong> cammino presidiato</td>
+<td><code>chk_fondi_source_stato</code> + <code>trgfn_fondi_source_guard_transizione</code></td>
+</tr>
+<tr>
+<td>l'<code>importo</code> non aveva <strong>nessun CHECK</strong></td>
+<td><code>importo &lt;&gt; 0</code> + <strong>corrispondenza con la sorgente</strong></td>
+<td><code>chk_fondi_source_importo_non_zero</code> + <code>trgfn_fondi_source_guard_importo</code></td>
+</tr>
+<tr>
+<td>un annullamento non lasciava una ragione sul dato</td>
+<td><code>motivo</code> obbligatorio su <code>ANNULLATO</code> e su <code>MANUALE</code></td>
+<td><code>chk_fondi_source_motivo_obbligatorio</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>I due presidi sull'importo non sono in serie come sembra.</strong> I trigger
+<code>BEFORE ROW</code> girano <strong>prima</strong> dei <code>CHECK</code>: su una sorgente con totale diverso
+da zero, un <code>importo = 0</code> lo intercetta il <strong>guard</strong>, e il <code>CHECK</code> non entra
+mai in gioco. Conta quando si scrive un test.</p>
+</blockquote>
+<p>🔵 <strong>Cosa non è ancora presidiato</strong>: l'<code>ANNULLATO</code> che
+<a href="../../funzioni/fn_sync_contabili_fondo_fattura/">fn_sync_contabili_fondo_fattura</a>
+scrive da sé quando la sorgente non è più capiente. Ora almeno <strong>dichiara la sua
+ragione</strong>, ma resta uno stato cambiato senza una persona: si toglie quando
+<code>pagamenti</code> avrà il processo rimborsi.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -5470,7 +5565,7 @@ selezione deterministica dei fondi disponibili per l’addebito/accredito.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

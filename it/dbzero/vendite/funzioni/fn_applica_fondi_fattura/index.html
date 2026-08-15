@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -5302,6 +5302,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#i-due-presidi-applicati-il-2026-08-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ✅ I due presidi, applicati il 2026-08-15
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5361,9 +5372,15 @@
 </p>
 </blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>(latest review 15-08-2026)</p>
 <p>La funzione <strong><code>vendite.fn_applica_fondi_fattura()</code></strong> applica i fondi fattura
 in stato <code>DISPONIBILE</code> ad una <strong>fattura figlia</strong>, creando le righe in
 <code>vendite.fatture_fondi_fattura</code> e aggiornando la <code>source</code> a stato <code>ASSEGNATO</code>.</p>
+<blockquote>
+<p>⭐ <strong>È l'unica funzione del fondo che MUOVE DENARO</strong>: assegnare una source a una
+fattura figlia ne cambia il totale. È il motivo per cui i due presidi del
+cantiere stanno entrambi qui.</p>
+</blockquote>
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
@@ -5374,7 +5391,53 @@ in stato <code>DISPONIBILE</code> ad una <strong>fattura figlia</strong>, creand
 <li>Aggiorna la <code>source</code>:</li>
 <li><code>fattura_figlia_id</code>, <code>data_assegnazione</code>, <code>user_assegnazione</code></li>
 <li><code>stato = 'ASSEGNATO'</code></li>
+<li><code>FOR UPDATE OF s SKIP LOCKED</code>: due giri paralleli non si contendono lo stesso
+  fondo.</li>
 </ul>
+<hr />
+<h3 id="i-due-presidi-applicati-il-2026-08-15">✅ I due presidi, applicati il 2026-08-15<a class="headerlink" href="#i-due-presidi-applicati-il-2026-08-15" title="Permanent link">&para;</a></h3>
+<p>Piano: brief-db-fondo-fattura… (<code>docs/it/dev/work-in-progress/brief-db-fondo-fattura-ricalcolo-e-governo</code>) §8.2.</p>
+<p><strong>1. La chiave sorgente ↔ figlia è passata da cinque elementi a nove</strong> (D-4).</p>
+<p>I cinque parametri di scope (<code>billing_account</code>, <code>utility</code>, <code>tipo_doc_fiscale</code>,
+<code>emittente</code>, <code>valuta</code>) erano un <strong>sottoinsieme</strong> della chiave con cui si
+accorpano le attività in fattura
+(<a href=".././fn_build_fattura_key/"><code>fn_build_fattura_key</code></a>):
+mancavano <strong>reseller, registro, termine e modalità di pagamento</strong>.</p>
+<p>⚠️ Conseguenza concreta: un fondo nato da una fattura a 30 giorni poteva finire
+su una figlia a 60 — due documenti che il sistema tiene <strong>deliberatamente
+separati</strong>, visto che il termine è nella chiave proprio per non accorparli.
+Adesso il confronto è <strong>riga contro riga</strong> su <code>vendite.fatture</code>, con la forma
+copiata da <code>fn_get_or_create_fattura_header</code> per non creare una seconda
+definizione della chiave: <code>=</code> sui cinque non nullable, <code>IS NOT DISTINCT FROM</code> sui
+quattro nullable.</p>
+<p>ℹ️ I cinque parametri restano ma <strong>cambiano mestiere</strong>: da filtro sulla source a
+<em>sanity check</em> sulla <strong>figlia</strong>. Applicati alla source erano ridondanti e
+potevano far saltare in silenzio un fondo la cui colonna denormalizzata fosse
+rimasta indietro.</p>
+<p><strong>2. Si verifica che la sorgente sia ancora capiente</strong> (D-3b).</p>
+<p>Prima la funzione assegnava qualunque riga <code>DISPONIBILE</code> che combaciasse con lo
+scope, <strong>senza guardare se la fattura sorgente fosse stata pagata nel frattempo</strong>.
+Adesso rilegge il residuo — al netto del contributo già dato dal fondo stesso —
+e verifica con
+<a href=".././fn_check_fondo_fattura_capiente/">fn_check_fondo_fattura_capiente</a>
+che regga ancora l'importo. Se non regge, <strong>il fondo non si applica e resta
+dov'è</strong>.</p>
+<p>⭐ Non è un ricalcolo del fondo — quello è vietato: è una <strong>lettura nell'istante
+dell'atto</strong>. Ed è la contropartita dell'<code>ANNULLATO</code> automatico rimosso dalla
+generazione: non un altro automatismo che scrive, ma un controllo dove il denaro
+si muove.</p>
+<blockquote>
+<p>⚠️ <strong>La regola di capienza non è scritta qui</strong>, ed è una scelta: la usa anche
+<a href="../../views/vw_fondi_fattura_da_decidere/">vw_fondi_fattura_da_decidere</a>
+— negata — per mostrare il motivo <code>NON_PIU_CAPIENTE</code>. Due copie avrebbero detto,
+senza errori e senza log, che un fondo è inapplicabile mentre il giro lo applica.</p>
+<p>🔴 E nell'estrarla è saltato fuori un difetto che nessuno cercava: la capienza
+veniva calcolata <strong>due volte sulla stessa riga</strong>, una per il segno e una per il
+valore assoluto. È una funzione <code>VOLATILE</code> che interroga <code>pagamenti</code>: non solo
+il doppio del lavoro, ma <strong>due valutazioni indipendenti</strong> che in teoria possono
+rispondere numeri diversi — accettando metà condizione e rifiutando l'altra.
+Adesso si legge una volta, in <code>LATERAL</code>.</p>
+</blockquote>
 <hr />
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>Ritorna il numero di righe applicate.</p>
@@ -5457,7 +5520,7 @@ in stato <code>DISPONIBILE</code> ad una <strong>fattura figlia</strong>, creand
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

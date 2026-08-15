@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -4874,10 +4874,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#quando-non-ce-nessuna-azione-prop-infokey" class="md-nav__link">
+  <a href="#linformazione-di-stato-prop-infokey" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Quando non c'e' nessuna azione — prop <code>infoKey</code>
+        L'informazione di stato — prop <code>infoKey</code>
       </span>
     </span>
   </a>
@@ -5340,6 +5340,23 @@
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Gestione errori API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#campi-in-errore-dal-backend-campierrati-dal-2026-08-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ Campi in errore dal backend — <code>campiErrati</code> (dal 2026-08-08)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -7546,10 +7563,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#quando-non-ce-nessuna-azione-prop-infokey" class="md-nav__link">
+  <a href="#linformazione-di-stato-prop-infokey" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Quando non c'e' nessuna azione — prop <code>infoKey</code>
+        L'informazione di stato — prop <code>infoKey</code>
       </span>
     </span>
   </a>
@@ -8012,6 +8029,23 @@
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Gestione errori API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#campi-in-errore-dal-backend-campierrati-dal-2026-08-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ Campi in errore dal backend — <code>campiErrati</code> (dal 2026-08-08)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -10159,7 +10193,7 @@ entrambe senza compromessi (stesso approccio di <code>RowActionsMenu</code>).</p
   <code>mapAvailableActionsToDrawerActions(...)</code>: niente loop manuale <code>v-for="action in availableActions"</code>
   nel template.</li>
 </ul>
-<h3 id="quando-non-ce-nessuna-azione-prop-infokey">Quando non c'e' nessuna azione — prop <code>infoKey</code><a class="headerlink" href="#quando-non-ce-nessuna-azione-prop-infokey" title="Permanent link">&para;</a></h3>
+<h3 id="linformazione-di-stato-prop-infokey">L'informazione di stato — prop <code>infoKey</code><a class="headerlink" href="#linformazione-di-stato-prop-infokey" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>Una lista di azioni vuota e' indistinguibile da un errore di caricamento.</strong>
 Se da uno stato non si puo' fare nulla, la barra deve dirlo — e dire cosa si fa
@@ -10168,13 +10202,39 @@ invece.</p>
 <p>E' la faccia a video della regola R3 del brief
 vie d'uscita per l'operatore (<code>docs/it/dev/work-done/brief-db-vie-uscita-operatore.md</code>):
 per ogni stato, <strong>o la via d'uscita c'e', o c'e' scritto perche' non c'e'</strong>. Il
-testo non e' una scelta del componente: e' un <strong>dato</strong>, la chiave i18n
-<code>meta-&gt;&gt;'nessuna_azione_key'</code> della riga di <code>config.stati_doc_*</code>, che le
-capability <code>script.fn_available_actions_*</code> espongono quando nessuna azione e'
-abilitata. Cambiare il messaggio e' cambiare un seed, non toccare il frontend.</p>
+testo non e' una scelta del componente: e' un <strong>dato</strong>, la chiave i18n seminata
+nel <code>meta</code> della riga di <code>config.stati_doc_*</code>, che le capability
+<code>script.fn_available_actions_*</code> espongono nel campo <strong><code>stato_info_key</code></strong>.
+Cambiare il messaggio e' cambiare un seed, non toccare il frontend.</p>
+<p>⚠️ <strong>Dal 2026-08-10 la nota NON e' piu' subordinata alla lista vuota</strong> (decisione
+§5 del test in-app, applicata da <code>20260810-04/-05/-06</code>): e' <strong>informazione di
+stato</strong> e compare anche accanto a un pulsante vivo — es. un ordine EVASO che ha
+ancora il push abilitato. Da qui il rinome del campo, che fino ad allora si
+chiamava <code>nessuna_azione_key</code>: quel nome descriveva il presupposto caduto, non il
+dato. ⚠️ Il campo e' <strong>sempre presente</strong> nel blob, col valore a <code>null</code> quando non
+si applica: va guardato il <strong>valore</strong>, non la presenza della chiave.</p>
+<p>⚠️ <strong>Asimmetria voluta</strong>: la proprieta' dentro il <code>meta</code> dello stato si chiama
+ancora <code>nessuna_azione_key</code>. Rinominarla e' una slice a se': il guard
+<code>scripts/check_i18n_keys.py</code> trova le chiavi seminate proprio per quel nome, e
+cambiarlo senza toccare il guard lo renderebbe <strong>verde per cecita'</strong>.</p>
+<p>⚠️ <strong>E il nome del file di seed non e' una garanzia</strong> (2026-08-15). Il guard
+ammetteva i soli CSV <code>transizioni_stati_*</code> e <code>stati_doc_*</code>: la tabella degli
+stati della commessa e' <code>vendite.stati_commessa</code>, senza il segmento <code>doc</code>,
+quindi le sue due chiavi non sono mai state guardate — verde per sottrazione,
+sullo stesso presidio che aveva gia' pagato due volte la stessa forma di
+difetto. Il filtro per nome e' caduto: si scandisce <strong>ogni</strong> CSV di
+<code>80_data/sql</code> e decide il contenuto (<code>RE_SEED_KEY</code>). Chi aggiunge una tabella di
+stato non deve piu' ricordarsi di battezzarla in un certo modo perche' il guard
+la veda.</p>
+<p><strong>Copertura oggi</strong>: tutti e otto i domini con <code>fn_available_actions_*</code>
+(preventivo, ordine, DDT, contratto, reso, offerta, commessa, lotto) leggono la
+prop nel drawer; i testi esistono per gli stati chiusi di sette di loro. Il
+<code>lotto</code> e' l'unico dichiarato aperto — la sua tabella di stato
+(<code>config.stati_doc_fiscale</code>) e' condivisa con le fatture, e una
+<code>fn_available_actions_fattura</code> non esiste ancora.</p>
 <div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">DrawerActionsBar</span>
   <span class="p">:</span><span class="na">actions</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">drawerActions</span><span class="s">&quot;</span>
-  <span class="p">:</span><span class="na">info-key</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">detail</span><span class="o">?</span><span class="p">.</span><span class="nx">nessuna_azione_key</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="s">&quot;</span>
+  <span class="p">:</span><span class="na">info-key</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">detail</span><span class="o">?</span><span class="p">.</span><span class="nx">stato_info_key</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="s">&quot;</span>
 <span class="p">/&gt;</span>
 </code></pre></div>
 <table>
@@ -10194,6 +10254,10 @@ abilitata. Cambiare il messaggio e' cambiare un seed, non toccare il frontend.</
 <td>Altrimenti l'unica cosa che spiega lo stato sparisce proprio nel caso in cui serve. Attenzione ai <code>v-if="drawerActions.length"</code> dei singoli drawer: vanno estesi alla chiave</td>
 </tr>
 <tr>
+<td>La nota convive con le azioni vive</td>
+<td>Non e' la risposta a uno schermo vuoto: e' lo stato del documento. Nessun <code>v-if</code> che la spenga quando ci sono pulsanti</td>
+</tr>
+<tr>
 <td>Risoluzione via <code>labelOrCode</code> (fail-visible)</td>
 <td>Chiave assente dai locales → si vede la chiave grezza, non il vuoto: il difetto silenzioso torna rumoroso</td>
 </tr>
@@ -10205,8 +10269,8 @@ abilitata. Cambiare il messaggio e' cambiare un seed, non toccare il frontend.</
 </table>
 <p>Distinta da <code>enabled: false</code> + <code>reasons</code> della <strong>singola</strong> azione (tooltip sul
 pulsante spento, vedi <code>mapAvailableActionsToDrawerActions</code>): quello spiega
-perche' <em>quel</em> pulsante non si puo' premere, questo perche' di pulsanti non ce
-n'e' nessuno.</p>
+perche' <em>quel</em> pulsante non si puo' premere, questa dice in che stato si trova il
+documento.</p>
 <p><strong>Convenzioni centralizzate:</strong></p>
 <table>
 <thead>
@@ -11286,6 +11350,65 @@ ed etichetta</strong> (l'icona ha sempre label o tooltip accanto). Quindi:</p>
 <span class="c1">// Polling silenzioso (nessun toast)</span>
 <span class="kd">const</span><span class="w"> </span><span class="nx">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">execute</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">api</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/status/&#39;</span><span class="p">),</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">silent</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
 </code></pre></div>
+<h3 id="campi-in-errore-dal-backend-campierrati-dal-2026-08-08">⭐ Campi in errore dal backend — <code>campiErrati</code> (dal 2026-08-08)<a class="headerlink" href="#campi-in-errore-dal-backend-campierrati-dal-2026-08-08" title="Permanent link">&para;</a></h3>
+<p>Quando il backend sa <strong>quale campo</strong> l'operatore deve correggere, lo dice:
+l'envelope d'errore porta <code>error.fields</code>, un array di <strong>nomi</strong> (mai i valori —
+vedi <a href="../../api/">api.md §Envelope risposte</a>). <code>useApiHandler</code> li espone gia'
+pronti da legare agli input:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">execute</span><span class="p">,</span><span class="w"> </span><span class="nx">loading</span><span class="p">,</span><span class="w"> </span><span class="nx">campiErrati</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useApiHandler</span><span class="p">()</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">InputText</span> <span class="na">v-model</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">form</span><span class="p">.</span><span class="nx">codice</span><span class="s">&quot;</span> <span class="p">:</span><span class="na">invalid</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">campiErrati</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;codice&#39;</span><span class="p">)</span><span class="s">&quot;</span> <span class="p">/&gt;</span>
+</code></pre></div>
+<p><strong>Non sostituisce la validazione client</strong>, la completa: <code>canSave</code> copre le
+regole che il frontend conosce (obbligatorieta', formato), <code>campiErrati</code> copre
+<strong>quelle che stanno nel service</strong> — unicita', coerenza fra entita', vincoli di
+stato. Prima l'operatore leggeva «Campo 'ordinamento' non valido» nel toast e
+doveva cercarselo da solo nel form.</p>
+<table>
+<thead>
+<tr>
+<th>Regola</th>
+<th>Perche'</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>si azzera a ogni <code>execute</code></td>
+<td>descrive l'<strong>ultimo</strong> errore, non la storia del drawer. Il campo resta rosso finche' non si riprova a salvare</td>
+</tr>
+<tr>
+<td>si legge anche in <code>silent</code></td>
+<td>il chiamante puo' voler evidenziare senza toast</td>
+</tr>
+<tr>
+<td>nessun messaggio sotto il campo</td>
+<td>il testo sta gia' nel toast; ripeterlo sotto l'input e' rumore. Il bordo rosso dice <em>dove</em>, il toast dice <em>cosa</em></td>
+</tr>
+<tr>
+<td>il nome e' quello del <strong>payload API</strong>, non del <code>v-model</code></td>
+<td>se il form rinomina un campo, il legame va scritto a mano — <code>:invalid="campiErrati.includes('nome_api')"</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>È lo standard, non un caso isolato</strong>: dal 2026-08-08 lo legano <strong>38 componenti
+con 136 binding</strong>. La regola per un drawer nuovo: se un campo del form ha lo
+stesso nome della chiave che mandi nel payload, legalo — costa una riga e il
+giorno in cui il service comincia a rifiutarlo l'operatore vede dove.</p>
+<p>⚠️ <strong>Non si lega tutto</strong>: la lista dei nomi che il backend può davvero mandare è
+finita (<strong>122</strong>, misurati sui <code>context={"field": …}</code> e sulle chiavi passate ai
+validator). Legare un campo fuori da quella lista non fa danno ma non fa niente:
+è una riga che non decide.</p>
+<p>⚠️ <strong>Oggi lo popolano solo gli errori nati nel backend Python</strong> (42 codici su
+125 con <code>ui_action = highlight_form_fields</code>). Per quelli sollevati dalle
+funzioni PL/pgSQL il canale esiste ma non e' ancora usato: finche' non lo sara',
+<code>campiErrati</code> su quegli errori resta vuoto e il comportamento e' quello di
+prima — nessuna regressione, solo nessun guadagno. Piano e misure:
+<code>docs/it/dev/work-done/piano-be-classe-codici-errore.md</code> §12.</p>
+<p>⚠️ <strong><code>ui_action</code> non si usa ancora.</strong> <code>useApiHandler</code> lo espone come <code>azioneUi</code>
+per chi vorra' costruirci sopra, ma <strong>nessun componente lo legge</strong>: la reazione
+della pagina la decidono il messaggio e lo status. Prima di dargli un
+comportamento vanno rilette le 176 scelte fatte quando nessuno poteva
+verificarle a video.</p>
 <hr />
 <h2 id="modalita-sola-lettura-e-accesso-pattern-protect">Modalita' sola lettura e accesso — pattern "protect"<a class="headerlink" href="#modalita-sola-lettura-e-accesso-pattern-protect" title="Permanent link">&para;</a></h2>
 <h3 id="principio_1">Principio<a class="headerlink" href="#principio_1" title="Permanent link">&para;</a></h3>
@@ -12868,7 +12991,7 @@ I componenti in <code>core/</code> sono cross-dominio e non devono importare da 
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

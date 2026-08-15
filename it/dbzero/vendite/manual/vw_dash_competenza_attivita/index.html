@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.53">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -5334,6 +5334,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#commessa_stato_descrizione-2026-08-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🆕 <code>commessa_stato_descrizione</code> (2026-08-15)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5476,6 +5487,27 @@ che da qui eredita <strong>scope emittente</strong> e <strong>coerenza dei conte
 <p><strong>Fail-closed senza GUC</strong>: <code>script.fn_get_emittenti_scope_sr_ids(NULL)</code>
 restituisce l'array <strong>vuoto</strong>, non <code>NULL</code>, quindi senza <code>app.current_user_id</code>
 nessuna riga passa. Da tenere presente scrivendo test.</p>
+<hr />
+<h3 id="commessa_stato_descrizione-2026-08-15">🆕 <code>commessa_stato_descrizione</code> (2026-08-15)<a class="headerlink" href="#commessa_stato_descrizione-2026-08-15" title="Permanent link">&para;</a></h3>
+<p>Aggiunta con <code>20260815-24</code> su richiesta del backend
+(brief-db-emittibilita-visibile-e-sbloccabile (<code>docs/it/dev/work-done/brief-db-emittibilita-visibile-e-sbloccabile</code>)
+§8.3), e propagata sui gruppi dal <code>20260815-25</code>.</p>
+<p>La vista esponeva <code>commessa_stato_codice_interno</code> e nient'altro. A video va però
+la <strong>descrizione</strong>: la convenzione del progetto è che le liste ricevano i campi
+di display già decodificati dal DB, mai risolti lato client, e un codice interno
+dentro un'interfaccia inglese — <em>«The job order is in state BOZZA»</em> — è il
+sintomo che quella convenzione è stata aggirata.</p>
+<p>Il backend si era messo un <code>LEFT JOIN</code> sul repository per cavarsela. Funzionava,
+ed è la ragione per cui la richiesta era arancione e non rossa: ma quel JOIN <strong>la
+vista lo faceva già</strong> — è da lì che arrivano <code>emittibile</code> e <code>codice_interno</code> — e
+una seconda risoluzione della stessa cosa è la duplicazione che il §7.1 di quel
+brief aveva già dovuto estrarre una volta, sul guard di transizione.</p>
+<p>ℹ️ <code>COALESCE(descrizione, codice)</code> e non <code>descrizione</code> nuda: la colonna è
+nullable a catalogo (il seed la valorizza su tutte e sei le righe, ma il DDL non
+lo impone), e un campo di <strong>display</strong> che torna <code>NULL</code> produce una cella vuota,
+che l'operatore legge come «non lo so» invece che come «manca il dato di
+catalogo». <code>codice</code> è <code>NOT NULL</code> ed è la forma leggibile del mutabile: è il
+ripiego giusto.</p>
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>
@@ -5535,7 +5567,7 @@ nessuna riga passa. Da tenere presente scrivendo test.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.69c251d7.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
