@@ -9117,9 +9117,21 @@ La soluzione responsive combina il meglio di entrambe senza compromessi.</p>
 <span class="w">  </span><span class="nx">visible</span><span class="o">?:</span><span class="w"> </span><span class="kr">boolean</span><span class="p">,</span><span class="w">        </span><span class="c1">// default true — azioni non applicabili si nascondono</span>
 <span class="w">  </span><span class="nx">disabled</span><span class="o">?:</span><span class="w"> </span><span class="kr">boolean</span><span class="p">,</span><span class="w">       </span><span class="c1">// default false — azione grigia ma presente</span>
 <span class="w">  </span><span class="nx">allowWhenInactive</span><span class="o">?:</span><span class="w"> </span><span class="kr">boolean</span><span class="p">,</span><span class="w"> </span><span class="c1">// default false — escape per azioni ammesse su record inattivi</span>
+<span class="w">  </span><span class="nx">action</span><span class="o">?:</span><span class="w"> </span><span class="nx">string</span><span class="p">,</span><span class="w">          </span><span class="c1">// codename permesso processo (auth.isActionAllowed) — senza, la voce NON si renderizza</span>
 <span class="w">  </span><span class="nx">command</span><span class="o">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ow">void</span><span class="p">,</span><span class="w">      </span><span class="c1">// handler click</span>
 <span class="p">}</span>
 </code></pre></div>
+<p>⚠️ <strong><code>action</code> è lo stesso campo di <code>PageActionsBar</code>/<code>DrawerActionsBar</code></strong>, con lo
+stesso effetto: <strong>nasconde</strong>. Fino al 2026-08-17 <code>RowActionsMenu</code> lo <strong>ignorava</strong>
+— chi lo passava credeva di aver messo un cancello che non esisteva, e le azioni
+di governo del lotto («Riporta in lavorazione», «Annulla», «Numera») comparivano
+nel kebab della lista anche a chi non aveva il permesso (rilievo in-app di Tid).
+Un campo dichiarato e non letto è peggio della sua assenza: sembra presidiato.
+Il gate vero resta il backend; questo è il non-proporre.</p>
+<p><strong>Permesso ⇒ nascondi, stato ⇒ disabilita col motivo.</strong> Il permesso non è
+qualcosa che l'operatore possa risolvere dal kebab, quindi una voce grigia
+sarebbe una promessa che non si mantiene; ciò che invece dipende dallo stato del
+record può cambiare, e lì <code>disabled</code> + <code>tooltip</code> spiega e resta a video.</p>
 <p><strong>Regola record inattivo (<code>attivo=false</code> / <code>is_active=false</code>):</strong></p>
 <ul>
 <li>Se la lista ha una colonna stato standard (<code>attivo</code> o <code>is_active</code>), passare sempre

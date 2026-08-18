@@ -5390,7 +5390,27 @@ Brief autorevole: <code>docs/it/dev/work-in-progress/brief-db-fatturazione-ddt-r
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(rev 2026-07-26 — etichetta ora reso-aware; rev 2026-07-18 forma cambiata)</p>
+<p>(rev 2026-08-17 — agganciata alla partita di merce; rev 2026-07-26 etichetta reso-aware;
+rev 2026-07-18 forma cambiata)</p>
+<blockquote>
+<p>⭐ <strong>Dal 2026-08-17 la coda si aggancia alla PARTITA DI MERCE</strong>
+(<a href="../vw_partite_merce/">vw_partite_merce</a>) invece che alla riga d'ordine.
+Cambia una cosa sola, ed è il motivo di tutto il cantiere:
+<code>resi_righe.ordine_riga_id</code> è <strong>facoltativo</strong>, <code>ddt_riga_id</code> è
+<strong>obbligatorio</strong>. Agganciarsi al primo significava che un reso su merce senza
+ordine — una riga aggiunta a mano, un documento di trasporto senza ordine
+dietro — <strong>usciva dal conto senza dare errore</strong>: registrato, e mai
+accreditato.</p>
+<p>⚠️ <strong>Ne discende che <code>ordine_riga_id</code> può ora essere vuoto</strong> in questa coda,
+ed è proprio la merce che prima non compariva. Resta esposto per risalire
+all'ordine quando c'è, ma <strong>non è più la chiave</strong>.</p>
+<p>⚠️ <strong>E l'accredito si distribuisce per spedizione</strong>, non per riga d'ordine: un
+reso appartiene alla spedizione da cui la merce è tornata. Su una riga
+d'ordine evasa da più documenti di trasporto le due letture danno numeri
+diversi — e la seconda è quella giusta, perché un reso su merce <strong>non
+fatturata</strong> di una spedizione non deve diluire l'accredito dovuto su
+un'altra.</p>
+</blockquote>
 <p><strong>Coda di lavoro</strong> delle righe reso per cui c'è un <strong>accredito dovuto</strong>: merce che il cliente
 ha reso ma che gli <strong>risulta già fatturata</strong>. La generazione della nota di credito arriva con
 una slice successiva; qui la coda dice <em>cosa è successo</em> («fatturata per 10, tenuta 7»), non

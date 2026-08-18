@@ -5385,7 +5385,19 @@ Brief autorevole: <code>docs/it/dev/work-in-progress/brief-db-fatturazione-ddt-r
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 2026-07-18)</p>
+<p>(latest review 2026-08-17)</p>
+<blockquote>
+<p>⭐ <strong>Dal 2026-08-17 questa vista non calcola più: legge.</strong> È diventata la lettura <strong>per riga
+d'ordine</strong> delle partite di merce (<a href="../../manual/vw_partite_merce/">vw_partite_merce</a>), più il fatturato
+nato sull'ordine. I sei numeri storici sono rimasti <strong>gli stessi</strong> — la parità è stata
+verificata riga per riga — ma la nozione sotto è cambiata: <strong>la partita non è più la riga
+d'ordine, è la riga di merce</strong>, e la riga d'ordine è una delle sue possibili origini.</p>
+<p><strong>Se stai cercando il conto della merce per lavorarci, leggi
+<a href="../../manual/vw_partite_merce/">vw_partite_merce</a>, non questa.</strong> Lì trovi anche la merce che un ordine
+non ce l'ha, il saldo tradotto in italiano (<code>stato</code>) e la distinzione fra «il conto torna» e
+«il conto non si sa fare». Questa vista resta il <strong>contatore grezzo</strong> che alimenta le
+macchine, e resta com'è per non cambiare di un pezzo le quantità che finiscono in fattura.</p>
+</blockquote>
 <p><code>vendite.vw_contatore_merce</code> è <strong>il contatore</strong>: per ogni <strong>partita di merce</strong> dice quanti
 pezzi il cliente <strong>ha in mano</strong> e quanti gli sono <strong>già stati fatturati</strong>. La differenza fra i
 due numeri è l'unica cosa che serve sapere per decidere cosa fare:</p>
@@ -5397,9 +5409,16 @@ due numeri è l'unica cosa che serve sapere per decidere cosa fare:</p>
 <p>È la <strong>fonte unica</strong> su cui si appoggiano il lister di push DDT, la coda accrediti e i
 cruscotti di fatturazione: prima di questa vista ognuno rifaceva il conto a modo suo, ed è da
 lì che nascevano le doppie fatturazioni.</p>
-<p><strong>La partita di merce è la RIGA D'ORDINE</strong> (<code>ordine_riga_id</code>), non il documento: la merce
-viaggia su più DDT, torna indietro con i resi, riparte con le ri-consegne — ma resta la stessa
-partita, e il conto si tiene lì.</p>
+<p><strong>Questa vista aggrega per RIGA D'ORDINE</strong> (<code>ordine_riga_id</code>): la merce viaggia su più DDT,
+torna indietro con i resi, riparte con le ri-consegne, e qui la si guarda tutta insieme
+dall'ordine.</p>
+<blockquote>
+<p>⚠️ Fino al 2026-08-17 «aggregare per riga d'ordine» e «la partita <strong>è</strong> la riga d'ordine»
+erano la stessa frase, e da lì veniva il difetto: <strong>ciò che una riga d'ordine non ce l'aveva
+non veniva contato affatto</strong>. Oggi sono due cose distinte — la partita sta in
+<a href="../../manual/vw_partite_merce/">vw_partite_merce</a>, questa è una <strong>lettura</strong> — e la merce senza ordine ha
+finalmente un conto.</p>
+</blockquote>
 <p>È <strong>read-time</strong>: nessun contatore materializzato, nessun campo da tenere allineato. I documenti
 restano l'unica verità.</p>
 <hr />
@@ -5462,10 +5481,19 @@ merce e non devono spostare il conto.</p>
 <hr />
 <h3 id="campi-chiave-esposti">📑 Campi chiave esposti<a class="headerlink" href="#campi-chiave-esposti" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Chiave</strong>: <code>ordine_riga_id</code> (la partita)</li>
+<li><strong>Chiave</strong>: <code>ordine_riga_id</code> (l'asse di aggregazione)</li>
 <li><strong>Contesto</strong>: <code>ordine_id</code>, <code>articolo_id</code></li>
 <li><strong>Il conto</strong>: <code>tenuti</code>, <code>fatturati</code>, <code>differenza</code></li>
+<li><strong>Il dettaglio, dal 2026-08-17</strong>: <code>consegnato</code>, <code>reso</code>, <code>in_riconsegna</code>,
+  <code>fatturato_su_merce</code>, <code>fatturato_su_ordine</code>, <code>fatturato_anticipato</code>, <code>partite_merce</code>,
+  <code>misurabile</code></li>
 </ul>
+<p>⭐ <strong><code>fatturato_anticipato</code> è la colonna che spiega un numero che prima sembrava un guasto.</strong>
+Sul cliente standard si fattura <strong>l'ordine alla conferma</strong>, e la spedizione arriva dopo: finché
+non arriva, quel fatturato non appartiene a nessuna merce. <code>differenza</code> diventa negativa, e un
+saldo negativo si legge come «va accreditato» — mentre lì c'è solo merce da spedire. Il numero
+di <code>differenza</code> non è cambiato (la parità viene prima), ma adesso accanto c'è la colonna che
+dice <strong>perché</strong>.</p>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Quanta merce è ancora da fatturare su una riga d&#39;ordine?</span>
@@ -5481,20 +5509,37 @@ merce e non devono spostare il conto.</p>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Perimetro: solo merce nata da un ordine e non composita.</strong> Restano fuori:</li>
-<li>i <strong>DDT standalone</strong> (senza ordine dietro): non hanno una partita su cui appoggiarsi;</li>
-<li>gli <strong>articoli compositi</strong> (<code>is_composito</code>): le loro attività sono in unità-componente
-    mentre fulfillment e resi sono in unità-padre — sommarli darebbe un numero senza senso.</li>
-</ul>
-<p>Sono follow-up dichiarati, non dimenticanze: i consumatori li trattano col comportamento
-  precedente.
-* <strong>L'universo sono le partite con movimento merce</strong>: una riga d'ordine mai evasa e mai resa
-  non compare (non c'è nulla da contare).
-* <code>security_invoker=on</code>: la vista è letta con i permessi di chi interroga, quindi la RLS di
+<li><strong>Perimetro: la merce nata da un ordine.</strong> Chi un ordine non ce l'ha — righe di DDT aggiunte
+  a mano, documenti di trasporto senza ordine dietro — non compare <strong>qui</strong>, ed è corretto:
+  questa vista guarda dall'ordine. Il suo conto c'è, e sta in
+  <a href="../../manual/vw_partite_merce/">vw_partite_merce</a>.</li>
+<li>✅ <strong>Gli articoli compositi ora ci sono.</strong> Erano esclusi perché le loro attività sono in
+  unità-componente mentre consegnato e reso sono in unità-padre: sommarli dava un numero senza
+  senso. Era una <strong>rinuncia dichiarata</strong> («follow-up a sé», changeSet <code>20260717-11</code>), e il
+  follow-up è stato fatto: <a href="../../manual/vw_af_merce_per_riga/">vw_af_merce_per_riga</a> riporta i componenti
+  in unità del padre, e l'esclusione non serve più.</li>
+<li><strong>L'universo sono le partite con movimento merce</strong>: una riga d'ordine mai evasa e mai resa
+  non compare (non c'è nulla da contare). ⚠️ <strong>Ne discende un limite di
+  <code>fatturato_anticipato</code></strong>: una riga fatturata sull'ordine e <strong>mai</strong> spedita non è in questa
+  vista per niente, quindi il suo anticipo non si vede. La colonna copre la spedizione
+  <em>parziale</em>, non l'assenza di spedizione — che resta fuori apposta, perché portarla dentro
+  significherebbe mostrare saldi negativi su merce che deve solo partire.</li>
+<li>⚠️ <strong>Le righe di ri-consegna sono escluse dall'aggregato.</strong> I loro pezzi sono già
+  nel <code>consegnato</code> della partita d'origine: contarli anche qui li conterebbe due
+  volte, e non è un caso di scuola — una riga di ri-consegna <strong>ha</strong> una riga
+  d'ordine, perché <code>fn_genera_ddt_riconsegna</code> le crea un fulfillment. Senza il
+  filtro, una riga d'ordine con 9 pezzi in mano al cliente ne dichiarerebbe 17.</li>
+<li>⚠️ <strong>Qui <code>differenza</code> non è mai vuota</strong>, a differenza di
+  <a href="../../manual/vw_partite_merce/">vw_partite_merce</a>. Non è una svista: <code>fn_list_ddt_da_pushare</code> fa
+  <code>COALESCE(differenza, 0)</code>, e un valore vuoto diventerebbe zero — cioè <strong>una riga che smette di
+  essere fatturata senza che nessuno se ne accorga</strong>. Questa vista resta grezza per non
+  rischiarlo; chi vuole la semantica parlante legge le partite.</li>
+<li><code>security_invoker=on</code>: la vista è letta con i permessi di chi interroga, quindi la RLS di
   scope emittente resta attiva. ⚠️ Chi la modifica con <code>CREATE OR REPLACE</code> <strong>deve
   ri-specificare la reloption</strong>: non è visibile in <code>pg_get_viewdef</code> e verrebbe azzerata in
-  silenzio, aprendo un bypass.
-* Test: <code>db/pgtap/vendite/test-vw-contatore-merce-v1.sql</code>.</p>
+  silenzio, aprendo un bypass.</li>
+<li>Test: <code>db/pgtap/vendite/test-vw-contatore-merce-v1.sql</code>.</li>
+</ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
