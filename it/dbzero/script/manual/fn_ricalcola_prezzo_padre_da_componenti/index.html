@@ -5283,6 +5283,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#rev-2026-08-19-tre-casi-non-piu-due" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Rev 2026-08-19 — tre casi, non piu' due
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#schema" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5368,8 +5379,45 @@
 
 <h1 id="fn_ricalcola_prezzo_padre_da_componenti">fn_ricalcola_prezzo_padre_da_componenti<a class="headerlink" href="#fn_ricalcola_prezzo_padre_da_componenti" title="Permanent link">&para;</a></h1>
 <h3 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h3>
-<p>Funzione generica del pattern "righe componenti BoM CASO A": aggiorna <code>prezzo_unitario</code> della riga padre come <code>COALESCE(SUM(figli.prezzo_unitario × figli.coeff_qta_snapshot), 0)</code> sui figli attivi. Parametrizzata su schema/tabella/FK per essere riusata da tutte e 4 le sorgenti documentali (preventivi, ordini, contratti, DDT).</p>
+<p>Funzione generica del pattern "righe componenti BoM CASO A": aggiorna <code>prezzo_unitario</code> della riga padre dai figli attivi.</p>
 <blockquote>
+<h2 id="rev-2026-08-19-tre-casi-non-piu-due">⚠️ Rev 2026-08-19 — tre casi, non piu' due<a class="headerlink" href="#rev-2026-08-19-tre-casi-non-piu-due" title="Permanent link">&para;</a></h2>
+<p>La formula <strong>non è più</strong> <code>COALESCE(SUM(…), 0)</code>:</p>
+<table>
+<thead>
+<tr>
+<th>figli attivi</th>
+<th>prezzo del padre</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nessuno</td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td>almeno uno <strong>senza prezzo</strong></td>
+<td><strong><code>NULL</code></strong> — «non si sa»</td>
+</tr>
+<tr>
+<td>tutti valorizzati</td>
+<td><code>SUM(prezzo × coeff_qta_snapshot)</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Perché.</strong> Da quando su <code>vendite.ddt_righe_componenti</code> il prezzo può mancare
+(un kit che viaggia senza vendersi), la <code>SUM</code> semplice <strong>ignorerebbe</strong> il
+figlio scoperto e restituirebbe la somma degli altri: un prezzo <strong>sbagliato</strong>
+al posto di un prezzo <strong>assente</strong>.</p>
+<p>⛔ E la differenza non è formale. Un kit a prezzo assente lo ferma il gate
+all'emissione; un kit a prezzo <strong>parziale</strong> il gate lo passa — un prezzo c'è —
+e arriva in fattura. È l'unico difetto di quella slice che nessun altro
+controllo prenderebbe.</p>
+<p>⚠️ <strong>Il <code>COALESCE</code> non torna «per sicurezza»</strong>: trasformerebbe il <code>NULL</code> in
+zero, cioè rifarebbe il difetto in un altro modo. Il caso «nessun figlio» è
+gestito esplicitamente.</p>
+<p>Su preventivi, ordini e contratti i figli restano <code>NOT NULL</code>: per loro il ramo
+nuovo è irraggiungibile e il comportamento è identico a prima. Parametrizzata su schema/tabella/FK per essere riusata da tutte e 4 le sorgenti documentali (preventivi, ordini, contratti, DDT).</p>
 <p><strong>Vedi anche</strong></p>
 <ul>
 <li><a href="../../funzioni/trgfn_componenti_ricalcola_padre/">script.trgfn_componenti_ricalcola_padre</a> — trigger wrapper che chiama questa funzione</li>
@@ -5442,6 +5490,9 @@
 <li><strong>SQL dinamico sicuro</strong>: gli identificatori schema/tabella/colonna passano per <code>%I</code> di <code>format()</code> — nessun rischio SQL injection.</li>
 </ul>
 <h2 id="invariante-componenti">Invariante componenti<a class="headerlink" href="#invariante-componenti" title="Permanent link">&para;</a></h2>
+<p>⚠️ <strong>Superato il 2026-08-19</strong> (vale ancora per preventivi, ordini, contratti e
+offerte; <strong>non</strong> per <code>vendite.ddt_righe_componenti</code>, dove il prezzo e la sua
+origine possono mancare insieme). Il testo storico:</p>
 <p>Con il pattern form atomic (rev. 12-05-2026b), <code>prezzo_unitario</code> è sempre NOT NULL su tutte le tabelle <code>*_righe_componenti</code>. Il vincolo DB è:</p>
 <div class="highlight"><pre><span></span><code><span class="n">prezzo_unitario</span><span class="w"> </span><span class="nb">NUMERIC</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">CHECK</span><span class="w"> </span><span class="p">(</span><span class="n">prezzo_unitario</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>

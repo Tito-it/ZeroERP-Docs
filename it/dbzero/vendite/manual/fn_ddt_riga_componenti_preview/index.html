@@ -5272,6 +5272,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#rev-2026-08-19-stesso-risultato-senza-sporcare-il-diario" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Rev 2026-08-19 — stesso risultato, senza sporcare il diario
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚠️ Rev 2026-08-19 — stesso risultato, senza sporcare il diario">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#scopo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5279,6 +5291,11 @@
       </span>
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -5345,6 +5362,23 @@
 
 
 <h1 id="fn_ddt_riga_componenti_preview">fn_ddt_riga_componenti_preview<a class="headerlink" href="#fn_ddt_riga_componenti_preview" title="Permanent link">&para;</a></h1>
+<blockquote>
+<h2 id="rev-2026-08-19-stesso-risultato-senza-sporcare-il-diario">⚠️ Rev 2026-08-19 — stesso risultato, senza sporcare il diario<a class="headerlink" href="#rev-2026-08-19-stesso-risultato-senza-sporcare-il-diario" title="Permanent link">&para;</a></h2>
+<p>La preview chiama ora il <strong>nucleo</strong>
+<a href="../../funzioni/fn_resolve_prezzo_listino_v2_esito/">fn_resolve_prezzo_listino_v2_esito</a>
+e ha perso il <code>BEGIN … EXCEPTION</code> che catturava l'errore del resolver.</p>
+<p><strong>Per il drawer non cambia niente</strong>: prezzo suggerito <code>NULL</code> e motivazione in
+<code>resolver_error_reason</code>, esattamente come prima.</p>
+<p>⛔ <strong>Cambia il costo nascosto.</strong> <code>script.fn_log_error_only</code> scrive su
+<code>dbops.error_log</code> via una connessione dblink <strong>separata, fuori transazione</strong>:
+il database la riga la scriveva <strong>prima</strong> di sollevare. Catturare l'eccezione
+nascondeva l'errore al chiamante e lasciava il log intatto — una riga per ogni
+componente non risolto, <strong>a ogni apertura del drawer</strong>. Ora zero.</p>
+<p>⚠️ Il messaggio mostrato viene composto con <code>format()</code> sui valori dell'esito,
+con il ripiego che ha <code>fn_log_and_raise_error</code>: se la sostituzione dei
+segnaposto fallisce resta il modello — brutto da leggere, ma una preview non
+deve rompersi per colpa di un messaggio.</p>
+</blockquote>
 <h3 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h3>
 <p>Preview read-only dei componenti BoM per il drawer riga DDT (pattern form atomic). Stesso comportamento di <code>fn_preventivo_riga_componenti_preview</code> ma tipizzato per la testata <code>ddt</code>. Proietta tutti i componenti attivi della BoM (modello unificato), inclusi <code>obbligatorio</code> e <code>esposto_in_fattura</code>. Consumata dal BE prima del save della riga composita.</p>
 <blockquote>

@@ -5283,6 +5283,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#rev-2026-08-19-non-fallisce-piu-quando-il-prezzo-non-ce" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Rev 2026-08-19 — non fallisce più quando il prezzo non c'è
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#schema" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5412,8 +5423,24 @@
 
 <h1 id="fn_ddt_riga_componenti_init">fn_ddt_riga_componenti_init<a class="headerlink" href="#fn_ddt_riga_componenti_init" title="Permanent link">&para;</a></h1>
 <h3 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h3>
-<p>Inizializza i componenti BoM (modello unificato) per una riga DDT composita. Per ogni componente attivo della BoM: se presente un override in <code>p_componenti_overrides</code>, usa quel prezzo; altrimenti chiama <code>fn_resolve_prezzo_listino_v2</code> con <code>p_articolo_padre_contesto = v_articolo_id</code> per attivare il pricing bundle — se il resolver fallisce, solleva <code>E_DOC_COMPONENTE_LISTINO_MANCANTE</code>. Idempotente.</p>
+<p>Inizializza i componenti BoM (modello unificato) per una riga DDT composita. Per ogni componente attivo della BoM: se presente un override in <code>p_componenti_overrides</code>, usa quel prezzo; altrimenti chiama <code>fn_resolve_prezzo_listino_v2</code> con <code>p_articolo_padre_contesto = v_articolo_id</code> per attivare il pricing bundle — se il resolver non risolve <strong>la riga si crea lo stesso, con prezzo <code>NULL</code></strong> (rev 2026-08-19). Idempotente.</p>
 <blockquote>
+<h2 id="rev-2026-08-19-non-fallisce-piu-quando-il-prezzo-non-ce">⚠️ Rev 2026-08-19 — non fallisce più quando il prezzo non c'è<a class="headerlink" href="#rev-2026-08-19-non-fallisce-piu-quando-il-prezzo-non-ce" title="Permanent link">&para;</a></h2>
+<p>Chiama il <strong>nucleo</strong>
+<a href="../../funzioni/fn_resolve_prezzo_listino_v2_esito/">fn_resolve_prezzo_listino_v2_esito</a>
+invece del guscio che solleva. Quando il prezzo non si risolve:</p>
+<ul>
+<li>il componente viene <strong>inserito</strong> con <code>prezzo_unitario</code> e <code>origine_prezzo</code> a
+  <code>NULL</code> — prima falliva l'inserimento dell'<strong>intera riga-kit</strong>, ed era l'unica
+  ragione per cui un kit non poteva viaggiare su un DDT che non vende;</li>
+<li>il <strong>motivo</strong> finisce in <code>prezzo_resolver_context-&gt;&gt;'esito_codice'</code>: chi
+  guarderà quella riga fra sei mesi saprà che il prezzo manca perché l'articolo
+  non era a listino, non per una dimenticanza;</li>
+<li><strong>nessuna riga di log</strong>: il nucleo non scrive su <code>dbops.error_log</code>.</li>
+</ul>
+<p>⚠️ Il divieto dell'<strong>override a zero</strong> su un componente obbligatorio prende la
+stessa condizione del trigger: vale finché il documento vende. Erano due posti
+che avrebbero detto cose diverse sulla stessa regola.</p>
 <p><strong>Vedi anche</strong></p>
 <ul>
 <li><a href="../../tabelle/ddt_righe_componenti/">vendite.ddt_righe_componenti</a> — tabella popolata</li>
@@ -5499,7 +5526,7 @@
 <li><strong>Lettura parametri DDT</strong> — <code>billing_account_id</code>, <code>utility_id</code> da <code>ddt</code>. <code>utility_id</code> è di tipo <code>integer</code>.</li>
 <li><strong>Loop per-componente</strong> — per ogni componente attivo della BoM (<code>attivo = TRUE</code>, <code>validita @&gt; p_data_riferimento</code>), senza filtro su <code>esposto_in_fattura</code>:</li>
 <li><strong>Path override</strong>: se <code>p_componenti_overrides ? componente_id::text</code> → prezzo = valore della mappa, <code>origine_prezzo = 'MANUALE'</code>. Prezzo = 0 → raise <code>E_PARAMETRO_INVALIDO</code> <strong>solo</strong> se <code>v_comp.obbligatorio = TRUE</code>; per i componenti opzionali, prezzo = 0 è ammesso.</li>
-<li><strong>Path resolver</strong>: chiama <code>fn_resolve_prezzo_listino_v2</code> con <code>p_articolo_padre_contesto := v_articolo_id</code>. Se esiste una riga in <code>vendite.listini_righe_componenti</code> per (listino_versione, padre, figlio, data), il resolver ritorna <code>origine = 'LISTINO_BUNDLE'</code>. Se fallisce → raise <code>E_DOC_COMPONENTE_LISTINO_MANCANTE</code>.</li>
+<li><strong>Path resolver</strong>: chiama <code>fn_resolve_prezzo_listino_v2</code> con <code>p_articolo_padre_contesto := v_articolo_id</code>. Se esiste una riga in <code>vendite.listini_righe_componenti</code> per (listino_versione, padre, figlio, data), il resolver ritorna <code>origine = 'LISTINO_BUNDLE'</code>. ⚠️ Se non risolve → <strong>nessun raise</strong>: prezzo <code>NULL</code> e motivo nel contesto (rev 2026-08-19).</li>
 <li><strong>INSERT</strong>: <code>attivo</code> = <code>v_comp.obbligatorio</code> — TRUE per i componenti obbligatori, FALSE per i componenti opzionali.</li>
 <li><strong>INSERT componente</strong> — <code>prezzo_unitario</code> NOT NULL, <code>origine_prezzo</code>, <code>prezzo_resolver_context</code> JSONB.</li>
 <li><strong>Check BoM vuota</strong> — se <code>v_inserted = 0</code> dopo il loop → raise <code>E_DOC_COMPOSITO_BOM_VUOTA</code> (442). Non scatta in caso di idempotenza (intercettata al passo 4).</li>
@@ -5625,8 +5652,8 @@
 <td><code>p_riga_id</code>/<code>p_emittente_sr_id</code> NULL/≤0; riga non trovata; override con prezzo = 0 su componente obbligatorio</td>
 </tr>
 <tr>
-<td><code>E_DOC_COMPONENTE_LISTINO_MANCANTE</code> (id 440)</td>
-<td>Resolver fallisce per un componente senza override</td>
+<td>~~<code>E_DOC_COMPONENTE_LISTINO_MANCANTE</code> (id 440)~~</td>
+<td>⚠️ <strong>non più sollevato da qui</strong> (rev 2026-08-19): il mancato prezzo è un esito, non un errore</td>
 </tr>
 <tr>
 <td><code>E_DOC_COMPOSITO_BOM_VUOTA</code> (442)</td>

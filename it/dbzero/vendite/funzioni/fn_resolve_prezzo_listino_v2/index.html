@@ -5394,6 +5394,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#dal-2026-08-19-le-funzioni-sono-due-e-questa-non-contiene-piu-la-logica" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ Dal 2026-08-19 le funzioni sono <strong>due</strong>, e questa non contiene più la logica
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⭐ Dal 2026-08-19 le funzioni sono due, e questa non contiene più la logica">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#perche-non-basta-catturare-lerrore" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Perché non basta catturare l'errore
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-diventa-un-esito-e-cosa-resta-un-errore" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cosa diventa un esito e cosa resta un errore
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ogni-esito-porta-gli-input-della-chiamata" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ogni esito porta gli input della chiamata
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -5787,6 +5837,81 @@ PREZZO_FISSO: valore                              -- prezzo assoluto (solo PROMO
   <strong>&copy; 2025-2026 Zero ERP</strong> <em><strong>&bull; powered by Tid &bull;</strong></em>
 </div>
 
+<hr />
+<h2 id="dal-2026-08-19-le-funzioni-sono-due-e-questa-non-contiene-piu-la-logica">⭐ Dal 2026-08-19 le funzioni sono <strong>due</strong>, e questa non contiene più la logica<a class="headerlink" href="#dal-2026-08-19-le-funzioni-sono-due-e-questa-non-contiene-piu-la-logica" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>a chi serve</th>
+<th>cosa fa quando non trova il prezzo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fn_resolve_prezzo_listino_v2_esito</code> — il <strong>nucleo</strong></td>
+<td>a chi può accettare un prezzo assente: oggi il DDT</td>
+<td><strong>ritorna</strong> l'esito in tre colonne (<code>esito_codice</code>, <code>esito_context</code>, <code>esito_valori</code>) e va avanti. Una riga esce sempre</td>
+</tr>
+<tr>
+<td><code>fn_resolve_prezzo_listino_v2</code> — il <strong>guscio</strong> (questa)</td>
+<td>a tutti gli altri: preventivi, ordini, contratti, offerte</td>
+<td><strong>solleva</strong>, come ha sempre fatto: stesso codice, stesso <code>P0001</code>, stessa riga di log</td>
+</tr>
+</tbody>
+</table>
+<p>Firma e <code>RETURNS TABLE</code> del guscio sono rimasti identici, quindi per i dieci
+chiamanti esistenti non è cambiato niente. <strong>La logica di risoluzione vive solo
+nel nucleo</strong>: chi deve modificarla va lì, altrimenti le due funzioni smettono di
+essere lo stesso corpo — che è l'unica cosa che rende questa coppia sicura.</p>
+<h3 id="perche-non-basta-catturare-lerrore">Perché non basta catturare l'errore<a class="headerlink" href="#perche-non-basta-catturare-lerrore" title="Permanent link">&para;</a></h3>
+<p>È la domanda che si fanno tutti guardando questa coppia, e la risposta non è di
+gusto. <code>script.fn_log_error_only</code> scrive su <code>dbops.error_log</code> attraverso una
+<strong>connessione separata, fuori dalla transazione</strong>: la riga di log resta anche se
+tutto il resto viene annullato. Un <code>BEGIN … EXCEPTION</code> attorno alla chiamata —
+in SQL o in Python — nasconderebbe l'errore a chi chiama, ma il log lo avrebbe
+già scritto il database un istante prima di sollevare: una riga per ogni
+tentativo, moltiplicata per le righe del documento.</p>
+<p>Il log lo scrive il database, quindi <strong>solo il database può smettere di
+scriverlo</strong>. Da qui un nucleo che non solleva affatto, invece di un guscio che
+ingoia.</p>
+<h3 id="cosa-diventa-un-esito-e-cosa-resta-un-errore">Cosa diventa un esito e cosa resta un errore<a class="headerlink" href="#cosa-diventa-un-esito-e-cosa-resta-un-errore" title="Permanent link">&para;</a></h3>
+<p>La regola in una riga: <strong>un parametro sbagliato è un errore; un prezzo che non
+c'è è un esito.</strong></p>
+<p>Restano errori i due <code>E_PARAMETRO_INVALIDO</code> — argomenti fuori dominio e
+billing account inesistente: lì ha sbagliato chi chiama, o si sta parlando di
+qualcosa che non esiste. Diventano esito tutti e otto i casi in cui il prezzo
+semplicemente non si trova, compreso <strong>l'articolo escluso da contratto</strong>:
+l'esclusione dice che quell'articolo non si <em>fattura</em> a quel cliente, non che non
+possa <em>viaggiare</em>, e infatti serve mandarlo in riparazione o riprenderselo
+indietro. Il divieto non si allenta — se la causale del DDT è di vendita, la
+riga resta senza prezzo e il documento non si emette.</p>
+<blockquote>
+<p><strong>Un ramo che non poteva più scattare, e che è stato tolto.</strong> Nel nucleo
+c'era il caso «billing account senza categoria», impossibile dal 2026-04-14
+perché quella colonna è diventata obbligatoria. Per un giorno l'abbiamo
+tenuto, commentato, «semmai un domani». Poi il codice d'errore che sollevava
+è andato in pensione — e a quel punto tenerlo sarebbe stato dichiarare due
+cose incompatibili: un cancello in CI vieta che una funzione viva nomini un
+codice ritirato, e ha ragione. Rimosso il 2026-08-19.</p>
+<p>Non si è scoperto nulla: se quel vincolo un giorno cadesse, la ricerca sulla
+matrice non troverebbe righe e si uscirebbe con «categoria non mappata» —
+un errore vero, che nomina la tabella giusta.</p>
+</blockquote>
+<h3 id="ogni-esito-porta-gli-input-della-chiamata">Ogni esito porta gli input della chiamata<a class="headerlink" href="#ogni-esito-porta-gli-input-della-chiamata" title="Permanent link">&para;</a></h3>
+<p>Dal 2026-08-19 il contesto registrato con ogni esito contiene <strong>i nove
+parametri della chiamata</strong>, oltre ai dati specifici dello stadio che ha
+fallito.</p>
+<p>Sembra un dettaglio e non lo è. Prima, quando qualcosa non si risolveva,
+scrivevano in due: il database e il backend, ciascuno con i propri campi. Messi
+insieme bastavano a ricostruire il caso; presi singolarmente, no — il database
+diceva <em>quale mappa mancava</em> ma non <em>per quale articolo</em>. Deciso che a scrivere
+sia il database e basta, la riga rimasta doveva diventare completa, altrimenti
+si sarebbe guadagnata una riga e persa la possibilità di indagare.</p>
+<p>Ci sono anche i due parametri che nessuno aveva chiesto — la classe di utenza e
+la versione di listino preferita — perché senza di essi due chiamate diverse
+lasciano righe identiche, e chi legge non può distinguerle.</p>
+<p><strong>Brief</strong>: <code>docs/it/dev/work-in-progress/brief-ddt-righe-senza-prezzo.md</code> §9 slice A.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

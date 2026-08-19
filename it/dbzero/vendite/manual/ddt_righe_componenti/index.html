@@ -5323,6 +5323,23 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rev-2026-08-19-su-questa-tabella-il-prezzo-puo-mancare" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Rev 2026-08-19 — su QUESTA tabella il prezzo può mancare
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚠️ Rev 2026-08-19 — su QUESTA tabella il prezzo può mancare">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#differenze-rispetto-a-preventivi_righe_componenti" class="md-nav__link">
     <span class="md-ellipsis">
@@ -5464,11 +5481,11 @@
 </tr>
 <tr>
 <td><code>prezzo_unitario</code></td>
-<td>Prezzo del componente (suggerito dal resolver, modificabile dall'operatore L1/L2/L3)</td>
+<td>Prezzo del componente (suggerito dal resolver, modificabile dall'operatore L1/L2/L3). ⚠️ <strong>Può mancare</strong> dal 2026-08-19, vedi sotto</td>
 </tr>
 <tr>
 <td><code>origine_prezzo</code></td>
-<td>Traccia l'origine: <code>PROMO</code>, <code>CONTRATTO_OVERRIDE</code>, <code>CONTRATTO_LISTINO</code>, <code>CATEGORIA</code>, <code>MANUALE</code></td>
+<td>Traccia l'origine: <code>PROMO</code>, <code>CONTRATTO_OVERRIDE</code>, <code>CONTRATTO_LISTINO</code>, <code>CATEGORIA</code>, <code>MANUALE</code>, <code>LISTINO_BUNDLE</code>. ⚠️ <strong>Può mancare</strong> insieme al prezzo</td>
 </tr>
 <tr>
 <td><code>prezzo_resolver_context</code></td>
@@ -5482,6 +5499,31 @@
 </table>
 <hr />
 <h3 id="relazione-con-la-riga-padre">Relazione con la riga padre<a class="headerlink" href="#relazione-con-la-riga-padre" title="Permanent link">&para;</a></h3>
+<blockquote>
+<h2 id="rev-2026-08-19-su-questa-tabella-il-prezzo-puo-mancare">⚠️ Rev 2026-08-19 — su QUESTA tabella il prezzo può mancare<a class="headerlink" href="#rev-2026-08-19-su-questa-tabella-il-prezzo-puo-mancare" title="Permanent link">&para;</a></h2>
+<p><code>prezzo_unitario</code> e <code>origine_prezzo</code> sono diventati <strong>facoltativi</strong>, e solo
+qui: sulle gemelle di preventivi, ordini, contratti e offerte restano
+obbligatori — lì un prezzo mancante è un difetto vero.</p>
+<p><strong>Perché.</strong> Un kit è merce come il resto, e la merce si muove anche quando non
+si vende: conto visione, campionatura, riparazione, trasferimento. Su quei
+documenti pretendere un prezzo per ogni componente significa chiedere un dato
+che per essi non ha significato. Era l'ultima ragione per cui un kit non
+poteva viaggiare senza vendersi.</p>
+<p><strong>Le due colonne mancano sempre insieme</strong>: nessun prezzo, nessuna origine. Non
+esiste un valore <code>NON_RISOLTO</code> — sarebbe entrato nel vocabolario di cinque
+tabelle per dire ciò che l'assenza dice già. Il motivo tecnico della mancata
+risoluzione sta in <code>prezzo_resolver_context-&gt;&gt;'esito_codice'</code>.</p>
+<p>⛔ <strong>E il prezzo del padre diventa <code>NULL</code>, non la somma dei figli rimasti.</strong> Un
+kit a prezzo assente lo ferma il gate all'emissione; un kit a prezzo
+<strong>parziale</strong> il gate lo passa e arriva in fattura. Vedi
+<a href="../../../script/funzioni/fn_ricalcola_prezzo_padre_da_componenti/">script.fn_ricalcola_prezzo_padre_da_componenti</a>.</p>
+<p><strong>Cosa resta in piedi</strong>: il divieto del prezzo <strong>zero</strong> sui componenti
+obbligatori vale ancora — ma solo se il DDT ha una causale fatturabile
+(clausola <code>WHEN</code> del trigger, su
+<a href="../../funzioni/fn_check_ddt_riga_richiede_prezzo/">vendite.fn_check_ddt_riga_richiede_prezzo</a>).
+E il gate all'emissione ferma comunque il DDT che vende con componenti non
+valorizzati.</p>
+</blockquote>
 <p>Il prezzo sulla riga padre (<code>ddt_righe.prezzo_unitario</code>) è <strong>calcolato automaticamente</strong> come SUM pesata dei componenti, tramite il trigger <code>z90_ricalcola_padre</code>:</p>
 <div class="highlight"><pre><span></span><code>ddt_righe.prezzo_unitario = SUM(
     ddt_righe_componenti.prezzo_unitario

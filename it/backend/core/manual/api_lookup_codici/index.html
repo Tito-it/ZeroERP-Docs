@@ -5372,6 +5372,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#lookup-a-matrice-endpoint-dedicati" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Lookup a matrice — endpoint dedicati
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#regole" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5737,6 +5748,45 @@ config <code>_LOOKUP_SPECIALIZZATE</code> in <code>dbops_repository.py</code> �
 <p>Per aggiungere una relazione specializzata: una riga di config in
 <code>_LOOKUP_SPECIALIZZATE</code> (<code>extra_col</code>, opz. <code>extra_expr</code>, <code>has_codice_interno</code>,
 <code>has_obsoleto</code>) — niente nuovo SQL.</p>
+<h2 id="lookup-a-matrice-endpoint-dedicati">Lookup a matrice — endpoint dedicati<a class="headerlink" href="#lookup-a-matrice-endpoint-dedicati" title="Permanent link">&para;</a></h2>
+<p>Tre lookup <strong>non</strong> passano da <code>rel</code>, e non e' un'eccezione arbitraria: non
+servono una tabella codice/descrizione, servono una <strong>matrice</strong> (quali
+indirizzi per quale tipo, quali utility per quale ruolo). Il contratto generico
+non saprebbe esprimere il vincolo, quindi hanno un path proprio.</p>
+<table>
+<thead>
+<tr>
+<th>endpoint</th>
+<th>risponde</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /api/v1/core/lookup/tipi-soggetto-dettaglio/{tipo_soggetto_dettaglio_id}/indirizzi/</code></td>
+<td>tipi indirizzo <strong>ammessi e obbligatori</strong> per quel tipo soggetto dettaglio</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/core/lookup/tipi-ruolo/{tipo_ruolo_codice}/indirizzi/</code></td>
+<td>idem, ma per <strong>tipo ruolo</strong> (chiave = <code>codice_interno</code>, non id)</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/core/lookup/tipi-ruolo/{tipo_ruolo_codice}/utilities/</code></td>
+<td>utility ammesse per quel ruolo, filtro strict su <code>config.utilities_tipi_ruolo</code></td>
+</tr>
+</tbody>
+</table>
+<p>Risposta: envelope standard con <code>results</code>. Nessun parametro di query: la
+matrice si chiede per intero, e il FE la usa per costruire i form indirizzo
+giusti <strong>prima</strong> che l'operatore sbagli.</p>
+<p>⚠️ <strong>Le due matrici indirizzi sono governate da tabelle diverse e non vanno
+confuse</strong>: quella per tipo soggetto e'
+<code>config.tipi_soggetto_dettaglio_tipi_indirizzo</code>, quella per ruolo e'
+<code>config.tipi_ruolo_tipi_indirizzo</code>. Hanno guard distinti a DB e, dal
+2026-08-19, <strong>codici errore distinti</strong> — prima ne condividevano uno e il
+messaggio mandava a cercare nella tabella sbagliata.</p>
+<p>⭐ Tutti e tre dichiarano <code>skip_area_check = True</code>: sono lookup cross-dominio,
+letti da form di aree diverse. Lo scope resta quello del repository — vedi
+<code>api_routing_core.md</code>.</p>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>rel</code> deve essere nella whitelist <code>_REL_CONSENTITE</code> (errore <code>E_CORE_VALIDATION</code> se assente).</li>

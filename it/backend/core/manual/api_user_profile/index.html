@@ -5377,6 +5377,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#get-post-apiv1coremeemittente-attivo-lemittente-di-sessione" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        GET / POST <code>/api/v1/core/me/emittente-attivo/</code> — l'emittente di sessione
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#errori" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5672,6 +5683,34 @@ teorico di auto-invito), chiamando /me/ con JWT ottenuto via <code>/admin/token/
 </tr>
 </tbody>
 </table>
+<h2 id="get-post-apiv1coremeemittente-attivo-lemittente-di-sessione">GET / POST <code>/api/v1/core/me/emittente-attivo/</code> — l'emittente di sessione<a class="headerlink" href="#get-post-apiv1coremeemittente-attivo-lemittente-di-sessione" title="Permanent link">&para;</a></h2>
+<p>La combo di topbar con cui il super admin sceglie <strong>dentro quale emittente
+lavorare</strong> (impersonazione di scope).</p>
+<table>
+<thead>
+<tr>
+<th>metodo</th>
+<th>fa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td>le opzioni selezionabili per l'utente corrente</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td>cambia l'emittente attivo <strong>e riemette i token</strong> — body: <code>emittente_fiscale_id</code> (opzionale: assente/null = torna alla vista completa)</td>
+</tr>
+</tbody>
+</table>
+<p>⭐ <strong>Perche' il POST riemette i token invece di limitarsi a salvare la scelta.</strong>
+La verita' della richiesta in corso e' il <strong>claim JWT</strong>, da cui nasce la GUC
+<code>app.current_emittente_id</code> che restringe i dati a database. Senza token nuovi la
+scelta avrebbe effetto solo al login successivo: la combo cambierebbe e i dati
+no — cioe' il difetto peggiore di tutti, <strong>l'interfaccia che mente</strong>.</p>
+<p>Errore specifico: <code>E_EMITTENTE_ATTIVO_TOKEN</code> se la riemissione del token
+fallisce.</p>
 <h2 id="errori">Errori<a class="headerlink" href="#errori" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

@@ -5428,6 +5428,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ricerca-stradario-autocomplete-indirizzi" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ricerca stradario (autocomplete indirizzi)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ricerca stradario (autocomplete indirizzi)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-apiv1coresearchstradario" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>GET /api/v1/core/search/stradario/</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-apiv1coresearchstradario-generale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>GET /api/v1/core/search/stradario-generale/</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#regole" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5696,6 +5735,71 @@ logica usare il nuovo <code>utility_codice_interno</code>. Vedi linee-guida-sql.
 <span class="w">  </span><span class="nt">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"request_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
+<h2 id="ricerca-stradario-autocomplete-indirizzi">Ricerca stradario (autocomplete indirizzi)<a class="headerlink" href="#ricerca-stradario-autocomplete-indirizzi" title="Permanent link">&para;</a></h2>
+<p>Due endpoint distinti, e la differenza e' <strong>quando</strong> si usano, non come:</p>
+<h3 id="get-apiv1coresearchstradario"><code>GET /api/v1/core/search/stradario/</code><a class="headerlink" href="#get-apiv1coresearchstradario" title="Permanent link">&para;</a></h3>
+<p>Vie di un comune gia' scelto. E' il passo che segue la selezione del comune nel
+form indirizzo.</p>
+<table>
+<thead>
+<tr>
+<th>query param</th>
+<th>default</th>
+<th>note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>comune_id</code></td>
+<td>—</td>
+<td>filtra le vie del comune</td>
+</tr>
+<tr>
+<td><code>search</code></td>
+<td>—</td>
+<td>ricerca su toponimo + denominazione</td>
+</tr>
+<tr>
+<td><code>limit</code></td>
+<td>30</td>
+<td><strong>max 100</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Restituisce <code>stradario_id</code>, via completa, comune, provincia, CAP: l'indirizzo
+esce gia' normalizzato, non da ricomporre a mano.</p>
+<h3 id="get-apiv1coresearchstradario-generale"><code>GET /api/v1/core/search/stradario-generale/</code><a class="headerlink" href="#get-apiv1coresearchstradario-generale" title="Permanent link">&para;</a></h3>
+<p>Vie su <strong>tutta Italia</strong>, senza comune ne' CAP: serve quando la via non e' ancora
+nello stradario del comune e va inserita nuova. L'operatore cerca prima la via,
+<strong>poi</strong> sceglie comune e CAP.</p>
+<table>
+<thead>
+<tr>
+<th>query param</th>
+<th>obbligatorio</th>
+<th>note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>search</code></td>
+<td><strong>si'</strong></td>
+<td>qui non si sfoglia: senza testo non si cerca</td>
+</tr>
+<tr>
+<td><code>toponomastica_id</code></td>
+<td>no</td>
+<td>filtro per tipo di toponimo</td>
+</tr>
+<tr>
+<td><code>limit</code></td>
+<td>no</td>
+<td>come sopra</td>
+</tr>
+</tbody>
+</table>
+<p>⭐ Entrambi sono <code>is_search_endpoint = True</code> (throttling di ricerca) e
+<code>skip_area_check = True</code>: l'indirizzo si compila da qualunque area.</p>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>q</code> obbligatorio, minimo 3 caratteri (validato da <code>require_min_search_length</code>)</li>

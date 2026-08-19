@@ -5339,6 +5339,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#fatturabile-la-colonna-che-dice-se-la-merce-si-sta-vendendo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ <code>fatturabile</code> — la colonna che dice se la merce si sta vendendo
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⭐ fatturabile — la colonna che dice se la merce si sta vendendo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#che-cosa-cambia-in-concreto" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Che cosa cambia, in concreto
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#due-cose-da-sapere-prima-di-aggiungere-una-causale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Due cose da sapere prima di aggiungere una causale
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -5508,6 +5547,65 @@
 <blockquote>
 <p><strong>“Un catalogo ben governato delle causali di trasporto rende più chiaro il ciclo logistico e facilita la definizione di regole automatiche su DDT, ordini e fatture.”</strong></p>
 </blockquote>
+<hr />
+<h2 id="fatturabile-la-colonna-che-dice-se-la-merce-si-sta-vendendo">⭐ <code>fatturabile</code> — la colonna che dice se la merce si sta vendendo<a class="headerlink" href="#fatturabile-la-colonna-che-dice-se-la-merce-si-sta-vendendo" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>Aggiunta il 2026-07-17. È la colonna più importante della tabella, e non si
+vede dal nome: decide <strong>se un documento entra nel giro della fatturazione</strong>.</p>
+</blockquote>
+<p>La merce si muove anche quando non si vende: conto visione, campionatura,
+riparazione, trasferimento fra depositi, conto lavorazione, omaggio. In quei casi
+un prezzo di listino è un dato che <strong>non ha significato</strong> — non manca per
+distrazione, semplicemente non si applica.</p>
+<p>Il problema è che l'assenza di un prezzo, da sola, è <strong>ambigua</strong>: non distingue
+«ho deciso che non si vende» da «me ne sono dimenticato». Per questo l'intento
+<strong>non si deduce</strong>, si <strong>dichiara</strong> — e lo si dichiara con il campo che
+l'operatore compila comunque, la causale.</p>
+<table>
+<thead>
+<tr>
+<th>causale (seed)</th>
+<th><code>fatturabile</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VENDITA</td>
+<td>✅ sì</td>
+</tr>
+<tr>
+<td>CONTO_VISIONE · RESO · RIPARAZIONE · CAMPIONATURA · TRASFERIMENTO · CONTO_LAVORO · OMAGGIO</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<h3 id="che-cosa-cambia-in-concreto">Che cosa cambia, in concreto<a class="headerlink" href="#che-cosa-cambia-in-concreto" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>all'emissione</strong>: se la causale dice che si vende, ogni riga — e ogni
+  componente di un kit — deve avere un prezzo, altrimenti il documento non esce
+  e il messaggio dice <strong>quale riga</strong> manca. Se la causale dice che non si vende,
+  il prezzo non viene chiesto a nessuno;</li>
+<li><strong>dopo l'emissione</strong>: i documenti non fatturabili restano <strong>fuori</strong> dalle liste
+  e dai cruscotti della fatturazione — non come «scartati», proprio come non
+  pertinenti;</li>
+<li><strong>la causale non si cambia più</strong> una volta che il documento è uscito dalla
+  bozza: è stampata sul documento di trasporto, e cambiarla dopo vorrebbe dire
+  che il foglio consegnato al vettore e l'archivio dicono cose diverse.</li>
+</ul>
+<h3 id="due-cose-da-sapere-prima-di-aggiungere-una-causale">Due cose da sapere prima di aggiungere una causale<a class="headerlink" href="#due-cose-da-sapere-prima-di-aggiungere-una-causale" title="Permanent link">&para;</a></h3>
+<p>⚠️ <strong><code>fatturabile</code> è una cella di seed, non codice.</strong> I casi discutibili — e
+l'omaggio è il principale — si decidono cambiando un valore nel CSV, non
+toccando funzioni. Se un domani l'omaggio dovesse arrivare a fattura (la rivalsa
+IVA), quello <strong>non</strong> è un fatto del prezzo né della causale: è la <strong>natura</strong> del
+documento, l'asse che vive in <code>config.nature_doc_fiscale</code>.</p>
+<p>⚠️ <strong>In bozza la causale può mancare, ed è voluto.</strong> L'operatore carica le righe
+prima di aver deciso l'intento: pretendere la causale al salvataggio
+sposterebbe l'errore su un momento in cui la risposta non c'è ancora. Il
+presidio sta <strong>all'emissione</strong>, che è il momento in cui il documento comincia ad
+avere effetti.</p>
+<p><strong>Approfondimento</strong>: <code>docs/it/dev/work-in-progress/brief-ddt-righe-senza-prezzo.md</code>
+· decisione di design DL-28 in
+<code>docs/it/dev/work-done/brief-design-fatturazione-due-lenti.md</code> §10.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
