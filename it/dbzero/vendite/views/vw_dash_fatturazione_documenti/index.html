@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5334,6 +5334,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#emittente_ragione_sociale-r-4-18-08-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5513,11 +5524,11 @@ da sapere per chi consuma:</p>
 </table>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Elementi fermi di maggio 2026 nell&#39;area preventivi (drill-down).</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Elementi fermi di maggio 2026 nell'area preventivi (drill-down).</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">valore_totale</span><span class="p">,</span><span class="w"> </span><span class="n">valore_transitato</span><span class="p">,</span><span class="w"> </span><span class="n">motivo_fermo</span><span class="p">,</span><span class="w"> </span><span class="n">stato_codice</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_dash_fatturazione_documenti</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVENTIVI&#39;</span>
-<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">competenza_mese</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">DATE</span><span class="w"> </span><span class="s1">&#39;2026-05-01&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'PREVENTIVI'</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">competenza_mese</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">DATE</span><span class="w"> </span><span class="s1">'2026-05-01'</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">is_abortito</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">is_transitato</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">valore_totale</span><span class="w"> </span><span class="k">DESC</span><span class="w"> </span><span class="n">NULLS</span><span class="w"> </span><span class="k">LAST</span><span class="p">;</span>
@@ -5539,6 +5550,28 @@ da sapere per chi consuma:</p>
   aggregata mensile e drill-down concordino (vedi quella scheda per il caveat
   fail-closed).</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-dash-fatturazione-v1.sql</code>.</li>
+</ul>
+<hr />
+<hr />
+<h3 id="emittente_ragione_sociale-r-4-18-08-2026">🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em><a class="headerlink" href="#emittente_ragione_sociale-r-4-18-08-2026" title="Permanent link">&para;</a></h3>
+<p>Il nome dell'emittente arriva in coda alla proiezione.</p>
+<p>⭐ <strong>La JOIN è scritta una volta sola.</strong> I sei resolver di ramo portano tutti
+<code>emittente_soggetto_ruolo_id</code>: la union viene avvolta e il nome si risolve
+all'esterno. Aggiungere la colonna ai sei rami avrebbe dato lo stesso risultato
+al prezzo di sei modifiche e di sei occasioni di divergere.</p>
+<p>⚠️ <strong>Le due lenti NON ereditano la colonna.</strong>
+<a href="../../manual/vw_dash_aperto_documenti/">vw_dash_aperto_documenti</a> e
+<a href="../../manual/vw_dash_backlog_documenti/">vw_dash_backlog_documenti</a> hanno proiezione a
+colonne <strong>esplicite</strong>, e sono loro che il backend legge. «Eredita» è vero del
+<em>dato</em> — nasce qui — ma falso della <em>proiezione</em>: va ri-elencata. Fermarsi a
+questa vista avrebbe prodotto migrazione verde, catalogo verde e colonna vuota a
+video, senza nessun errore a spiegarlo.</p>
+<p>⚠️ <strong>Il flag <code>multi_emittente</code> della lista NON si accende insieme alla colonna.</strong>
+Si guadagna dopo, quando la colonna mostra un nome su dati veri (brief
+perimetro-emittente §7, decisione 3). Il controllo automatico
+<code>dbops.vw_liste_multi_emittente_non_certificate</code> deve restare a zero righe.</p>
+<ul>
+<li>Test: <code>db/pgtap/vendite/test-viste-dash-emittente-v1.sql</code>.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

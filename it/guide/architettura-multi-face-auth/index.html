@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -6572,11 +6572,11 @@ legate a <code>profili_accesso</code> invece che direttamente a <code>unita_orga
     profilo_accesso_id     INT FK
     -- esattamente uno dei tre seguenti deve essere valorizzato:
     unita_organizzativa_id INT FK NULL    (se il profilo vale per un reparto)
-    identita_digitale_id   BIGINT FK NULL (se il profilo vale per una singola identita&#39;)
+    identita_digitale_id   BIGINT FK NULL (se il profilo vale per una singola identita')
     ruolo_applicativo      ENUM  NULL     (se il profilo vale per tutti gli utenti di quel ruolo)
 </code></pre></div>
 <p>Cosi' la catena di risoluzione diventa:</p>
-<div class="highlight"><pre><span></span><code>1. profilo binding per identita&#39; specifica?     -&gt; ha priorita&#39;
+<div class="highlight"><pre><span></span><code>1. profilo binding per identita' specifica?     -&gt; ha priorita'
 2. profilo binding per reparto (se OPERATORE)?  -&gt; ereditato come oggi
 3. profilo binding per ruolo applicativo?       -&gt; fallback standard per CLIENTE, FORNITORE, SHOP
 4. default -&gt; BLOCCATO
@@ -6641,7 +6641,7 @@ canale), il caso shop e' "silo chiuso" (filtro <code>canale_origine = 'SHOP'</co
 </code></pre></div>
 <p>Ogni policy e' implementata da una funzione SQL che, dati <code>(identita_id, target)</code>,
 risponde <em>true</em> o <em>false</em>. Esempio:</p>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Policy BA_OWNERSHIP: il cliente portale vede solo i BA dove e&#39; titolare</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Policy BA_OWNERSHIP: il cliente portale vede solo i BA dove e' titolare</span>
 <span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_scope_ba_ownership</span><span class="p">(</span><span class="n">p_identita_id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="p">,</span><span class="w"> </span><span class="n">p_billing_account_id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="p">)</span>
 <span class="k">RETURNS</span><span class="w"> </span><span class="nb">BOOLEAN</span><span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="k">STABLE</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
 <span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">(</span>
@@ -6675,7 +6675,7 @@ solo se l'utente corrente ha uno scope che la include</em>.</p>
 <span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="k">SELECT</span>
 <span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="p">(</span>
 <span class="w">        </span><span class="n">script</span><span class="p">.</span><span class="n">fn_identita_vede_billing_account</span><span class="p">(</span>
-<span class="w">            </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.current_identita_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)::</span><span class="nb">bigint</span><span class="p">,</span>
+<span class="w">            </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">'app.current_identita_id'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)::</span><span class="nb">bigint</span><span class="p">,</span>
 <span class="w">            </span><span class="n">billing_account_id</span>
 <span class="w">        </span><span class="p">)</span>
 <span class="w">    </span><span class="p">);</span>
@@ -6770,10 +6770,10 @@ clause. Il caso shop lo filtra esplicitamente:</p>
 <span class="k">CREATE</span><span class="w"> </span><span class="n">POLICY</span><span class="w"> </span><span class="n">rls_ordini_shop_silo</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">ordini</span>
 <span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="k">SELECT</span>
 <span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="p">(</span>
-<span class="w">        </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.ruolo_applicativo&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;SHOP_CUSTOMER&#39;</span>
-<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">canale_origine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;SHOP&#39;</span>
+<span class="w">        </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">'app.ruolo_applicativo'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'SHOP_CUSTOMER'</span>
+<span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">canale_origine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'SHOP'</span>
 <span class="w">        </span><span class="k">AND</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_scope_cliente_ownership</span><span class="p">(</span>
-<span class="w">                </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.current_identita_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)::</span><span class="nb">bigint</span><span class="p">,</span>
+<span class="w">                </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">'app.current_identita_id'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">''</span><span class="p">)::</span><span class="nb">bigint</span><span class="p">,</span>
 <span class="w">                </span><span class="n">soggetto_ruolo_id</span>
 <span class="w">            </span><span class="p">)</span>
 <span class="w">    </span><span class="p">);</span>

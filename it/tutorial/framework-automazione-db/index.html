@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -6023,12 +6023,12 @@
 <h2 id="passo-1-verifica-che-lo-schema-sia-nellambito">Passo 1 – Verifica che lo schema sia nell'ambito<a class="headerlink" href="#passo-1-verifica-che-lo-schema-sia-nellambito" title="Permanent link">&para;</a></h2>
 <p>Il framework opera solo sugli schemi e tabelle dichiarati nell'<strong>ambito</strong>. Per prima cosa verifica se lo schema della tua tabella e gia presente.</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automation_scope</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="k">schema_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;catalogo&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">schema_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'catalogo'</span><span class="p">;</span>
 </code></pre></div>
 <p><strong>Se trovi righe</strong> (es. <code>('catalogo', '*all')</code>): lo schema e gia nell'ambito, la tua tabella e automaticamente inclusa. Vai al Passo 2.</p>
 <p><strong>Se non trovi righe</strong>: aggiungi lo schema all'ambito:</p>
 <div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automation_scope</span><span class="w"> </span><span class="p">(</span><span class="k">schema_name</span><span class="p">,</span><span class="w"> </span><span class="n">table_like</span><span class="p">)</span>
-<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;catalogo&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;*all&#39;</span><span class="p">);</span>
+<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'catalogo'</span><span class="p">,</span><span class="w"> </span><span class="s1">'*all'</span><span class="p">);</span>
 </code></pre></div>
 <p>Usa <code>'*all'</code> per includere tutte le tabelle dello schema. Se vuoi limitare a un pattern specifico, usa un pattern LIKE (es. <code>'categorie_%'</code>).</p>
 <hr />
@@ -6090,19 +6090,19 @@
 <p>A differenza dell'apply (Passo 4), qui puoi lanciare <strong>tutte le regole insieme</strong>: il dry-run non modifica nulla, quindi non c'e rischio. L'apply invece conviene farlo un tipo alla volta per facilitare la diagnostica in caso di errore.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Dry-run su tutte le regole per lo schema catalogo</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span><span class="w">                </span><span class="c1">-- exec_mode</span>
-<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;catalogo&#39;</span><span class="err">\</span><span class="p">],</span><span class="w">     </span><span class="c1">-- solo lo schema della nuova tabella</span>
+<span class="w">    </span><span class="s1">'AUTO'</span><span class="p">,</span><span class="w">                </span><span class="c1">-- exec_mode</span>
+<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'catalogo'</span><span class="err">\</span><span class="p">],</span><span class="w">     </span><span class="c1">-- solo lo schema della nuova tabella</span>
 <span class="w">    </span><span class="k">true</span><span class="p">,</span><span class="w">                  </span><span class="c1">-- dry_run = true</span>
-<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;TX_ID&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;AUDIT_UPDATE&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;STORICO&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;STORICO_PROVISION&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ATTIVO&#39;</span><span class="err">\</span><span class="p">]</span>
+<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'TX_ID'</span><span class="p">,</span><span class="w"> </span><span class="s1">'AUDIT_UPDATE'</span><span class="p">,</span><span class="w"> </span><span class="s1">'STORICO'</span><span class="p">,</span><span class="w"> </span><span class="s1">'STORICO_PROVISION'</span><span class="p">,</span><span class="w"> </span><span class="s1">'ATTIVO'</span><span class="err">\</span><span class="p">]</span>
 <span class="p">);</span>
 </code></pre></div>
 <p>Ora verifica cosa ha loggato:</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">executed_at</span><span class="p">,</span><span class="w"> </span><span class="n">rule_type</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">,</span>
-<span class="w">       </span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;table&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tabella</span><span class="p">,</span>
-<span class="w">       </span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;trigger&#39;</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">trigger</span><span class="p">,</span>
+<span class="w">       </span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">'table'</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tabella</span><span class="p">,</span>
+<span class="w">       </span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">'trigger'</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">trigger</span><span class="p">,</span>
 <span class="w">       </span><span class="n">message</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">audit_log</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;DRYRUN&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'DRYRUN'</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">executed_at</span><span class="w"> </span><span class="k">DESC</span>
 <span class="k">LIMIT</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
 </code></pre></div>
@@ -6121,20 +6121,20 @@
 <p>Soddisfatto del dry-run? Ora esegui per davvero. E consigliato procedere <strong>un tipo di regola alla volta</strong>, cosi e piu facile diagnosticare eventuali problemi.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- 1. Prima STORICO_PROVISION (crea la tabella storico)</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;catalogo&#39;</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;STORICO_PROVISION&#39;</span><span class="err">\</span><span class="p">]</span>
+<span class="w">    </span><span class="s1">'AUTO'</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'catalogo'</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'STORICO_PROVISION'</span><span class="err">\</span><span class="p">]</span>
 <span class="p">);</span>
 
 <span class="c1">-- 2. Poi TX_ID + AUDIT_UPDATE + STORICO</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;catalogo&#39;</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;TX_ID&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;AUDIT_UPDATE&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;STORICO&#39;</span><span class="err">\</span><span class="p">]</span>
+<span class="w">    </span><span class="s1">'AUTO'</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'catalogo'</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'TX_ID'</span><span class="p">,</span><span class="w"> </span><span class="s1">'AUDIT_UPDATE'</span><span class="p">,</span><span class="w"> </span><span class="s1">'STORICO'</span><span class="err">\</span><span class="p">]</span>
 <span class="p">);</span>
 
 <span class="c1">-- 3. Infine ATTIVO (se la tabella ha la colonna attivo e relazioni FK)</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;catalogo&#39;</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;ATTIVO&#39;</span><span class="err">\</span><span class="p">]</span>
+<span class="w">    </span><span class="s1">'AUTO'</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'catalogo'</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'ATTIVO'</span><span class="err">\</span><span class="p">]</span>
 <span class="p">);</span>
 </code></pre></div>
 <hr />
@@ -6144,8 +6144,8 @@
 <span class="k">FROM</span><span class="w"> </span><span class="n">pg_trigger</span><span class="w"> </span><span class="n">t</span>
 <span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="k">c</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgrelid</span>
 <span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relnamespace</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;catalogo&#39;</span>
-<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;categorie_materiali&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'catalogo'</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'categorie_materiali'</span>
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgisinternal</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="n">tgname</span><span class="p">;</span>
 </code></pre></div>
@@ -6158,44 +6158,44 @@
 <h3 id="52-controlla-la-tabella-storico">5.2 Controlla la tabella storico<a class="headerlink" href="#52-controlla-la-tabella-storico" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">column_name</span><span class="p">,</span><span class="w"> </span><span class="n">data_type</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">information_schema</span><span class="p">.</span><span class="n">columns</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;storico&#39;</span>
-<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">table_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;categorie_materiali&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">table_schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'storico'</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">table_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'categorie_materiali'</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">ordinal_position</span><span class="p">;</span>
 </code></pre></div>
 <h3 id="53-test-funzionali">5.3 Test funzionali<a class="headerlink" href="#53-test-funzionali" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Test TX_ID: insert e verifica tx_id</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">categorie_materiali</span><span class="w"> </span><span class="p">(</span><span class="n">codice_interno</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">)</span>
-<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;TEST001&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Materiale di test&#39;</span><span class="p">);</span>
+<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'TEST001'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Materiale di test'</span><span class="p">);</span>
 
 <span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">codice_interno</span><span class="p">,</span><span class="w"> </span><span class="n">tx_id</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">categorie_materiali</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;TEST001&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'TEST001'</span><span class="p">;</span>
 <span class="c1">-- tx_id deve essere NOT NULL</span>
 
 <span class="c1">-- Test AUDIT: update e verifica campi audit</span>
 <span class="k">UPDATE</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">categorie_materiali</span>
-<span class="k">SET</span><span class="w"> </span><span class="n">descrizione</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Materiale di test aggiornato&#39;</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;TEST001&#39;</span><span class="p">;</span>
+<span class="k">SET</span><span class="w"> </span><span class="n">descrizione</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'Materiale di test aggiornato'</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'TEST001'</span><span class="p">;</span>
 
 <span class="k">SELECT</span><span class="w"> </span><span class="n">data_update</span><span class="p">,</span><span class="w"> </span><span class="n">user_update</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">categorie_materiali</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;TEST001&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'TEST001'</span><span class="p">;</span>
 <span class="c1">-- data_update e user_update devono essere valorizzati</span>
 
 <span class="c1">-- Test STORICO: verifica snapshot</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">storico</span><span class="p">.</span><span class="n">categorie_materiali</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">snapshot</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;codice_interno&#39;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;TEST001&#39;</span><span class="p">;</span>
-<span class="c1">-- deve esserci una riga con lo snapshot prima dell&#39;update</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">snapshot</span><span class="o">-&gt;&gt;</span><span class="s1">'codice_interno'</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'TEST001'</span><span class="p">;</span>
+<span class="c1">-- deve esserci una riga con lo snapshot prima dell'update</span>
 
 <span class="c1">-- Cleanup test</span>
 <span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">categorie_materiali</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;TEST001&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'TEST001'</span><span class="p">;</span>
 </code></pre></div>
 <h3 id="54-controlla-laudit-log">5.4 Controlla l'audit log<a class="headerlink" href="#54-controlla-laudit-log" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">executed_at</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">rule_type</span><span class="p">,</span><span class="w"> </span><span class="n">message</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">audit_log</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">&#39;table&#39;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;categorie_materiali&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">params</span><span class="o">-&gt;&gt;</span><span class="s1">'table'</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'categorie_materiali'</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">executed_at</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
 <span class="c1">-- tutti gli status devono essere OK</span>
 </code></pre></div>
@@ -6204,20 +6204,20 @@
 <p>Se la tabella ha <code>codice_interno</code> (come nel nostro esempio), potresti voler bloccare la modifica di questa colonna dopo l'inserimento.</p>
 <h3 id="61-verifica-se-la-regola-lock_columns-esiste">6.1 Verifica se la regola LOCK_COLUMNS esiste<a class="headerlink" href="#61-verifica-se-la-regola-lock_columns-esiste" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automation_rules_tbl</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">rule_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;LOCK_COLUMNS&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">rule_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'LOCK_COLUMNS'</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
 </code></pre></div>
 <h3 id="62-se-vuoi-aggiungere-colonne-extra-oltre-a-codice_interno">6.2 Se vuoi aggiungere colonne extra (oltre a codice_interno)<a class="headerlink" href="#62-se-vuoi-aggiungere-colonne-extra-oltre-a-codice_interno" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automation_lock_columns</span>
 <span class="w">    </span><span class="p">(</span><span class="n">target_schema</span><span class="p">,</span><span class="w"> </span><span class="n">target_table</span><span class="p">,</span><span class="w"> </span><span class="k">column_name</span><span class="p">,</span><span class="w"> </span><span class="n">error_code</span><span class="p">,</span><span class="w"> </span><span class="n">exec_mode</span><span class="p">,</span><span class="w"> </span><span class="n">enabled</span><span class="p">)</span>
 <span class="k">VALUES</span>
-<span class="w">    </span><span class="p">(</span><span class="s1">&#39;catalogo&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;categorie_materiali&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ERR_LOCK_PK&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">);</span>
+<span class="w">    </span><span class="p">(</span><span class="s1">'catalogo'</span><span class="p">,</span><span class="w"> </span><span class="s1">'categorie_materiali'</span><span class="p">,</span><span class="w"> </span><span class="s1">'id'</span><span class="p">,</span><span class="w"> </span><span class="s1">'ERR_LOCK_PK'</span><span class="p">,</span><span class="w"> </span><span class="s1">'AUTO'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">);</span>
 </code></pre></div>
 <h3 id="63-esegui-il-runner">6.3 Esegui il runner<a class="headerlink" href="#63-esegui-il-runner" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Dry-run</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations_lock_columns</span><span class="p">(</span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;catalogo&#39;</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">true</span><span class="p">);</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations_lock_columns</span><span class="p">(</span><span class="s1">'AUTO'</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'catalogo'</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">true</span><span class="p">);</span>
 
 <span class="c1">-- Apply</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations_lock_columns</span><span class="p">(</span><span class="s1">&#39;AUTO&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">&#39;catalogo&#39;</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">false</span><span class="p">);</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_run_automations_lock_columns</span><span class="p">(</span><span class="s1">'AUTO'</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="s1">'catalogo'</span><span class="err">\</span><span class="p">],</span><span class="w"> </span><span class="k">false</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h2 id="passo-7-opzionale-policy-indici-fk">Passo 7 (opzionale) – Policy indici FK<a class="headerlink" href="#passo-7-opzionale-policy-indici-fk" title="Permanent link">&para;</a></h2>
@@ -6230,7 +6230,7 @@
 
 <span class="c1">-- 3. Verifica cosa e stato registrato</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fk_index_policy</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">child_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;categorie_materiali&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">child_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'categorie_materiali'</span><span class="p">;</span>
 
 <span class="c1">-- 4. Apply (crea gli indici mancanti dove consentito)</span>
 <span class="k">CALL</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">apply_fk_index_policy</span><span class="p">();</span>
@@ -6390,9 +6390,9 @@ Domenica @ 23:00
 <div class="highlight"><pre><span></span><code><span class="c1">-- Ultimi 20 esiti dei job di automazione</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">jobname</span><span class="p">,</span><span class="w"> </span><span class="n">stepname</span><span class="p">,</span><span class="w"> </span><span class="n">started_at</span><span class="p">,</span><span class="w"> </span><span class="n">ended_at</span><span class="p">,</span><span class="w"> </span><span class="n">ok</span><span class="p">,</span><span class="w"> </span><span class="n">rows_affected</span><span class="p">,</span><span class="w"> </span><span class="n">message</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">maintenance</span><span class="p">.</span><span class="n">job_run_log</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">jobname</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;automations_%&#39;</span>
-<span class="w">   </span><span class="k">OR</span><span class="w"> </span><span class="n">jobname</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;apply_%&#39;</span>
-<span class="w">   </span><span class="k">OR</span><span class="w"> </span><span class="n">jobname</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;sync_%&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">jobname</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">'automations_%'</span>
+<span class="w">   </span><span class="k">OR</span><span class="w"> </span><span class="n">jobname</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">'apply_%'</span>
+<span class="w">   </span><span class="k">OR</span><span class="w"> </span><span class="n">jobname</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">'sync_%'</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">started_at</span><span class="w"> </span><span class="k">DESC</span>
 <span class="k">LIMIT</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
 

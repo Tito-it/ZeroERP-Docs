@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5323,6 +5323,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#emittente_ragione_sociale-r-4-18-08-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5418,10 +5429,10 @@ flusso inverso, <code>REVERSE_FLOW</code>) ma nel backlog sì: hanno lavoro arre
 </table>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Il lavoro di oggi: gli arretrati interni piu&#39; vecchi.</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Il lavoro di oggi: gli arretrati interni piu' vecchi.</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">area</span><span class="p">,</span><span class="w"> </span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">cliente_display</span><span class="p">,</span><span class="w"> </span><span class="n">motivo_fermo</span><span class="p">,</span><span class="w"> </span><span class="n">azione</span><span class="p">,</span><span class="w"> </span><span class="n">anzianita_giorni</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_dash_backlog_documenti</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">classe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;RECUPERABILE&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">classe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'RECUPERABILE'</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">anzianita_giorni</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
 </code></pre></div>
 <hr />
@@ -5443,6 +5454,35 @@ flusso inverso, <code>REVERSE_FLOW</code>) ma nel backlog sì: hanno lavoro arre
 <li>Il timestamp di transito (DL-5) <strong>non serve qui</strong>: gli elementi del backlog
   non sono ancora transitati — l'anzianità v1 resta sulla data documento.</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-dash-backlog-v1.sql</code>.</li>
+</ul>
+<hr />
+<hr />
+<h3 id="emittente_ragione_sociale-r-4-18-08-2026">🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em><a class="headerlink" href="#emittente_ragione_sociale-r-4-18-08-2026" title="Permanent link">&para;</a></h3>
+<p>Il nome dell'emittente arriva in coda alla proiezione, su <strong>tutti e tre</strong> i rami.</p>
+<p>⚠️ <strong>Qui il problema era doppio</strong>, e la seconda metà è la più insidiosa:</p>
+<ol>
+<li>come per la Situazione aperta, la proiezione è a colonne <strong>esplicite</strong> e non
+   eredita dalla vista a monte;</li>
+<li>i due rami <strong>RESI</strong> non hanno <code>emittente_soggetto_ruolo_id</code> (lì è <code>NULL</code>) ma
+   hanno <code>emittente_fiscale_id</code>. Risolvere il nome solo dal soggetto-ruolo
+   avrebbe lasciato muto <strong>l'intero blocco resi</strong> — e siccome i resi sono una
+   minoranza delle righe, sarebbe passato per «qualche riga senza emittente»
+   invece che per un ramo mai risolto.</li>
+</ol>
+<p>⭐ <strong>La cura è una sola catena di JOIN, non due.</strong>
+<code>emittenti_fiscali.soggetto_ruolo_id</code> è <code>NOT NULL</code> con <code>UNIQUE</code>: fra emittente
+fiscale e soggetto-ruolo c'è una corrispondenza uno-a-uno. Basta un <code>COALESCE</code>
+sulla <strong>chiave</strong> — prima il soggetto-ruolo se c'è, altrimenti quello dedotto
+dall'id fiscale — e la risoluzione del nome resta scritta una volta.</p>
+<p>⚠️ <code>emittente_soggetto_ruolo_id</code> sui rami resi <strong>resta <code>NULL</code></strong> come prima.
+Valorizzarla sarebbe un miglioramento vero, ma è un cambio di semantica di una
+colonna esistente e va deciso a parte.</p>
+<p>⚠️ <strong>Il flag <code>multi_emittente</code> della lista NON si accende insieme alla colonna.</strong>
+Si guadagna dopo, quando la colonna mostra un nome su dati veri (brief
+perimetro-emittente §7, decisione 3). Il controllo automatico
+<code>dbops.vw_liste_multi_emittente_non_certificate</code> deve restare a zero righe.</p>
+<ul>
+<li>Test: <code>db/pgtap/vendite/test-viste-dash-emittente-v1.sql</code>.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

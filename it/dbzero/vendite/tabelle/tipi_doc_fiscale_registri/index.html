@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5312,6 +5312,34 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-08-18-il-mapping-diventa-tipo_doc-natura-registro-serie" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-08-18 — il mapping diventa <code>(tipo_doc, natura) → (registro, serie)</code>
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 rev 2026-08-18 — il mapping diventa (tipo_doc, natura) → (registro, serie)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#e-qui-che-registro-proprio-o-serie-dedicata-diventa-una-riga-di-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ È qui che «registro proprio o serie dedicata?» diventa una riga di seed
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5365,6 +5393,65 @@ numerazione e la contabilizzazione dei documenti.</p>
 <li>mapping <strong>multiplo</strong> per <code>tipo_doc_fiscale_id</code> verso registri diversi.</li>
 <li>la selezione del registro e<code>determinata da</code>vendite.fn_get_registro_id`.</li>
 </ul>
+<hr />
+<hr />
+<h3 id="rev-2026-08-18-il-mapping-diventa-tipo_doc-natura-registro-serie">🔄 rev 2026-08-18 — il mapping diventa <code>(tipo_doc, natura) → (registro, serie)</code><a class="headerlink" href="#rev-2026-08-18-il-mapping-diventa-tipo_doc-natura-registro-serie" title="Permanent link">&para;</a></h3>
+<p>Brief: <code>brief-design-note-credito-resi</code> (slice <strong>N2</strong>, §12.4-bis.3).</p>
+<div class="highlight"><pre><span></span><code>PRIMA    (tipo_doc)          →  registro
+ORA      (tipo_doc, natura)  →  (registro, serie)
+</code></pre></div>
+<p>Questa tabella <strong>era già</strong> la sede della domanda <em>«dato un tipo di documento, su
+quale registro va?»</em>. La natura è la seconda metà della stessa domanda, non una
+domanda nuova: per questo entra qui e non in una gerarchia a parte.</p>
+<table>
+<thead>
+<tr>
+<th>Colonna nuova</th>
+<th>Ruolo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>natura_doc_id</code></td>
+<td><code>NOT NULL DEFAULT FATTURA</code> → le righe esistenti restano quelle che erano</td>
+</tr>
+<tr>
+<td><code>serie</code></td>
+<td>nullable: <strong>override</strong> del <code>serie_default</code> del registro. <code>NULL</code> = vale il default</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong>La <code>UNIQUE</code> è cambiata</strong>, da <code>(tipo_doc_fiscale_id, registro_id)</code> a
+<code>(tipo_doc_fiscale_id, natura_doc_id, registro_id)</code>. Senza, mappare fattura e
+nota di credito sullo <strong>stesso</strong> registro con due serie diverse — che è l'altra
+metà della scelta — sarebbe stato vietato da un vincolo che non sa della natura.
+Il vincolo va allargato <strong>prima</strong> del seed, o il seed non entra.</p>
+<h4 id="e-qui-che-registro-proprio-o-serie-dedicata-diventa-una-riga-di-seed">⭐ È qui che «registro proprio o serie dedicata?» diventa una riga di seed<a class="headerlink" href="#e-qui-che-registro-proprio-o-serie-dedicata-diventa-una-riga-di-seed" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Se il seed dice…</th>
+<th>Effetto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stesso <code>registro_id</code>, <code>serie = 'NC'</code></td>
+<td>serie a parte <strong>dentro</strong> il registro vendite</td>
+</tr>
+<tr>
+<td><code>registro_id</code> diverso</td>
+<td><strong>sezionale proprio</strong>, progressivo e <code>reset_policy</code> indipendenti</td>
+</tr>
+</tbody>
+</table>
+<p>Entrambe funzionano senza una riga di codice diversa, ed entrambe restano
+cambiabili dopo. È la forma che il progetto usa per le scelte che appartengono
+all'azienda e non allo sviluppatore — <code>tipi_reso.riapre_residuo</code>,
+<code>causali_trasporto.fatturabile</code>: nessun <code>IF</code> cablato, si legge il flag.</p>
+<p>⚠️ <strong><code>NOTA_DEBITO</code> non ha mapping</strong>, ed è voluto: <code>fn_get_registro_id</code> risponde
+<code>E_CONFIG_MANCANTE</code>. Nessuno ha ancora deciso su quale registro numerarla, e
+ripiegare su quello delle fatture la emetterebbe nel posto sbagliato in silenzio.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

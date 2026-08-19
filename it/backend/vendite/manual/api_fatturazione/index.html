@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5542,9 +5542,29 @@ oneri di una commessa. Un solo verbo, due perimetri: il processo è identico
 <ul>
 <li><code>POST /api/v1/vendite/fatturazione/numera/</code> · permesso <code>numera_fatture_lotti</code></li>
 <li>Body: <code>{ "competenza_mese": "YYYY-MM-DD" }</code></li>
-<li>Accoda un job <code>FATTURAZIONE_NUMERA</code>: esegue lo step DEFINITIVA (numera + accoda
-  stampa) sui <strong>lotti EMESSA</strong> del mese. Polling via <code>run/&lt;job_id&gt;/</code>.</li>
+<li>Accoda un job <code>FATTURAZIONE_NUMERA</code>: esegue lo step DEFINITIVA sui <strong>lotti
+  EMESSA</strong> del mese. Polling via <code>run/&lt;job_id&gt;/</code>.</li>
 </ul>
+<p>⭐ <strong>Lo step DEFINITIVA ha tre task, dal 2026-08-18</strong> (prima due):</p>
+<div class="highlight"><pre><span></span><code>numera_fatture  →  popola_fatture_rettifiche  →  stampa_documenti_lotto
+</code></pre></div>
+<p><code>popola_fatture_rettifiche</code> proietta il legame documento-a-documento delle
+<strong>note di credito</strong> (<code>vendite.fatture_rettifiche</code>) da ciò che le righe già
+dicono (<code>fatture_righe.riga_rettificata_id</code>). Idempotente
+(<code>ON CONFLICT DO NOTHING</code>), non cancella mai.</p>
+<p>⚠️ <strong>Sta in mezzo, e le due ragioni non sono intercambiabili</strong>: <em>dopo</em> la
+numerazione perché prima un reset di lotto può ancora passare e
+<code>fn_cleanup_fatture_by_ids</code> <strong>non</strong> cancella <code>fatture_rettifiche</code> (la FK non è
+<code>ON DELETE CASCADE</code>); <em>prima</em> della stampa perché una TD04 porta
+<code>DatiFattureCollegate</code>, cioè numero e data del documento rettificato. L'ordine è
+<strong>dichiarato</strong> in <code>_TASK_ORDER_DEPENDENCIES</code> e verificato <strong>prima</strong> che il primo
+task scriva, non lasciato al solo seed.</p>
+<p>⚠️ <strong>Fail-fast per fattura</strong>, a differenza di <code>genera_scadenze_lotto</code> e
+<code>snapshot_indirizzi_lotto</code> che chiudono in esito parziale: qui la stampa viene
+subito dopo e <strong>consuma</strong> il legame, quindi proseguire non lascerebbe una riga
+da rilavorare — stamperebbe un documento fiscale incompleto. La <code>task_policy</code> è
+<code>RESUME_TASK</code>: il rilancio riprende dal task fallito, e l'idempotenza rende
+innocuo il secondo giro.</p>
 <h3 id="4-rendi-definitive-singolo-lotto-c-4-sincrono">4. «Rendi definitive» singolo lotto (C-4, sincrono)<a class="headerlink" href="#4-rendi-definitive-singolo-lotto-c-4-sincrono" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>POST /api/v1/vendite/fatturazione/lotti/&lt;lotto_id&gt;/numera/</code> · permesso <code>numera_fatture_lotti</code></li>
@@ -5569,14 +5589,14 @@ oneri di una commessa. Un solo verbo, due perimetri: il processo è identico
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Accodamento (run / numera perimetro):
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;job_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">555</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;stato&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PENDING&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;request_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"job_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">555</span><span class="p">,</span><span class="w"> </span><span class="nt">"stato"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PENDING"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nt">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"request_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div></li>
 <li>Polling (<code>run/&lt;job_id&gt;/</code>):
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">555</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;job_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FATTURAZIONE_GIRO&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;stato&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;FATTO&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;tentativi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;max_tentativi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;lane&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;senza_emittente&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;falliti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;ultimo_errore&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;job_run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">555</span><span class="p">,</span><span class="w"> </span><span class="nt">"job_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FATTURAZIONE_GIRO"</span><span class="p">,</span><span class="w"> </span><span class="nt">"stato"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FATTO"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"tentativi"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"max_tentativi"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"lane"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">"senza_emittente"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"falliti"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"ultimo_errore"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">"job_run_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span>
 <span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
   Stati: <code>PENDING</code> → <code>IN_CORSO</code> → <code>FATTO</code> | <code>ERRORE</code> | <code>ANNULLATO</code>. Il <code>result</code>

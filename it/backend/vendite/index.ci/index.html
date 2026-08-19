@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5325,24 +5325,64 @@
 <h1 id="area-vendite-backend">Area 'vendite' (Backend)<a class="headerlink" href="#area-vendite-backend" title="Permanent link">&para;</a></h1>
 <h2 id="api">API<a class="headerlink" href="#api" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../manual/api_listini/">api_listini</a> — Esporre via HTTP la gestione completa dei listini vendite: anagrafica, versioni, righe prezzo, associazioni e test del resolver.</li>
-<li><a href="../manual/api_run_lotto_pipeline/">api_run_lotto_pipeline</a> — Esporre via HTTP l'avvio della pipeline lotto vendite.</li>
+<li><a href="../manual/api_approvazioni_prezzo/">api_approvazioni_prezzo</a> — Workflow <strong>L3 approvazione out-of-policy</strong> per override prezzo che violano i limiti L2 configurati: l'operatore richiede approvazione, l'approver (utente con approva_prezzo_override) decide approva/rifiuta dalla coda de…</li>
+<li><a href="../manual/api_commessa_attivita/">api_commessa_attivita</a> — Esporre via HTTP la lista paginata delle attività (commesse_attivita) di una commessa, con filtri opzionali per stato emissione, stato approvazione e mese di competenza.</li>
+<li><a href="../manual/api_commessa_oneri/">api_commessa_oneri</a> — Caricare su una commessa una <strong>voce di puro valore</strong> (onere): una riga commesse_attivita con quantita = 1 fissa, tipo_movimento = 'ONERE', già APPROVATA, il cui prezzo <strong>è</strong> l'importo dell'onere.</li>
+<li><a href="../manual/api_commessa_stato/">api_commessa_stato</a> — Sulla risorsa stato di una commessa:</li>
+<li><a href="../manual/api_commesse_pricing/">api_commesse_pricing</a> — Esporre via HTTP le operazioni di gestione prezzo su attivita` di commessa: riallineamento da listino (N5), variazione eccezionale manuale (N7) e sblocco prezzo bloccato (N7-sblocco).</li>
+<li><a href="../manual/api_commesse_push_log/">api_commesse_push_log</a> — Esporre via HTTP il dettaglio di un singolo push log commesse, per consultazione operativa e diagnostica delle esecuzioni push.</li>
+<li><a href="../manual/api_contratti/">api_contratti</a> — CRUD operativo dei contratti commerciali cliente-listino, con sub-entita' <strong>righe</strong> (vendite.contratti_righe) e <strong>utility 1:1</strong> (vendite.contratti_utilities). E' il ponte tra il cliente (BA) e il listino di riferimento.</li>
+<li><a href="../manual/api_dashboard_aperto/">api_dashboard_aperto</a> — Espone la <strong>Situazione aperta v2</strong> (serbatoio pre-commessa) dei cruscotti fatturazione: i documenti <strong>aperti-non-chiusi</strong> che, se conclusi, andrebbero in commessa/fatturazione ma non ci sono ancora arrivati. Riepilogo d…</li>
+<li><a href="../manual/api_dashboard_backlog/">api_dashboard_backlog</a> — Espone la Lente 2 Backlog dei cruscotti fatturazione a due lenti: contatori per classe di azionabilità e lista paginata dei documenti non-collegati non-verdi, ordinata per anzianità (i più vecchi prima).</li>
+<li><a href="../manual/api_dashboard_competenza/">api_dashboard_competenza</a> — Espone la Lente 1 Competenza dei cruscotti fatturazione a due lenti: aggregata annuale del funnel commessa → fattura per mese di competenza (4 stadi + breakdown per stato documento fiscale), drill-down paginato a grana…</li>
+<li><a href="../manual/api_ddt/">api_ddt</a> — CRUD operativo dei <strong>DDT di vendita</strong> (documenti di trasporto), gemello strutturale di api_ordini.md (D-4: stessa impronta, logica DDT). Espone testata trasporto, <strong>righe</strong> con <strong>componenti BoM</strong>, <strong>emissione</strong> (DRAFT -…</li>
+<li><a href="../manual/api_fattura_dettaglio/">api_fattura_dettaglio</a> — Esporre via HTTP il <strong>documento fattura completo</strong> per la consultazione a video: testata (cliente, emittente, pagamento, totali già decodificati), righe, riepilogo IVA, piano rate e i <strong>contatori dei badge</strong>, in un solo…</li>
+<li><a href="../manual/api_fatturazione/">api_fatturazione</a> — Documentare gli endpoint di <strong>comando</strong> del cockpit di fatturazione (Fase C): i verbi «Fattura» e «Rendi definitive» del mese di competenza, la numerazione del singolo lotto, la ristampa massiva e la lettura degli esiti…</li>
+<li><a href="../manual/api_fondi_fattura/">api_fondi_fattura</a> — Espone l'elenco paginato dei fondi fattura su cui il giro automatico <strong>si è fermato</strong>, e la decisione resta a un operatore.</li>
+<li><a href="../manual/api_indirizzi_documento/">api_indirizzi_documento</a> — Gestione degli <strong>indirizzi documento</strong> (snapshot congelato + origine soft) per i 5 domini vendite: <strong>preventivi, offerte, ordini, ddt, contratti</strong>. Endpoint identici su tutti i domini, generati dal factory condiviso bui…</li>
+<li><a href="../manual/api_lineage_passaggi/">api_lineage_passaggi</a> — Esporre la <strong>genealogia/lineage</strong> di un documento vendite per il pannello "Passaggi" dei drawer: pratica collegata, <strong>frontiera</strong> (documento più prossimo in esecuzione) e la <strong>catena reale dei transiti</strong> in entrambe le…</li>
+<li><a href="../manual/api_listini/">api_listini</a> — Esporre via HTTP la gestione completa dei listini vendite: anagrafica listino, versioni temporali, righe prezzo, associazioni di contesto e test del resolver prezzo.</li>
+<li><a href="../manual/api_lotti_list/">api_lotti_list</a> — Esporre via HTTP l'elenco paginato dei lotti di fatturazione con filtri opzionali e decodifica delle FK.</li>
+<li><a href="../manual/api_lotto_fatture_list/">api_lotto_fatture_list</a> — Esporre via HTTP l'elenco paginato delle fatture appartenenti a un lotto, con decodifiche FK, filtri opzionali e ordinamento configurabile.</li>
+<li><a href="../manual/api_lotto_segnalazioni_summary/">api_lotto_segnalazioni_summary</a> — Esporre via HTTP il riepilogo segnalazioni attive di un lotto, con indicazione di blocco avanzamento step.</li>
+<li><a href="../manual/api_lotto_task_runs/">api_lotto_task_runs</a> — Esporre via HTTP i task run runtime di un lotto per monitoraggio operativo e diagnostica pipeline.</li>
+<li><a href="../manual/api_offerte/">api_offerte</a> — CRUD operativo delle <strong>offerte commerciali</strong>, documento pre-contrattuale che propone al cliente le condizioni quadro per una specifica utility prima della formalizzazione in contratto. Espone sub-entita' <strong>eccezioni</strong> (…</li>
+<li><a href="../manual/api_ordini/">api_ordini</a> — CRUD operativo (scheletro) degli <strong>ordini di vendita</strong>, documento del ciclo attivo che raccoglie le righe articolo da evadere/fatturare. Espone testata, <strong>righe</strong> con <strong>componenti BoM</strong> (modello unificato), <strong>conferma</strong>…</li>
+<li><a href="../manual/api_pipeline_task/">api_pipeline_task</a> — Il contratto di un <strong>task di pipeline</strong>: cos'è, quali cinque pezzi servono perché esista, che forma ha il suo handler Python, e come si aggiunge un task nuovo senza lasciare una pipeline armata a vuoto.</li>
+<li><a href="../manual/api_preventivi/">api_preventivi</a> — Esporre via HTTP la gestione completa dei preventivi di vendita: CRUD testata, righe, indirizzi, cambio stato, revisioni, integrazione con commesse/fatturazione e pratiche.</li>
+<li><a href="../manual/api_preventivi_collega_pratica/">api_preventivi_collega_pratica</a> — Aggancia un preventivo come <strong>ROOT</strong> a una pratica (pratiche_sorgenti). Usato a PREVENTIVAZIONE sul percorso pratica-first PREVENTIVI: è la <strong>fonte di verità</strong> del legame preventivo↔pratica da cui l'handler vendita.push…</li>
+<li><a href="../manual/api_pricing/">api_pricing</a> — Endpoint diagnostici e di lookup per il sistema pricing v5. Espongono il resolver a 3 stadi (PROMO → CONTRATTO → CATEGORIA) e i limiti L2 di variazione prezzo configurati per l'utente corrente.</li>
+<li><a href="../manual/api_promo_articoli/">api_promo_articoli</a> — CRUD admin per l'overlay promo temporale <strong>STADIO 0</strong> del resolver prezzi v5: una promo attiva per (articolo, uom) in un periodo batte qualunque prezzo da listino o matrice categoria. E' l'unico livello che ammette tipo…</li>
 <li><a href="../manual/api_reset_lotto_draft/">api_reset_lotto_draft</a> — Esporre via HTTP il reset tecnico di un lotto MASSIVO in DRAFT.</li>
+<li><a href="../manual/api_reset_lotto_fattura_draft/">api_reset_lotto_fattura_draft</a> — Esporre via HTTP il reset tecnico di una singola fattura in un lotto MASSIVO in DRAFT.</li>
+<li><a href="../manual/api_resi/">api_resi</a> — Motore <strong>resi di vendita su DDT</strong>: il reso NASCE solo da un DDT <strong>CONSEGNATO</strong> (pannello nel drawer DDT), mai standalone. Clone strutturale ridotto di api_ddt.md: niente componenti BoM / PDF / push / note / riepilogo IV…</li>
+<li><a href="../manual/api_run_commesse_push/">api_run_commesse_push</a> — Esporre via HTTP l'avvio dell'orchestratore push commesse, che sincronizza documenti sorgente (preventivi, ordini, contratti, DDT, consumi) verso commesse e commesse_attivita.</li>
+<li><a href="../manual/api_run_lotto_pipeline/">api_run_lotto_pipeline</a> — Esporre via HTTP l'avvio della pipeline lotto vendite.</li>
+<li><a href="../manual/api_run_lotto_pipeline_until_done/">api_run_lotto_pipeline_until_done</a> — Esporre via HTTP il <strong>driver</strong> della pipeline lotto: a differenza di pipeline/run/ (che esegue <strong>un solo step</strong> per chiamata), questo endpoint <strong>concatena gli step</strong> finché la catena del lotto è conclusa, restituendo un…</li>
+<li><a href="../manual/api_situazione_merce/">api_situazione_merce</a> — Espone in <strong>un round-trip</strong> la situazione della merce di un documento — quanto è uscito, quanto è tornato, quanto è fatturato, cosa resta aperto — per il pannello del cantiere 2. Sola lettura, nessun verbo.</li>
+<li><a href="../manual/api_vendite_form_defaults/">api_vendite_form_defaults</a> — Endpoint <strong>form-defaults</strong> read-only consumati dai drawer FE all'apertura o al cambio di un campo chiave (BA per contratti/preventivi, sorgente per clone versione). Centralizzano lato BE la risoluzione di valori di defa…</li>
+<li><a href="../manual/api_vendite_lookups/">api_vendite_lookups</a> — Endpoint <strong>lookup statici</strong> per gli enum di dominio vendite (Fase 2 refactor frontend vendite): tipi variazione (contratto/promo), ambiti contratto, modalità pricing contratto. Eliminano i magic string cablati nei drawe…</li>
 </ul>
 <h2 id="funzioni">Funzioni<a class="headerlink" href="#funzioni" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../funzioni/fn_execute_pipeline_step/">fn_execute_pipeline_step</a> — Eseguire un singolo step di pipeline, applicando i task definiti nello step corrente.</li>
-<li><a href="../funzioni/run_lotto_pipeline/">run_lotto_pipeline</a> — Orchestrare l'esecuzione della pipeline di fatturazione per un lotto.</li>
+<li><a href="../funzioni/run_lotto_pipeline/">run_lotto_pipeline</a></li>
 </ul>
 <h2 id="altri-contenuti">Altri contenuti<a class="headerlink" href="#altri-contenuti" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../manual/fn_generate_fatture_righe/">fn_generate_fatture_righe</a> — Generare in Django le righe fattura a partire da attivita_fatturabili lockate sul lotto.</li>
 <li><a href="../manual/fn_group_attivita_fatturabili/">fn_group_attivita_fatturabili</a> — Costruire in Django la chiave di aggregazione delle attivita fatturabili.</li>
-<li><a href="../manual/fn_prepare_sdi_payload_lotto/">fn_prepare_sdi_payload_lotto</a> — Reperire il dataset SDI del lotto dal DB con apertura/riuso tentativi.</li>
-<li><a href="../manual/fn_reset_lotto_draft/">fn_reset_lotto_draft</a> — Reset tecnico lotto DRAFT tramite wrapper Django.</li>
-<li><a href="../manual/fn_reset_lotto_fattura_draft/">fn_reset_lotto_fattura_draft</a> — Reset tecnico singola fattura in lotto DRAFT tramite wrapper Django.</li>
-<li><a href="../manual/api_reset_lotto_fattura_draft/">api_reset_lotto_fattura_draft</a> — Endpoint reset singola fattura in lotto DRAFT.</li>
+<li><a href="../manual/fn_prepare_sdi_payload_lotto/">fn_prepare_sdi_payload_lotto</a> — Reperire dal database il dataset SDI di un lotto, aprendo/riusando i tentativi di invio e restituendo le righe da usare per la generazione file.</li>
+<li><a href="../manual/fn_reset_lotto_draft/">fn_reset_lotto_draft</a> — Eseguire il reset tecnico di un lotto MASSIVO in DRAFT invocando la funzione DB.</li>
+<li><a href="../manual/fn_reset_lotto_fattura_draft/">fn_reset_lotto_fattura_draft</a> — Eseguire il reset tecnico di una singola fattura in un lotto MASSIVO DRAFT.</li>
+<li><a href="../manual/modello-contratti/">modello-contratti</a> — Un contratto e' un accordo cliente-fornitore che fissa <strong>come si prezza</strong> un articolo per un cliente specifico, su una specifica utility, per un periodo di validita'. E' il ponte tra:</li>
+<li><a href="../manual/offerte_service/">offerte_service</a> — Facade applicativa CRUD per vendite.offerte_commerciali + eccezioni (mirror di contratti_righe) + utility 1:1 (estensione contratti_utilities), con gestione della state machine di processo (BOZZA / EMESSA / ACCETTATA /…</li>
+<li><a href="../manual/pr_run_lotto_pipeline/">pr_run_lotto_pipeline</a> — Orchestrare l'esecuzione della pipeline di fatturazione per un lotto, gestendo:</li>
+<li><a href="../manual/pricing_service/">pricing_service</a> — Wrapper Python su due funzioni DB del pricing v5:</li>
+<li><a href="../manual/push_preventivo_handler/">push_preventivo_handler</a> — Handler flusso vendita.push_preventivo — orchestratore <strong>CONFERMA_VENDITA</strong>, primo handler reale del motore pratiche. Al passaggio del flusso CONFERMA in IN_CORSO <strong>smista per natura</strong> le righe del preventivo ACCETTATO…</li>
 <li><a href="../manual/template_contratto_iniziale/">template_contratto_iniziale</a> — Template HTML iniziale per la generazione PDF di un contratto commerciale tramite context builder CONTRATTO.</li>
+<li><a href="../manual/template_fattura_contratto/">template_fattura_contratto</a> — Descrivere il <strong>contratto</strong> fra il context builder FATTURA (apps/vendite/services/fattura_document_context_builder.py) e il template documentale Fattura (documenti.template_documenti), cioè quali chiavi il template può…</li>
+<li><a href="../manual/template_offerta_iniziale/">template_offerta_iniziale</a> — Template HTML iniziale per la generazione PDF di un'<strong>offerta commerciale</strong> tramite il context builder OFFERTA_COMMERCIALE. Da copiare in documenti.template_documenti_versioni.html_template come prima versione PUBBLICAT…</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

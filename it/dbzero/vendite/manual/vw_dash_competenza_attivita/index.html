@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5345,6 +5345,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#emittente_ragione_sociale-r-4-18-08-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5434,11 +5445,11 @@ dimensione dei <strong>recuperi tardivi</strong>. L'asse è la competenza <stron
 </table>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Il mese M e&#39; completo? Cosa manca, e cosa e&#39; stato recuperato in ritardo.</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Il mese M e' completo? Cosa manca, e cosa e' stato recuperato in ritardo.</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">stadio</span><span class="p">,</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="w"> </span><span class="k">sum</span><span class="p">(</span><span class="n">valore</span><span class="p">),</span>
 <span class="w">       </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="n">FILTER</span><span class="w"> </span><span class="p">(</span><span class="k">WHERE</span><span class="w"> </span><span class="n">emessa_in_ritardo</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">recuperi_tardivi</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_dash_competenza_attivita</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">competenza_mese</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">DATE</span><span class="w"> </span><span class="s1">&#39;2026-05-01&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">competenza_mese</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">DATE</span><span class="w"> </span><span class="s1">'2026-05-01'</span>
 <span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">stadio</span><span class="p">;</span>
 </code></pre></div>
 <hr />
@@ -5508,6 +5519,31 @@ lo impone), e un campo di <strong>display</strong> che torna <code>NULL</code> p
 che l'operatore legge come «non lo so» invece che come «manca il dato di
 catalogo». <code>codice</code> è <code>NOT NULL</code> ed è la forma leggibile del mutabile: è il
 ripiego giusto.</p>
+<hr />
+<h3 id="emittente_ragione_sociale-r-4-18-08-2026">🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em><a class="headerlink" href="#emittente_ragione_sociale-r-4-18-08-2026" title="Permanent link">&para;</a></h3>
+<p>Il nome dell'emittente <strong>della commessa</strong> arriva in coda alla proiezione.</p>
+<p>⭐ <strong>Il drill-down commesse può metterla nel <code>GROUP BY</code> in sicurezza</strong>, e non è
+una misura sui dati: nella vista quella colonna è <code>co.emittente_soggetto_ruolo_id</code>
+dove <code>co</code> è <code>vendite.commesse</code>, e <code>commessa_id</code> è la sua <strong>chiave primaria</strong>.
+L'emittente è un campo <em>della commessa</em>: una commessa ne ha uno solo per lo
+stesso motivo per cui ha un solo codice, e non può avere attività di emittenti
+diversi perché l'emittente non sta sull'attività. Non è una proprietà dei dati
+che possa cambiare domani.</p>
+<p>⚠️ <strong>La colonna nel <code>GROUP BY</code> serve comunque.</strong> PostgreSQL deduce da sé la
+dipendenza funzionale quando si raggruppa per la chiave primaria di una
+<em>tabella</em>, ma qui si raggruppa su una colonna di <strong>vista</strong>: la deduzione non
+scatta. È innocua, non superflua.</p>
+<p>⚠️ <strong>Due catene distinte sulle stesse tabelle</strong>: <code>sr</code>/<code>s</code> sono il <strong>cliente</strong>
+(via billing account), <code>sr_ef</code>/<code>s_ef</code> l'<strong>emittente</strong>. Scambiarle non darebbe
+nessun errore — solo un nome sbagliato a video.</p>
+<p>⚠️ <strong>Il flag <code>multi_emittente</code> della lista NON si accende insieme alla colonna.</strong>
+Si guadagna dopo, quando la colonna mostra un nome su dati veri (brief
+perimetro-emittente §7, decisione 3). Il controllo automatico
+<code>dbops.vw_liste_multi_emittente_non_certificate</code> deve restare a zero righe.</p>
+<ul>
+<li>Test: <code>db/pgtap/vendite/test-viste-dash-emittente-v1.sql</code>.</li>
+</ul>
+<hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5732,7 +5732,7 @@ ping<span class="w"> </span>-c<span class="w"> </span><span class="m">4</span><s
 </code></pre></div>
 <h3 id="22-vm-risoluzione-dns">2.2 VM: risoluzione DNS<a class="headerlink" href="#22-vm-risoluzione-dns" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>cat<span class="w"> </span>/etc/resolv.conf<span class="w">        </span><span class="c1"># atteso: nameserver 192.168.8.4</span>
-grep<span class="w"> </span><span class="s1">&#39;^hosts:&#39;</span><span class="w"> </span>/etc/nsswitch.conf<span class="w">  </span><span class="c1"># atteso: files dns</span>
+grep<span class="w"> </span><span class="s1">'^hosts:'</span><span class="w"> </span>/etc/nsswitch.conf<span class="w">  </span><span class="c1"># atteso: files dns</span>
 getent<span class="w"> </span>hosts<span class="w"> </span>google.com
 </code></pre></div>
 <p>Blocca/sblocca modifiche a <code>resolv.conf</code>:</p>
@@ -5740,15 +5740,15 @@ getent<span class="w"> </span>hosts<span class="w"> </span>google.com
 sudo<span class="w"> </span>chattr<span class="w"> </span>-i<span class="w"> </span>/etc/resolv.conf<span class="w">     </span><span class="c1"># sblocca</span>
 </code></pre></div>
 <h3 id="23-nodo-unbound-e-in-ascolto">2.3 Nodo: Unbound è in ascolto<a class="headerlink" href="#23-nodo-unbound-e-in-ascolto" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;:53&#39;</span><span class="w">   </span><span class="c1"># atteso: 0.0.0.0:53 (UDP)</span>
-sudo<span class="w"> </span>ss<span class="w"> </span>-ltnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;:53&#39;</span><span class="w">   </span><span class="c1"># atteso: 0.0.0.0:53 (TCP)</span>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">':53'</span><span class="w">   </span><span class="c1"># atteso: 0.0.0.0:53 (UDP)</span>
+sudo<span class="w"> </span>ss<span class="w"> </span>-ltnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">':53'</span><span class="w">   </span><span class="c1"># atteso: 0.0.0.0:53 (TCP)</span>
 </code></pre></div>
 <p>Test dal nodo e da VM:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># sul nodo</span>
 dig<span class="w"> </span>@192.168.8.4<span class="w"> </span>google.com<span class="w"> </span>+short
 
 <span class="c1"># dalla VM</span>
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;nameserver 192.168.8.4&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/resolv.conf
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"nameserver 192.168.8.4"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/resolv.conf
 getent<span class="w"> </span>hosts<span class="w"> </span>google.com
 </code></pre></div>
 <p>Se <strong>VM non risolve ma nodo sì</strong> → probabile blocco su pve‑firewall <strong>HOST</strong>.</p>
@@ -5819,7 +5819,7 @@ Oppure file: <code>/etc/pve/nodes/proxmox-node1/host.fw</code></p>
 <span class="w">  </span><span class="na">do-tcp</span><span class="o">:</span><span class="w"> </span><span class="s">yes</span>
 
 <span class="na">forward-zone</span><span class="o">:</span>
-<span class="w">  </span><span class="na">name</span><span class="o">:</span><span class="w"> </span><span class="s">&quot;.&quot;</span>
+<span class="w">  </span><span class="na">name</span><span class="o">:</span><span class="w"> </span><span class="s">"."</span>
 <span class="w">  </span><span class="na">forward-addr</span><span class="o">:</span><span class="w"> </span><span class="s">192.168.8.1</span><span class="w">      </span><span class="c1"># router (consigliato)</span>
 <span class="w">  </span><span class="c1"># alternative pubbliche:</span>
 <span class="w">  </span><span class="c1"># forward-addr: 1.1.1.1</span>
@@ -5828,7 +5828,7 @@ Oppure file: <code>/etc/pve/nodes/proxmox-node1/host.fw</code></p>
 </code></pre></div>
 <p>Controllo e restart:</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>unbound-checkconf<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>unbound
-sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;:53&#39;</span>
+sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">':53'</span>
 </code></pre></div>
 <hr />
 <h2 id="5-tailscale">5) Tailscale<a class="headerlink" href="#5-tailscale" title="Permanent link">&para;</a></h2>
@@ -5838,7 +5838,7 @@ sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </sp
 <h3 id="52-nodo-come-exit-node">5.2 Nodo come Exit Node<a class="headerlink" href="#52-nodo-come-exit-node" title="Permanent link">&para;</a></h3>
 <p>Sul nodo:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># forwarding richiesto per exit node (persistente)</span>
-<span class="nb">echo</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;net.ipv4.ip_forward=1\nnet.ipv6.conf.all.forwarding=1&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/sysctl.d/99-tailscale-exit.conf
+<span class="nb">echo</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">"net.ipv4.ip_forward=1\nnet.ipv6.conf.all.forwarding=1"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/sysctl.d/99-tailscale-exit.conf
 sudo<span class="w"> </span>sysctl<span class="w"> </span>--system
 
 <span class="c1"># annuncia exit node (poi approva da Admin Console)</span>
@@ -5861,7 +5861,7 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="
 <h3 id="62-avvio-affidabile-dopo-rete-e-tailscale">6.2 Avvio affidabile (dopo rete e Tailscale)<a class="headerlink" href="#62-avvio-affidabile-dopo-rete-e-tailscale" title="Permanent link">&para;</a></h3>
 <p>Override systemd:</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/systemd/system/postgresql@17-main.service.d
-sudo<span class="w"> </span>tee<span class="w"> </span>/etc/systemd/system/postgresql@17-main.service.d/override.conf<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+sudo<span class="w"> </span>tee<span class="w"> </span>/etc/systemd/system/postgresql@17-main.service.d/override.conf<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;'EOF'</span>
 <span class="s">\[Unit\]</span>
 <span class="s">After=network-online.target tailscaled.service</span>
 <span class="s">Wants=network-online.target</span>
@@ -5877,10 +5877,10 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class=
 </code></pre></div>
 <h3 id="63-listen-accessi">6.3 Listen &amp; accessi<a class="headerlink" href="#63-listen-accessi" title="Permanent link">&para;</a></h3>
 <p><strong>Opzione A (consigliata):</strong> <code>listen_addresses='*'</code> e limito con pg_hba + firewall</p>
-<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s/^#\?listen_addresses.*/listen_addresses = &#39;*&#39;/&#39;&quot;</span><span class="w"> </span>/etc/postgresql/17/main/postgresql.conf
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">"s/^#\?listen_addresses.*/listen_addresses = '*'/'"</span><span class="w"> </span>/etc/postgresql/17/main/postgresql.conf
 </code></pre></div>
 <p><code>pg_hba.conf</code> (LAN + Tailscale):</p>
-<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/postgresql/17/main/pg_hba.conf<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/postgresql/17/main/pg_hba.conf<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;'EOF'</span>
 <span class="s"># LAN 192.168.8.0/24</span>
 <span class="s">host    all     all     192.168.8.0/24        md5</span>
 <span class="s"># Tailscale 100.64.0.0/10</span>
@@ -5941,7 +5941,7 @@ git<span class="w"> </span>pull<span class="w"> </span>--rebase<span class="w"> 
 <p><div class="highlight"><pre><span></span><code>pve-firewall<span class="w"> </span>status
 </code></pre></div>
 3. <strong>Unbound</strong> in ascolto su <code>0.0.0.0:53</code>:</p>
-<p><div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;:53&#39;</span>
+<p><div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ss<span class="w"> </span>-lunp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">':53'</span>
 </code></pre></div>
 4. <strong>DNS VM</strong> punta al nodo:</p>
 <p><div class="highlight"><pre><span></span><code>cat<span class="w"> </span>/etc/resolv.conf
@@ -5967,7 +5967,7 @@ sudo<span class="w"> </span>iptables<span class="w"> </span>-L<span class="w"> <
 </code></pre></div>
 <h3 id="dns-troubleshooting">DNS troubleshooting<a class="headerlink" href="#dns-troubleshooting" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># VM</span>
-nc<span class="w"> </span>-zu<span class="w"> </span><span class="m">192</span>.168.8.4<span class="w"> </span><span class="m">53</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;UDP 53 reach OK&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;UDP 53 reach FAIL&quot;</span>
+nc<span class="w"> </span>-zu<span class="w"> </span><span class="m">192</span>.168.8.4<span class="w"> </span><span class="m">53</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"UDP 53 reach OK"</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"UDP 53 reach FAIL"</span>
 dig<span class="w"> </span>@192.168.8.4<span class="w"> </span>google.com<span class="w"> </span>+time<span class="o">=</span><span class="m">2</span><span class="w"> </span>+tries<span class="o">=</span><span class="m">1</span>
 
 <span class="c1"># Nodo</span>
@@ -5984,7 +5984,7 @@ b<span class="o">)</span><span class="w"> </span>sudo<span class="w"> </span>tai
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>pg_lsclusters
 sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>postgresql@17-main<span class="w"> </span>--no-pager
 sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>postgresql@17-main
-sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;select version();&#39;</span>
+sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql<span class="w"> </span>-c<span class="w"> </span><span class="s1">'select version();'</span>
 </code></pre></div>
 <h3 id="git">Git<a class="headerlink" href="#git" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># HTTPS</span>

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5570,7 +5570,7 @@ leggere la veste corrente dal GUC <code>app.ruolo_applicativo</code> (popolato d
 middleware <code>JwtAuditAuthentication</code>) e passarla alla fn:</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_profili_accesso_applicabili</span><span class="p">(</span>
 <span class="w">    </span><span class="n">p_auth_user_id</span><span class="p">,</span>
-<span class="w">    </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.ruolo_applicativo&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)::</span><span class="n">config</span><span class="p">.</span><span class="n">ruolo_applicativo</span>
+<span class="w">    </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">'app.ruolo_applicativo'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">''</span><span class="p">)::</span><span class="n">config</span><span class="p">.</span><span class="n">ruolo_applicativo</span>
 <span class="p">);</span>
 </code></pre></div>
 <p><strong>Stato corrente (04-05-2026):</strong> i 4 resolver chiamanti
@@ -5615,14 +5615,14 @@ l'isolamento veste e' garantito da (a) permission class per namespace,
 <hr />
 <h3 id="esempi-duso">Esempi d'uso<a class="headerlink" href="#esempi-duso" title="Permanent link">&para;</a></h3>
 <p><strong>In una funzione resolver</strong> (pattern §4.8):</p>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Trova il livello per l&#39;area &#39;vendite&#39;</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Trova il livello per l'area 'vendite'</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">paa</span><span class="p">.</span><span class="n">livello</span>
 <span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_get_profili_accesso_applicabili</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span><span class="w"> </span><span class="n">h</span>
 <span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">profili_accesso_aree</span><span class="w"> </span><span class="n">paa</span>
 <span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">paa</span><span class="p">.</span><span class="n">profilo_accesso_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h</span><span class="p">.</span><span class="n">profilo_accesso_id</span>
 <span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">aree_funzionali</span><span class="w"> </span><span class="n">af</span>
 <span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paa</span><span class="p">.</span><span class="n">area_id</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">schema_db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;vendite&#39;</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">schema_db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'vendite'</span>
 <span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">h</span><span class="p">.</span><span class="n">priorita</span>
 <span class="w"> </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 </code></pre></div>
@@ -5648,7 +5648,7 @@ l'isolamento veste e' garantito da (a) permission class per namespace,
 <span class="w">      </span><span class="k">FROM</span><span class="w"> </span><span class="n">livelli</span>
 <span class="w">     </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">area_id</span><span class="p">,</span><span class="w"> </span><span class="n">priorita</span>
 <span class="p">)</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">schema_db</span><span class="p">,</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">livello</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;BLOCCATO&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">livello</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">schema_db</span><span class="p">,</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">b</span><span class="p">.</span><span class="n">livello</span><span class="p">,</span><span class="w"> </span><span class="s1">'BLOCCATO'</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">livello</span>
 <span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">aree_funzionali</span><span class="w"> </span><span class="n">af</span>
 <span class="w">  </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">best</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">area_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">id</span>
 <span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">af</span><span class="p">.</span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>

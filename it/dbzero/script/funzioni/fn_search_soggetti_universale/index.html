@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5346,6 +5346,78 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#lemittente-nella-riga-r-5-dal-18-08-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        L'emittente nella riga <em>(R-5, dal 18-08-2026)</em>
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="L&#x27;emittente nella riga (R-5, dal 18-08-2026)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#e-aggregata-e-non-e-una-scelta-di-comodo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ È aggregata, e non è una scelta di comodo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ne-segue-che-letichetta-a-video-non-puo-essere-emittente" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Ne segue che l'etichetta a video non può essere «Emittente»
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#la-colonna-e-filtrata-dallo-scope-non-solo-la-riga" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ La colonna è filtrata dallo scope, non solo la riga
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#null-sui-rami-non-cl-e-la-risposta-giusta" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>NULL</code> sui rami non-CL è la risposta giusta
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#non-e-ordinabile" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Non è ordinabile
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ordinamento-dinamico" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5577,6 +5649,11 @@
 <td><code>TEXT</code></td>
 <td><code>string_agg(DISTINCT codice_interno)</code> da utilities</td>
 </tr>
+<tr>
+<td><code>emittente_ragione_sociale</code></td>
+<td><code>TEXT</code></td>
+<td><strong>Dal 18-08-2026 (R-5)</strong> — emittenti presso cui il soggetto è cliente, <strong>aggregati</strong>; <code>NULL</code> sui ruoli non-CL</td>
+</tr>
 </tbody>
 </table>
 <p>Se nessun soggetto corrisponde, la funzione restituisce <strong>zero righe</strong>.</p>
@@ -5587,9 +5664,9 @@ SELECT entita_tabella, entita_colonna_codice
 FROM config.tipi_ruoli WHERE id = p_tipo_ruolo_id
 
 -- Se entita_tabella IS NOT NULL, costruisce:
-v_exists_clause = &#39;OR EXISTS (SELECT 1 FROM &lt;tabella&gt; e
+v_exists_clause = 'OR EXISTS (SELECT 1 FROM &lt;tabella&gt; e
                     WHERE e.soggetto_ruolo_id = sr.id
-                    AND e.&lt;colonna&gt; ILIKE $2)&#39;
+                    AND e.&lt;colonna&gt; ILIKE $2)'
 
 -- Query principale via RETURN QUERY EXECUTE:
 filtered (CTE 1)
@@ -5607,7 +5684,12 @@ with_utility (CTE 2)
   filtered f
     LEFT JOIN clienti cl        ON cl.soggetto_ruolo_id = f.soggetto_ruolo_id
     LEFT JOIN utilities u       ON u.id = cl.utility_id
+    LEFT JOIN soggetti_ruoli sr_ef                       -- R-5 (18-08-2026)
+           ON sr_ef.id = fn_get_ba_emittente_sr_id(cl.billing_account_id)
+          AND ($5 IS NULL OR sr_ef.id = ANY($5))         -- &lt;- filtrata dallo scope
+    LEFT JOIN soggetti s_ef     ON s_ef.id = sr_ef.soggetto_id
   GROUP BY (tutti i campi filtered)
+  -- string_agg su utility_list E su emittente_ragione_sociale
 
 paged (CTE 3)
   COUNT(*) OVER() + ORDER BY dinamico + LIMIT/OFFSET
@@ -5676,8 +5758,16 @@ paged (CTE 3)
 <hr />
 <h3 id="filtro-scope-emittente">Filtro Scope Emittente<a class="headerlink" href="#filtro-scope-emittente" title="Permanent link">&para;</a></h3>
 <p>Il parametro <code>p_emittente_ids</code> filtra i risultati in base agli emittenti fiscali autorizzati. Si applica <strong>solo per tipo ruolo CL</strong> (clienti).</p>
+<p>⚠️ <strong>Dal 2026-08-18 il parametro NON decide piu' da solo.</strong> La funzione risolve
+lo scope <strong>da se'</strong>, dalla GUC <code>app.current_user_id</code> via
+<code>script.fn_get_emittenti_scope_sr_effettivo</code>, e <code>p_emittente_ids</code> puo' solo
+<strong>RESTRINGERE</strong>: nessun valore passato dal chiamante puo' allargare cio' che la
+funzione mostra. Prima il filtro si accendeva su <code>p_emittente_ids IS NOT NULL</code>,
+quindi <code>NULL</code> valeva «nessuna restrizione» — ed e' cio' in cui Python appiattisce
+la lista vuota, che significa l'opposto.</p>
 <ul>
-<li><strong><code>NULL</code></strong> = nessuna restrizione (ADMIN o utente senza scope)</li>
+<li><strong><code>NULL</code></strong> = nessuna restrizione <strong>richiesta dal chiamante</strong> (vale lo scope di
+  diritto: universo per il super admin, la sua whitelist per l'operatore)</li>
 <li><strong>Array valorizzato</strong> = mostra solo clienti il cui billing_account e' collegato a uno degli emittenti autorizzati</li>
 <li><strong><code>'{}'::bigint&#91;&#93;</code></strong> = nessun accesso (zero risultati)</li>
 </ul>
@@ -5698,6 +5788,47 @@ paged (CTE 3)
 <p>Stessa funzione usata anche da <code>fn_get_search_detail</code>. Allineamento a <code>clienti_repository.list_clienti</code> lato Python.</p>
 </blockquote>
 <p>Per ruoli non-CL (FO, EF, VT, ...) il parametro viene ignorato.</p>
+<hr />
+<h3 id="lemittente-nella-riga-r-5-dal-18-08-2026">L'emittente nella riga <em>(R-5, dal 18-08-2026)</em><a class="headerlink" href="#lemittente-nella-riga-r-5-dal-18-08-2026" title="Permanent link">&para;</a></h3>
+<p>La colonna <code>emittente_ragione_sociale</code> esiste per un caso concreto:</p>
+<blockquote>
+<p>Due clienti <strong>omonimi</strong>, di due emittenti diversi, sono a video <strong>due righe
+identiche</strong>. Chi cerca ne sceglie una e non ha modo di sapere quale.</p>
+</blockquote>
+<p>L'etichetta di perimetro che il frontend mostra sopra i risultati (<em>«stai
+cercando in tutti gli emittenti»</em>) dichiara <strong>dove</strong> si sta cercando, ma non
+distingue le due righe. Serve il dato <strong>nella</strong> riga.</p>
+<h4 id="e-aggregata-e-non-e-una-scelta-di-comodo">⚠️ È aggregata, e non è una scelta di comodo<a class="headerlink" href="#e-aggregata-e-non-e-una-scelta-di-comodo" title="Permanent link">&para;</a></h4>
+<p>Un soggetto può avere billing account sotto <strong>più</strong> emittenti — sull'istanza di
+sviluppo era già vero per 1 cliente su 7. L'alternativa (una riga per emittente)
+è stata scartata perché sarebbe <strong>concettualmente sbagliata</strong>:</p>
+<blockquote>
+<p><strong>La riga della ricerca è un soggetto, e un soggetto NON ha un emittente.</strong>
+Il legame è solo transitivo, via billing account — vedi
+<a href="../../../../guide/soggetti-e-ruoli-anagrafici/">soggetti-e-ruoli-anagrafici §5a-bis</a>.</p>
+</blockquote>
+<p>Moltiplicare i soggetti per una proprietà che non è loro romperebbe anche
+<code>total_count</code>, che oggi conta soggetti.</p>
+<h4 id="ne-segue-che-letichetta-a-video-non-puo-essere-emittente">⚠️ Ne segue che l'etichetta a video non può essere «Emittente»<a class="headerlink" href="#ne-segue-che-letichetta-a-video-non-puo-essere-emittente" title="Permanent link">&para;</a></h4>
+<p>Su una riga-soggetto quella colonna mostra una <strong>relazione</strong>, non un attributo.
+Chiamarla «Emittente» insegnerebbe un modello falso: <em>«Emittenti presso cui è
+cliente»</em>, o simile. È una scelta di frontend, ma nasce da un vincolo di dominio.</p>
+<h4 id="la-colonna-e-filtrata-dallo-scope-non-solo-la-riga">⚠️ La colonna è filtrata dallo scope, non solo la riga<a class="headerlink" href="#la-colonna-e-filtrata-dallo-scope-non-solo-la-riga" title="Permanent link">&para;</a></h4>
+<p>È il punto meno ovvio. Non basta che la <strong>riga</strong> sia visibile: se un soggetto è
+cliente di A e di B, e chi guarda ha in whitelist il solo A, la riga si vede (via
+A) ma la colonna deve dire <strong>«A»</strong>, non «A, B». Altrimenti una colonna nata per
+disambiguare finirebbe per rivelare l'esistenza di un emittente <strong>fuori
+perimetro</strong>.</p>
+<p>Con scope <code>NULL</code> (super admin) il filtro non morde e si vedono tutti: è
+esattamente il caso per cui la colonna è stata chiesta.</p>
+<h4 id="null-sui-rami-non-cl-e-la-risposta-giusta"><code>NULL</code> sui rami non-CL è la risposta giusta<a class="headerlink" href="#null-sui-rami-non-cl-e-la-risposta-giusta" title="Permanent link">&para;</a></h4>
+<p>Un fornitore non ha billing account, quindi non ha emittente. La funzione non ne
+inventa uno; il frontend mostra l'etichetta solo dove il valore c'è.</p>
+<h4 id="non-e-ordinabile">Non è ordinabile<a class="headerlink" href="#non-e-ordinabile" title="Permanent link">&para;</a></h4>
+<p><code>emittente_ragione_sociale</code> <strong>non</strong> è nella whitelist di <code>p_order_by</code>, ed è
+voluto: è un aggregato, quindi ordinarci sopra ordinerebbe per la <em>stringa
+concatenata</em> — non per emittente. Se un giorno servirà, sarà una decisione di
+merito, non un'aggiunta meccanica alla lista.</p>
 <hr />
 <h3 id="ordinamento-dinamico">Ordinamento Dinamico<a class="headerlink" href="#ordinamento-dinamico" title="Permanent link">&para;</a></h3>
 <p>L'ordinamento e' controllato dai parametri <code>p_order_by</code> e <code>p_order_dir</code>:</p>
@@ -5799,43 +5930,47 @@ paged (CTE 3)
 <h3 id="esempi-di-utilizzo">Esempi di Utilizzo<a class="headerlink" href="#esempi-di-utilizzo" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- 1) Ricerca clienti per nome, prima pagina</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_search_soggetti_universale</span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;Rossi&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="s1">'Rossi'</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
 <span class="p">);</span>
 
 <span class="c1">-- 2) Ricerca fornitori per P.IVA parziale</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_search_soggetti_universale</span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;0123456&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="s1">'0123456'</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
 <span class="p">);</span>
 
 <span class="c1">-- 3) Ricerca clienti per codice billing_account</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_search_soggetti_universale</span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;BA-001&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="s1">'BA-001'</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
 <span class="p">);</span>
 
 <span class="c1">-- 4) Ricerca banche per bank_code</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_search_soggetti_universale</span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;03069&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="s1">'03069'</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
 <span class="p">);</span>
 
 <span class="c1">-- 5) Seconda pagina (offset 50)</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_search_soggetti_universale</span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;Rossi&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span>
+<span class="w">  </span><span class="s1">'Rossi'</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span>
 <span class="p">);</span>
 
 <span class="c1">-- 6) Ordinamento per codice soggetto, discendente</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_search_soggetti_universale</span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;Rossi&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;soggetto_codice&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;DESC&#39;</span>
+<span class="w">  </span><span class="s1">'Rossi'</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s1">'soggetto_codice'</span><span class="p">,</span><span class="w"> </span><span class="s1">'DESC'</span>
 <span class="p">);</span>
 
 <span class="c1">-- 7) Ordinamento per id_fiscale_univoco, ascendente</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_search_soggetti_universale</span><span class="p">(</span>
-<span class="w">  </span><span class="s1">&#39;Rossi&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;id_fiscale_univoco&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ASC&#39;</span>
+<span class="w">  </span><span class="s1">'Rossi'</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s1">'id_fiscale_univoco'</span><span class="p">,</span><span class="w"> </span><span class="s1">'ASC'</span>
 <span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="caratteristiche-tecniche">Caratteristiche Tecniche<a class="headerlink" href="#caratteristiche-tecniche" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Volatilita'</strong>: <code>STABLE</code> + <code>PARALLEL SAFE</code> — non modifica dati, puo' essere parallelizzata.</li>
+<li><strong>Volatilita'</strong>: <code>STABLE</code>. ⚠️ <code>PARALLEL SAFE</code> è stato <strong>tolto il 18-08-2026</strong>: la
+  funzione chiama <code>fn_get_emittenti_scope_sr_effettivo</code>, che è <code>STABLE</code> e basta —
+  tenerla <code>SAFE</code> sarebbe stata una dichiarazione falsa al planner. Il costo reale è
+  ~zero: la query dinamica interna resta parallelizzabile, perché lo scope si
+  risolve <strong>prima</strong>, in una variabile, e non dentro la query.</li>
 <li><strong>Linguaggio</strong>: PL/pgSQL</li>
 <li><strong>SQL dinamico</strong>: <code>RETURN QUERY EXECUTE</code> con <code>format()</code> per il frammento EXISTS. La tabella e' validata come <code>regclass</code> dal trigger guard su <code>tipi_ruoli</code>.</li>
 <li><strong>Tipi colonne</strong>: <code>%TYPE</code> per allineamento automatico ai tipi delle tabelle sorgente.</li>

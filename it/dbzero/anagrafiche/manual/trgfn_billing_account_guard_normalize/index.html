@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5381,25 +5381,73 @@ Il trigger <code>anagrafiche.trgfn_billing_account_guard_normalize</code> applic
 <h3 id="logica-operativa">Logica Operativa<a class="headerlink" href="#logica-operativa" title="Permanent link">&para;</a></h3>
 <ol>
 <li>
-<p><strong>Normalizzazione <code>codice (account)</code></strong></p>
+<p><strong>Genitore diverso da se stesso</strong> — un billing account non puo' essere
+   genitore di se stesso.</p>
 </li>
 <li>
-<p>Se <code>NEW.codice</code> è valorizzato, viene normalizzato (trim).</p>
+<p><strong>Data di inizio obbligatoria</strong> — se c'e' un genitore, la validita' deve
+   partire da una data.</p>
 </li>
 <li>
-<p><strong>Restituzione record</strong></p>
-</li>
-<li>
-<p>Il record <code>NEW</code>, opportunamente modificato, viene ritornato al motore di PostgreSQL, che prosegue l’operazione di INSERT o UPDATE.</p>
+<p><strong>Coerenza del soggetto fiscale fra genitore e figlio</strong> <em>(rivisto 18-08-26)</em></p>
 </li>
 </ol>
+<p>E' il controllo che impedisce di appendere un billing account sotto quello di
+   <strong>un'altra persona o azienda</strong>. Procede in tre gradini:</p>
+<ul>
+<li><strong>il genitore non si raggiunge</strong> → si rifiuta. Puo' voler dire che non
+     esiste, oppure che <strong>esiste ma e' fuori dal perimetro di chi sta
+     scrivendo</strong>: la lettura passa dalle regole di visibilita' per emittente, e
+     il controllo non finge di distinguere due cose che non puo' distinguere.
+     ⚠️ Prima di questa revisione il caso cadeva sull'errore <em>«identificativi
+     fiscali diversi»</em> — su due codici fiscali <strong>identici</strong>. Un messaggio che
+     nominava la causa sbagliata;</li>
+<li><strong>manca il codice fiscale da una delle due parti</strong> → il confronto fiscale
+     non e' utilizzabile come prova, quindi si confronta il <strong>soggetto</strong>, che
+     c'e' sempre. Due billing account della <strong>stessa</strong> persona senza codice
+     fiscale restano legittimi; due di persone <strong>diverse</strong> vengono rifiutati.
+     ⚠️ Prima passavano entrambi: <code>NULL</code> confrontato con <code>NULL</code> non risulta
+     diverso, ed era il classico buco del dato mancante in una chiave;</li>
+<li>
+<p><strong>entrambi i codici fiscali presenti</strong> → si confrontano. Due soggetti
+     diversi con lo <strong>stesso</strong> codice fiscale continuano a passare, ed e'
+     voluto: quella e' identita' fiscale, che e' cio' che il controllo presidia.</p>
+</li>
+<li>
+<p><strong>Coerenza delle date di validita'</strong> — la fine non puo' precedere l'inizio.</p>
+</li>
+<li>
+<p><strong>Distacco dal genitore</strong> — non si puo' togliere il genitore a un billing
+   account che ha ancora attivita' da fatturare: spezzerebbe la catena che porta
+   al documento.</p>
+</li>
+<li>
+<p><strong>Restituzione record</strong> — il record viene ritornato al motore, che prosegue
+   l'operazione.</p>
+</li>
+</ul>
+<blockquote>
+<p>ℹ️ La normalizzazione del <code>codice</code> e' rimasta un posto riservato: la
+generazione vera e' demandata al sistema automatico dei codici.</p>
+</blockquote>
 <hr />
 <h3 id="impatto-e-vantaggi">Impatto e Vantaggi<a class="headerlink" href="#impatto-e-vantaggi" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Consistenza</strong>: garantisce che nessun record venga creato senza un codice di fatturazione.</li>
 <li><strong>Automazione</strong>: la generazione del codice e' gestita dal trigger automatico su <code>config.sistema_codici</code>.</li>
 <li><strong>Estendibilita</strong>: la configurazione e' centralizzata in <code>config.sistema_codici</code> per tutte le tabelle.</li>
+<li><strong>Nessun dato mancante che apre una porta</strong> <em>(18-08-26)</em>: dove il codice
+  fiscale non c'e', il controllo ripiega sul soggetto invece di lasciar passare.
+  E dove il genitore non si vede, lo dice — invece di attribuire il rifiuto a
+  una causa che non c'entra.</li>
 </ul>
+<blockquote>
+<p>ℹ️ <strong>Questo controllo non guarda l'emittente.</strong> Che un albero non attraversi
+due emittenti fiscali e' presidiato a parte, da
+<a href=".././fn_guard_albero_ba_emittente/"><code>fn_guard_albero_ba_emittente</code></a>:
+sono due domande diverse — <em>«e' la stessa persona?»</em> e <em>«e' lo stesso
+emittente?»</em> — e tenerle separate e' voluto.</p>
+</blockquote>
 <hr />
 <h3 id="note-operative">⚠️ Note Operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>

@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5848,15 +5848,15 @@ popola i GUC che rappresentano la veste applicativa della richiesta:</p>
 dalla whitelist applicativa generale.</p>
 <h2 id="esecuzione-provisioning-admin-db">Esecuzione provisioning (admin DB)<a class="headerlink" href="#esecuzione-provisioning-admin-db" title="Permanent link">&para;</a></h2>
 <p>Eseguire da host che raggiunge PostgreSQL con un utente amministrativo.</p>
-<div class="highlight"><pre><span></span><code>psql<span class="w"> </span><span class="s2">&quot;host=&lt;DB_HOST&gt; port=5432 dbname=zeroerp user=&lt;ADMIN_DB_USER&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>psql<span class="w"> </span><span class="s2">"host=&lt;DB_HOST&gt; port=5432 dbname=zeroerp user=&lt;ADMIN_DB_USER&gt;"</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-v<span class="w"> </span><span class="nv">app_role</span><span class="o">=</span>zeroerp_app<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-v<span class="w"> </span><span class="nv">app_password</span><span class="o">=</span><span class="s1">&#39;&lt;PASSWORD_FOR_ZEROERP_APP&gt;&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="nv">app_password</span><span class="o">=</span><span class="s1">'&lt;PASSWORD_FOR_ZEROERP_APP&gt;'</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-v<span class="w"> </span><span class="nv">migrator_role</span><span class="o">=</span>titodb<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-f<span class="w"> </span>scripts/sql/provision_db_roles.sql
 </code></pre></div>
 <h2 id="verifica-grant-runtime">Verifica grant runtime<a class="headerlink" href="#verifica-grant-runtime" title="Permanent link">&para;</a></h2>
 <p>Controllo rapido dei grant oggetto/schema:</p>
-<div class="highlight"><pre><span></span><code>psql<span class="w"> </span><span class="s2">&quot;host=&lt;DB_HOST&gt; port=5432 dbname=zeroerp user=&lt;ADMIN_DB_USER&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>psql<span class="w"> </span><span class="s2">"host=&lt;DB_HOST&gt; port=5432 dbname=zeroerp user=&lt;ADMIN_DB_USER&gt;"</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-v<span class="w"> </span><span class="nv">app_role</span><span class="o">=</span>zeroerp_app<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-f<span class="w"> </span>scripts/sql/check_db_role_access.sql
 </code></pre></div>
@@ -5865,7 +5865,7 @@ dalla whitelist applicativa generale.</p>
 comportamento RLS. Controllare anche:</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">rolname</span><span class="p">,</span><span class="w"> </span><span class="n">rolcanlogin</span><span class="p">,</span><span class="w"> </span><span class="n">rolbypassrls</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">pg_roles</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">rolname</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;zeroerp_app&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;titodb&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;postgres&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;zeroerp_batch_fatturazione&#39;</span><span class="p">);</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">rolname</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">'zeroerp_app'</span><span class="p">,</span><span class="w"> </span><span class="s1">'titodb'</span><span class="p">,</span><span class="w"> </span><span class="s1">'postgres'</span><span class="p">,</span><span class="w"> </span><span class="s1">'zeroerp_batch_fatturazione'</span><span class="p">);</span>
 </code></pre></div>
 <p>Atteso:</p>
 <ul>
@@ -5883,16 +5883,16 @@ comportamento RLS. Controllare anche:</p>
 <span class="k">FROM</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="k">c</span>
 <span class="k">JOIN</span><span class="w"> </span><span class="n">pg_namespace</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">n</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relnamespace</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">nspname</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="p">)</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;fatture&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;fatture_scadenze&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;fatturazione_lotti&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ordini&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;preventivi&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;contratti&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;vendite&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;offerte_commerciali&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;documenti&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;documenti_generati&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;pratiche&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pratiche&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(</span><span class="s1">&#39;anagrafiche&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;billing_account&#39;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'vendite'</span><span class="p">,</span><span class="w"> </span><span class="s1">'fatture'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'vendite'</span><span class="p">,</span><span class="w"> </span><span class="s1">'fatture_scadenze'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'vendite'</span><span class="p">,</span><span class="w"> </span><span class="s1">'fatturazione_lotti'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'vendite'</span><span class="p">,</span><span class="w"> </span><span class="s1">'ordini'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'vendite'</span><span class="p">,</span><span class="w"> </span><span class="s1">'preventivi'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'vendite'</span><span class="p">,</span><span class="w"> </span><span class="s1">'contratti'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'vendite'</span><span class="p">,</span><span class="w"> </span><span class="s1">'offerte_commerciali'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'documenti'</span><span class="p">,</span><span class="w"> </span><span class="s1">'documenti_generati'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'pratiche'</span><span class="p">,</span><span class="w"> </span><span class="s1">'pratiche'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(</span><span class="s1">'anagrafiche'</span><span class="p">,</span><span class="w"> </span><span class="s1">'billing_account'</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
 </code></pre></div>

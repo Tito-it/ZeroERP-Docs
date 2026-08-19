@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5323,6 +5323,56 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-08-18-la-natura-entra-la-serie-esce" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-08-18 — la natura entra, la SERIE esce
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 rev 2026-08-18 — la natura entra, la SERIE esce">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#la-natura-e-un-filtro-esatto-non-un-livello-di-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ La natura è un filtro ESATTO, non un livello di fallback
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#perche-restituisce-anche-la-serie" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Perché restituisce anche la serie
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-cosi-registro-proprio-o-serie-dedicata-diventa-una-riga-di-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ E così «registro proprio o serie dedicata?» diventa una riga di seed
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5407,6 +5457,56 @@ in base al mapping <strong>tipo documento → registro</strong>, considerando ut
 <li>Funzione pensata per la numerazione e per i processi che richiedono il registro contabile.</li>
 <li>Le varianti sono gestite tramite registri con utility/emittente valorizzati.</li>
 </ul>
+<hr />
+<hr />
+<h3 id="rev-2026-08-18-la-natura-entra-la-serie-esce">🔄 rev 2026-08-18 — la natura entra, la SERIE esce<a class="headerlink" href="#rev-2026-08-18-la-natura-entra-la-serie-esce" title="Permanent link">&para;</a></h3>
+<p>Brief: <code>brief-design-note-credito-resi</code> (slice <strong>N2</strong>).</p>
+<p>La firma e il <strong>tipo di ritorno</strong> sono cambiati (<code>DROP</code> + <code>CREATE</code>: un
+<code>CREATE OR REPLACE</code> non cambia un tipo di ritorno):</p>
+<div class="highlight"><pre><span></span><code>prima    fn_get_registro_id(tipo_doc, utility, emittente)          → bigint
+ora      fn_get_registro_id(tipo_doc, NATURA, utility, emittente)  → TABLE(registro_id, serie)
+</code></pre></div>
+<p>La natura entra in <strong>seconda posizione</strong>, accanto al tipo documento, perché i due
+sono la coppia che identifica la riga di mapping; utility ed emittente restano il
+raffinamento.</p>
+<h4 id="la-natura-e-un-filtro-esatto-non-un-livello-di-fallback">⚠️ La natura è un filtro ESATTO, non un livello di fallback<a class="headerlink" href="#la-natura-e-un-filtro-esatto-non-un-livello-di-fallback" title="Permanent link">&para;</a></h4>
+<p>Il fallback a quattro livelli (utility+emittente → utility → emittente → nessuno
+dei due) è la gerarchia di specificità del <strong>registro</strong> e resta identico. La
+natura no: se il mapping per <code>(tipo_doc, NOTA_CREDITO)</code> non esiste, la risposta è
+<code>E_CONFIG_MANCANTE</code>. Ripiegare sulla fattura emetterebbe <strong>una nota di credito
+nel registro delle fatture</strong>, in silenzio.</p>
+<h4 id="perche-restituisce-anche-la-serie">Perché restituisce anche la serie<a class="headerlink" href="#perche-restituisce-anche-la-serie" title="Permanent link">&para;</a></h4>
+<p>Perché è il mapping a saperlo, e perché <code>vendite.fatture.serie</code> <strong>non era mai
+stata scritta dalla pipeline</strong>: restava <code>NULL</code> e la numerazione cadeva sul
+<code>serie_default</code> del registro. Va benissimo finché esiste una serie sola per
+registro; smette di funzionare nel momento in cui due nature devono numerare
+separate <strong>dentro</strong> lo stesso registro.</p>
+<p>⚠️ La serie esce <strong>grezza</strong> (l'override del mapping), non <code>COALESCE</code>-ata sul
+default del registro: scrivere il default dentro <code>fatture.serie</code>, dove oggi c'è
+<code>NULL</code>, cambierebbe il valore di una colonna <strong>su documenti già emessi</strong>.</p>
+<h4 id="e-cosi-registro-proprio-o-serie-dedicata-diventa-una-riga-di-seed">⭐ E così «registro proprio o serie dedicata?» diventa una riga di seed<a class="headerlink" href="#e-cosi-registro-proprio-o-serie-dedicata-diventa-una-riga-di-seed" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Se il seed dice…</th>
+<th>Effetto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stesso <code>registro_id</code>, <code>serie = 'NC'</code></td>
+<td>le note di credito numerano in una serie a parte <strong>dentro</strong> il registro vendite</td>
+</tr>
+<tr>
+<td><code>registro_id</code> diverso</td>
+<td><strong>sezionale proprio</strong>, progressivo e <code>reset_policy</code> indipendenti</td>
+</tr>
+</tbody>
+</table>
+<p>Entrambe funzionano <strong>senza una riga di codice diversa</strong>. È la forma che il
+progetto usa per le scelte che appartengono all'azienda e non allo sviluppatore.
+⭐ La scelta è stata il <strong>sezionale proprio</strong> (D-NC-3b), e lo dice il seed, non
+questa funzione.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

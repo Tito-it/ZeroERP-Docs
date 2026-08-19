@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -62,7 +62,8 @@
     <label class="md-overlay" for="__drawer" aria-label="Navigazione"></label>
     <div data-md-component="skip">
       
-        <a href="#__skip" class="md-skip">
+        
+        <a href="#documentazione-concettuale-funzione-scriptfn_get_emittenti_scope_sr_effettivo" class="md-skip">
           Vai al contenuto
         </a>
       
@@ -5245,6 +5246,11 @@
                     
                     
                     
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
                   
                   <div class="md-sidebar__inner">
                     
@@ -5254,6 +5260,75 @@
   
   
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Indice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#documentazione-concettuale-funzione-scriptfn_get_emittenti_scope_sr_effettivo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        📘 Documentazione Concettuale – Funzione <code>script.fn_get_emittenti_scope_sr_effettivo</code>
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📘 Documentazione Concettuale – Funzione script.fn_get_emittenti_scope_sr_effettivo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scopo-principale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🎯 Scopo Principale
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#il-problema-che-risolve" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Il problema che risolve
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logica-operativa" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Logica Operativa
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impatto-e-vantaggi" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Impatto e Vantaggi
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -5273,6 +5348,82 @@
 
   <h1 id="__skip">Fn get emittenti scope sr effettivo</h1>
 
+<h2 id="documentazione-concettuale-funzione-scriptfn_get_emittenti_scope_sr_effettivo">📘 Documentazione Concettuale – Funzione <code>script.fn_get_emittenti_scope_sr_effettivo</code><a class="headerlink" href="#documentazione-concettuale-funzione-scriptfn_get_emittenti_scope_sr_effettivo" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>👀 <strong>Vedi anche</strong></p>
+<p>Approfondimenti funzioni:</p>
+<p><a href="../../manual/fn_get_emittenti_scope_sr_ids/">script.fn_get_emittenti_scope_sr_ids</a></p>
+<p><a href="../../manual/fn_get_emittenti_scope_pk_ids/">script.fn_get_emittenti_scope_pk_ids</a></p>
+</blockquote>
+<hr />
+<h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
+<p>(latest review 18-08-26)</p>
+<p>Risponde a una domanda sola: <strong>quali emittenti fiscali puo' vedere chi sta
+leggendo, tenuto conto anche di una restrizione che il chiamante ha chiesto?</strong></p>
+<p>Il risultato e' l'<strong>intersezione</strong> fra lo scope <em>di diritto</em> (quello che
+l'utente ha) e la restrizione <em>richiesta</em>. La regola che la governa e' una:</p>
+<blockquote>
+<p><strong>Il chiamante puo' solo restringere. Mai allargare.</strong></p>
+</blockquote>
+<hr />
+<h3 id="il-problema-che-risolve">Il problema che risolve<a class="headerlink" href="#il-problema-che-risolve" title="Permanent link">&para;</a></h3>
+<p>Lo scope esce dal database con <strong>tre</strong> significati distinti:</p>
+<table>
+<thead>
+<tr>
+<th>Valore</th>
+<th>Significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NULL</code></td>
+<td>nessuna restrizione: li vede tutti</td>
+</tr>
+<tr>
+<td><code>'{}'</code></td>
+<td>nessun accesso: non ne vede nessuno</td>
+</tr>
+<tr>
+<td>array</td>
+<td>vede solo quelli elencati</td>
+</tr>
+</tbody>
+</table>
+<p>Due funzioni di ricerca ricevevano pero' quell'informazione <strong>di ritorno dal
+backend</strong>, dopo un viaggio attraverso Python. E in Python la lista vuota e il
+"non specificato" sono <strong>entrambi falsi</strong>: ogni modo naturale di scrivere quel
+codice li fonde. I due estremi opposti — <em>tutto</em> e <em>niente</em> — arrivavano
+appiattiti sullo stesso valore, e si appiattivano dalla parte che <strong>apre</strong>.</p>
+<p>Non era una svista di chi aveva scritto quella riga: era un canale che perde per
+costruzione, tanto che la stessa fusione era gia' avvenuta in due punti
+indipendenti.</p>
+<p>Questa funzione non corregge il viaggio: <strong>toglie il viaggio</strong>. Una risposta che
+non esce dal database non puo' degradarsi per strada.</p>
+<hr />
+<h3 id="logica-operativa">Logica Operativa<a class="headerlink" href="#logica-operativa" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Attore nullo</strong> (processo automatico senza utente): non c'e' uno scope di
+   diritto da opporre, quindi vale la sola restrizione del chiamante. E' la
+   convenzione di tutta la famiglia, non un'eccezione locale.</li>
+<li><strong>Scope di diritto uguale a tutto</strong> (super admin): decide il chiamante, che
+   comunque puo' solo restringere.</li>
+<li><strong>Scope di diritto vuoto</strong>: si risponde vuoto, <strong>mai</strong> <code>NULL</code>. E' il punto
+   per cui la funzione esiste: rispondere <code>NULL</code> qui vorrebbe dire <em>«vede
+   tutto»</em>, cioe' ricreare in SQL lo stesso appiattimento che si voleva togliere.</li>
+<li><strong>Nessuna restrizione richiesta</strong>: vale lo scope di diritto.</li>
+<li><strong>Altrimenti</strong>: intersezione dei due insiemi.</li>
+</ol>
+<hr />
+<h3 id="impatto-e-vantaggi">Impatto e Vantaggi<a class="headerlink" href="#impatto-e-vantaggi" title="Permanent link">&para;</a></h3>
+<ul>
+<li>nessun valore passato da fuori puo' <strong>allargare</strong> cio' che una lettura mostra;</li>
+<li>la regola <em>«solo restringente, mai allargante»</em> non e' nuova: e' la stessa con
+  cui l'emittente attivo si combina con lo scope. Qui e' applicata a un
+  parametro invece che a un'impostazione di sessione;</li>
+<li>l'errore Python a valle diventa <strong>innocuo</strong>: continua a scrivere una cosa
+  falsa, ma non decide piu' niente.</li>
+</ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

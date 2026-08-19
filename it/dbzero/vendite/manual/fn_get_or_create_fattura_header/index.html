@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5323,6 +5323,34 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-08-18-natura-e-serie-nel-where-e-nella-insert" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-08-18 — natura e serie nel WHERE <strong>e</strong> nella INSERT
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 rev 2026-08-18 — natura e serie nel WHERE e nella INSERT">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#is-not-distinct-from-sulla-serie-sulla-natura" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ <code>IS NOT DISTINCT FROM</code> sulla serie, <code>=</code> sulla natura
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5382,6 +5410,35 @@ usando la chiave documento (<code>vendite.fn_build_fattura_key</code>) e collega
 <span class="w">  </span><span class="n">p_attivita_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">12345</span>
 <span class="p">);</span>
 </code></pre></div>
+<hr />
+<hr />
+<h3 id="rev-2026-08-18-natura-e-serie-nel-where-e-nella-insert">🔄 rev 2026-08-18 — natura e serie nel WHERE <strong>e</strong> nella INSERT<a class="headerlink" href="#rev-2026-08-18-natura-e-serie-nel-where-e-nella-insert" title="Permanent link">&para;</a></h3>
+<p>Brief: <code>brief-design-note-credito-resi</code> (slice <strong>N3</strong>). Gemello obbligatorio
+della revisione di <code>fn_build_fattura_key</code>.</p>
+<p>La chiave ha ora <strong>undici</strong> elementi. Due trappole, entrambe silenziose:</p>
+<p><strong>1. Chiave che separa + lookup che non separa.</strong> Il commento vivo di questa
+funzione lo diceva già: <em>«se la chiave separa e il lookup no, le due metà si
+annullano e le attività tornano nella stessa fattura»</em>. Per questo il <code>WHERE</code> si
+tocca insieme alla chiave.</p>
+<p><strong>2. Serie calcolata + INSERT che non la scrive.</strong> <code>vendite.fatture.serie</code> <strong>non
+era mai stata scritta da questa INSERT</strong>: restava <code>NULL</code> e
+<code>fn_assign_numero_fattura</code> cadeva sul <code>serie_default</code> del registro. Se la chiave
+la calcolasse e la <code>INSERT</code> non la scrivesse, la nota di credito prenderebbe <strong>un
+numero valido nella serie delle fatture</strong> — cioè un difetto che non solleva nulla
+e si scopre guardando un registro IVA.</p>
+<p>Per questo la serie entra in <strong>tre posti</strong> nello stesso changeSet: il <code>WHERE</code> del
+lookup, l'elenco colonne della <code>INSERT</code> e i suoi valori.</p>
+<h4 id="is-not-distinct-from-sulla-serie-sulla-natura">⚠️ <code>IS NOT DISTINCT FROM</code> sulla serie, <code>=</code> sulla natura<a class="headerlink" href="#is-not-distinct-from-sulla-serie-sulla-natura" title="Permanent link">&para;</a></h4>
+<p>La serie è <strong>nullable</strong> — anzi, con il sezionale proprio è <code>NULL</code> sempre. Con <code>=</code>
+il <code>NULL</code> non combacia mai, quindi <strong>ogni giro aprirebbe una fattura nuova</strong> per
+la totalità dei casi. È la stessa trappola già pagata tre volte in questo
+progetto (reseller, modalità di pagamento, indice d'ambito): la serie è il
+quarto elemento nullable.</p>
+<p>La natura invece è <code>NOT NULL</code> su <code>fatture</code> e su <code>attivita_fatturabili</code>: <code>=</code> è
+corretto, e un confronto permissivo nasconderebbe sotto un'uguaglianza un valore
+che non può mancare. Per la stessa ragione entra nel guard di <strong>completezza</strong>
+della chiave, accanto a <code>utility_id</code>; la serie no, perché <code>NULL</code> è il suo valore
+normale.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

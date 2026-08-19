@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5628,7 +5628,7 @@ dalla FK in <code>INSERT</code> interno.</p>
 </tbody>
 </table>
 <p>Esempio:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;changed&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;scope_mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SINGLE&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;emittente_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">17</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"changed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"scope_mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SINGLE"</span><span class="p">,</span><span class="w"> </span><span class="nt">"emittente_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">17</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
 <h2 id="algoritmo">Algoritmo<a class="headerlink" href="#algoritmo" title="Permanent link">&para;</a></h2>
 <ol>
@@ -5692,9 +5692,9 @@ validazione EF, FOR UPDATE). Il bypass del trigger non ha quindi senso
 "libero": serve solo per consentire il <code>DELETE+INSERT</code> orchestrato. La
 GUC viene resettata immediatamente dopo, così se la transazione
 contiene altre operazioni dopo la fn esse non beneficiano del bypass.</p>
-<div class="highlight"><pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="k">LOCAL</span><span class="w"> </span><span class="n">zeroerp</span><span class="p">.</span><span class="n">allow_user_emittente_delete_override</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;on&#39;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="k">LOCAL</span><span class="w"> </span><span class="n">zeroerp</span><span class="p">.</span><span class="n">allow_user_emittente_delete_override</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'on'</span><span class="p">;</span>
 <span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">user_emittenti_fiscali</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">auth_user_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
-<span class="k">SET</span><span class="w"> </span><span class="k">LOCAL</span><span class="w"> </span><span class="n">zeroerp</span><span class="p">.</span><span class="n">allow_user_emittente_delete_override</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">;</span>
+<span class="k">SET</span><span class="w"> </span><span class="k">LOCAL</span><span class="w"> </span><span class="n">zeroerp</span><span class="p">.</span><span class="n">allow_user_emittente_delete_override</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">''</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="codici-errore">Codici errore<a class="headerlink" href="#codici-errore" title="Permanent link">&para;</a></h2>
 <table>
@@ -5808,19 +5808,19 @@ parametri prima usava <code>RAISE EXCEPTION</code> diretto con SQLSTATE 22023
 <h2 id="esempio">Esempio<a class="headerlink" href="#esempio" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Promuovi un operatore GLOBAL a SINGLE su EF id=17</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_change_user_emittenti_scope</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="mi">17</span><span class="err">\</span><span class="p">]::</span><span class="nb">bigint</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">]);</span>
-<span class="c1">-- {&quot;changed&quot;: true, &quot;scope_mode&quot;: &quot;SINGLE&quot;, &quot;emittente_id&quot;: 17}</span>
+<span class="c1">-- {"changed": true, "scope_mode": "SINGLE", "emittente_id": 17}</span>
 
 <span class="c1">-- No-op (stesso scope)</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_change_user_emittenti_scope</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="mi">17</span><span class="err">\</span><span class="p">]::</span><span class="nb">bigint</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">]);</span>
-<span class="c1">-- {&quot;changed&quot;: false, &quot;scope_mode&quot;: &quot;SINGLE&quot;, &quot;emittente_id&quot;: 17}</span>
+<span class="c1">-- {"changed": false, "scope_mode": "SINGLE", "emittente_id": 17}</span>
 
 <span class="c1">-- Demote a GLOBAL</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_change_user_emittenti_scope</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="k">NULL</span><span class="p">::</span><span class="nb">bigint</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">]);</span>
-<span class="c1">-- {&quot;changed&quot;: true, &quot;scope_mode&quot;: &quot;GLOBAL&quot;, &quot;emittente_id&quot;: null}</span>
+<span class="c1">-- {"changed": true, "scope_mode": "GLOBAL", "emittente_id": null}</span>
 
 <span class="c1">-- Cambio EF (DELETE + INSERT)</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_change_user_emittenti_scope</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="mi">18</span><span class="err">\</span><span class="p">]::</span><span class="nb">bigint</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">]);</span>
-<span class="c1">-- {&quot;changed&quot;: true, &quot;scope_mode&quot;: &quot;SINGLE&quot;, &quot;emittente_id&quot;: 18}</span>
+<span class="c1">-- {"changed": true, "scope_mode": "SINGLE", "emittente_id": 18}</span>
 
 <span class="c1">-- MULTI rifiutato applicativamente</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_change_user_emittenti_scope</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="nb">ARRAY</span><span class="err">\</span><span class="p">[</span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="err">\</span><span class="p">]::</span><span class="nb">bigint</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">]);</span>

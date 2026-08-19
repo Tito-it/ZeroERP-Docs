@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5395,12 +5395,12 @@
 <p>La funzione <strong><code>script.fn_log_and_raise_error</code></strong> unifica logging ed escalation di errori in PL/pgSQL, utilizzando l’estensione <strong>dblink</strong> per inserire record di log in una sessione separata e garantire commit immediato, quindi solleva un’eccezione con messaggio, dettaglio e hint.</p>
 <hr />
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">  </span><span class="n">p_area</span><span class="w">           </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- &#39;database&#39; / &#39;backend&#39; / &#39;frontend&#39; / &#39;job&#39;</span>
+<span class="w">  </span><span class="n">p_area</span><span class="w">           </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- 'database' / 'backend' / 'frontend' / 'job'</span>
 <span class="w">  </span><span class="n">p_function_name</span><span class="w">  </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- nome di trigger o funzione chiamante</span>
 <span class="w">  </span><span class="n">p_error_code</span><span class="w">     </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- codice testuale di messaggio (config.messaggi_errore.codice)</span>
 <span class="w">  </span><span class="n">p_context</span><span class="w">        </span><span class="n">JSONB</span><span class="p">,</span><span class="w">                      </span><span class="c1">-- payload di contesto (parametri, variabili, metadata)</span>
 <span class="w">  </span><span class="n">p_tx_id</span><span class="w">          </span><span class="n">UUID</span><span class="p">,</span><span class="w">                       </span><span class="c1">-- transaction id per correlazione audit (ammesso NULL)</span>
-<span class="w">  </span><span class="n">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="w"> </span><span class="nb">TEXT</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">]</span><span class="w">                     </span><span class="c1">-- valori da sostituire a &#39;%s&#39; nel template messaggio</span>
+<span class="w">  </span><span class="n">VARIADIC</span><span class="w"> </span><span class="n">p_valori</span><span class="w"> </span><span class="nb">TEXT</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">]</span><span class="w">                     </span><span class="c1">-- valori da sostituire a '%s' nel template messaggio</span>
 <span class="p">)</span>
 <span class="k">RETURNS</span><span class="w"> </span><span class="n">VOID</span>
 <span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span>
@@ -5487,7 +5487,7 @@ argomento. Migrazione che ha introdotto il cambio:
 <ol>
 <li><strong>Risoluzione lingua di sessione</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="n">v_lang</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;myapp.user_language&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;it&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="n">v_lang</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">'myapp.user_language'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">'it'</span><span class="p">);</span>
 </code></pre></div>
 <ol>
 <li><strong>Recupero messaggio con fallback lingua</strong></li>
@@ -5505,7 +5505,7 @@ argomento. Migrazione che ha introdotto il cambio:
 <span class="w">  </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_detail</span><span class="p">,</span><span class="w"> </span><span class="n">v_hint</span>
 <span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="mf">.</span><span class="n">messaggi_errore</span>
 <span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_error_code</span>
-<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">lingua</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="n">v_lang</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;it&#39;</span><span class="p">)</span>
+<span class="w">   </span><span class="k">AND</span><span class="w"> </span><span class="n">lingua</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="n">v_lang</span><span class="p">,</span><span class="w"> </span><span class="s1">'it'</span><span class="p">)</span>
 <span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">lingua</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lang</span><span class="p">)</span><span class="w"> </span><span class="k">DESC</span>
 <span class="w"> </span><span class="k">LIMIT</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
 </code></pre></div>
@@ -5527,10 +5527,10 @@ argomento. Migrazione che ha introdotto il cambio:
 <ol>
 <li><strong>Sollevamento dell'eccezione con DETAIL/HINT localizzati e CODICE strutturato</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">RAISE</span><span class="w"> </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="s1">&#39;%&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">v_msg</span>
-<span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="n">ERRCODE</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;P0001&#39;</span><span class="p">,</span>
-<span class="w">          </span><span class="n">DETAIL</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_detail</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">),</span>
-<span class="w">          </span><span class="n">HINT</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_hint</span><span class="p">,</span><span class="w">   </span><span class="s1">&#39;&#39;</span><span class="p">),</span>
+<div class="highlight"><pre><span></span><code><span class="k">RAISE</span><span class="w"> </span><span class="k">EXCEPTION</span><span class="w"> </span><span class="s1">'%'</span><span class="p">,</span><span class="w"> </span><span class="n">v_msg</span>
+<span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="n">ERRCODE</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s1">'P0001'</span><span class="p">,</span>
+<span class="w">          </span><span class="n">DETAIL</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_detail</span><span class="p">,</span><span class="w"> </span><span class="s1">''</span><span class="p">),</span>
+<span class="w">          </span><span class="n">HINT</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="k">coalesce</span><span class="p">(</span><span class="n">v_hint</span><span class="p">,</span><span class="w">   </span><span class="s1">''</span><span class="p">),</span>
 <span class="w">          </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p_error_code</span><span class="p">;</span><span class="w">      </span><span class="c1">-- post 05-08-2026</span>
 </code></pre></div>
 <hr />
@@ -5606,12 +5606,12 @@ dal DB e non scritto nella chiamata).</p>
 <ol>
 <li><strong>Trigger PL/pgSQL con <code>NEW.tx_id</code> + placeholder VARIADIC</strong></li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ERROR&#39;</span><span class="w"> </span><span class="k">THEN</span>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'ERROR'</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">    </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">        </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">'database'</span><span class="p">,</span>
 <span class="w">        </span><span class="n">TG_NAME</span><span class="o">::</span><span class="nb">text</span><span class="p">,</span><span class="w">                              </span><span class="c1">-- cast obbligatorio</span>
-<span class="w">        </span><span class="s1">&#39;ERR_INVALID_STATUS&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">id</span><span class="p">),</span>
+<span class="w">        </span><span class="s1">'ERR_INVALID_STATUS'</span><span class="p">,</span>
+<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">id</span><span class="p">),</span>
 <span class="w">        </span><span class="k">NEW</span><span class="mf">.</span><span class="n">tx_id</span><span class="p">,</span><span class="w">                                  </span><span class="c1">-- p_tx_id UUID</span>
 <span class="w">        </span><span class="k">OLD</span><span class="mf">.</span><span class="n">status</span><span class="o">::</span><span class="nb">text</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">status</span><span class="o">::</span><span class="nb">text</span><span class="w">          </span><span class="c1">-- VARIADIC %s</span>
 <span class="w">    </span><span class="p">);</span>
@@ -5624,10 +5624,10 @@ dal DB e non scritto nella chiamata).</p>
 <span class="w">    </span><span class="c1">-- operazioni...</span>
 <span class="k">EXCEPTION</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">OTHERS</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">    </span><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">        </span><span class="s1">&#39;backend&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;sync_data&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;ERR_TIMEOUT&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">current_user</span><span class="p">),</span>
+<span class="w">        </span><span class="s1">'backend'</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">'sync_data'</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">'ERR_TIMEOUT'</span><span class="p">,</span>
+<span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">'user'</span><span class="p">,</span><span class="w"> </span><span class="k">current_user</span><span class="p">),</span>
 <span class="w">        </span><span class="k">NULL</span><span class="o">::</span><span class="nb">uuid</span><span class="p">,</span><span class="w">                                 </span><span class="c1">-- p_tx_id NULL ammesso</span>
 <span class="w">        </span><span class="n">now</span><span class="p">()</span><span class="o">::</span><span class="nb">text</span><span class="w">                                 </span><span class="c1">-- VARIADIC %s</span>
 <span class="w">    </span><span class="p">);</span>
@@ -5637,10 +5637,10 @@ dal DB e non scritto nella chiamata).</p>
 <li><strong>Caller senza placeholder VARIADIC (solo messaggio statico)</strong></li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="k">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="mf">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">    </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">'database'</span><span class="p">,</span>
 <span class="w">    </span><span class="n">TG_NAME</span><span class="o">::</span><span class="nb">text</span><span class="p">,</span>
-<span class="w">    </span><span class="s1">&#39;E_OPERAZIONE_NON_AMMESSA&#39;</span><span class="p">,</span>
-<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">&#39;versione_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">id</span><span class="p">),</span>
+<span class="w">    </span><span class="s1">'E_OPERAZIONE_NON_AMMESSA'</span><span class="p">,</span>
+<span class="w">    </span><span class="n">jsonb_build_object</span><span class="p">(</span><span class="s1">'versione_id'</span><span class="p">,</span><span class="w"> </span><span class="k">NEW</span><span class="mf">.</span><span class="n">id</span><span class="p">),</span>
 <span class="w">    </span><span class="k">NEW</span><span class="mf">.</span><span class="n">tx_id</span>
 <span class="w">    </span><span class="c1">-- p_valori VARIADIC omesso: il messaggio non ha %s</span>
 <span class="p">);</span>

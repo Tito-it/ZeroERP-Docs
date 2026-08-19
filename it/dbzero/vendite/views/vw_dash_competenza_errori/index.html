@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5323,6 +5323,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#emittente_ragione_sociale-r-4-18-08-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5389,10 +5400,10 @@ lotto o una fattura inceppati, senza andare a caccia nei log.</p>
 <p>Scope emittente in-vista da GUC (fail-closed), <code>security_invoker = on</code>.</p>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">-- C&#39;e&#39; qualcosa di inceppato che tocca la competenza di maggio?</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- C'e' qualcosa di inceppato che tocca la competenza di maggio?</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">tipo_evento</span><span class="p">,</span><span class="w"> </span><span class="n">lotto_codice</span><span class="p">,</span><span class="w"> </span><span class="n">fattura_id</span><span class="p">,</span><span class="w"> </span><span class="n">error_code</span><span class="p">,</span><span class="w"> </span><span class="n">messaggio</span><span class="p">,</span><span class="w"> </span><span class="n">data_evento</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_dash_competenza_errori</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">competenza_mese</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">DATE</span><span class="w"> </span><span class="s1">&#39;2026-05-01&#39;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">competenza_mese</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">DATE</span><span class="w"> </span><span class="s1">'2026-05-01'</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">data_evento</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span>
 </code></pre></div>
 <hr />
@@ -5404,6 +5415,24 @@ lotto o una fattura inceppati, senza andare a caccia nei log.</p>
   produce <strong>una riga per mese</strong>: ogni mese interessato vede il suo problema.</li>
 <li>⚠️ Fail-closed: senza GUC operatore restituisce 0 righe.</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-dash-competenza-v1.sql</code>.</li>
+</ul>
+<hr />
+<hr />
+<h3 id="emittente_ragione_sociale-r-4-18-08-2026">🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em><a class="headerlink" href="#emittente_ragione_sociale-r-4-18-08-2026" title="Permanent link">&para;</a></h3>
+<p>Il nome dell'emittente arriva in coda alla proiezione. La union dei due rami
+(<code>TASK_ERRORE</code> dal <strong>lotto</strong>, <code>FATTURA_CRITICA</code> dalla <strong>fattura</strong>) viene avvolta
+in una CTE e il nome si risolve una volta all'esterno: entrambi i rami portano
+già la chiave, quindi non c'è niente da normalizzare — solo da leggere.</p>
+<p>⚠️ <strong>Il filtro di scope NON è stato accorpato fuori dalla union</strong>, e non è una
+svista: i due rami filtrano su <strong>sorgenti diverse</strong> (l'emittente del lotto e
+quello della fattura), e unificarli significherebbe sceglierne una. Il filtro
+sta dove sta la ragione.</p>
+<p>⚠️ <strong>Il flag <code>multi_emittente</code> della lista NON si accende insieme alla colonna.</strong>
+Si guadagna dopo, quando la colonna mostra un nome su dati veri (brief
+perimetro-emittente §7, decisione 3). Il controllo automatico
+<code>dbops.vw_liste_multi_emittente_non_certificate</code> deve restare a zero righe.</p>
+<ul>
+<li>Test: <code>db/pgtap/vendite/test-viste-dash-emittente-v1.sql</code>.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

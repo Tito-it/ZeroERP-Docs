@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5446,8 +5446,8 @@ non editabili di una <strong>riga specifica</strong>: unisce i lock statici
 <p><code>dbops</code></p>
 <h2 id="firma">Firma<a class="headerlink" href="#firma" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="n">dbops</span><span class="p">.</span><span class="n">fn_non_editable_fields</span><span class="p">(</span>
-<span class="w">    </span><span class="n">p_schema</span><span class="w">     </span><span class="nb">text</span><span class="p">,</span><span class="w">   </span><span class="c1">-- schema tabella target (es. &#39;catalogo&#39;)</span>
-<span class="w">    </span><span class="n">p_table</span><span class="w">      </span><span class="nb">text</span><span class="p">,</span><span class="w">   </span><span class="c1">-- nome tabella target (es. &#39;articoli&#39;)</span>
+<span class="w">    </span><span class="n">p_schema</span><span class="w">     </span><span class="nb">text</span><span class="p">,</span><span class="w">   </span><span class="c1">-- schema tabella target (es. 'catalogo')</span>
+<span class="w">    </span><span class="n">p_table</span><span class="w">      </span><span class="nb">text</span><span class="p">,</span><span class="w">   </span><span class="c1">-- nome tabella target (es. 'articoli')</span>
 <span class="w">    </span><span class="n">p_record_id</span><span class="w">  </span><span class="nb">text</span><span class="w">    </span><span class="c1">-- PK della riga come text (cast a tipo target in condition_expr)</span>
 <span class="p">)</span><span class="w"> </span><span class="k">RETURNS</span><span class="w"> </span><span class="nb">text</span><span class="err">\</span><span class="p">[</span><span class="err">\</span><span class="p">]</span>
 </code></pre></div>
@@ -5457,12 +5457,12 @@ non editabili di una <strong>riga specifica</strong>: unisce i lock statici
 Restituisce <code>ARRAY&#91;&#93;::text&#91;&#93;</code> (mai NULL) se nessun lock e' attivo.</p>
 <p>Esempi:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Articolo senza BoM attive: solo lock statici</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_non_editable_fields</span><span class="p">(</span><span class="s1">&#39;catalogo&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;articoli&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">art_id</span><span class="p">::</span><span class="nb">text</span><span class="p">);</span>
-<span class="c1">-- → &#39;{codice}&#39;</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_non_editable_fields</span><span class="p">(</span><span class="s1">'catalogo'</span><span class="p">,</span><span class="w"> </span><span class="s1">'articoli'</span><span class="p">,</span><span class="w"> </span><span class="n">art_id</span><span class="p">::</span><span class="nb">text</span><span class="p">);</span>
+<span class="c1">-- → '{codice}'</span>
 
 <span class="c1">-- Articolo padre di BoM attiva: lock statici + condizionali</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_non_editable_fields</span><span class="p">(</span><span class="s1">&#39;catalogo&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;articoli&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">art_composito_id</span><span class="p">::</span><span class="nb">text</span><span class="p">);</span>
-<span class="c1">-- → &#39;{codice,is_composito,requires_serial}&#39;</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_non_editable_fields</span><span class="p">(</span><span class="s1">'catalogo'</span><span class="p">,</span><span class="w"> </span><span class="s1">'articoli'</span><span class="p">,</span><span class="w"> </span><span class="n">art_composito_id</span><span class="p">::</span><span class="nb">text</span><span class="p">);</span>
+<span class="c1">-- → '{codice,is_composito,requires_serial}'</span>
 </code></pre></div>
 <hr />
 <h2 id="algoritmo">Algoritmo<a class="headerlink" href="#algoritmo" title="Permanent link">&para;</a></h2>
@@ -5471,7 +5471,7 @@ Restituisce <code>ARRAY&#91;&#93;::text&#91;&#93;</code> (mai NULL) se nessun lo
    filtrata per <code>(target_schema, target_table)</code>.</li>
 <li><strong>Lock condizionali</strong>: loop su <code>dbops.lock_columns_conditional</code> per
    <code>(schema_name, table_name, enabled IS TRUE)</code>. Per ogni riga:
-   <div class="highlight"><pre><span></span><code><span class="k">EXECUTE</span><span class="w"> </span><span class="s1">&#39;SELECT (&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">condition_expr</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;)&#39;</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="n">p_record_id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_match</span>
+   <div class="highlight"><pre><span></span><code><span class="k">EXECUTE</span><span class="w"> </span><span class="s1">'SELECT ('</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">condition_expr</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">')'</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="n">p_record_id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_match</span>
 </code></pre></div>
    Se <code>v_match IS TRUE</code>, aggiunge <code>column_name</code> al risultato.</li>
 <li><strong>Deduplicazione + ordinamento</strong>: <code>ARRAY(SELECT DISTINCT col FROM unnest(...) ORDER BY col)</code>.</li>
@@ -5495,7 +5495,7 @@ La chiamata sostituisce <code>list_non_editable</code> per i detail endpoint che
 <span class="k">def</span><span class="w"> </span><span class="nf">list_non_editable_with_record</span><span class="p">(</span><span class="n">schema</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span>\<span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span>\<span class="p">]:</span>
     <span class="k">with</span> <span class="n">connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
         <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-            <span class="s2">&quot;SELECT dbops.fn_non_editable_fields(</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+            <span class="s2">"SELECT dbops.fn_non_editable_fields(</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)"</span><span class="p">,</span>
             \<span class="p">[</span><span class="n">schema</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">record_id</span>\<span class="p">],</span>
         <span class="p">)</span>
         <span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
@@ -5505,9 +5505,9 @@ La chiamata sostituisce <code>list_non_editable</code> per i detail endpoint che
 <p>Il service usa il risultato per costruire <code>non_editable_fields</code> nel DTO/detail:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Nel service detail</span>
 <span class="n">non_editable</span> <span class="o">=</span> <span class="n">lock_repo</span><span class="o">.</span><span class="n">list_non_editable_with_record</span><span class="p">(</span>
-    <span class="s1">&#39;catalogo&#39;</span><span class="p">,</span> <span class="s1">&#39;articoli&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">articolo</span>\<span class="p">[</span><span class="s1">&#39;id&#39;</span>\<span class="p">])</span>
+    <span class="s1">'catalogo'</span><span class="p">,</span> <span class="s1">'articoli'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">articolo</span>\<span class="p">[</span><span class="s1">'id'</span>\<span class="p">])</span>
 <span class="p">)</span>
-<span class="n">articolo</span>\<span class="p">[</span><span class="s1">&#39;non_editable_fields&#39;</span>\<span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">non_editable</span><span class="p">)</span>
+<span class="n">articolo</span>\<span class="p">[</span><span class="s1">'non_editable_fields'</span>\<span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">non_editable</span><span class="p">)</span>
 </code></pre></div>
 <hr />
 <h2 id="dipendenze">Dipendenze<a class="headerlink" href="#dipendenze" title="Permanent link">&para;</a></h2>

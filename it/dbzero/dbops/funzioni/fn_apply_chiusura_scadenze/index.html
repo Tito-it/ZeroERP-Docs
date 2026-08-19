@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5438,10 +5438,10 @@ tabella + meta-info di esecuzione.</p>
 <hr />
 <h3 id="output-jsonb">Output (JSONB)<a class="headerlink" href="#output-jsonb" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;vendite.listini_versioni&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;vendite.contratti&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;_total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;_executed_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-04-27T00:05:01.234567+02:00&quot;</span>
+<span class="w">  </span><span class="nt">"vendite.listini_versioni"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"vendite.contratti"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"_executed_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-04-27T00:05:01.234567+02:00"</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
@@ -5498,19 +5498,19 @@ del framework. Nessun bypass, nessun GUC, nessun privilegio elevato.</p>
 <h3 id="esempi">Esempi<a class="headerlink" href="#esempi" title="Permanent link">&para;</a></h3>
 <p><strong>1) Esecuzione manuale (debug/recovery):</strong></p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_apply_chiusura_scadenze</span><span class="p">();</span>
-<span class="c1">-- {&quot;vendite.listini_versioni&quot;: 0, &quot;vendite.contratti&quot;: 1, &quot;_total&quot;: 1, &quot;_executed_at&quot;: &quot;...&quot;}</span>
+<span class="c1">-- {"vendite.listini_versioni": 0, "vendite.contratti": 1, "_total": 1, "_executed_at": "..."}</span>
 </code></pre></div>
 <p><strong>2) Esecuzione schedulata via job pgAgent:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Da dentro il job step &#39;run_chiusura_scadenze&#39;:</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Da dentro il job step 'run_chiusura_scadenze':</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_apply_chiusura_scadenze</span><span class="p">();</span>
 </code></pre></div>
 <p><strong>3) Disattivare temporaneamente una tabella prima di eseguire:</strong></p>
 <div class="highlight"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">automazione_chiusura_scadenze</span>
 <span class="w">   </span><span class="k">SET</span><span class="w"> </span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">schema_tabella</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;vendite&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">nome_tabella</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;contratti&#39;</span><span class="p">;</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">schema_tabella</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'vendite'</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">nome_tabella</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'contratti'</span><span class="p">;</span>
 
 <span class="k">SELECT</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">fn_apply_chiusura_scadenze</span><span class="p">();</span>
-<span class="c1">-- {&quot;vendite.listini_versioni&quot;: 0, &quot;_total&quot;: 0, &quot;_executed_at&quot;: &quot;...&quot;}</span>
+<span class="c1">-- {"vendite.listini_versioni": 0, "_total": 0, "_executed_at": "..."}</span>
 </code></pre></div>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>

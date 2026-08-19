@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5351,6 +5351,34 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-08-18-la-coda-sa-cosa-e-gia-stato-accreditato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-08-18 — la coda sa cosa è già stato accreditato
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 rev 2026-08-18 — la coda sa cosa è già stato accreditato">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ma-la-modifica-vera-e-unaltra-la-distribuzione-era-sbagliata" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔴 Ma la modifica vera è un'altra: la distribuzione era sbagliata
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5510,6 +5538,55 @@ coda (il fulfillment rialza <code>evaso</code>, <code>differenza</code> torna a 
   applicativo BE. ⚠️ Ri-specificarla a ogni <code>CREATE OR REPLACE</code>.</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-resi-da-accreditare-contatore-v1.sql</code>.</li>
 </ul>
+<hr />
+<hr />
+<h3 id="rev-2026-08-18-la-coda-sa-cosa-e-gia-stato-accreditato">🔄 rev 2026-08-18 — la coda sa cosa è già stato accreditato<a class="headerlink" href="#rev-2026-08-18-la-coda-sa-cosa-e-gia-stato-accreditato" title="Permanent link">&para;</a></h3>
+<p>Brief: <code>brief-design-note-credito-resi</code> (slice <strong>N9</strong>, rilievo H).</p>
+<p><strong>Due colonne nuove</strong>, in coda dopo <code>etichetta</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>A cosa serve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gia_accreditato</code></td>
+<td>pezzi già accreditati per quella riga di reso, in <strong>unità di merce</strong></td>
+</tr>
+<tr>
+<td><code>blocco_codice</code></td>
+<td>motivo dell'eventuale blocco in forma di <strong>codice</strong> e non di frase (oggi un valore solo: <code>GIA_ACCREDITATO</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Il progetto vieta le capability <code>fn_available_actions_*</code> per riga di lista: le
+liste si gate sui <strong>codici già presenti in riga</strong>, mai con N chiamate. Queste due
+colonne sono ciò che il frontend usa per disabilitare il bottone.</p>
+<h4 id="ma-la-modifica-vera-e-unaltra-la-distribuzione-era-sbagliata">🔴 Ma la modifica vera è un'altra: la distribuzione era sbagliata<a class="headerlink" href="#ma-la-modifica-vera-e-unaltra-la-distribuzione-era-sbagliata" title="Permanent link">&para;</a></h4>
+<p>La coda ripartisce l'accredito della <strong>partita</strong> fra le righe di reso con una
+finestra <code>ORDER BY resi_riga_id</code>, e quella finestra <strong>non sapeva nulla degli
+accrediti già fatti</strong>. Misurato sulla partita 17163 — accredito 8, due righe di
+reso da 5 e da 3:</p>
+<div class="highlight"><pre><span></span><code>prima                  5797 → 5   ·  5799 → 3            ✅
+si accredita 5797, poi l'emissione: l'accredito della partita scende a 3
+dopo, col difetto      5797 → 3   ·  5799 → 0 (sparita)  🔴
+</code></pre></div>
+<p>La riga <strong>già accreditata</strong> tornava a chiedere altri 3; la riga che quei 3 li
+doveva davvero <strong>usciva dalla coda</strong>, e la sua quota diventava irraggiungibile.
+⚠️ È la malattia per cui il cantiere esiste, in una forma nuova.</p>
+<p>✅ La finestra si applica ora alla quantità <strong>ancora accreditabile</strong>
+(<code>quantità − già accreditato</code>, da
+<a href="../../manual/fn_resi_riga_accreditato_partita/"><code>fn_resi_riga_accreditato_partita</code></a>), non
+alla quantità resa.</p>
+<p>⭐ <strong>E ne discende l'idempotenza</strong>: una riga esce dalla coda <strong>al verbo</strong>, non
+alla generazione della fattura. La finestra temporale che il brief descriveva al
+§12.6-E non esiste più — c'è un numero che è già sceso.</p>
+<p>⚠️ <code>gia_accreditato</code> vale zero nella stragrande maggioranza dei casi, <strong>ma non
+per costruzione</strong>: quando l'accredito della partita è minore della quantità resa,
+la riga viene accreditata per meno di quanto ha reso e può tornare in coda per il
+residuo.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

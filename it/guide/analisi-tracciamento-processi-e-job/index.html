@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -6439,12 +6439,12 @@ maintenance (job schedulati)
    ├── Per ogni task:
    │     │
    │     ├── INSERT vendite.fatturazione_lotti_task_runs
-   │     │     task_stato = &#39;IN_ESECUZIONE&#39;, tentativo = N
+   │     │     task_stato = 'IN_ESECUZIONE', tentativo = N
    │     │
    │     ├── Esecuzione handler Python
    │     │     (chiama funzioni SQL di dominio)
    │     │
-   │     ├── UPDATE task_runs → &#39;COMPLETATO&#39; o &#39;ERRORE&#39;
+   │     ├── UPDATE task_runs → 'COMPLETATO' o 'ERRORE'
    │     │     con ended_at, error_code/message se fallito
    │     │
    │     └── In caso di errore SQL:
@@ -6479,22 +6479,22 @@ maintenance (job schedulati)
 <p><strong>1. Registrare il dominio e i task (una tantum):</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Dominio</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">domini_task</span><span class="w"> </span><span class="p">(</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">)</span>
-<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;PRATICHE&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Gestione pratiche&#39;</span><span class="p">);</span>
+<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'PRATICHE'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Gestione pratiche'</span><span class="p">);</span>
 
 <span class="c1">-- Task</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">pipeline_task_registry</span><span class="w"> </span><span class="p">(</span><span class="n">dominio_id</span><span class="p">,</span><span class="w"> </span><span class="n">task_code</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">)</span>
 <span class="k">VALUES</span>
-<span class="w">  </span><span class="p">((</span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">domini_task</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PRATICHE&#39;</span><span class="p">),</span>
-<span class="w">   </span><span class="s1">&#39;assegna_pratica&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Assegnazione pratica a operatore&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">((</span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">domini_task</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PRATICHE&#39;</span><span class="p">),</span>
-<span class="w">   </span><span class="s1">&#39;valida_documenti&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Validazione documenti allegati&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">((</span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">domini_task</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'PRATICHE'</span><span class="p">),</span>
+<span class="w">   </span><span class="s1">'assegna_pratica'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Assegnazione pratica a operatore'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">((</span><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">domini_task</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">codice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'PRATICHE'</span><span class="p">),</span>
+<span class="w">   </span><span class="s1">'valida_documenti'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Validazione documenti allegati'</span><span class="p">);</span>
 
 <span class="c1">-- Implementazione default</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">pipeline_task_registry_impl</span>
 <span class="w">  </span><span class="p">(</span><span class="n">task_registry_id</span><span class="p">,</span><span class="w"> </span><span class="n">implementation_key</span><span class="p">,</span><span class="w"> </span><span class="n">handler_code</span><span class="p">,</span><span class="w"> </span><span class="n">is_default</span><span class="p">)</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;default&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pratiche_assegna_v1&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s1">'default'</span><span class="p">,</span><span class="w"> </span><span class="s1">'pratiche_assegna_v1'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">pipeline_task_registry</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">task_code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;assegna_pratica&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">task_code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'assegna_pratica'</span><span class="p">;</span>
 </code></pre></div>
 <p><strong>2. Creare le tabelle di runtime nel dominio</strong> (seguendo lo schema di vendite):</p>
 <ul>

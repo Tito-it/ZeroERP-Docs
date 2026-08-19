@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5647,7 +5647,7 @@ per assoggettare l'owner non-superuser <code>titodb</code> senza <code>SET ROLE<
 <span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="k">SELECT</span>
 <span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="p">(</span>
 <span class="w">        </span><span class="n">script</span><span class="p">.</span><span class="n">fn_scope_ba_ownership</span><span class="p">(</span>
-<span class="w">            </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.current_identita_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)::</span><span class="nb">bigint</span><span class="p">,</span>
+<span class="w">            </span><span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">'app.current_identita_id'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">''</span><span class="p">)::</span><span class="nb">bigint</span><span class="p">,</span>
 <span class="w">            </span><span class="n">billing_account_id</span>
 <span class="w">        </span><span class="p">)</span>
 <span class="w">    </span><span class="p">);</span>
@@ -5730,7 +5730,7 @@ ulteriormente anche cio' che le permissive avrebbero ammesso.</p>
 <div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="n">POLICY</span><span class="w"> </span><span class="n">rls_fatture_non_annullate</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span>
 <span class="w">    </span><span class="k">AS</span><span class="w"> </span><span class="n">RESTRICTIVE</span>
 <span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="k">SELECT</span>
-<span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="p">(</span><span class="n">stato</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;ANNULLATA&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="p">(</span><span class="n">stato</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">'ANNULLATA'</span><span class="p">);</span>
 </code></pre></div>
 <p>Usare <code>RESTRICTIVE</code> con parsimonia: riduce la componibilita' e va documentato con
 chiarezza, perche' non si combina "naturalmente" con le altre.</p>
@@ -5740,8 +5740,8 @@ chiarezza, perche' non si combina "naturalmente" con le altre.</p>
 <code>JwtAuditAuthentication</code> (backend Django). Riferimento completo:
 <a href=".././parametri-personalizzati-(GUC)/">parametri-personalizzati-(GUC)</a>.</p>
 <p>Pattern raccomandato di lettura sicura del GUC:</p>
-<div class="highlight"><pre><span></span><code><span class="c1">-- Ritorna NULL se il GUC non e&#39; settato, invece di errore</span>
-<span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.current_identita_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)::</span><span class="nb">bigint</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Ritorna NULL se il GUC non e' settato, invece di errore</span>
+<span class="k">NULLIF</span><span class="p">(</span><span class="n">current_setting</span><span class="p">(</span><span class="s1">'app.current_identita_id'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span><span class="w"> </span><span class="s1">''</span><span class="p">)::</span><span class="nb">bigint</span>
 </code></pre></div>
 <p>Il secondo parametro <code>true</code> di <code>current_setting</code> attiva la modalita' "missing_ok":
 invece di sollevare <code>unrecognized configuration parameter</code>, la funzione ritorna stringa
@@ -5796,10 +5796,10 @@ Dentro una policy RLS "mono-scope" e' preferibile leggere solo il GUC direttamen
 <span class="k">ALTER</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="n">zeroerp_migration</span><span class="w">  </span><span class="n">BYPASSRLS</span><span class="p">;</span>
 
 <span class="c1">-- Ruolo applicativo del backend (DB_USER): NON owner, NON bypassa.</span>
-<span class="c1">-- E&#39; il ruolo con cui Django si connette -&gt; soggetto a RLS col solo ENABLE.</span>
+<span class="c1">-- E' il ruolo con cui Django si connette -&gt; soggetto a RLS col solo ENABLE.</span>
 <span class="k">ALTER</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="n">zeroerp_app</span><span class="w">        </span><span class="n">NOBYPASSRLS</span><span class="p">;</span>
 
-<span class="c1">-- Sulle tabelle del ciclo attivo basta ENABLE (zeroerp_app e&#39; non-owner):</span>
+<span class="c1">-- Sulle tabelle del ciclo attivo basta ENABLE (zeroerp_app e' non-owner):</span>
 <span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span><span class="w">   </span><span class="n">ENABLE</span><span class="w"> </span><span class="k">ROW</span><span class="w"> </span><span class="k">LEVEL</span><span class="w"> </span><span class="k">SECURITY</span><span class="p">;</span>
 <span class="c1">-- FORCE NON necessario: nessun owner fa DML applicativo a runtime.</span>
 </code></pre></div>
@@ -5809,7 +5809,7 @@ e ai ruoli di migrazione (che bypassano per natura), i processi headless del bac
 un'identita' operatore via GUC — usano un ruolo <code>BYPASSRLS</code> <strong>dedicato per singolo job</strong>,
 non <code>zeroerp_app</code> ne' <code>postgres</code>/<code>titodb</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Canale di sistema headless, uno per job (oggi: batch di fatturazione)</span>
-<span class="k">ALTER</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="n">zeroerp_batch_fatturazione</span><span class="w"> </span><span class="n">BYPASSRLS</span><span class="p">;</span><span class="w">   </span><span class="c1">-- salta SOLO l&#39;isolamento per-emittente</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="n">zeroerp_batch_fatturazione</span><span class="w"> </span><span class="n">BYPASSRLS</span><span class="p">;</span><span class="w">   </span><span class="c1">-- salta SOLO l'isolamento per-emittente</span>
 <span class="c1">-- ...ma DML concesso SOLO sul perimetro del job: il least-privilege si fa coi GRANT,</span>
 <span class="c1">--    non con la RLS (vendite.ordini, fuori perimetro, resta non scrivibile -&gt; fail-loud).</span>
 </code></pre></div>
@@ -5832,7 +5832,7 @@ Senza conoscere la policy, il bug sembra un problema di dati.</p>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">schemaname</span><span class="p">,</span><span class="w"> </span><span class="n">tablename</span><span class="p">,</span><span class="w"> </span><span class="n">rowsecurity</span><span class="p">,</span><span class="w"> </span><span class="n">forcerowsecurity</span>
 <span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_tables</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">schemaname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;vendite&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">tablename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;fatture&#39;</span><span class="p">;</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">schemaname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'vendite'</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">tablename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'fatture'</span><span class="p">;</span>
 </code></pre></div>
 <ol>
 <li><strong>Elenca le policy installate</strong>:</li>
@@ -5840,13 +5840,13 @@ Senza conoscere la policy, il bug sembra un problema di dati.</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">polname</span><span class="p">,</span><span class="w"> </span><span class="n">polcmd</span><span class="p">,</span><span class="w"> </span><span class="n">polroles</span><span class="p">,</span><span class="w"> </span><span class="n">polqual</span><span class="p">,</span><span class="w"> </span><span class="n">polwithcheck</span>
 <span class="w">  </span><span class="k">FROM</span><span class="w"> </span><span class="n">pg_policy</span><span class="w"> </span><span class="n">p</span>
 <span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">pg_class</span><span class="w"> </span><span class="k">c</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">oid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">polrelid</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;fatture&#39;</span><span class="p">;</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">relname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'fatture'</span><span class="p">;</span>
 </code></pre></div>
 <ol>
 <li><strong>Simula un ruolo</strong> in una sessione di test:</li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="n">zeroerp_app</span><span class="p">;</span>
-<span class="k">SET</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">current_identita_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;42&#39;</span><span class="p">;</span>
+<span class="k">SET</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">current_identita_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'42'</span><span class="p">;</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fatture</span><span class="p">;</span>
 <span class="k">RESET</span><span class="w"> </span><span class="k">ROLE</span><span class="p">;</span>
 </code></pre></div>

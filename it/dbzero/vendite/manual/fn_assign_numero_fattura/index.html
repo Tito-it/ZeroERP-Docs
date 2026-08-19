@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5323,6 +5323,56 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-08-18-la-settima-condizione-del-guard-d-k" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-08-18 — la SETTIMA condizione del guard D-K
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 rev 2026-08-18 — la SETTIMA condizione del guard D-K">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#da-convenzione-a-invariante-verificato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Da convenzione a invariante verificato
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#due-scelte-dentro-la-condizione" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Due scelte dentro la condizione
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-questa-condizione-non-fa" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cosa questa condizione NON fa
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5390,6 +5440,40 @@ in base al registro e aggiorna <code>anno</code>, <code>serie</code> e <code>num
 <span class="w">  </span><span class="n">p_fattura_id</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="mi">123</span>
 <span class="p">);</span>
 </code></pre></div>
+<hr />
+<hr />
+<h3 id="rev-2026-08-18-la-settima-condizione-del-guard-d-k">🔄 rev 2026-08-18 — la SETTIMA condizione del guard D-K<a class="headerlink" href="#rev-2026-08-18-la-settima-condizione-del-guard-d-k" title="Permanent link">&para;</a></h3>
+<p>Brief: <code>brief-design-note-credito-resi</code> (slice <strong>N11</strong>, §12.4-bis.6).</p>
+<div class="highlight"><pre><span></span><code>natura = NOTA_CREDITO   ⟺   totale_a_pagare ≤ 0
+</code></pre></div>
+<h4 id="da-convenzione-a-invariante-verificato">Da convenzione a invariante verificato<a class="headerlink" href="#da-convenzione-a-invariante-verificato" title="Permanent link">&para;</a></h4>
+<p>Con la decisione D-NC-2 il segno della nota di credito <strong>vive nel numero</strong>:
+quantità negativa in catena, totale del documento negativo, e nessun consumatore
+deve sapere che una riga «RETTIFICA» va sottratta. È una scelta forte, e fin qui
+era una <strong>convenzione</strong>: nulla verificava che un documento dichiarato
+<code>NOTA_CREDITO</code> avesse davvero un saldo non positivo.</p>
+<p>⭐ Il guard D-K gira <strong>prima che il progressivo venga consumato</strong> — cioè prima
+del punto in cui la guida dice che l'errore diventa irreparabile: <em>«un numero
+fiscale valido su un documento invalido si ripara solo con una nota di
+variazione»</em>. È esattamente il posto dove metterla, e chiude il cerchio con la
+FatturaPA, dove lo stesso invariante si legge <code>TipoDocumento = TD04 ⟺
+totale_doc &lt; 0</code>.</p>
+<h4 id="due-scelte-dentro-la-condizione">⚠️ Due scelte dentro la condizione<a class="headerlink" href="#due-scelte-dentro-la-condizione" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Lo zero è ammesso da entrambe le parti.</strong> L'equivalenza scritta con <code>≤</code>
+   renderebbe incoerente una fattura a saldo nullo, che è strana ma non
+   sbagliata — e vietarla qui sarebbe una regola <strong>inventata da questo guard</strong>
+   invece che decisa. Si presidia il <strong>segno</strong>, non l'importo;</li>
+<li><strong>La seconda metà dice «diverso da NOTA_CREDITO», non «uguale a FATTURA»</strong>:
+   così copre anche <code>NOTA_DEBITO</code> senza doverla nominare, ed è letteralmente il
+   verso ⟸ dell'equivalenza — un totale negativo può appartenere solo a una nota
+   di credito.</li>
+</ol>
+<h4 id="cosa-questa-condizione-non-fa">Cosa questa condizione NON fa<a class="headerlink" href="#cosa-questa-condizione-non-fa" title="Permanent link">&para;</a></h4>
+<p>Non verifica che la nota di credito abbia le rate a zero: lo fa già la
+<strong>condizione 4</strong> (<em>«un documento non positivo non si rateizza»</em>), ed è scritta
+<code>&lt;= 0</code>, non «assumo positivo». ⭐ Il documento a saldo negativo non è un caso che
+qualcuno deve insegnare alla catena — è un caso che la catena <strong>contempla già</strong>.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

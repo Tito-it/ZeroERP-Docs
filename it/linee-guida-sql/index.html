@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -7250,9 +7250,9 @@ storia e misure: <code>docs/it/dev/work-done/brief-db-pgtap-runner-rls-baseline.
 <li>Se servono <strong>entrambi</strong> (logica + display), esporli <strong>entrambi</strong> con nome fedele (come fanno gia' <code>vw_preventivi_*</code>/<code>vw_ordini_*</code>).</li>
 </ul>
 <p><strong>Guardrail CI</strong> (uccide la classe di bug): un check che fallisce sul pattern mislabel —</p>
-<div class="highlight"><pre><span></span><code>grep<span class="w"> </span>-rEn<span class="w"> </span><span class="s2">&quot;codice_interno\[[:space:\]]+AS\[[:space:\]]+\[a-z_\]*codice\b&quot;</span><span class="w"> </span>db/<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-vE<span class="w"> </span><span class="s2">&quot;AS\[[:space:\]]+\[a-z_\]*codice_interno\b&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="w">   </span><span class="c1"># codice_interno AS *_codice</span>
-grep<span class="w"> </span>-rEn<span class="w"> </span><span class="s2">&quot;\[^_\]codice\[[:space:\]]+AS\[[:space:\]]+\[a-z_\]*codice_interno\b&quot;</span><span class="w"> </span>db/<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="w">  </span><span class="c1"># codice AS *_codice_interno</span>
+<div class="highlight"><pre><span></span><code>grep<span class="w"> </span>-rEn<span class="w"> </span><span class="s2">"codice_interno\[[:space:\]]+AS\[[:space:\]]+\[a-z_\]*codice\b"</span><span class="w"> </span>db/<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-vE<span class="w"> </span><span class="s2">"AS\[[:space:\]]+\[a-z_\]*codice_interno\b"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="w">   </span><span class="c1"># codice_interno AS *_codice</span>
+grep<span class="w"> </span>-rEn<span class="w"> </span><span class="s2">"\[^_\]codice\[[:space:\]]+AS\[[:space:\]]+\[a-z_\]*codice_interno\b"</span><span class="w"> </span>db/<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="w">  </span><span class="c1"># codice AS *_codice_interno</span>
 </code></pre></div>
 <blockquote>
 <p><strong>Bonifica completata (2026-06-28)</strong>: i mislabel DB sono stati corretti (sweep
@@ -7266,8 +7266,8 @@ in un <code>WHERE</code>/<code>JOIN</code>/<code>CASE</code>/<code>IN</code> con
 <code>'SUPER_ADMIN'</code>, <code>'STANDARD'</code>, <code>'SISTEMA'</code>, <code>'EF'</code>), fermati e chiediti: <strong>sto confrontando
 contro <code>codice</code> (mutabile) o contro la chiave stabile?</strong></p>
 <p><strong>Antipattern (BUG_DUAL)</strong> — confronto logico contro la colonna mutabile:</p>
-<div class="highlight"><pre><span></span><code><span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">codice</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVENTIVO&#39;</span><span class="w">   </span><span class="c1">-- ❌ BUG latente (colonna mutabile)</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">codice_interno</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVENTIVO&#39;</span><span class="w">   </span><span class="c1">-- ✅ chiave immutabile</span>
+<div class="highlight"><pre><span></span><code><span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">codice</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s1">'PREVENTIVO'</span><span class="w">   </span><span class="c1">-- ❌ BUG latente (colonna mutabile)</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">codice_interno</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s1">'PREVENTIVO'</span><span class="w">   </span><span class="c1">-- ✅ chiave immutabile</span>
 </code></pre></div>
 <p>È una classe <strong>diversa</strong> dal mislabel di alias (§6c): qui il valore <em>letto/filtrato</em> è proprio
 <code>codice</code>. Funziona <em>per caso</em> finché nessuno rinomina il <code>codice</code>; al primo rename → lookup a
@@ -7341,8 +7341,8 @@ smettere di funzionare l'ordinamento per data di creazione.</p>
 <div class="highlight"><pre><span></span><code><span class="n">valido_dal</span><span class="w"> </span><span class="nb">DATE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
 <span class="n">valido_al</span><span class="w">  </span><span class="nb">DATE</span><span class="p">,</span>
 <span class="n">validita</span><span class="w">   </span><span class="n">daterange</span><span class="w"> </span><span class="k">GENERATED</span><span class="w"> </span><span class="n">ALWAYS</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
-<span class="w">               </span><span class="n">daterange</span><span class="p">(</span><span class="k">COALESCE</span><span class="p">(</span><span class="n">valido_dal</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;-infinity&#39;</span><span class="p">::</span><span class="nb">date</span><span class="p">),</span>
-<span class="w">                         </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">valido_al</span><span class="p">,</span><span class="w">  </span><span class="s1">&#39;infinity&#39;</span><span class="p">::</span><span class="nb">date</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;\[\]&#39;</span><span class="p">)</span>
+<span class="w">               </span><span class="n">daterange</span><span class="p">(</span><span class="k">COALESCE</span><span class="p">(</span><span class="n">valido_dal</span><span class="p">,</span><span class="w"> </span><span class="s1">'-infinity'</span><span class="p">::</span><span class="nb">date</span><span class="p">),</span>
+<span class="w">                         </span><span class="k">COALESCE</span><span class="p">(</span><span class="n">valido_al</span><span class="p">,</span><span class="w">  </span><span class="s1">'infinity'</span><span class="p">::</span><span class="nb">date</span><span class="p">),</span><span class="w"> </span><span class="s1">'\[\]'</span><span class="p">)</span>
 <span class="w">           </span><span class="p">)</span><span class="w"> </span><span class="n">STORED</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
 </code></pre></div>
 <p><strong>Regole</strong>:</p>
@@ -7352,9 +7352,9 @@ smettere di funzionare l'ordinamento per data di creazione.</p>
 <li>Nei <strong>BEFORE trigger</strong> <code>NEW.validita</code> e` <strong>NULL</strong> (la generazione avviene dopo tutti i BEFORE trigger). Per calcolare il range del nuovo valore usare <strong>con COALESCE simmetrico</strong> all'espressione STORED:</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="n">daterange</span><span class="p">(</span>
-<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">valido_dal</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;-infinity&#39;</span><span class="p">::</span><span class="nb">date</span><span class="p">),</span>
-<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">valido_al</span><span class="p">,</span><span class="w">  </span><span class="s1">&#39;infinity&#39;</span><span class="p">::</span><span class="nb">date</span><span class="p">),</span>
-<span class="w">    </span><span class="s1">&#39;\[\]&#39;</span>
+<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">valido_dal</span><span class="p">,</span><span class="w"> </span><span class="s1">'-infinity'</span><span class="p">::</span><span class="nb">date</span><span class="p">),</span>
+<span class="w">    </span><span class="k">COALESCE</span><span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="n">valido_al</span><span class="p">,</span><span class="w">  </span><span class="s1">'infinity'</span><span class="p">::</span><span class="nb">date</span><span class="p">),</span>
+<span class="w">    </span><span class="s1">'\[\]'</span>
 <span class="p">)</span>
 </code></pre></div>
 <p><strong>Motivazione</strong>: <code>daterange(d, NULL, '&#91;&#93;')</code> produce <code>upper_inf=true</code> (testo: <code>&#91;d,)</code>), mentre la STORED con COALESCE produce <code>upper_inf=false, upper='infinity'::date</code> (testo: <code>&#91;d,infinity&#93;</code>). L'operatore <code>@&gt;</code> confronta le rappresentazioni interne: <code>&#91;d,infinity&#93; @&gt; &#91;d,)</code> restituisce <strong>false</strong> anche se semanticamente equivalenti. Applicare COALESCE garantisce rappresentazioni identiche e <code>@&gt;</code> corretto.
@@ -7388,7 +7388,7 @@ smettere di funzionare l'ordinamento per data di creazione.</p>
 </code></pre></div>
 <p><strong>Vincoli anti-overlap</strong> (due pathway, scegliere in base alla presenza di <code>WHERE</code>):</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Pathway 1: senza WHERE → temporal UNIQUE PG 18 (preferito, SQL:2011 standard)</span>
-<span class="c1">-- L&#39;indice GiST generato dal constraint serve anche query WHERE validita @&gt; data</span>
+<span class="c1">-- L'indice GiST generato dal constraint serve anche query WHERE validita @&gt; data</span>
 <span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">tabella</span>
 <span class="w">    </span><span class="k">ADD</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">uq_tabella_no_overlap</span>
 <span class="w">    </span><span class="k">UNIQUE</span><span class="w"> </span><span class="p">(</span><span class="n">key_col</span><span class="p">,</span><span class="w"> </span><span class="n">validita</span><span class="w"> </span><span class="k">WITHOUT</span><span class="w"> </span><span class="k">OVERLAPS</span><span class="p">);</span>
@@ -7396,8 +7396,8 @@ smettere di funzionare l'ordinamento per data di creazione.</p>
 <span class="c1">-- Pathway 2: con WHERE → EXCLUDE USING gist parziale (unico tipo che enforça</span>
 <span class="c1">-- con predicato parziale; il temporal UNIQUE PG18 non supporta WHERE).</span>
 <span class="c1">-- DEVE essere un ADD CONSTRAINT ... EXCLUDE, NON un CREATE INDEX:</span>
-<span class="c1">-- un CREATE INDEX ... USING gist (key_col, validita) NON enforça nulla (e&#39; solo</span>
-<span class="c1">-- una struttura di supporto query). Richiede l&#39;estensione btree_gist.</span>
+<span class="c1">-- un CREATE INDEX ... USING gist (key_col, validita) NON enforça nulla (e' solo</span>
+<span class="c1">-- una struttura di supporto query). Richiede l'estensione btree_gist.</span>
 <span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">schema</span><span class="p">.</span><span class="n">tabella</span>
 <span class="w">    </span><span class="k">ADD</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">ex_tabella_no_overlap</span>
 <span class="w">    </span><span class="n">EXCLUDE</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="n">gist</span><span class="w"> </span><span class="p">(</span><span class="n">key_col</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="o">=</span><span class="p">,</span><span class="w"> </span><span class="n">validita</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="p">)</span>
@@ -7869,7 +7869,7 @@ Preferire:</p>
 <p>Il planner sceglie l'indice più stretto quando ci sono entrambi, perché costa meno pagine: è proprio per questo che le letture stanno lì. Tolto il più stretto, le stesse query passano sul più largo. Prima di decidere, confrontare le dimensioni dei due:</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">indice_ridondante</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">idx_scan</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">peso</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">peso_stretto</span><span class="p">,</span>
 <span class="w">       </span><span class="n">pg_size_pretty</span><span class="p">(</span><span class="n">pg_relation_size</span><span class="p">(</span>
-<span class="w">         </span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="k">schema_name</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">quote_ident</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">coperto_da</span><span class="p">))::</span><span class="n">regclass</span><span class="p">))</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">peso_largo</span>
+<span class="w">         </span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="k">schema_name</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">'.'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">quote_ident</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">coperto_da</span><span class="p">))::</span><span class="n">regclass</span><span class="p">))</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">peso_largo</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">dbops</span><span class="p">.</span><span class="n">vw_indici_ridondanti_prefisso</span><span class="w"> </span><span class="n">v</span>
 <span class="k">WHERE</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">idx_scan</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50</span><span class="p">;</span>
 </code></pre></div>
@@ -7998,7 +7998,7 @@ nella policy.</p>
 <span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="k">SELECT</span>
 <span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="p">(</span>
 <span class="w">        </span><span class="n">script</span><span class="p">.</span><span class="n">fn_scope_ba_ownership</span><span class="p">(</span>
-<span class="w">            </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">&#39;app.current_identita_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)::</span><span class="nb">bigint</span><span class="p">,</span>
+<span class="w">            </span><span class="n">current_setting</span><span class="p">(</span><span class="s1">'app.current_identita_id'</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">)::</span><span class="nb">bigint</span><span class="p">,</span>
 <span class="w">            </span><span class="n">billing_account_id</span>
 <span class="w">        </span><span class="p">)</span>
 <span class="w">    </span><span class="p">);</span>

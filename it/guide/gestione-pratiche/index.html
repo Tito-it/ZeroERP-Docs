@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -7308,9 +7308,9 @@ transizione diretta <code>DA_ESEGUIRE -&gt; COMPLETATO</code>). La logica applic
 <p>Le azioni STATO_CAMBIATO e FLUSSO_STATO_CAMBIATO sono <strong>generiche</strong>: coprono tutte le transizioni di stato senza moltiplicare i tipi azione. Che la pratica passi da APERTA a SOSPESA, da SOSPESA a APERTA, o da APERTA ad ANNULLATA, l'azione registrata e' sempre <code>STATO_CAMBIATO</code>. Lo stesso vale per i flussi.</p>
 <p>I dettagli specifici (stato precedente, stato nuovo, esito se applicabile) sono nel campo JSONB <code>dettaglio</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;stato_precedente&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;APERTA&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;stato_nuovo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SOSPESA&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;tx_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3...&quot;</span>
+<span class="w">  </span><span class="nt">"stato_precedente"</span><span class="p">:</span><span class="w"> </span><span class="s2">"APERTA"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"stato_nuovo"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SOSPESA"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"tx_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a1b2c3..."</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Questo design mantiene il CHECK sulla colonna <code>azione</code> stabile nel tempo: non serve aggiungere nuovi valori per nuove transizioni. La ricostruzione di cosa e' successo avviene sempre leggendo il <code>dettaglio</code>.</p>
@@ -7377,7 +7377,7 @@ transizione diretta <code>DA_ESEGUIRE -&gt; COMPLETATO</code>). La logica applic
     Flusso #457 PRIMO_CONTATTO  stato: IN_CORSO
     Flusso #458 SOPRALLUOGO     stato: DA_ESEGUIRE
 
-L&#39;operatore sospende la pratica con motivo &quot;Cliente assente fino al 20 marzo&quot;
+L'operatore sospende la pratica con motivo "Cliente assente fino al 20 marzo"
 
 Dopo la sospensione:
   Pratica #123           stato: SOSPESA
@@ -7389,7 +7389,7 @@ Sospensione creata:
   id: 50, pratica_id: 123, flusso_id: NULL
   data_inizio: 6 marzo 10:00
   data_fine: NULL (attiva)
-  motivo: &quot;Cliente assente fino al 20 marzo&quot;
+  motivo: "Cliente assente fino al 20 marzo"
   data_riattivazione_prevista: 20 marzo
 </code></pre></div>
 <p>Alla riattivazione (manuale o automatica via pgAgent il 20 marzo):</p>
@@ -7411,7 +7411,7 @@ Sospensione chiusa:
     Flusso #457 PRIMO_CONTATTO  stato: COMPLETATO
     Flusso #458 SOPRALLUOGO     stato: IN_CORSO
 
-L&#39;operatore sospende il flusso #458 con motivo &quot;Tecnico assente&quot;
+L'operatore sospende il flusso #458 con motivo "Tecnico assente"
 
 Dopo la sospensione:
   Pratica #123           stato: APERTA           (invariata)
@@ -7419,7 +7419,7 @@ Dopo la sospensione:
 
 Sospensione creata:
   id: 51, pratica_id: 123, flusso_id: 458
-  motivo: &quot;Tecnico assente&quot;
+  motivo: "Tecnico assente"
 </code></pre></div>
 <p>La pratica resta APERTA. Eventuali altri flussi nuovi possono essere creati e avviati normalmente. Solo il flusso sospeso e' bloccato.</p>
 <h3 id="riattivazione-automatica-via-pgagent">Riattivazione automatica via pgAgent<a class="headerlink" href="#riattivazione-automatica-via-pgagent" title="Permanent link">&para;</a></h3>
@@ -7534,7 +7534,7 @@ Formula 4: SOPRALLUOGO → RISPOSTA_CLIENTE ( 3 giorni) — tempo risposta
     giorni_formula: 15
 
 5 marzo (giorno 4):
-  Pratica sospesa per &quot;attesa documenti catastali&quot;
+  Pratica sospesa per "attesa documenti catastali"
   → il conteggio dei giorni netti si congela
 
 8 marzo (giorno 7):
@@ -7617,15 +7617,15 @@ Stato iniziale:
   Pratica #123 (ONBOARDING_CLIENTE, emittente 32, soggetto uuid-mario)
     Flusso #457 PRIMO_CONTATTO  stato: IN_CORSO
 
-L&#39;operatore completa il flusso #457 con esito POSITIVO:
-  UPDATE pratiche.flussi SET stato_id = 3, esito = &#39;POSITIVO&#39; WHERE id = 457;
+L'operatore completa il flusso #457 con esito POSITIVO:
+  UPDATE pratiche.flussi SET stato_id = 3, esito = 'POSITIVO' WHERE id = 457;
 
 Il trigger DB (trgfn_flussi_generazione):
   1. Trova la regola con auto=true e esito_richiesto=POSITIVO
   2. Chiama fn_genera_pratica_da_flusso()
   3. Crea:
      Pratica #789 (SOPRALLUOGO_TECNICO, emittente 32, soggetto uuid-mario)
-       flusso_origine_id = 457  (tracciabilita&#39; cross-pratica)
+       flusso_origine_id = 457  (tracciabilita' cross-pratica)
        stato: BOZZA
        Flusso #890 PROGRAMMAZIONE  stato: DA_ESEGUIRE
 
@@ -7694,8 +7694,8 @@ divergenza in <strong>entrambe</strong> le direzioni.</p>
 <p>La tabella <a href="../../dbzero/pratiche/tabelle/handler_flussi/"><code>handler_flussi</code></a> contiene le chiavi di dispatch (<code>handler_key</code>). Django mantiene un mapping statico <code>handler_key -&gt; classe Handler</code> nel codice Python:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># apps/pratiche/services/handler_registry.py</span>
 <span class="n">HANDLER_MAP</span><span class="p">:</span> <span class="nb">dict</span>\<span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span>\<span class="p">[</span><span class="n">BaseFlussoHandler</span>\\<span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="c1"># &quot;APPUNTAMENTO&quot;: AppuntamentoHandler,</span>
-    <span class="c1"># &quot;SOPRALLUOGO&quot;: SopralluogoHandler,</span>
+    <span class="c1"># "APPUNTAMENTO": AppuntamentoHandler,</span>
+    <span class="c1"># "SOPRALLUOGO": SopralluogoHandler,</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
@@ -8186,9 +8186,9 @@ PostgreSQL (schema pratiche)
 <span class="n">pratica_id</span> <span class="o">=</span> <span class="n">pratiche_service</span><span class="o">.</span><span class="n">crea_pratica</span><span class="p">(</span>
     <span class="n">emittente_fiscale_id</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
     <span class="n">tipo_prestazione_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">soggetto_id</span><span class="o">=</span><span class="s2">&quot;uuid-...&quot;</span><span class="p">,</span>
+    <span class="n">soggetto_id</span><span class="o">=</span><span class="s2">"uuid-..."</span><span class="p">,</span>
     <span class="n">priorita_id</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-    <span class="n">descrizione</span><span class="o">=</span><span class="s2">&quot;Onboarding cliente Mario Rossi&quot;</span><span class="p">,</span>
+    <span class="n">descrizione</span><span class="o">=</span><span class="s2">"Onboarding cliente Mario Rossi"</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
 <h3 id="file-coinvolti">File coinvolti<a class="headerlink" href="#file-coinvolti" title="Permanent link">&para;</a></h3>
@@ -8314,12 +8314,12 @@ PostgreSQL (schema pratiche)
 </table>
 <h3 id="esempio-completo-onboarding-cliente">Esempio completo: onboarding cliente<a class="headerlink" href="#esempio-completo-onboarding-cliente" title="Permanent link">&para;</a></h3>
 <p>Flusso end-to-end di come un dominio esterno usa il motore pratiche:</p>
-<div class="highlight"><pre><span></span><code>1. vendite_service riceve &quot;nuovo cliente&quot;
+<div class="highlight"><pre><span></span><code>1. vendite_service riceve "nuovo cliente"
        |
        v
 2. pratiche_service.crea_pratica(
        tipo_prestazione_id = ONBOARDING_CLIENTE,
-       soggetto_id = &quot;uuid-cliente&quot;,
+       soggetto_id = "uuid-cliente",
        priorita_id = NORMALE,
        emittente_fiscale_id = 32
    )
@@ -8333,7 +8333,7 @@ PostgreSQL (schema pratiche)
        |  --&gt; DB trigger: giornale registra FLUSSO_CREATO
        v
 4. Operatore lavora il flusso, poi:
-   pratiche_service.completa_flusso(flusso_id=456, esito=&quot;POSITIVO&quot;)
+   pratiche_service.completa_flusso(flusso_id=456, esito="POSITIVO")
        |  --&gt; DB trigger: giornale registra FLUSSO_STATO_CAMBIATO
        |  --&gt; DB trigger: cerca regole_generazione con auto=true → nessuna
        v
@@ -8370,15 +8370,15 @@ PostgreSQL (schema pratiche)
 <p>Inserire seed data nelle tabelle catalogo:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Tipo prestazione</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">tipi_prestazione</span><span class="w"> </span><span class="p">(</span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">,</span><span class="w"> </span><span class="n">categoria</span><span class="p">)</span>
-<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;RECLAMO&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Gestione reclamo cliente&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;COMMERCIALE&#39;</span><span class="p">);</span>
+<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'RECLAMO'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Gestione reclamo cliente'</span><span class="p">,</span><span class="w"> </span><span class="s1">'COMMERCIALE'</span><span class="p">);</span>
 
 <span class="c1">-- Template flussi (3 step con sequenza)</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">template_flussi</span>
 <span class="w">  </span><span class="p">(</span><span class="n">tipo_prestazione_id</span><span class="p">,</span><span class="w"> </span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">,</span><span class="w"> </span><span class="n">sequenza</span><span class="p">,</span><span class="w"> </span><span class="n">obbligatorio</span><span class="p">,</span><span class="w"> </span><span class="n">direzione</span><span class="p">)</span>
 <span class="k">VALUES</span>
-<span class="w">  </span><span class="p">(:</span><span class="n">tp_id</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;PRESA_CARICO&#39;</span><span class="p">,</span><span class="w">   </span><span class="s1">&#39;Presa in carico reclamo&#39;</span><span class="p">,</span><span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ENTRATA&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(:</span><span class="n">tp_id</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ANALISI&#39;</span><span class="p">,</span><span class="w">        </span><span class="s1">&#39;Analisi del problema&#39;</span><span class="p">,</span><span class="w">     </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;INTERNA&#39;</span><span class="p">),</span>
-<span class="w">  </span><span class="p">(:</span><span class="n">tp_id</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;RISPOSTA&#39;</span><span class="p">,</span><span class="w">       </span><span class="s1">&#39;Risposta al cliente&#39;</span><span class="p">,</span><span class="w">      </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;USCITA&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">(:</span><span class="n">tp_id</span><span class="p">,</span><span class="w"> </span><span class="s1">'PRESA_CARICO'</span><span class="p">,</span><span class="w">   </span><span class="s1">'Presa in carico reclamo'</span><span class="p">,</span><span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="s1">'ENTRATA'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(:</span><span class="n">tp_id</span><span class="p">,</span><span class="w"> </span><span class="s1">'ANALISI'</span><span class="p">,</span><span class="w">        </span><span class="s1">'Analisi del problema'</span><span class="p">,</span><span class="w">     </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="s1">'INTERNA'</span><span class="p">),</span>
+<span class="w">  </span><span class="p">(:</span><span class="n">tp_id</span><span class="p">,</span><span class="w"> </span><span class="s1">'RISPOSTA'</span><span class="p">,</span><span class="w">       </span><span class="s1">'Risposta al cliente'</span><span class="p">,</span><span class="w">      </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">,</span><span class="w"> </span><span class="s1">'USCITA'</span><span class="p">);</span>
 
 <span class="c1">-- Prerequisiti: ANALISI richiede PRESA_CARICO, RISPOSTA richiede ANALISI</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">template_flussi_prerequisiti</span>
@@ -8395,17 +8395,17 @@ PostgreSQL (schema pratiche)
 <p>Se uno step e' automatizzato, registrare l'handler:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Handler DB</span>
 <span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">pratiche</span><span class="p">.</span><span class="n">handler_flussi</span><span class="w"> </span><span class="p">(</span><span class="n">handler_key</span><span class="p">,</span><span class="w"> </span><span class="n">descrizione</span><span class="p">)</span>
-<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;INVIO_RISPOSTA_RECLAMO&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Invio email risposta reclamo&#39;</span><span class="p">);</span>
+<span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'INVIO_RISPOSTA_RECLAMO'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Invio email risposta reclamo'</span><span class="p">);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1"># apps/reclami/handlers/risposta_handler.py</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">InvioRispostaReclamoHandler</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flusso_id</span><span class="p">,</span> <span class="n">pratica_id</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">handler_params</span><span class="p">):</span>
         <span class="c1"># handler_params contiene la configurazione statica dal template</span>
-        <span class="c1"># meta contiene i dati specifici dell&#39;istanza flusso</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;email_inviata&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+        <span class="c1"># meta contiene i dati specifici dell'istanza flusso</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"email_inviata"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
 
 <span class="c1"># apps/pratiche/services/handler_registry.py</span>
-<span class="n">HANDLER_MAP</span>\<span class="p">[</span><span class="s2">&quot;INVIO_RISPOSTA_RECLAMO&quot;</span>\<span class="p">]</span> <span class="o">=</span> <span class="n">InvioRispostaReclamoHandler</span>
+<span class="n">HANDLER_MAP</span>\<span class="p">[</span><span class="s2">"INVIO_RISPOSTA_RECLAMO"</span>\<span class="p">]</span> <span class="o">=</span> <span class="n">InvioRispostaReclamoHandler</span>
 </code></pre></div>
 <h3 id="3-integrazione-dal-dominio">3. Integrazione dal dominio<a class="headerlink" href="#3-integrazione-dal-dominio" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># apps/reclami/services/reclami_service.py</span>
@@ -8418,10 +8418,10 @@ PostgreSQL (schema pratiche)
         <span class="n">soggetto_id</span><span class="o">=</span><span class="n">cliente_uuid</span><span class="p">,</span>
         <span class="n">priorita_id</span><span class="o">=</span><span class="n">ALTA_ID</span><span class="p">,</span>
         <span class="n">descrizione</span><span class="o">=</span><span class="n">descrizione</span><span class="p">,</span>
-        <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;canale&quot;</span><span class="p">:</span> <span class="s2">&quot;web&quot;</span><span class="p">,</span> <span class="s2">&quot;riferimento&quot;</span><span class="p">:</span> <span class="s2">&quot;ORD-2026-001&quot;</span><span class="p">},</span>
+        <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s2">"canale"</span><span class="p">:</span> <span class="s2">"web"</span><span class="p">,</span> <span class="s2">"riferimento"</span><span class="p">:</span> <span class="s2">"ORD-2026-001"</span><span class="p">},</span>
     <span class="p">)</span>
     <span class="c1"># I trigger DB registrano PRATICA_CREATA nel giornale.</span>
-    <span class="c1"># I flussi vengono creati dall&#39;operatore o automaticamente.</span>
+    <span class="c1"># I flussi vengono creati dall'operatore o automaticamente.</span>
     <span class="k">return</span> <span class="n">pratica_id</span>
 </code></pre></div>
 <p>Non serve toccare il nucleo pratiche: tutto avviene per configurazione.</p>

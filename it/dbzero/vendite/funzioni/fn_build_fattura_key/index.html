@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5323,6 +5323,45 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-08-18-undici-elementi-e-i-registri-per-emittente-tornano-raggiungibili" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-08-18 — undici elementi, e i registri per emittente tornano raggiungibili
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 rev 2026-08-18 — undici elementi, e i registri per emittente tornano raggiungibili">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#n2b-il-difetto-che-rendeva-irraggiungibili-i-sezionali-intestati" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔴 N2b — il difetto che rendeva irraggiungibili i sezionali intestati
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#n3-la-chiave-porta-la-natura-e-la-serie" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        N3 — la chiave porta la NATURA e la SERIE
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5382,6 +5421,42 @@ di aggregazione documento a partire da una riga di <code>attivita_fatturabili</c
 <h3 id="esempio">Esempio<a class="headerlink" href="#esempio" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_build_fattura_key</span><span class="p">(</span><span class="mi">12345</span><span class="p">);</span>
 </code></pre></div>
+<hr />
+<hr />
+<h3 id="rev-2026-08-18-undici-elementi-e-i-registri-per-emittente-tornano-raggiungibili">🔄 rev 2026-08-18 — undici elementi, e i registri per emittente tornano raggiungibili<a class="headerlink" href="#rev-2026-08-18-undici-elementi-e-i-registri-per-emittente-tornano-raggiungibili" title="Permanent link">&para;</a></h3>
+<p>Brief: <code>brief-design-note-credito-resi</code> (slice <strong>N2b</strong> e <strong>N3</strong>).</p>
+<h4 id="n2b-il-difetto-che-rendeva-irraggiungibili-i-sezionali-intestati">🔴 N2b — il difetto che rendeva irraggiungibili i sezionali intestati<a class="headerlink" href="#n2b-il-difetto-che-rendeva-irraggiungibili-i-sezionali-intestati" title="Permanent link">&para;</a></h4>
+<p><code>fn_get_registro_id</code> ha un fallback a quattro livelli su utility ed emittente. Il
+suo <strong>unico chiamante</strong> — questa funzione — la invocava con <strong>un argomento solo</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">v_registro_id</span><span class="w"> </span><span class="p">:</span><span class="o">=</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">fn_get_registro_id</span><span class="p">(</span><span class="n">v_tipo_doc_fiscale_id</span><span class="p">);</span>
+</code></pre></div>
+<p>Con <code>p_utility_id</code> e <code>p_emittente_soggetto_ruolo_id</code> a <code>NULL</code>, i due predicati
+del <code>WHERE</code> valutano <code>NULL</code> — mai veri:</p>
+<div class="highlight"><pre><span></span><code><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">utility_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">utility_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">)</span><span class="w">                    </span><span class="c1">-- mai vero</span>
+<span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">emittente_soggetto_ruolo_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">emittente_</span><span class="err">…</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NULL</span><span class="p">)</span><span class="w">  </span><span class="c1">-- idem</span>
+</code></pre></div>
+<p>⛔ Dalla pipeline erano raggiungibili <strong>solo</strong> i registri con utility ed emittente
+entrambi <code>NULL</code>. Un registro intestato a un emittente non veniva scelto: veniva
+<strong>escluso dalla selezione</strong>, e se fosse stato l'unico per quel tipo documento la
+risposta sarebbe stata <code>E_CONFIG_MANCANTE</code> <strong>su una configurazione corretta</strong>.</p>
+<p>⚠️ E il modello promette il contrario — la doc di <code>registri_fatturazione</code>:
+<em>«la separazione dei registri evita collisioni di numerazione»</em> fra più aziende.</p>
+<p>✅ Ora utility ed emittente si passano: erano già in mano tre righe più su.
+<strong>Parità misurata</strong> il 2026-08-18: zero registri intestati oggi, quindi nessun
+documento esistente cambia registro. Il difetto era latente — zero occorrenze, e
+nulla lo impediva.</p>
+<h4 id="n3-la-chiave-porta-la-natura-e-la-serie">N3 — la chiave porta la NATURA e la SERIE<a class="headerlink" href="#n3-la-chiave-porta-la-natura-e-la-serie" title="Permanent link">&para;</a></h4>
+<p>Da nove a <strong>undici</strong> elementi. È qui che la separazione fisica della nota di
+credito finisce: due attività di natura diversa hanno chiavi diverse, quindi
+<strong>testate diverse</strong>, quindi registro e numerazione diversi — senza una riga di
+codice scritta per la NC.</p>
+<p>⚠️ <strong>Da qui in giù vanno usati tutti e undici.</strong> Chi separa nella chiave e non
+separa nel lookup <strong>annulla le due metà</strong> e fa tornare le attività nella stessa
+fattura. Il presidio è
+<code>db/pgtap/vendite/test-chiave-fattura-tre-specchi-v1.sql</code>.</p>
+<p>⚠️ <strong>Da questo momento un LOTTO può contenere documenti di natura diversa</strong>: chi
+lo legge non deve più assumere «sono tutte fatture», e il verbo «numera» li
+numera entrambi sui rispettivi registri.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

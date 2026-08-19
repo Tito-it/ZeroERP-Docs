@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5558,35 +5558,35 @@ con contesto JSONB diagnostico (<code>articolo_id</code>).</p>
 <hr />
 <h3 id="esempi">Esempi<a class="headerlink" href="#esempi" title="Permanent link">&para;</a></h3>
 <p><strong>1) Riattiva articolo disattivato (caso d'uso tipico):</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">fn_riattiva_articolo</span><span class="p">(</span><span class="s1">&#39;aaa...101&#39;</span><span class="p">::</span><span class="n">uuid</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">fn_riattiva_articolo</span><span class="p">(</span><span class="s1">'aaa...101'</span><span class="p">::</span><span class="n">uuid</span><span class="p">);</span>
 <span class="c1">-- Esito: catalogo.articoli.attivo = true</span>
 <span class="c1">-- Figli (articoli_uom_operativa, ecc.): nessun cambio</span>
 <span class="c1">-- Ritorno: void</span>
 </code></pre></div>
 <p><strong>2) Riattivazione idempotente (articolo gia' attivo):</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">fn_riattiva_articolo</span><span class="p">(</span><span class="s1">&#39;aaa...101&#39;</span><span class="p">::</span><span class="n">uuid</span><span class="p">);</span>
-<span class="c1">-- Articolo gia&#39; attivo</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">fn_riattiva_articolo</span><span class="p">(</span><span class="s1">'aaa...101'</span><span class="p">::</span><span class="n">uuid</span><span class="p">);</span>
+<span class="c1">-- Articolo gia' attivo</span>
 <span class="c1">-- Esito: no-op, niente raise, niente audit spurio</span>
 <span class="c1">-- Ritorno: void</span>
 </code></pre></div>
 <p><strong>3) Articolo cancellato (FE stale):</strong></p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">fn_riattiva_articolo</span><span class="p">(</span><span class="s1">&#39;00000000-0000-0000-0000-000000000999&#39;</span><span class="p">::</span><span class="n">uuid</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">fn_riattiva_articolo</span><span class="p">(</span><span class="s1">'00000000-0000-0000-0000-000000000999'</span><span class="p">::</span><span class="n">uuid</span><span class="p">);</span>
 <span class="c1">-- ERROR: P0001 — Articolo non trovato: id=00000000-0000-0000-0000-000000000999.</span>
 </code></pre></div>
 <p><strong>4) Parent inattivo:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="c1">-- iva_id riferito dall&#39;articolo e&#39; stato disattivato.</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">fn_riattiva_articolo</span><span class="p">(</span><span class="s1">&#39;aaa...101&#39;</span><span class="p">::</span><span class="n">uuid</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="c1">-- iva_id riferito dall'articolo e' stato disattivato.</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">fn_riattiva_articolo</span><span class="p">(</span><span class="s1">'aaa...101'</span><span class="p">::</span><span class="n">uuid</span><span class="p">);</span>
 <span class="c1">-- ERROR: trigger trgfn_child_requires_active_parent (catalogo.articoli)</span>
 <span class="c1">-- segnala IVA inattivo.</span>
 </code></pre></div>
 <p><strong>5) Disattivazione (azione opposta, NO fn dedicata):</strong></p>
 <div class="highlight"><pre><span></span><code><span class="k">UPDATE</span><span class="w"> </span><span class="n">catalogo</span><span class="p">.</span><span class="n">articoli</span>
 <span class="w">   </span><span class="k">SET</span><span class="w"> </span><span class="n">attivo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span>
-<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;aaa...101&#39;</span><span class="p">::</span><span class="n">uuid</span><span class="p">;</span>
-<span class="c1">-- Se l&#39;articolo ha figli attivi (es. una BoM dove e&#39; componente) -&gt;</span>
+<span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'aaa...101'</span><span class="p">::</span><span class="n">uuid</span><span class="p">;</span>
+<span class="c1">-- Se l'articolo ha figli attivi (es. una BoM dove e' componente) -&gt;</span>
 <span class="c1">-- ERROR: trigger trgfn_prevent_deactivate_if_children -&gt; messaggio</span>
-<span class="c1">-- &quot;...presenti figli attivi che impediscono la disattivazione...&quot;.</span>
-<span class="c1">-- L&#39;admin disattiva prima i figli, poi il padre.</span>
+<span class="c1">-- "...presenti figli attivi che impediscono la disattivazione...".</span>
+<span class="c1">-- L'admin disattiva prima i figli, poi il padre.</span>
 </code></pre></div>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>

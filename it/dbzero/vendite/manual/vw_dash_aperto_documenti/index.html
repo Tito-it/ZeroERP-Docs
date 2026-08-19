@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5323,6 +5323,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#emittente_ragione_sociale-r-4-18-08-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5404,10 +5415,10 @@ WHERE, dalla union). <code>motivo_fermo</code> <strong>tenuto</strong> come hint
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Drill-down di una card: i preventivi aperti in fase IN_ATTESA. Il filtro</span>
-<span class="c1">-- &quot;aperti da oltre N giorni&quot; è BE-side su data_riferimento (solo sulla lista).</span>
+<span class="c1">-- "aperti da oltre N giorni" è BE-side su data_riferimento (solo sulla lista).</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">codice</span><span class="p">,</span><span class="w"> </span><span class="n">cliente_display</span><span class="p">,</span><span class="w"> </span><span class="n">stato_codice</span><span class="p">,</span><span class="w"> </span><span class="n">motivo_fermo</span><span class="p">,</span><span class="w"> </span><span class="n">data_riferimento</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_dash_aperto_documenti</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;PREVENTIVI&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">fase</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;IN_ATTESA&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'PREVENTIVI'</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">fase</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'IN_ATTESA'</span><span class="p">;</span>
 </code></pre></div>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
@@ -5419,6 +5430,22 @@ WHERE, dalla union). <code>motivo_fermo</code> <strong>tenuto</strong> come hint
   prima (ordine di dipendenza, no CASCADE) e ricreato dal <code>20260708-04</code>.</li>
 <li><code>fase</code> è sempre valorizzata sulle 4 aree (join <code>config.stati_doc_*</code>).</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-dash-aperto-v1.sql</code>.</li>
+</ul>
+<hr />
+<hr />
+<h3 id="emittente_ragione_sociale-r-4-18-08-2026">🆕 <code>emittente_ragione_sociale</code> <em>(R-4, 18-08-2026)</em><a class="headerlink" href="#emittente_ragione_sociale-r-4-18-08-2026" title="Permanent link">&para;</a></h3>
+<p>Il nome dell'emittente arriva in coda alla proiezione, già risolto da
+<a href="../vw_dash_fatturazione_documenti/">vw_dash_fatturazione_documenti</a>.</p>
+<p>⚠️ <strong>Andava ELENCATA.</strong> La proiezione di questa vista è a colonne esplicite:
+non eredita niente dalla vista a monte. È il tranello che ha reso cinque i
+changeSet di R-4 invece dei tre previsti — e il modo in cui si scopre è
+guardare <em>cosa legge il backend</em>, non il grafo delle viste.</p>
+<p>⚠️ <strong>Il flag <code>multi_emittente</code> della lista NON si accende insieme alla colonna.</strong>
+Si guadagna dopo, quando la colonna mostra un nome su dati veri (brief
+perimetro-emittente §7, decisione 3). Il controllo automatico
+<code>dbops.vw_liste_multi_emittente_non_certificate</code> deve restare a zero righe.</p>
+<ul>
+<li>Test: <code>db/pgtap/vendite/test-viste-dash-emittente-v1.sql</code>.</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

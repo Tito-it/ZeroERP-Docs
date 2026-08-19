@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -7096,7 +7096,7 @@ altrimenti                            -&gt; override utente -&gt; profili_access
 <li><code>config.user_override_aree</code>, <code>config.user_override_oggetti</code>, <code>config.user_override_azioni</code> — eccezioni individuali</li>
 <li><code>config.user_emittenti_fiscali</code> — whitelist opzionale per limitare l'operativita per emittente fiscale</li>
 </ul>
-<p><strong>Ambito emittente fiscale:</strong> in un sistema multi-emittente (piu soggetti che emettono fatture), la tabella <code>config.user_emittenti_fiscali</code> consente di restringere su quali emittenti un utente puo operare. Se l'utente non ha righe nella whitelist, puo operare su tutti gli emittenti; se ha almeno una riga, e limitato a quelli indicati. Questo ambito e ortogonale ai permessi reparto: un utente puo avere accesso alla fatturazione (profilo reparto) ma essere limitato a un solo emittente (whitelist). L'enforcement avviene sia a livello API (<code>EmittenteFiscaleScopeMixin</code>) che a livello DB (trigger <code>fn_check_user_emittente_scope</code>).</p>
+<p><strong>Ambito emittente fiscale:</strong> in un sistema multi-emittente (piu soggetti che emettono fatture), la tabella <code>config.user_emittenti_fiscali</code> consente di restringere su quali emittenti un utente puo operare. ⚠️ <strong>Dal 2026-08-18 e fail-closed</strong>: se l'utente non ha righe non vede NESSUN emittente — la riga mancante e un errore di configurazione, non un permesso (prima valeva il contrario). L'unico attore legittimamente multi-emittente e il SUPER_ADMIN, che passa da <code>fn_is_super_admin</code> e non da questa tabella. Chi resta senza assegnazione compare in <code>dbops.vw_operatori_senza_emittente</code>, che deve restare a zero righe. Questo ambito e ortogonale ai permessi reparto: un utente puo avere accesso alla fatturazione (profilo reparto) ma essere limitato a un solo emittente (whitelist). L'enforcement avviene sia a livello API (<code>EmittenteFiscaleScopeMixin</code>) che a livello DB (trigger <code>fn_check_user_emittente_scope</code>).</p>
 <blockquote>
 <p>Per il modello dati completo, le funzioni SQL di risoluzione e l'enforcement Django:
 vedi <a href=".././architettura-permessi-e-autorizzazioni/">Architettura Permessi e Autorizzazioni</a>.</p>
@@ -7116,7 +7116,7 @@ vedi <a href=".././architettura-permessi-e-autorizzazioni/">Architettura Permess
 <p><strong>Impatto immediato sui permessi:</strong> l'utente eredita il profilo del nuovo reparto. I permessi cambiano all'istante.</p>
 <p><strong>Invalidazione cache automatica (LISTEN/NOTIFY):</strong></p>
 <p>Il sistema si occupa automaticamente di aggiornare la cache. Quando <code>unita_organizzativa_id</code> cambia, il trigger <code>trg_risorse_umane_z90_notify_cambio_reparto_upd</code> emette una notifica PostgreSQL sul canale <code>cambio_reparto</code> con un payload JSON:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;risorsa_umana_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;old_uo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;new_uo_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;auth_user_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"risorsa_umana_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span><span class="w"> </span><span class="nt">"old_uo_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"new_uo_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">"auth_user_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">}</span>
 </code></pre></div>
 <p>Il listener backend (<code>CambioRepartoListener</code>, avviato tramite <code>python manage.py listen_cambio_reparto</code>) intercetta la notifica e chiama <code>invalidate_user(auth_user_id)</code> per l'utente spostato. Il meccanismo e trasparente: qualsiasi path che modifica il reparto (API, management command, operazione diretta sul DB, import bulk) ottiene l'invalidazione automatica senza dover ricordare di aggiungerla caso per caso.</p>
 <p>Il listener usa una connessione psycopg3 dedicata con riconnessione automatica (backoff esponenziale) in caso di caduta connessione PostgreSQL. Va eseguito come processo long-running (systemd, supervisor, o in foreground durante lo sviluppo).</p>
@@ -7177,13 +7177,13 @@ e l'operatore sceglie la propria password al primo accesso. Questa scelta elimin
 di password condivise, annotate su post-it o inviate in chiaro su canali non sicuri.</p>
 <h3 id="invito-operatore">Invito operatore<a class="headerlink" href="#invito-operatore" title="Permanent link">&para;</a></h3>
 <p>Quando l'admin crea un operatore e decide di abilitarlo al software, il flusso e':</p>
-<div class="highlight"><pre><span></span><code>1. Admin → Amm. Software → Operatori → seleziona operatore → &quot;Invia invito&quot;
+<div class="highlight"><pre><span></span><code>1. Admin → Amm. Software → Operatori → seleziona operatore → "Invia invito"
    |
-2. Il sistema verifica 5 condizioni di invitabilita&#39;:
+2. Il sistema verifica 5 condizioni di invitabilita':
    - auth_user esiste e is_active = true
    - risorse_umane_auth_user esiste e attivo = true
    - ruolo_sistema &lt;&gt; DISABILITATO
-   - l&#39;utente ha un indirizzo email configurato
+   - l'utente ha un indirizzo email configurato
    - last_login IS NULL (non ha mai fatto login)
    |
 3. Imposta una password temporanea casuale (MAI comunicata)
@@ -7192,13 +7192,13 @@ di password condivise, annotate su post-it o inviate in chiaro su canali non sic
 6. Invia email con link di attivazione
 7. Registra invito_inviato_at
    |
-8. L&#39;operatore riceve l&#39;email → clicca il link
+8. L'operatore riceve l'email → clicca il link
    |
 9. Pagina attivazione: sceglie la propria password
    - Il token viene validato PRIMA, la password DOPO
-   - Se la password e&#39; troppo debole, il token resta valido e l&#39;operatore riprova
+   - Se la password e' troppo debole, il token resta valido e l'operatore riprova
    |
-10. Account attivato → l&#39;operatore fa login con la password scelta
+10. Account attivato → l'operatore fa login con la password scelta
 </code></pre></div>
 <p><strong>Reinvio invito</strong>: se l'email non e' arrivata o il token e' scaduto, l'admin puo'
 reinviare l'invito. Il sistema invalida automaticamente il token precedente e ne genera
@@ -7260,30 +7260,30 @@ nuova coppia JWT rilasciata, profilo ricaricato.</p>
 <h3 id="reset-password-dimenticata">Reset password dimenticata<a class="headerlink" href="#reset-password-dimenticata" title="Permanent link">&para;</a></h3>
 <p>L'operatore puo' reimpostare la password <strong>senza intervento admin</strong> tramite il link
 "Password dimenticata?" nella pagina di login. Il flusso e' completamente self-service:</p>
-<div class="highlight"><pre><span></span><code>1. Operatore clicca &quot;Password dimenticata?&quot; nel login
+<div class="highlight"><pre><span></span><code>1. Operatore clicca "Password dimenticata?" nel login
    |
 2. Inserisce la propria email
    |
 3. Il sistema risponde SEMPRE con lo stesso messaggio
-   (non rivela se l&#39;email esiste — sicurezza)
+   (non rivela se l'email esiste — sicurezza)
    |
-4. Se l&#39;email e&#39; registrata e l&#39;utente e&#39; attivo:
+4. Se l'email e' registrata e l'utente e' attivo:
    - Genera token monouso tipo RESET_PASSWORD (scadenza 1 ora)
    - Invia email con link di reset
    |
-5. L&#39;operatore clicca il link nell&#39;email
+5. L'operatore clicca il link nell'email
    |
 6. La pagina verifica il token (senza consumarlo)
    - Se valido: mostra il form per la nuova password
    - Se invalido/scaduto: mostra messaggio + link per nuova richiesta
    |
-7. L&#39;operatore inserisce la nuova password
+7. L'operatore inserisce la nuova password
    - Il token viene validato PRIMA, la password DOPO
-   - Se la password e&#39; debole, il token resta valido e l&#39;operatore riprova
+   - Se la password e' debole, il token resta valido e l'operatore riprova
    |
 8. Password reimpostata, tutti i JWT invalidati
-9. Email di conferma inviata all&#39;operatore
-10. L&#39;operatore fa login con la nuova password
+9. Email di conferma inviata all'operatore
+10. L'operatore fa login con la nuova password
 </code></pre></div>
 <p><strong>Scelta validate-before-consume</strong>: il token viene consumato solo DOPO che la password
 ha superato tutti i 4 validators Django. Se l'operatore inserisce una password troppo
@@ -7691,22 +7691,22 @@ che apre la transazione, non al livello HTTP. Implementazione raccomandata:</p>
 
 <span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">app_atomic</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">auth_user_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">jwt_user</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apre transaction.atomic() e propaga l&#39;identita utente come GUC PG</span>
+<span class="w">    </span><span class="sd">"""Apre transaction.atomic() e propaga l'identita utente come GUC PG</span>
 <span class="sd">    (`SET LOCAL` con scope transazione, autoreset al COMMIT/ROLLBACK).</span>
 
-<span class="sd">    Da usare nei service di scrittura quando l&#39;entry point NON e HTTP/JWT</span>
+<span class="sd">    Da usare nei service di scrittura quando l'entry point NON e HTTP/JWT</span>
 <span class="sd">    (CLI, cron, signal): in quei contesti JwtAuditAuthentication non gira</span>
 <span class="sd">    e le GUC devono essere propagate esplicitamente.</span>
 
 <span class="sd">    Per le request HTTP JWT NON serve: la propagazione e gia automatica</span>
 <span class="sd">    via JwtAuditAuthentication.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">auth_user_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cursor</span><span class="p">:</span>
                 <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-                    <span class="s2">&quot;SELECT set_config(&#39;app.current_user_id&#39;, </span><span class="si">%s</span><span class="s2">, true), &quot;</span>
-                    <span class="s2">&quot;       set_config(&#39;app.jwt_user&#39;,        </span><span class="si">%s</span><span class="s2">, true)&quot;</span><span class="p">,</span>
+                    <span class="s2">"SELECT set_config('app.current_user_id', </span><span class="si">%s</span><span class="s2">, true), "</span>
+                    <span class="s2">"       set_config('app.jwt_user',        </span><span class="si">%s</span><span class="s2">, true)"</span><span class="p">,</span>
                     \<span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">auth_user_id</span><span class="p">),</span> <span class="n">jwt_user</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">auth_user_id</span><span class="p">)</span>\<span class="p">],</span>
                 <span class="p">)</span>
         <span class="k">yield</span>
@@ -7714,7 +7714,7 @@ che apre la transazione, non al livello HTTP. Implementazione raccomandata:</p>
 <p>Uso tipico in un management command:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
-        <span class="n">admin_user_id</span> <span class="o">=</span> <span class="n">opts</span>\<span class="p">[</span><span class="s2">&quot;admin_user_id&quot;</span>\<span class="p">]</span>
+        <span class="n">admin_user_id</span> <span class="o">=</span> <span class="n">opts</span>\<span class="p">[</span><span class="s2">"admin_user_id"</span>\<span class="p">]</span>
         <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records_to_import</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">app_atomic</span><span class="p">(</span><span class="n">auth_user_id</span><span class="o">=</span><span class="n">admin_user_id</span><span class="p">):</span>
                 <span class="n">ClientiService</span><span class="p">()</span><span class="o">.</span><span class="n">crea_cliente</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">auth_user_id</span><span class="o">=</span><span class="n">admin_user_id</span><span class="p">)</span>
@@ -7808,9 +7808,9 @@ autenticazione PostgreSQL, allocazione memoria sul server DB).</p>
 <strong>non chiudere</strong> la connessione — tienila aperta per le prossime richieste".</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># settings.py</span>
 <span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s1">'default'</span><span class="p">:</span> <span class="p">{</span>
         <span class="o">...</span>
-        <span class="s1">&#39;CONN_MAX_AGE&#39;</span><span class="p">:</span> <span class="mi">600</span><span class="p">,</span>  <span class="c1"># 10 minuti</span>
+        <span class="s1">'CONN_MAX_AGE'</span><span class="p">:</span> <span class="mi">600</span><span class="p">,</span>  <span class="c1"># 10 minuti</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>

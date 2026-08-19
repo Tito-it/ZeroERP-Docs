@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -4885,6 +4885,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#vendite-code-resi-filtrate-su-un-documento-appsvenditedb" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Vendite — Code resi filtrate su un documento (<code>apps/vendite/db/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#vendite-lineage-documenti-pannello-passaggi-appsvendite" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5954,6 +5965,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#vendite-code-resi-filtrate-su-un-documento-appsvenditedb" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Vendite — Code resi filtrate su un documento (<code>apps/vendite/db/</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#vendite-lineage-documenti-pannello-passaggi-appsvendite" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6408,7 +6430,7 @@ Prima di implementare logica nuova, verificare se esiste già un building block 
 <tr>
 <td><code>USER_MESSAGE_FALLBACK</code></td>
 <td><code>error_messages_fallback.py</code></td>
-<td>Il messaggio da mostrare <strong>quando quello del DB non e' arrivato</strong>. ⚠️ Non duplica <code>config.messaggi_errore</code>: e' la variante <strong>senza segnaposto</strong> — misurato, <code>%s</code> in <strong>371</strong> messaggi a catalogo e in <strong>0</strong> di questi.</td>
+<td>Il messaggio da mostrare <strong>quando quello del DB non e' arrivato</strong>. ⚠️ Non duplica <code>config.messaggi_errore</code>: e' la variante <strong>senza segnaposto</strong> — misurato, <code>%s</code> in <strong>371</strong> messaggi a catalogo e in <strong>0</strong> di questi. ⚠️ <strong>Il perimetro e' OGNI codice vivo, e la descrizione qui sopra non lo dice</strong> (letta come perimetro il 2026-08-18, e l'ho letta male): <code>test_ogni_codice_vivo_ha_un_messaggio_di_ripiego</code> e' rosso finche' un codice non ritirato non ha la sua voce. ⭐ <strong>Un <code>%s</code> a catalogo non e' un'esenzione: e' la ragione per cui il ripiego serve</strong> — e' proprio quando gli argomenti non arrivano che il segnaposto finirebbe a video in chiaro. Registrare un codice nuovo = rigenerare <code>error_policies_generated.py</code> <strong>e</strong> scrivere qui la sua frase.</td>
 </tr>
 <tr>
 <td><code>richiedi_db_provvisto</code></td>
@@ -7848,6 +7870,45 @@ fiscale (ROUND 2 per aliquota, DPR 633/72 art. 21) vive nelle viste DB
 </tr>
 </tbody>
 </table>
+<h2 id="vendite-code-resi-filtrate-su-un-documento-appsvenditedb">Vendite — Code resi filtrate su un documento (<code>apps/vendite/db/</code>)<a class="headerlink" href="#vendite-code-resi-filtrate-su-un-documento-appsvenditedb" title="Permanent link">&para;</a></h2>
+<p>Il predicato «questa riga di coda appartiene a QUESTO documento», condiviso fra
+il <strong>pannello situazione merce</strong> e le <strong>due code di lavoro resi</strong>. Estratto il
+2026-08-18 (regola del 2, ok Tid) dalla slice B3 di
+brief-design-note-credito-resi.md (<code>docs/it/dev/work-in-progress/brief-design-note-credito-resi.md</code>),
+per la richiesta FE-2: dal pannello si arriva alla coda <strong>già filtrata</strong> sul
+documento aperto.</p>
+<table>
+<thead>
+<tr>
+<th>Building Block</th>
+<th>File</th>
+<th>Descrizione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>filtro_coda_per_documento</code></td>
+<td><code>_coda_documento_filtro.py</code></td>
+<td><code>(*, ddt_id=None, ordine_id=None) -&gt; (condizione_sql \| None, params)</code>. Lato <strong>DDT</strong> usa <code>v.ddt_id</code>, che la coda espone già (è il DDT della riga resa, per costruzione quello della partita). Lato <strong>ordine</strong> il legame non è una colonna: è un <code>EXISTS</code> sul <strong>fulfillment</strong> della riga di DDT resa (<code>ordini_righe_fulfillment</code> → <code>ordini_righe</code>), cioè la stessa fonte da cui <code>vw_partite_merce</code> deriva la propria origine — un criterio solo, non un terzo criterio. 🔴 <strong>E NON si passa da <code>v.ordine_riga_id</code></strong>, che pure c'è: con la partita generalizzata quella colonna è <strong>nullable</strong> (vuota sulla merce senza origine ordine — riga di DDT aggiunta a mano, DDT standalone), e usarla come chiave farebbe sparire dal filtro proprio le righe che il cantiere della partita ha appena portato dentro il conto: l'elenco corto sembrerebbe giusto. Senza documento ritorna <code>(None, &#91;&#93;)</code> = «nessuna restrizione», <strong>non</strong> una condizione sempre vera. ⚠️ Assume l'alias <code>v</code> sulla vista-coda: è la convenzione di entrambi i chiamanti. ⚠️ I due id sono <strong>alternativi</strong>, e il divieto vive nel service (<code>_valida_filtro_documento</code> → <code>E_RESO_VALIDAZIONE</code>), non qui: il BB resta puro e deterministico (a parità arriva, vince il DDT).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consumer</strong>: <code>VenditeRepository._list_coda_su_partite</code> (le sezioni «da
+accreditare» / «da ri-consegnare» del pannello) e <code>ResiRepository._list_coda</code>
+via <code>_aggiungi_filtro_documento</code> (le due code di lavoro, con i query param
+<code>?ddt_id=</code> / <code>?ordine_id=</code> su list <strong>ed export</strong>).</p>
+<p>⚠️ <strong>Perché è un BB e non due copie</strong>: le due schermate rispondono alla stessa
+domanda e devono contare le <strong>stesse righe</strong>. Scritto due volte, il giorno in cui
+uno dei due cambia il pannello dice «8 da accreditare» e la coda filtrata ne
+mostra 7 — e nessun test lo intercetta, perché ognuna delle due copie è coerente
+con sé stessa.</p>
+<p>⚠️ <strong>L'unica rete sulla stringa SQL sono i test del BB</strong>
+(<code>apps/vendite/tests/db/test_coda_documento_filtro.py</code>, 6 test): i test del
+service situazione merce mockano il repository, quindi il predicato non lo
+attraversano. Verificato inoltre <strong>sui dati</strong> il 2026-08-18: la partizione per
+DDT somma al totale della coda, la variante ordine dà lo stesso split, e un id
+inesistente dà <strong>0</strong> e non «tutto».</p>
+<hr />
 <h2 id="vendite-lineage-documenti-pannello-passaggi-appsvendite">Vendite — Lineage documenti / pannello "Passaggi" (<code>apps/vendite/</code>)<a class="headerlink" href="#vendite-lineage-documenti-pannello-passaggi-appsvendite" title="Permanent link">&para;</a></h2>
 <p>Genealogia/transiti dei documenti vendite (brief-be-fe-lineage-documenti-vendite,
 Fase A 2026-07-15). Tutta la logica di grafo vive nel DB

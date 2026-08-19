@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5493,25 +5493,25 @@
 <h2 id="logica">Logica<a class="headerlink" href="#logica" title="Permanent link">&para;</a></h2>
 <p>Il trigger gestisce tre casi in base a <code>TG_OP</code>:</p>
 <h3 id="delete-sempre-bloccato">DELETE — sempre bloccato<a class="headerlink" href="#delete-sempre-bloccato" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>IF TG_OP = &#39;DELETE&#39;
+<div class="highlight"><pre><span></span><code>IF TG_OP = 'DELETE'
     → raise E_RIGA_LISTINO_VERSIONE_CHIUSA (362)
-       context: { operazione: &#39;DELETE&#39;, hint: &#39;Usare attivo=FALSE&#39;, riga_id }
+       context: { operazione: 'DELETE', hint: 'Usare attivo=FALSE', riga_id }
 </code></pre></div>
 <h3 id="insert-solo-su-versione-bozza">INSERT — solo su versione BOZZA<a class="headerlink" href="#insert-solo-su-versione-bozza" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>SELECT lv.stato FROM vendite.listini_versioni lv
 WHERE lv.id = NEW.listino_versione_id
 
-IF TG_OP = &#39;INSERT&#39; AND COALESCE(v_stato, &#39;BOZZA&#39;) &lt;&gt; &#39;BOZZA&#39;
+IF TG_OP = 'INSERT' AND COALESCE(v_stato, 'BOZZA') &lt;&gt; 'BOZZA'
     → raise E_RIGA_LISTINO_VERSIONE_CHIUSA (362)
-       context: { operazione: &#39;INSERT&#39;, stato_versione, listino_versione_id }
+       context: { operazione: 'INSERT', stato_versione, listino_versione_id }
 </code></pre></div>
 <h3 id="update-campi-core-bloccati-se-versione-non-bozza">UPDATE — campi core bloccati se versione non BOZZA<a class="headerlink" href="#update-campi-core-bloccati-se-versione-non-bozza" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>IF TG_OP = &#39;UPDATE&#39; AND COALESCE(v_stato, &#39;BOZZA&#39;) &lt;&gt; &#39;BOZZA&#39; THEN
+<div class="highlight"><pre><span></span><code>IF TG_OP = 'UPDATE' AND COALESCE(v_stato, 'BOZZA') &lt;&gt; 'BOZZA' THEN
     IF NEW.prezzo    IS DISTINCT FROM OLD.prezzo
     OR NEW.iva_id    IS DISTINCT FROM OLD.iva_id
     OR NEW.validita  IS DISTINCT FROM OLD.validita
         → raise E_RIGA_LISTINO_VERSIONE_CHIUSA (362)
-           context: { operazione: &#39;UPDATE_CAMPI_CORE&#39;, stato_versione, listino_versione_id, riga_id }
+           context: { operazione: 'UPDATE_CAMPI_CORE', stato_versione, listino_versione_id, riga_id }
 </code></pre></div>
 <p>Gli altri campi (es. <code>attivo</code>, <code>meta</code>) rimangono modificabili anche su versioni non-BOZZA.</p>
 <hr />

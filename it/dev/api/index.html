@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -6942,7 +6942,7 @@ la view non contiene logica di business.</p>
 
 <span class="c1"># Per endpoint di dominio (anagrafiche, vendite, pratiche...)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ToponomasticaView</span><span class="p">(</span><span class="n">DomainAPIView</span><span class="p">):</span>
-    <span class="n">area_funzionale</span> <span class="o">=</span> <span class="s2">&quot;anagrafiche&quot;</span>
+    <span class="n">area_funzionale</span> <span class="o">=</span> <span class="s2">"anagrafiche"</span>
     <span class="n">is_search_endpoint</span> <span class="o">=</span> <span class="kc">True</span>        <span class="c1"># opzionale, per throttling ricerca</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span> <span class="o">...</span>      <span class="c1"># lista</span>
@@ -7040,8 +7040,8 @@ per la catena livello area. Lo scope dati e' applicato a livello DB via
 Tutti i moduli usano ora <code>DomainAPIView</code>, <code>AdminAPIView</code>, <code>PortaleAPIView</code>
 o <code>ShopAPIView</code> direttamente:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ApiRunLottoPipeline</span><span class="p">(</span><span class="n">DomainAPIView</span><span class="p">):</span>
-    <span class="n">area_funzionale</span> <span class="o">=</span> <span class="s2">&quot;vendite&quot;</span>
-    <span class="n">post_permission</span> <span class="o">=</span> <span class="s2">&quot;genera_fatture_lotti&quot;</span>
+    <span class="n">area_funzionale</span> <span class="o">=</span> <span class="s2">"vendite"</span>
+    <span class="n">post_permission</span> <span class="o">=</span> <span class="s2">"genera_fatture_lotti"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span> <span class="o">...</span>
 </code></pre></div>
@@ -7065,8 +7065,8 @@ Il helper gestisce in modo centralizzato:</p>
     <span class="c1"># Scopo: Gestisce la richiesta HTTP POST per cambiare stato pratica.</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">pratica_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JsonResponse</span><span class="p">:</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">_handler</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span>\<span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span>\<span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span>\<span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span>\<span class="p">]:</span>
-            <span class="n">pratiche_service</span><span class="o">.</span><span class="n">cambia_stato_pratica</span><span class="p">(</span><span class="n">pratica_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span>\<span class="p">[</span><span class="s2">&quot;nuovo_stato&quot;</span>\<span class="p">]))</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span><span class="p">}</span>
+            <span class="n">pratiche_service</span><span class="o">.</span><span class="n">cambia_stato_pratica</span><span class="p">(</span><span class="n">pratica_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span>\<span class="p">[</span><span class="s2">"nuovo_stato"</span>\<span class="p">]))</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="n">handle_post_json</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">handler</span><span class="o">=</span><span class="n">_handler</span><span class="p">)</span>
 </code></pre></div>
@@ -7139,15 +7139,15 @@ Il helper gestisce in modo centralizzato:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ApiLottiList</span><span class="p">(</span><span class="n">APIView</span><span class="p">):</span>
     <span class="n">is_search_endpoint</span> <span class="o">=</span> <span class="kc">True</span>                           <span class="c1"># abilita throttling</span>
 
-    <span class="c1"># Scopo: Restituisce via GET l&#39;elenco paginato dei lotti fatturazione.</span>
+    <span class="c1"># Scopo: Restituisce via GET l'elenco paginato dei lotti fatturazione.</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JsonResponse</span><span class="p">:</span>
         <span class="n">competenza_mese</span> <span class="o">=</span> <span class="n">optional_iso_date</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;competenza_mese&quot;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;competenza_mese&quot;</span><span class="p">)},</span>
-            <span class="s2">&quot;competenza_mese&quot;</span><span class="p">,</span>
+            <span class="p">{</span><span class="s2">"competenza_mese"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"competenza_mese"</span><span class="p">)},</span>
+            <span class="s2">"competenza_mese"</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">page</span> <span class="o">=</span> <span class="n">optional_int</span><span class="p">({</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">)},</span> <span class="s2">&quot;page&quot;</span><span class="p">)</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">optional_int</span><span class="p">({</span><span class="s2">"page"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"page"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">)},</span> <span class="s2">"page"</span><span class="p">)</span>
         <span class="n">page_size</span> <span class="o">=</span> <span class="n">optional_int</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;page_size&quot;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page_size&quot;</span><span class="p">,</span> <span class="s2">&quot;50&quot;</span><span class="p">)},</span> <span class="s2">&quot;page_size&quot;</span>
+            <span class="p">{</span><span class="s2">"page_size"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"page_size"</span><span class="p">,</span> <span class="s2">"50"</span><span class="p">)},</span> <span class="s2">"page_size"</span>
         <span class="p">)</span>
         <span class="n">auth_user_id</span> <span class="o">=</span> <span class="n">get_scope_user_id</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>       <span class="c1"># None per superuser</span>
 
@@ -7245,21 +7245,21 @@ l'ordinamento: <code>validate_order_params(order_by, order_dir, *, allowed_colum
 </table>
 <p>Risposta paginata:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;page&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;page_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;total_pages&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">\</span><span class="p">[</span><span class="err">...\</span><span class="p">]</span>
+<span class="w">  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"count"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"page_size"</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"results"</span><span class="p">:</span><span class="w"> </span><span class="err">\</span><span class="p">[</span><span class="err">...\</span><span class="p">]</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;request_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"request_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Pattern alternativo (per endpoint che usano <code>limit</code>/<code>offset</code>):</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">\</span><span class="p">[</span><span class="err">...\</span><span class="p">]</span>
+<span class="w">  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"count"</span><span class="p">:</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"results"</span><span class="p">:</span><span class="w"> </span><span class="err">\</span><span class="p">[</span><span class="err">...\</span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -7277,7 +7277,7 @@ l'ordinamento: <code>validate_order_params(order_by, order_dir, *, allowed_colum
     <span class="k">def</span><span class="w"> </span><span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">pratica_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JsonResponse</span><span class="p">:</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">_handler</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span>\<span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span>\<span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span>\<span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span>\<span class="p">]:</span>
             <span class="n">pratiche_service</span><span class="o">.</span><span class="n">aggiorna_pratica</span><span class="p">(</span><span class="n">pratica_id</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">payload</span><span class="p">))</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="n">handle_post_json</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">handler</span><span class="o">=</span><span class="n">_handler</span><span class="p">)</span>
 </code></pre></div>
@@ -7318,22 +7318,22 @@ usare <code>handle_post_json</code> con <code>require_idempotency_key=True</code
 <h2 id="envelope-risposte">Envelope risposte<a class="headerlink" href="#envelope-risposte" title="Permanent link">&para;</a></h2>
 <h3 id="successo">Successo<a class="headerlink" href="#successo" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;request_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid-...&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"request_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uuid-..."</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Generato da <code>success_response()</code> in <code>apps.core.api.success_responses</code>.</p>
 <h3 id="errore">Errore<a class="headerlink" href="#errore" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;error&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;E_PIPELINE_VALIDATION&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Tipo documento fiscale non valido.&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;detail&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tipo_doc_fiscale_id=42 non trovato&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;retryable&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;ui_action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;highlight_form_fields&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;fields&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">\</span><span class="p">[</span><span class="s2">&quot;tipo_doc_fiscale_id&quot;</span><span class="err">\</span><span class="p">]</span>
+<span class="w">  </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"E_PIPELINE_VALIDATION"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tipo documento fiscale non valido."</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tipo_doc_fiscale_id=42 non trovato"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"retryable"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"ui_action"</span><span class="p">:</span><span class="w"> </span><span class="s2">"highlight_form_fields"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="err">\</span><span class="p">[</span><span class="s2">"tipo_doc_fiscale_id"</span><span class="err">\</span><span class="p">]</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;meta&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;request_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid-...&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">"meta"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"request_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uuid-..."</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <table>
@@ -7380,6 +7380,11 @@ usare <code>handle_post_json</code> con <code>require_idempotency_key=True</code
 <td>no</td>
 <td>I <strong>nomi</strong> dei campi del form da correggere (<code>&#91;"partita_iva"&#93;</code>)</td>
 </tr>
+<tr>
+<td><code>hint</code></td>
+<td>no</td>
+<td>L'<strong>azione suggerita</strong>: cosa può fare l'operatore adesso</td>
+</tr>
 </tbody>
 </table>
 <p>⭐ <strong><code>fields</code> — dal 2026-08-08.</strong> È l'informazione senza la quale
@@ -7387,6 +7392,21 @@ usare <code>handle_post_json</code> con <code>require_idempotency_key=True</code
 campo»</em> senza dire quale. Arriva dal <code>context</code> del <code>ServiceError</code>, dalla
 convenzione <code>context={"field": &lt;nome&gt;}</code> già presente in <strong>114 punti di
 chiamata</strong> — non è una convenzione nuova, è una che si fermava al log.</p>
+<p>⭐ <strong><code>hint</code> — dal 2026-08-18.</strong> È la <code>soluzione</code> che il team DB scrive <strong>a
+catalogo per ogni codice</strong> (<em>«se il documento non è ancora numerato, la strada è
+il reset del lotto…»</em>): la parte che dice all'operatore cosa fare. PostgreSQL la
+consegna come <code>HINT</code> dell'eccezione.</p>
+<p>🔴 <strong>Prima non arrivava, ed è il motivo per cui la modifica esiste.</strong>
+<code>ErrorTranslator._from_database_error</code> la leggeva già dalla diag psycopg — ma
+quel ramo vale solo per un <code>DatabaseError</code> che arriva <strong>nudo</strong> al middleware, e
+appena un service traduce con <code>translate_db_errors</code> (cioè sempre, in ogni
+dominio) non ci passa: il <code>ServiceError</code> nasceva <strong>senza <code>hint</code></strong> e la frase
+restava annegata nel testo grezzo di <code>detail</code>.</p>
+<p>Ne discendeva che un dominio che volesse mostrarla doveva <strong>riscriverla in
+Python</strong>, cioè duplicare il catalogo. Ora il campo viaggia strutturato fino
+all'envelope. ⚠️ <strong>Il frontend non lo legge ancora</strong> (zero occorrenze di
+<code>error.hint</code>): il primo consumatore sarà la coda accrediti, dove distingue
+«non si può» da «resetta il lotto, ma sappi che la nota si rigenera».</p>
 <p>⚠️ <strong>Escono solo i nomi, e solo dalla chiave <code>field</code>.</strong> Il <code>context</code> è una borsa
 diagnostica destinata a <code>dbops.error_log</code>: contiene anche <code>lotto_id</code>,
 <code>contratto_id</code>, <code>order_dir</code>, che non sono campi di un form — mandarli direbbe al
@@ -7441,13 +7461,13 @@ nome di <strong>colonna</strong>. Non c'è un secondo significato da cui difende
 I serializer sono <strong>inline</strong> (non in file separati):</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@extend_schema</span><span class="p">(</span>
     <span class="n">request</span><span class="o">=</span><span class="n">inline_serializer</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;PraticaStatoRequest&quot;</span><span class="p">,</span>
-        <span class="n">fields</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;nuovo_stato&quot;</span><span class="p">:</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">()},</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"PraticaStatoRequest"</span><span class="p">,</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">{</span><span class="s2">"nuovo_stato"</span><span class="p">:</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">()},</span>
     <span class="p">),</span>
     <span class="n">responses</span><span class="o">=</span><span class="p">{</span><span class="mi">200</span><span class="p">:</span> <span class="n">inline_serializer</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;PraticaStatoResponse&quot;</span><span class="p">,</span>
-        <span class="n">fields</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">inline_serializer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;PraticaStatoData&quot;</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(),</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"PraticaStatoResponse"</span><span class="p">,</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">{</span><span class="s2">"data"</span><span class="p">:</span> <span class="n">inline_serializer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"PraticaStatoData"</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(),</span>
         <span class="p">})},</span>
     <span class="p">)},</span>
 <span class="p">)</span>
@@ -7561,7 +7581,7 @@ Vedi <a href="../../guide/architettura-multi-face-auth/">architettura-multi-face
 <li><strong>Vendite — Commesse (governo operativo)</strong>: <a href="../../backend/vendite/manual/api_commessa_stato/">api_commessa_stato.md</a> | <a href="../../backend/vendite/manual/api_commessa_attivita/">api_commessa_attivita.md</a> — lista righe + azioni APPROVA (riga/mese) e, dal 2026-07-28, <strong>ANNULLA riga manuale</strong> (<code>POST /commesse/&lt;id&gt;/attivita/&lt;att_id&gt;/annulla/</code>): non cancella, porta <code>stato_emissione</code> ad <code>ANNULLATA</code> (valore già filtrato da tutte le porte verso fattura e cockpit) con motivo obbligatorio tracciato; gate <code>carica_voce_manuale</code>, perimetro = righe sourceless non emesse su commessa modificabile | <a href="../../backend/vendite/manual/api_commesse_pricing/">api_commesse_pricing.md</a> — azioni prezzo N5/N7/sblocco, dal 2026-07-23 gated su azione di processo <strong><code>prezzo_override_manuale</code></strong> (stesso codename dei gate prezzo di preventivi/contratti/DDT) | <a href="../../backend/vendite/manual/api_commessa_oneri/">api_commessa_oneri.md</a> — <strong>porta oneri</strong>: <code>POST /commesse/&lt;id&gt;/oneri/</code> crea la riga di puro valore (qta=1, <code>tipo_movimento=ONERE</code>, già APPROVATA, sourceless), causale/UoM/IVA derivate dall'articolo-onere dalla madre DB; gate <code>carica_voce_manuale</code>, presidio all'ingresso senza approvazione a due passi</li>
 <li><strong>Vendite — Fattura (consultazione)</strong>: <a href="../../backend/vendite/manual/api_fattura_dettaglio/">api_fattura_dettaglio.md</a> — <code>GET /vendite/fatture/&lt;id&gt;/</code> restituisce il <strong>documento completo</strong> (testata decodificata + righe da <code>vw_fattura_righe_esposte</code> con kit risolti + riepilogo IVA + piano rate) in un round-trip, per il drawer di consultazione. Orchestra gli <strong>stessi</strong> lettori che alimentano il contesto del PDF → video e stampa raccontano lo stesso documento per costruzione (regola R17). Sola lettura: oltre EMESSA le righe sono congelate a DB. ⚠️ <strong>Ordine di lettura vincolante</strong>: la testata è l'unico cancello di scope — <code>vendite.fatture</code> ha la RLS, <code>fatture_righe</code>/<code>fatture_riepiloghi_iva</code> <strong>no</strong>. Include le note fattura (<code>&lt;id&gt;/note/</code>, sesto dominio del BB partizionato) e i <code>contatori</code> dei badge (oggi <code>note</code>) — dict e non scalare per reggere i prossimi senza cambiare shape; il conteggio sta <strong>dopo</strong> il cancello di testata perché <code>note_fatture</code> non ha RLS</li>
 <li><strong>Vendite — Fondi fattura (governo)</strong>: <a href="../../backend/vendite/manual/api_fondi_fattura/">api_fondi_fattura.md</a> — <code>GET /vendite/fondi-fattura/da-decidere/</code>: l'elenco dei casi in cui il giro automatico <strong>si ferma</strong> e la scelta resta a una persona (4 motivi a vocabolario chiuso). Read-only su <code>vw_fondi_fattura_da_decidere</code>, <code>security_invoker</code> → <strong>va letta con la connessione dell'utente, mai da un canale di sistema</strong>. ⭐ L'elenco <strong>presenta, non sana</strong>: nessuna riga ha un gemello automatico che la corregge, perché sanarla vorrebbe dire muovere denaro senza che nessuno l'abbia deciso</li>
-<li><strong>Vendite — Situazione merce (ordine e DDT)</strong>: <a href="../../backend/vendite/manual/api_situazione_merce/">api_situazione_merce.md</a> — <code>GET /vendite/{ordini|ddt}/&lt;id&gt;/situazione-merce/</code>: quanto è uscito, tornato, fatturato e cosa resta aperto, in <strong>un round-trip</strong> e quattro sezioni (riassunto per riga d'ordine · partite di merce · coda accrediti · coda ri-consegne). Read-only su <code>vw_situazione_merce_ordine</code> + <code>vw_partite_merce</code> + le due code, tutte <code>security_invoker</code>. Le due view nascono dal factory <code>build_situazione_merce_view</code> (i domini sono due dal primo giorno). ⛔ <strong><code>differenza</code> può essere <code>null</code> e non significa zero</strong> («il conto non si applica»: riga mai spedita, causale non fatturabile, conto non calcolabile) e <strong><code>stato</code> non si ri-traduce</strong> — arriva già tradotto dal DB con sei valori. ⚠️ <code>fatturato_anticipato</code> non è un accredito. 🔴 Il perimetro si verifica sulla <strong>testata</strong> prima di ogni lettura (<code>ordini</code>/<code>ddt</code> hanno la RLS, le righe no): fuori scope → 404, altrimenti il pannello uscirebbe vuoto invece che negato</li>
+<li><strong>Vendite — Situazione merce (ordine e DDT)</strong>: <a href="../../backend/vendite/manual/api_situazione_merce/">api_situazione_merce.md</a> — <code>GET /vendite/{ordini|ddt}/&lt;id&gt;/situazione-merce/</code>: quanto è uscito, tornato, fatturato e cosa resta aperto, in <strong>un round-trip</strong> e quattro sezioni (riassunto per riga d'ordine · partite di merce · coda accrediti · coda ri-consegne). Read-only su <code>vw_situazione_merce_ordine</code> + <code>vw_partite_merce</code> + le due code, tutte <code>security_invoker</code>. Le due view nascono dal factory <code>build_situazione_merce_view</code> (i domini sono due dal primo giorno). ⛔ <strong><code>differenza</code> e <code>da_spedire</code> possono essere <code>null</code>, e <code>null</code> non è zero</strong> («il conto non si applica»: ordine non ancora impegnato, riga mai spedita, causale non fatturabile, conto non calcolabile) e <strong><code>stato</code> non si ri-traduce</strong> — arriva già tradotto dal DB con <strong>sette</strong> valori. ⚠️ <code>fatturato_anticipato</code> non è un accredito. 🔴 Il perimetro si verifica sulla <strong>testata</strong> prima di ogni lettura (<code>ordini</code>/<code>ddt</code> hanno la RLS, le righe no): fuori scope → 404, altrimenti il pannello uscirebbe vuoto invece che negato</li>
 <li><strong>Vendite — Lineage/genealogia documenti</strong>: <a href="../../backend/vendite/manual/api_lineage_passaggi/">api_lineage_passaggi.md</a> — <code>GET /&lt;dominio&gt;/&lt;id&gt;/passaggi/</code> sui 7 domini (6 documenti + commessa — factory <code>build_passaggi_view</code>): pratica collegata + frontiera + catena transiti avanti/indietro (read-only su <code>vw_documento_lineage</code>/<code>fn_documento_lineage</code>, RLS invoker)</li>
 <li><strong>Vendite — Situazione aperta</strong>: <a href="../../backend/vendite/manual/api_dashboard_aperto/">api_dashboard_aperto.md</a> — stock documenti per <code>area × fase</code> senza asse temporale + drill-down (read-only su <code>vw_dash_aperto_*</code>; sostituisce la dashboard 5-card, Fase 3 due-lenti)</li>
 <li><strong>Vendite — Dashboard competenza (Lente 1)</strong>: <a href="../../backend/vendite/manual/api_dashboard_competenza/">api_dashboard_competenza.md</a> — funnel commessa→fattura per mese di competenza: aggregata 12 mesi × 4 stadi + breakdown stato fattura, drill-down attività, drill-down per commessa, <strong>gruppi fatturabili</strong> (<code>gruppi/</code> — l'unità dell'emissione mirata: documento sorgente oppure oneri di commessa, con riepilogo di perimetro nell'envelope; la <code>gruppo_key</code> è la stessa accettata da <code>fatturazione/run/</code>), errori vivi (read-only su <code>vw_dash_competenza_*</code>)</li>
@@ -7756,8 +7776,8 @@ il consumer API:</p>
 <h2 id="decisioni-architetturali">Decisioni architetturali<a class="headerlink" href="#decisioni-architetturali" title="Permanent link">&para;</a></h2>
 <h3 id="validazione-input">Validazione input<a class="headerlink" href="#validazione-input" title="Permanent link">&para;</a></h3>
 <p>La validazione vive nel <strong>service layer</strong>, tramite helper procedurali:</p>
-<div class="highlight"><pre><span></span><code><span class="n">descrizione</span> <span class="o">=</span> <span class="n">_require_str</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="s2">&quot;descrizione&quot;</span><span class="p">,</span> <span class="s2">&quot;Descrizione obbligatoria.&quot;</span><span class="p">)</span>
-<span class="n">sigla</span> <span class="o">=</span> <span class="n">_optional_str</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="s2">&quot;sigla&quot;</span><span class="p">,</span> <span class="s2">&quot;Sigla non puo&#39; essere vuota.&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">descrizione</span> <span class="o">=</span> <span class="n">_require_str</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="s2">"descrizione"</span><span class="p">,</span> <span class="s2">"Descrizione obbligatoria."</span><span class="p">)</span>
+<span class="n">sigla</span> <span class="o">=</span> <span class="n">_optional_str</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="s2">"sigla"</span><span class="p">,</span> <span class="s2">"Sigla non puo' essere vuota."</span><span class="p">)</span>
 </code></pre></div>
 <p>Non si usano serializer DRF ne' Pydantic — gli helper <code>_require_str</code>, <code>_optional_str</code>,
 <code>optional_int</code>, <code>optional_bool</code> sono sufficienti per il volume attuale.
@@ -8308,6 +8328,43 @@ parte del comportamento la decide <code>ui_action</code>, non lo status»</em>.<
 <code>error.message</code> (in <code>useApiHandler.extractErrorMessage</code>) e lo <strong>status</strong>:
 <code>&gt;= 500</code> → toast di sistema, 401 → refresh del token, 401/403 → il polling dei
 contatori si ferma. <strong>Sono tutti e tre gli effetti che esistono.</strong></p>
+<p>🔴 <strong>AGGIORNAMENTO (2026-08-18): la prima metà di quella misura è scaduta, la
+seconda no — e la differenza è quella che conta.</strong> Rimisurato:</p>
+<table>
+<thead>
+<tr>
+<th>Cosa</th>
+<th>2026-08-07</th>
+<th>2026-08-18</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>il <strong>nome</strong> in <code>frontend/src</code></td>
+<td>zero</td>
+<td><strong>2 occorrenze</strong>, entrambe in <code>useApiHandler.js</code>: il commento e <code>azioneUi.value = err.response?.data?.error?.ui_action ?? null</code></td>
+</tr>
+<tr>
+<td>i <strong>consumatori</strong> di quel valore</td>
+<td>zero</td>
+<td><strong>zero</strong> — <code>azioneUi</code> non è letto da nessun componente</td>
+</tr>
+<tr>
+<td>i <strong>valori</strong> del vocabolario (<code>show_error_banner</code>, <code>highlight_form_fields</code>, <code>show_empty_state</code>, <code>redirect_login</code>, …)</td>
+<td>zero</td>
+<td><strong>zero</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Il campo è arrivato insieme a <code>fields</code> (2026-08-08), dallo stesso envelope e
+nella stessa riga: <code>useApiHandler</code> <strong>estrae</strong> entrambi, ma solo <code>campiErrati</code>
+ha un consumatore. Quindi <code>ui_action</code> oggi è <strong>emessa, trasportata e non
+consumata</strong> — un passo più avanti di «non la legge nessuno», e <strong>zero passi</strong>
+più avanti sul comportamento a video.</p>
+<p>⚠️ <strong>Le tre conseguenze pratiche qui sotto non cambiano di una virgola</strong>, e
+il punto 3 diventa più concreto: il giorno in cui un componente reagirà a
+<code>azioneUi</code> non ci sarà da scrivere l'estrazione — c'è già. Ci sarà solo da
+riguardare le 176 righe di override, <strong>prima</strong> di accenderlo.</p>
 <p>⚠️ <strong>Non vuol dire che <code>ui_action</code> sia da togliere</strong>, e nemmeno che le 176
 decisioni di override siano state inutili: è un contratto <strong>emesso e non
 ancora consumato</strong>, e il costo di tenerlo è zero. Vuol dire tre cose pratiche:</p>
@@ -8695,13 +8752,13 @@ campo <code>attivo</code>. Il trigger <strong>impedisce di disattivare un padre 
 <p><strong>Disattivazione</strong> — prima i figli, poi il padre:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># 1. Disattiva figlio</span>
 <span class="n">UPDATE</span> <span class="n">risorse_umane_auth_user</span> <span class="n">SET</span> <span class="n">attivo</span> <span class="o">=</span> <span class="n">false</span> <span class="n">WHERE</span> <span class="o">...</span>
-<span class="c1"># 2. Disattiva padre (trigger OK: figlio gia&#39; inattivo)</span>
+<span class="c1"># 2. Disattiva padre (trigger OK: figlio gia' inattivo)</span>
 <span class="n">UPDATE</span> <span class="n">risorse_umane</span> <span class="n">SET</span> <span class="n">attivo</span> <span class="o">=</span> <span class="n">false</span> <span class="n">WHERE</span> <span class="o">...</span>
 </code></pre></div>
 <p><strong>Riattivazione</strong> — prima il padre, poi i figli:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># 1. Riattiva padre</span>
 <span class="n">UPDATE</span> <span class="n">risorse_umane</span> <span class="n">SET</span> <span class="n">attivo</span> <span class="o">=</span> <span class="n">true</span> <span class="n">WHERE</span> <span class="o">...</span>
-<span class="c1"># 2. Riattiva figlio (padre gia&#39; attivo)</span>
+<span class="c1"># 2. Riattiva figlio (padre gia' attivo)</span>
 <span class="n">UPDATE</span> <span class="n">risorse_umane_auth_user</span> <span class="n">SET</span> <span class="n">attivo</span> <span class="o">=</span> <span class="n">true</span> <span class="n">WHERE</span> <span class="o">...</span>
 </code></pre></div>
 <h3 id="perche">Perche'<a class="headerlink" href="#perche" title="Permanent link">&para;</a></h3>

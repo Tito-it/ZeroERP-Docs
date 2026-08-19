@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -2804,6 +2804,34 @@
       </span>
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5a-bis-il-soggetto-non-ha-un-emittente-fiscale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5a-bis. ⭐ Il soggetto NON ha un emittente fiscale
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5a-bis. ⭐ Il soggetto NON ha un emittente fiscale">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cosa-ne-segue-in-pratica" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cosa ne segue, in pratica
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -5818,6 +5846,34 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#5a-bis-il-soggetto-non-ha-un-emittente-fiscale" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5a-bis. ⭐ Il soggetto NON ha un emittente fiscale
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5a-bis. ⭐ Il soggetto NON ha un emittente fiscale">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cosa-ne-segue-in-pratica" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cosa ne segue, in pratica
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#5b-identificazione-canonica-di-un-ruolo-specializzato-pk-reale-vs-soggetto_ruolo_id" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6430,6 +6486,57 @@ e le scope policy (portali + shop):</p>
 </table>
 <p>I ruoli <strong>REFERENTE</strong> (RE), <strong>VENDITORE</strong> (VE), <strong>DISTRIBUTORE</strong> (DI) e <strong>BANCA</strong> (BANK) non hanno tabella specializzata: operano solo tramite il record in <code>soggetti_ruoli</code> e le tabelle trasversali (contatti, conti bancari).</p>
 <p>Tutte le tabelle specializzate si collegano tramite <code>soggetto_ruolo_id → soggetti_ruoli.id</code> con vincolo UNIQUE: un solo record specializzato per ruolo assegnato. I dati appartengono solo al ruolo pertinente — le condizioni di pagamento del cliente non si mescolano con quelle del fornitore, anche se il soggetto e lo stesso.</p>
+<hr />
+<h3 id="5a-bis-il-soggetto-non-ha-un-emittente-fiscale">5a-bis. ⭐ Il soggetto NON ha un emittente fiscale<a class="headerlink" href="#5a-bis-il-soggetto-non-ha-un-emittente-fiscale" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>⚠️ <strong>Sezione canonica.</strong> Aggiunta il 2026-08-18 perche' l'assenza di questo
+legame era <strong>implicita</strong>, e cio' che e' implicito viene letto al contrario:
+era gia' successo che si chiedesse «l'emittente del soggetto» come se fosse un
+suo attributo.</p>
+</blockquote>
+<p><strong>In tutta l'anagrafica l'emittente fiscale compare in un solo posto:</strong></p>
+<div class="highlight"><pre><span></span><code>anagrafiche.emittenti_fiscali_billing_account.emittente_soggetto_ruolo_id
+</code></pre></div>
+<p>Non esiste su <code>soggetti</code>, ne' su <code>soggetti_ruoli</code>, ne' su <code>clienti</code>, ne' su
+<code>billing_account</code>, ne' su <code>istanze_utilities</code>. Verificato sul catalogo, non
+dedotto.</p>
+<table>
+<thead>
+<tr>
+<th>Entita'</th>
+<th>Legame con l'emittente</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>billing account</strong></td>
+<td>✅ <strong>esattamente uno</strong>, per costruzione: <code>UNIQUE (billing_account_id)</code> sul mapping, piu' il ripiego sul gestore globale (che e' comunque uno)</td>
+</tr>
+<tr>
+<td><strong>soggetto</strong></td>
+<td>❌ <strong>nessuno.</strong> Il legame esiste solo <em>transitivamente</em>, attraverso i billing account del soggetto</td>
+</tr>
+</tbody>
+</table>
+<h4 id="cosa-ne-segue-in-pratica">Cosa ne segue, in pratica<a class="headerlink" href="#cosa-ne-segue-in-pratica" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>un soggetto puo' essere cliente di piu' emittenti</strong>, ed e' legittimo: sono
+  alberi di billing account separati, uno per emittente. Misurato il 2026-08-18:
+  <strong>1 soggetto cliente su 7</strong> e' gia' in questa condizione, non e' un caso di
+  laboratorio;</li>
+<li>la regola che il database presidia <strong>non</strong> e' <em>«un soggetto sta sotto un solo
+  emittente»</em> — sarebbe falsa e dannosa. E' <em>«un singolo albero di billing
+  account non attraversa due emittenti»</em>, ed e' un'altra cosa. Guard:
+  <a href="../../dbzero/anagrafiche/manual/fn_guard_albero_ba_emittente/"><code>fn_guard_albero_ba_emittente</code></a>;</li>
+<li>⚠️ <strong>quando si mostra «l'emittente» accanto a un soggetto</strong>, si sta mostrando
+  una <strong>relazione</strong>, non un attributo. Se il soggetto ne tocca due, i valori sono
+  due: l'etichetta deve dirlo (<em>«emittenti presso cui e' cliente»</em>), e la riga
+  <strong>non</strong> va duplicata per emittente — duplicarla cambierebbe il significato di
+  un conteggio di soggetti;</li>
+<li>dove invece l'emittente <strong>e'</strong> un dato pulito per riga e' il livello del
+  <strong>rapporto</strong>: ogni riga cliente punta a un billing account, quindi a un
+  emittente solo.</li>
+</ul>
 <hr />
 <h3 id="5b-identificazione-canonica-di-un-ruolo-specializzato-pk-reale-vs-soggetto_ruolo_id">5b. Identificazione canonica di un ruolo specializzato — PK reale vs <code>soggetto_ruolo_id</code><a class="headerlink" href="#5b-identificazione-canonica-di-un-ruolo-specializzato-pk-reale-vs-soggetto_ruolo_id" title="Permanent link">&para;</a></h3>
 <blockquote>

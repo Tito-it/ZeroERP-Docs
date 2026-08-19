@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5389,6 +5389,56 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-08-18-la-partita-conosce-la-nota-di-credito" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-08-18 — la partita conosce la nota di credito
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 rev 2026-08-18 — la partita conosce la nota di credito">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#n6-il-fatturato-somma-le-rettifiche" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        N6 — il <code>fatturato</code> somma le rettifiche
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#n7-una-ri-consegna-e-merce-nuova-solo-per-la-parte-accreditata" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        N7 — «una ri-consegna è merce nuova SOLO per la parte accreditata»
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#consegnato-e-la-base-contabile-non-la-quantita-fisica" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ <code>consegnato</code> è la base CONTABILE, non la quantità fisica
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5651,12 +5701,12 @@ spedizione</strong>, che è un costo fisico, non informatico.</p>
 <span class="c1">-- Tutto ciò che è aperto su un ordine, comprese le righe aggiunte a mano.</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">ddt_riga_id</span><span class="p">,</span><span class="w"> </span><span class="n">origine</span><span class="p">,</span><span class="w"> </span><span class="n">stato</span><span class="p">,</span><span class="w"> </span><span class="n">differenza</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_partite_merce</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">ordine_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">18586</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">stato</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;DA_FATTURARE&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;DA_ACCREDITARE&#39;</span><span class="p">);</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">ordine_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">18586</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">stato</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">'DA_FATTURARE'</span><span class="p">,</span><span class="w"> </span><span class="s1">'DA_ACCREDITARE'</span><span class="p">);</span>
 
 <span class="c1">-- Merce fatturata e poi resa: gli accrediti da emettere.</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">ddt_riga_id</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">differenza</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">accredito_dovuto</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">vendite</span><span class="p">.</span><span class="n">vw_partite_merce</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">stato</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;DA_ACCREDITARE&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">stato</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'DA_ACCREDITARE'</span><span class="p">;</span>
 </code></pre></div>
 <hr />
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
@@ -5683,6 +5733,98 @@ spedizione</strong>, che è un costo fisico, non informatico.</p>
   <code>misurabile</code>.</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-partite-merce-v1.sql</code>.</li>
 </ul>
+<hr />
+<hr />
+<h3 id="rev-2026-08-18-la-partita-conosce-la-nota-di-credito">🔄 rev 2026-08-18 — la partita conosce la nota di credito<a class="headerlink" href="#rev-2026-08-18-la-partita-conosce-la-nota-di-credito" title="Permanent link">&para;</a></h3>
+<p>Brief: <code>brief-design-note-credito-resi</code> (slice <strong>N6</strong> e <strong>N7</strong>).</p>
+<p><strong>Due colonne nuove</strong>, entrambe in coda perché un <code>CREATE OR REPLACE VIEW</code> non
+ne inserisce in mezzo — e da questa vista dipendono <code>vw_contatore_merce</code>,
+<code>vw_resi_da_accreditare</code> e <code>vw_situazione_merce_ordine</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Cosa dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rettificato</code></td>
+<td>quanto una nota di credito ha tolto al fatturato della partita. <strong>Negativo o zero</strong></td>
+</tr>
+<tr>
+<td><code>riconsegna_quota_nuova</code></td>
+<td>i pezzi accreditati che hanno <strong>cambiato casa</strong> verso una spedizione di ri-consegna</td>
+</tr>
+</tbody>
+</table>
+<h4 id="n6-il-fatturato-somma-le-rettifiche">N6 — il <code>fatturato</code> somma le rettifiche<a class="headerlink" href="#n6-il-fatturato-somma-le-rettifiche" title="Permanent link">&para;</a></h4>
+<p>È la riga che chiude il <strong>contratto del §2</strong> del brief: <em>«una nota di credito che
+non abbassa i fatturati della partita è invisibile al contatore → la coda
+accrediti continuerebbe a chiedere l'accredito per sempre, anche a NC emessa»</em>.</p>
+<p>⚠️ <strong>La rettifica si legge SEMPRE sulla corsia DDT</strong>, anche quando a fatturare è
+stata la corsia ordine (decisione D-NC-1). Se entrasse nel serbatoio d'ordine, la
+greedy oldest-first della CTE <code>alloc</code> scaricherebbe l'accredito sull'<strong>ultima</strong>
+spedizione invece che su quella da cui la merce è tornata — con il totale
+perfettamente giusto e la <strong>ripartizione falsa</strong>, cioè un difetto che nessun test
+di parità vede. Per questo <code>alloc</code> non è stata toccata.</p>
+<p>⭐ <strong>È una somma, non una sottrazione</strong>: la quantità della rettifica è già
+negativa in catena (D-NC-2). Il segno vive nel numero, non in un'etichetta che
+ogni consumatore dovrebbe saper tradurre.</p>
+<h4 id="n7-una-ri-consegna-e-merce-nuova-solo-per-la-parte-accreditata">N7 — «una ri-consegna è merce nuova SOLO per la parte accreditata»<a class="headerlink" href="#n7-una-ri-consegna-e-merce-nuova-solo-per-la-parte-accreditata" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p>Quando si rispedisce, i pezzi che erano stati <strong>accreditati</strong> contano sulla
+spedizione <strong>nuova</strong>. Quelli non accreditati continuano a contare su quella
+vecchia.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>consegnato</th>
+<th>reso</th>
+<th>in mano</th>
+<th>fatturato</th>
+<th>esito</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DDT₁ <em>(resta ferma)</em></td>
+<td>10</td>
+<td>3</td>
+<td>7</td>
+<td>7</td>
+<td>0 — a posto ✅</td>
+</tr>
+<tr>
+<td>DDT₂ <em>(prende i 3 accreditati)</em></td>
+<td><strong>3</strong></td>
+<td>0</td>
+<td>3</td>
+<td>0</td>
+<td><strong>3 da fatturare</strong> ✅</td>
+</tr>
+</tbody>
+</table>
+<p>DDT₂ è una spedizione <strong>mai instradata</strong>: <code>fn_get_stato_push_segment</code> la vede
+<code>LIBERA</code>, il giro di fatturazione normale la prende in carico. ⭐ Nessun verbo
+nuovo, nessuna seconda pipeline — e la cintura che impedisce di ri-spingere una
+riga già fatturata <strong>non si allenta</strong>.</p>
+<p>La quota si ripartisce fra più ri-consegne della stessa origine con la solita
+<strong>greedy oldest-first</strong>, ed è cappata alla quantità ri-consegnata: un secondo
+giro reso → NC → ri-consegna non conta due volte lo stesso accredito.</p>
+<p>⚠️ <strong>Senza nota di credito la regola è INERTE</strong>: nessun pezzo è stato
+accreditato, nessuno cambia casa, ogni numero resta quello di prima. È ciò che
+tiene chiuso il buco di luglio e verde il <strong>caso D</strong> di
+<code>test-fn-list-ddt-da-pushare-contatore-v1</code>.</p>
+<h4 id="consegnato-e-la-base-contabile-non-la-quantita-fisica">⚠️ <code>consegnato</code> è la base CONTABILE, non la quantità fisica<a class="headerlink" href="#consegnato-e-la-base-contabile-non-la-quantita-fisica" title="Permanent link">&para;</a></h4>
+<p>Su una riga di <strong>ri-consegna</strong> <code>consegnato</code> è ora la quota che ha cambiato casa —
+cioè <strong>0</strong> finché non c'è una nota di credito. Prima era la quantità della riga
+di DDT, contata <strong>sia</strong> sull'origine <strong>sia</strong> sulla riga nuova: la somma delle
+partite superava la merce realmente uscita, e l'invariante <em>«i pezzi si spostano,
+non si moltiplicano»</em> non era vero. Ora lo è.</p>
+<p>La quantità fisica resta dov'è sempre stata: <code>vendite.ddt_righe.quantita</code>.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -5437,7 +5437,7 @@ La funzione <code>anagrafiche.trgfn_clienti_sync_stato_pdp()</code> è una <stro
 <li><code>AT</code> → attivo;</li>
 <li><code>CH</code> → chiuso.</li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">v_cd_stato_cliente</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;AT&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;CH&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
+<div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">v_cd_stato_cliente</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span><span class="s1">'AT'</span><span class="p">,</span><span class="w"> </span><span class="s1">'CH'</span><span class="p">)</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NEW</span><span class="p">;</span>
 <span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 </code></pre></div>
@@ -5447,25 +5447,25 @@ La funzione <code>anagrafiche.trgfn_clienti_sync_stato_pdp()</code> è una <stro
 <p>La funzione recupera gli ID corrispondenti ai codici:</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_stato_att_id</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_pdp</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ATT&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'ATT'</span><span class="p">;</span>
 
 <span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">v_stato_disp_id</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_pdp</span>
-<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;DISP&#39;</span><span class="p">;</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'DISP'</span><span class="p">;</span>
 </code></pre></div>
 <p>Se uno dei due non è configurato, viene invocata <code>script.fn_log_and_raise_error</code> per segnalare un errore di configurazione:</p>
 <div class="highlight"><pre><span></span><code><span class="k">IF</span><span class="w"> </span><span class="n">v_stato_att_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">v_stato_disp_id</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">THEN</span>
 <span class="w">    </span><span class="n">PERFORM</span><span class="w"> </span><span class="n">script</span><span class="p">.</span><span class="n">fn_log_and_raise_error</span><span class="p">(</span>
-<span class="w">        </span><span class="s1">&#39;database&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;anagrafiche.trgfn_clienti_sync_stato_pdp&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;E_CODICE&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">'database'</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">'anagrafiche.trgfn_clienti_sync_stato_pdp'</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">'E_CODICE'</span><span class="p">,</span>
 <span class="w">        </span><span class="n">jsonb_build_object</span><span class="p">(</span>
-<span class="w">            </span><span class="s1">&#39;config.stati_pdp: stati tecnici ATT / DISP non configurati correttamente)&#39;</span><span class="p">,</span>
-<span class="w">            </span><span class="s1">&#39;att/disp missing&#39;</span>
+<span class="w">            </span><span class="s1">'config.stati_pdp: stati tecnici ATT / DISP non configurati correttamente)'</span><span class="p">,</span>
+<span class="w">            </span><span class="s1">'att/disp missing'</span>
 <span class="w">        </span><span class="p">),</span>
 <span class="w">        </span><span class="k">NEW</span><span class="p">.</span><span class="n">tx_id</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;ATT/DISP&#39;</span><span class="p">,</span>
-<span class="w">        </span><span class="s1">&#39;config.stati_pdp&#39;</span>
+<span class="w">        </span><span class="s1">'ATT/DISP'</span><span class="p">,</span>
+<span class="w">        </span><span class="s1">'config.stati_pdp'</span>
 <span class="w">    </span><span class="p">);</span>
 <span class="k">END</span><span class="w"> </span><span class="k">IF</span><span class="p">;</span>
 </code></pre></div>
@@ -5507,7 +5507,7 @@ Nella versione corrente la funzione non verifica l’esistenza di altri clienti 
 <span class="o">&gt;</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">config</span><span class="p">.</span><span class="n">stati_cliente</span><span class="w"> </span><span class="n">sc</span>
 <span class="o">&gt;</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">stato_cliente_id</span>
 <span class="o">&gt;</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">pdp_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">pdp_id</span>
-<span class="o">&gt;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;AT&#39;</span>
+<span class="o">&gt;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">sc</span><span class="p">.</span><span class="n">codice_interno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'AT'</span>
 <span class="o">&gt;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="k">NEW</span><span class="p">.</span><span class="n">id</span><span class="p">;</span>
 <span class="o">&gt;</span><span class="w"> </span><span class="o">```</span>
 <span class="o">&gt;</span>
