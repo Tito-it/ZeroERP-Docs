@@ -5301,6 +5301,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#la-guardia-dellaccredito-cosa-guarda-e-cosa-non-guarda-rev-2026-08-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ La guardia dell'accredito: cosa guarda e cosa non guarda (rev 2026-08-19)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5330,7 +5341,10 @@
 <blockquote>
 <p>👀 <strong>Vedi anche</strong></p>
 <p><a href=".././fn_conferma_reso/">vendite.fn_conferma_reso</a> (simmetrica) ·
-<a href="../../tabelle/resi_righe_riconsegne/">vendite.resi_righe_riconsegne</a></p>
+<a href="../../tabelle/resi_righe_riconsegne/">vendite.resi_righe_riconsegne</a> ·
+<a href="../../tabelle/resi_righe_accrediti/">vendite.resi_righe_accrediti</a> ·
+<a href=".././fn_annulla_accredito_riga_reso/">vendite.fn_annulla_accredito_riga_reso</a>
+(la strada da prendere prima)</p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
@@ -5340,15 +5354,43 @@ simmetrica a <code>fn_conferma_reso</code>. Stati ammessi: <code>DRAFT</code> o 
 (<code>E_RESO_STATO_NON_ANNULLABILE</code>).</p>
 <h3 id="logica">Logica<a class="headerlink" href="#logica" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Guard anti-storno complesso</strong>: un reso già ri-spedito (righe nel ponte
-   <code>resi_righe_riconsegne</code>) <strong>non</strong> è annullabile — lo storno di una ri-spedizione emessa è fuori
-   perimetro (<code>E_RESO_ANNULLO_CON_RICONSEGNE</code>).</li>
+<li><strong>Due guard anti-storno complesso</strong>, gemelli fra loro e tutti e due prima di qualunque
+   scrittura. In entrambi i casi c'è <strong>un effetto già partito</strong>, che l'annullo del documento non
+   saprebbe riportare indietro:</li>
+<li>un reso già <strong>ri-spedito</strong> (righe nel ponte <code>resi_righe_riconsegne</code>) <strong>non</strong> è annullabile —
+     lo storno di una ri-spedizione emessa è fuori perimetro (<code>E_RESO_ANNULLO_CON_RICONSEGNE</code>);</li>
+<li><em>(rev 2026-08-19)</em> un reso già <strong>accreditato</strong> (almeno una riga in <code>resi_righe_accrediti</code>)
+     <strong>non</strong> è annullabile (<code>E_RESO_ANNULLO_CON_ACCREDITO</code>). L'accredito ha già creato una
+     rettifica a quantità negativa che il giro di fatturazione raccoglie da solo: annullare il
+     reso senza disfarla farebbe uscire <strong>una nota di credito per un reso che non esiste più</strong>.
+     Il messaggio dice la strada: annullare prima l'accredito sulla riga, poi il reso.</li>
 <li>Transizione → <code>ANNULLATO</code>.</li>
 <li><strong>Solo se era CONFERMATO</strong> — storno: l'addendo reso decade (l'helper filtra i CONFERMATI) →
    <strong>ri-proiezione stato ordine</strong> (<code>PARZIALMENTE_EVASO</code>/<code>EVASO</code>); e <strong>ri-flip DDT</strong> <code>RESO →
    CONSEGNATO</code> se non è più reso totale (transizione seedata nella matrice DDT).</li>
 </ol>
 <p>Un annullo in <code>DRAFT</code> non ha effetti (nulla era stato applicato).</p>
+<h3 id="la-guardia-dellaccredito-cosa-guarda-e-cosa-non-guarda-rev-2026-08-19">⚠️ La guardia dell'accredito: cosa guarda e cosa non guarda (rev 2026-08-19)<a class="headerlink" href="#la-guardia-dellaccredito-cosa-guarda-e-cosa-non-guarda-rev-2026-08-19" title="Permanent link">&para;</a></h3>
+<p>Il predicato è <strong>l'esistenza della riga di ponte</strong>, non lo stato delle rettifiche. Se
+l'accredito è ormai troppo tardi per essere disfatto lo dice la sua madre
+(<code>fn_annulla_accredito_riga_reso</code>, con <code>E_ACCREDITO_ANNULLO_NON_AMMESSO</code>): ricalcolare qui
+«tutte NON_EMESSA» sarebbe una <strong>seconda copia della stessa regola</strong>, destinata a divergere.</p>
+<p><strong>Si rifiuta, non si cascata.</strong> L'annullo dell'accredito pretende un <em>motivo obbligatorio</em> e la
+traccia del perché vive solo in <code>commesse_attivita_log</code>: una cascata automatica dovrebbe
+inventarselo. E se anche una sola rettifica non è più <code>NON_EMESSA</code>, l'annullo del reso non deve
+avvenire <strong>affatto</strong> — non avvenire a metà.</p>
+<p>⭐ <strong>Vincolo reciproco, su tre posti</strong> (C-3), con
+<a href="../../../script/funzioni/fn_check_rinuncia_reversibile/">script.fn_check_rinuncia_reversibile</a> e
+<a href=".././fn_annulla_accredito_riga_reso/">vendite.fn_annulla_accredito_riga_reso</a>:
+la guardia <strong>si auto-ripara</strong> perché l'annullo dell'accredito <em>cancella</em> le righe di ponte. Se un
+giorno quell'annullo diventasse un <em>soft-delete</em>, questo ramo continuerebbe a vedere la riga e
+vieterebbe per sempre l'annullo di un reso ormai annullabile, <strong>in silenzio</strong>. I tre posti si
+cambiano insieme.</p>
+<p><strong>Il verso opposto era già chiuso</strong>: accreditare un reso <em>annullato</em> non passa, perché
+<code>vw_resi_da_accreditare</code> si costruisce su <code>vw_resi_righe_effettive</code>, che filtra i soli
+<code>CONFERMATO</code> — la riga esce dalla coda e <code>fn_accredita_riga_reso</code> risponde
+<code>E_ACCREDITO_NON_IN_CODA</code>.</p>
+<p>Verifica: <code>db/pgtap/vendite/test-annulla-reso-gate-accredito-v1.sql</code> (8 asserzioni).</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">

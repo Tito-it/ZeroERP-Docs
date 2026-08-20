@@ -5311,6 +5311,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#righe-senza-prezzo-il-campo-prezzo_esito" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Righe senza prezzo — il campo <code>prezzo_esito</code>
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Righe senza prezzo — il campo prezzo_esito">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cosa-risponde-post-apiv1venditeddtidrighe" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cosa risponde <code>POST /api/v1/vendite/ddt/{id}/righe/</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cosa-serve-al-client-per-decidere" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cosa serve al client per decidere
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#codici-errore-principali" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5408,10 +5447,14 @@ brief-db-ddt-vendita-evasione-e-stati.md (<code>docs/it/dev/work-done/brief-db-d
 <li>Push <code>POST /api/v1/vendite/ddt/&lt;id&gt;/push/</code> — push singolo a commessa
   (sorgente <code>DDT_VENDITA</code>, fatturazione differita).</li>
 <li>Righe <code>GET/POST /&lt;id&gt;/righe/</code>, <code>PATCH/DELETE /&lt;id&gt;/righe/&lt;riga_id&gt;/</code> — solo
-  DRAFT; <code>prezzo_unitario</code>/<code>iva_id</code> nullable (DDT anche solo di trasporto).</li>
+  DRAFT; <code>prezzo_unitario</code>/<code>iva_id</code> nullable (DDT anche solo di trasporto).
+  ⭐ <strong>Il DDT è l'unico documento dove il prezzo mancante non è un errore</strong>:
+  vedi la sezione dedicata più sotto.</li>
 <li>Componenti BoM <code>GET /&lt;id&gt;/righe/&lt;rid&gt;/componenti/</code> +
   <code>PATCH/DELETE .../componenti/&lt;cid&gt;/</code> + preview — mixin condiviso.</li>
-<li>Note <code>GET/POST /&lt;id&gt;/note/</code> + <code>GET/PATCH/DELETE /&lt;id&gt;/note/&lt;note_id&gt;/</code>.</li>
+<li>Note <code>GET/POST /&lt;id&gt;/note/</code> + <code>GET/PATCH/DELETE /&lt;id&gt;/note/&lt;note_id&gt;/</code> —
+  building block, contratto comune in <a href="../../../core/manual/api_note_documento/">api_note_documento</a>
+  (partizione <code>vendite.note_ddt</code>, <code>target_tipo='DDT'</code>).</li>
 <li>Documenti/Stampa <code>…/&lt;id&gt;/documenti/…</code> — vedi api_ordini.md §Documenti.</li>
 </ul>
 <h3 id="lineage-genealogia-brief-be-fe-lineage-2026-07-15">Lineage / genealogia (brief-be-fe-lineage, 2026-07-15)<a class="headerlink" href="#lineage-genealogia-brief-be-fe-lineage-2026-07-15" title="Permanent link">&para;</a></h3>
@@ -5430,6 +5473,59 @@ brief-db-ddt-vendita-evasione-e-stati.md (<code>docs/it/dev/work-done/brief-db-d
   Contratto completo nel manuale del BB condiviso:
   <a href="../api_lineage_passaggi/">api_lineage_passaggi.md</a>.</li>
 </ul>
+<h2 id="righe-senza-prezzo-il-campo-prezzo_esito">Righe senza prezzo — il campo <code>prezzo_esito</code><a class="headerlink" href="#righe-senza-prezzo-il-campo-prezzo_esito" title="Permanent link">&para;</a></h2>
+<p>⭐ <strong>Il DDT è l'unico documento dove il prezzo mancante non è un errore.</strong> Una
+riga in conto visione, un reso in ri-consegna, un articolo fuori listino: sono
+casi legittimi, e pretendere il prezzo significherebbe impedire di salvare la
+riga. Ordini, preventivi, contratti e offerte continuano invece a <strong>rifiutare</strong>
+la riga: lì il prezzo assente è un difetto.</p>
+<h3 id="cosa-risponde-post-apiv1venditeddtidrighe">Cosa risponde <code>POST /api/v1/vendite/ddt/{id}/righe/</code><a class="headerlink" href="#cosa-risponde-post-apiv1venditeddtidrighe" title="Permanent link">&para;</a></h3>
+<p>Quando il prezzo non è passato dal client, il BE lo risolve. Se <strong>non</strong> è
+risolvibile, la riga <strong>si salva lo stesso</strong> con <code>prezzo_unitario = null</code>, e la
+risposta porta il motivo:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"ddt_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="nt">"riga_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">31</span><span class="p">,</span><span class="w"> </span><span class="nt">"is_composito"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">"prezzo_esito"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"codice"</span><span class="p">:</span><span class="w"> </span><span class="s2">"E_CATEGORIA_LISTINO_NON_MAPPATA"</span><span class="p">,</span>
+<span class="w">                              </span><span class="nt">"messaggio"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Categoria cliente non mappata a listino per la quadrupla indicata."</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>Quando il prezzo si risolve, <code>prezzo_esito</code> è <code>null</code>.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>dov'è</strong></td>
+<td>dentro <code>data</code>, <strong>non</strong> nell'envelope degli errori: la riga è stata salvata, quindi non è un fallimento (DEC-3)</td>
+</tr>
+<tr>
+<td><strong>il testo</strong></td>
+<td>è il messaggio a catalogo del codice, <strong>senza segnaposto</strong> — il FE lo mostra, non lo riscrive e non ne tiene una copia i18n (DEC-4)</td>
+</tr>
+<tr>
+<td><strong>persistenza</strong></td>
+<td>il motivo resta anche dopo il ricarico: sta in <code>ddt_righe.meta.prezzo_resolver_context.esito_codice</code>, stesso nome della colonna che il DB usa sui componenti (DEC-8)</td>
+</tr>
+</tbody>
+</table>
+<p>⛔ <strong><code>importo_riga</code> esce <code>null</code>, non <code>0</code>.</strong> La lista righe non fa più
+<code>COALESCE(prezzo, 0)</code>: uno zero sarebbe indistinguibile da una riga che vale
+davvero zero, e il totale del documento tornerebbe «giusto» sommando quel che
+non c'è.</p>
+<p>⛔ <strong>Il padre di un kit si inserisce con prezzo <code>null</code></strong>, non <code>0</code>: il ricalcolo
+lato DB mette <code>NULL</code> se anche un solo figlio è scoperto.</p>
+<h3 id="cosa-serve-al-client-per-decidere">Cosa serve al client per decidere<a class="headerlink" href="#cosa-serve-al-client-per-decidere" title="Permanent link">&para;</a></h3>
+<p><code>GET /api/v1/vendite/ddt/{id}/</code> espone <strong><code>causale_trasporto_fatturabile</code></strong>:</p>
+<ul>
+<li><code>true</code> — il documento vende: una riga senza prezzo bloccherà l'emissione;</li>
+<li><code>false</code> — non vende (conto visione, ri-consegna): il prezzo assente è normale;</li>
+<li><code>null</code> — <strong>causale non ancora scelta</strong>, che è un terzo caso e non un <code>false</code>.</li>
+</ul>
+<p>Il BE non fa <code>COALESCE(false)</code> di proposito: al client serve distinguere «non
+vende» da «non lo so ancora» (DEC-5).</p>
+<p>Riferimento: <code>docs/it/dev/work-in-progress/brief-ddt-righe-senza-prezzo.md</code>.</p>
 <h2 id="codici-errore-principali">Codici errore principali<a class="headerlink" href="#codici-errore-principali" title="Permanent link">&para;</a></h2>
 <p><code>E_DDT_NOT_FOUND</code> (404), <code>E_DDT_VALIDAZIONE</code> (400), <code>E_DDT_STATO_TRANSIZIONE</code>,
 <code>E_STATO_DDT_TRANSIZIONE_NON_VALIDA</code> (matrice), <code>E_QTA_SUPERA_RESIDUO</code>

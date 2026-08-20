@@ -5302,6 +5302,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#tipo_movimento-nel-raggruppamento-20-08-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ <code>tipo_movimento</code> nel raggruppamento (20-08-2026)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#esempio-duso" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5357,12 +5368,12 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 06-07-2026)
+<p>(latest review 20-08-2026)
 Aggregata mensile della <strong>Lente 1 Competenza</strong> in <strong>formato lungo</strong>: una riga
-per <code>competenza_mese × stadio × stato_fattura_codice_interno</code>. Gli stati
-fattura sono <strong>dati</strong> (<code>config.stati_doc_fiscale</code>), non colonne: il formato
-lungo regge il breakdown per stato (blocco 3a del design) senza rincorrere il
-vocabolario; il <strong>BE pivota</strong>.</p>
+per <code>competenza_mese × stadio × stato_fattura_codice_interno × tipo_movimento</code>.
+Gli stati fattura sono <strong>dati</strong> (<code>config.stati_doc_fiscale</code>), non colonne: il
+formato lungo regge il breakdown per stato (blocco 3a del design) senza
+rincorrere il vocabolario; il <strong>BE pivota</strong>.</p>
 <hr />
 <h3 id="semantica">Semantica<a class="headerlink" href="#semantica" title="Permanent link">&para;</a></h3>
 <table>
@@ -5389,9 +5400,36 @@ vocabolario; il <strong>BE pivota</strong>.</p>
 <td><code>n_in_ritardo</code>, <code>valore_in_ritardo</code></td>
 <td>Recuperi tardivi del gruppo (<code>emessa_in_ritardo</code>)</td>
 </tr>
+<tr>
+<td><code>tipo_movimento</code></td>
+<td><code>NORMALE</code> / <code>RETTIFICA</code> / <code>ONERE</code> — dimensione del raggruppamento dal 20-08-2026</td>
+</tr>
 </tbody>
 </table>
 <p>Eredita dal dettaglio perimetro computabile e scope emittente fail-closed.</p>
+<hr />
+<h3 id="tipo_movimento-nel-raggruppamento-20-08-2026">⭐ <code>tipo_movimento</code> nel raggruppamento (20-08-2026)<a class="headerlink" href="#tipo_movimento-nel-raggruppamento-20-08-2026" title="Permanent link">&para;</a></h3>
+<p><strong>Perché.</strong> Il residuo del mese è una somma <strong>con segno</strong>, quindi senza questa
+dimensione le rettifiche si <strong>compensano</strong> con le fatture ancora da emettere.
+Misurato: agosto 2026 segnava <strong>101% di copertura</strong> perché il residuo era
+−29,50 — due note di credito da emettere.</p>
+<p>⚠️ <strong>Non è estetica.</strong> Con una sola fattura da 29,50 in sospeso, il residuo
+sarebbe andato a <strong>zero</strong> e la dashboard avrebbe detto <em>«100%, niente da fare»</em>
+con <strong>tre documenti da produrre</strong>. La compensazione <strong>nasconde lavoro</strong>.</p>
+<p>⭐ E non riguarda solo le rettifiche: a luglio 2026 ci sono <strong>5.000 € di oneri</strong>
+nello stesso totale. La somma mescolava <strong>tre</strong> cose di natura diversa, non due
+— ed è la ragione per cui si è aggiunta la <strong>dimensione</strong> e non una colonna
+<code>valore_rettifiche</code>, che avrebbe messo i valori dell'enum dentro la vista e
+avrebbe ignorato il quarto movimento che nascerà.</p>
+<p>🔴 <strong>Cambia la cardinalità, ed è un contratto rotto in un punto solo.</strong> Sul dato
+del 20-08-2026 le righe passano da <strong>7 a 8</strong>; l'unico bucket che si spezza è
+<code>2026-07 · FATTURATA · EMESSA</code> (<code>NORMALE</code> + <code>ONERE</code>). Il pivot del BE
+<strong>accumula</strong> per <code>(mese, stadio)</code>, quindi i <strong>totali reggono</strong>; il breakdown per
+stato documento fiscale invece elenca <strong>una voce per riga</strong>, e senza adeguamento
+mostra <strong>EMESSA due volte</strong>.</p>
+<p>⚠️ E si vede <strong>solo su luglio</strong>: su agosto la cardinalità non cambia affatto (le
+rettifiche stanno in <code>DA_EMETTERE</code>, i normali in <code>FATTURATA</code>). Chi provasse il
+solo mese del rilievo concluderebbe che non si è rotto niente.</p>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Funnel del mese (il BE genera i mesi mancanti con generate_series).</span>
@@ -5404,11 +5442,18 @@ vocabolario; il <strong>BE pivota</strong>.</p>
 <h3 id="note-operative">Note operative<a class="headerlink" href="#note-operative" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Contratto <strong>stabile per tutti i 4 blocchi</strong> del design DL-8 (funnel,
-  breakdown stato, ritardi; gli errori hanno la loro vista dedicata).</li>
+  breakdown stato, ritardi; gli errori hanno la loro vista dedicata).
+  ⚠️ La revisione del 20-08-2026 lo <strong>estende</strong> (una dimensione in più): è
+  l'unica volta in cui la grana è cambiata, e il §40.2 di
+  <code>brief-design-note-credito-resi</code> dice cosa deve fare il BE.</li>
 <li>Materializzabile in futuro (snapshot notturno) <strong>senza cambiare il
   contratto</strong> verso il BE.</li>
 <li>⚠️ Fail-closed: senza GUC operatore restituisce 0 righe (vedi dettaglio).</li>
-<li>Test: <code>db/pgtap/vendite/test-vw-dash-competenza-v1.sql</code>.</li>
+<li>Test: <code>db/pgtap/vendite/test-vw-dash-competenza-v1.sql</code> e
+  <code>db/pgtap/vendite/test-fn-list-commessa-attivita-provenienza-v1.sql</code>
+  (test 20-22: la colonna, <code>security_invoker</code> preservato, e la <strong>grana</strong> —
+  una riga per <code>(mese, stadio, stato, tipo_movimento)</code>, così una
+  ri-aggregazione a valle «per non rompere il backend» diventerebbe rossa).</li>
 </ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">

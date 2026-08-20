@@ -6288,9 +6288,9 @@ envelope <code>{"error": {"code": "E_INTERNAL", ...}}</code> con HTTP 500.</p>
 <td>Coerenza ruolo <code>EF</code></td>
 </tr>
 <tr>
-<td><code>anagrafiche.trgfn_emittenti_fiscali_guard_attivo</code></td>
-<td>Trigger</td>
-<td>Blocca disattivazione se esistono figli (BA mapping, utilities, parameter_overrides, user_emittenti_fiscali)</td>
+<td><code>dbops.trgfn_prevent_deactivate_if_children</code></td>
+<td>Trigger (×16)</td>
+<td>Blocca la disattivazione se esistono figli. Un trigger <strong>per tabella figlia</strong> generato dall'automazione ATTIVO, e il messaggio (<code>E_ATTIVO_BLOCK_CHILDREN_EXIST</code>) <strong>nomina la tabella</strong> che sta bloccando. Copertura reale (letta dagli argomenti dei trigger, non dai loro nomi troncati): <code>anagrafiche.emittenti_fiscali_billing_account</code>, <code>anagrafiche.emittenti_fiscali_utilities</code>, <code>config.parameter_overrides</code>, <code>config.user_emittente_attivo</code>, <code>config.user_emittenti_fiscali</code>, <code>documenti.documenti_generati</code>, <code>documenti.template_asset</code>, <code>documenti.template_documenti</code>, <code>pratiche.pratiche</code>, <code>pratiche.workflow_definizioni</code>, <code>vendite.contratti</code>, <code>vendite.ddt</code>, <code>vendite.offerte_commerciali</code>, <code>vendite.ordini</code>, <code>vendite.preventivi</code>, <code>vendite.resi</code>.<br>⚠️ Sostituisce <code>anagrafiche.trgfn_emittenti_fiscali_guard_attivo</code>, <strong>droppato</strong> il 2026-08-20 (changeSet <code>20260820-02</code>): era un doppione che copriva <strong>il solo</strong> mapping billing account — non i quattro figli che questa riga gli attribuiva — e non veniva nemmeno più raggiunto, perché i BEFORE ROW scattano in ordine alfabetico e il generico viene prima. Il suo codice <code>E_EMITTENTE_DISATTIVAZIONE_BLOCCATA</code> è <strong>ritirato</strong>.</td>
 </tr>
 <tr>
 <td><code>anagrafiche.trgfn_emittenti_fiscali_default_guard</code></td>

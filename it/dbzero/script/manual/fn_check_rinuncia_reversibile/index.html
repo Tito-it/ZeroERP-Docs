@@ -5291,10 +5291,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#e-un-gate-dormiente-e-non-e-incompleto" class="md-nav__link">
+  <a href="#il-gate-si-e-svegliato-2026-08-19" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        ⚠️ È un gate DORMIENTE — e non è incompleto
+        ⭐ Il gate SI È SVEGLIATO (2026-08-19)
       </span>
     </span>
   </a>
@@ -5302,10 +5302,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#perche-allora-esiste" class="md-nav__link">
+  <a href="#vincolo-reciproco-su-tre-posti-rev-2026-08-19" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Perché allora esiste
+        ⭐ Vincolo reciproco, su TRE posti (rev 2026-08-19)
       </span>
     </span>
   </a>
@@ -5313,10 +5313,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#non-rimuovere-perche-ritorna-sempre-vuoto" class="md-nav__link">
+  <a href="#perche-esisteva-gia-prima-di-servire-storico-luglio-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        🚫 Non rimuovere «perché ritorna sempre vuoto»
+        Perché esisteva già prima di servire <em>(storico — luglio 2026)</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#non-rimuovere-questa-funzione" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🚫 Non rimuovere questa funzione
       </span>
     </span>
   </a>
@@ -5375,16 +5386,55 @@
 cioè di annullare la dichiarazione «questa merce non tornerà al cliente».
 Ritorna <code>&#91;&#93;</code> se reversibile, altrimenti l'array ordinato dei motivi ostativi:
 <code>&#91;{codice, reason, reason_key, dettaglio}, ...&#93;</code>.</p>
-<h3 id="e-un-gate-dormiente-e-non-e-incompleto">⚠️ È un gate DORMIENTE — e non è incompleto<a class="headerlink" href="#e-un-gate-dormiente-e-non-e-incompleto" title="Permanent link">&para;</a></h3>
-<p>Oggi l'unico motivo che produce è la <strong>riga inesistente</strong>. Il gate <em>vero</em> sarebbe:</p>
+<h3 id="il-gate-si-e-svegliato-2026-08-19">⭐ Il gate SI È SVEGLIATO (2026-08-19)<a class="headerlink" href="#il-gate-si-e-svegliato-2026-08-19" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p>reversibile <strong>finché la nota di credito non è stata emessa</strong> sulla quota</p>
+<p>⚠️ <strong>Superata la sezione «è un gate dormiente»</strong>, che è rimasta vera dal 2026-07-26
+al 2026-08-19 e si legge qui sotto, sotto «Perché allora esiste»: è il ragionamento
+che ha fatto esistere il punto di innesto, non lavoro da fare.</p>
 </blockquote>
-<p>perché riaprire una rinuncia già coperta da una NC sfalserebbe un documento fiscale. Ma
-<strong>il ramo NC non esiste ancora</strong> nel progetto: la coda accrediti
-(<code>vw_resi_da_accreditare</code>) oggi la alimenta e nessuno emette note di credito. Vietare
-qualcosa che non può accadere sarebbe finto rigore.</p>
-<h3 id="perche-allora-esiste">Perché allora esiste<a class="headerlink" href="#perche-allora-esiste" title="Permanent link">&para;</a></h3>
+<p>Da <code>20260819-02</code> la funzione produce <strong>due</strong> motivi:</p>
+<table>
+<thead>
+<tr>
+<th>reason</th>
+<th>codice</th>
+<th>quando</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RIGA_INESISTENTE</code></td>
+<td><code>E_RESO_NOT_FOUND</code></td>
+<td>l'id passato non è una riga di reso</td>
+</tr>
+<tr>
+<td><code>ACCREDITO_ESEGUITO</code></td>
+<td><code>E_RESO_RINUNCIA_ACCREDITO_ESEGUITO</code></td>
+<td>esiste almeno una riga in <code>vendite.resi_righe_accrediti</code> per quella riga</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong>La condizione è «accreditata», non «nota di credito emessa».</strong> Il piano di luglio
+immaginava il gate sul <em>documento</em>; la finestra pericolosa si apre invece <strong>al verbo</strong>:
+fra l'accredito e la fattura la quota è già impegnata e la riga è già uscita dalla coda,
+quindi aspettare l'emissione lascerebbe scoperta la parte più lunga del giro.</p>
+<p>Il ramo nuovo sta <strong>dopo</strong> «riga inesistente», che ritorna subito: quello è l'<em>identità</em>
+della riga, non una sua condizione. Dire «già accreditata» a chi ha passato un id
+inventato lo manderebbe a cercare un accredito che non esiste.</p>
+<p>⭐ E la madre <strong>non è stata toccata</strong>: <code>fn_riapri_riconsegna_reso</code> solleva già il primo
+motivo prodotto. Era il pregio del disegno di luglio, ed è stato incassato.</p>
+<h3 id="vincolo-reciproco-su-tre-posti-rev-2026-08-19">⭐ Vincolo reciproco, su TRE posti (rev 2026-08-19)<a class="headerlink" href="#vincolo-reciproco-su-tre-posti-rev-2026-08-19" title="Permanent link">&para;</a></h3>
+<p>Questo gate, <a href="../../../vendite/funzioni/fn_annulla_accredito_riga_reso/">vendite.fn_annulla_accredito_riga_reso</a>
+e — dal 2026-08-19 — la guardia <code>E_RESO_ANNULLO_CON_ACCREDITO</code> di
+<a href="../../../vendite/funzioni/fn_annulla_reso/">vendite.fn_annulla_reso</a> <strong>si auto-riparano</strong>
+tutti e tre per la stessa ragione: l'annullo dell'accredito <strong>cancella</strong> le righe di
+ponte, e non le marca. Annullato l'accredito, la rinuncia torna riapribile e il reso
+torna annullabile, senza che nessuno dei due sappia nulla di quella funzione.</p>
+<p>⛔ È un pregio <strong>fragile</strong>: se un giorno l'annullo diventasse un <em>soft-delete</em>, questi
+rami continuerebbero a vedere la riga e vieterebbero <strong>per sempre</strong> una rinuncia ormai
+reversibile e un annullo ormai ammesso — <strong>in silenzio</strong>, perché nessuno dei lati sarebbe
+sbagliato da solo. I tre posti si cambiano <strong>insieme</strong>.</p>
+<h3 id="perche-esisteva-gia-prima-di-servire-storico-luglio-2026">Perché esisteva già prima di servire <em>(storico — luglio 2026)</em><a class="headerlink" href="#perche-esisteva-gia-prima-di-servire-storico-luglio-2026" title="Permanent link">&para;</a></h3>
 <p>Perché il <strong>punto di innesto</strong> deve esistere <em>prima</em> del bisogno. L'alternativa scartata
 era lasciare la conseguenza in un commento dentro la funzione madre: un commento non è un
 punto di innesto — la slice NC dovrebbe <em>cercare</em> dove intervenire, e nel frattempo una
@@ -5394,10 +5444,12 @@ motivo, e il divieto si attiverà da sé — <code>fn_riapri_riconsegna_reso</co
 motivo prodotto. Nessuna modifica alla madre, nessuna conseguenza da ricordare.</p>
 <p>È lo stesso principio dei <code>fn_check_*</code> esistenti: il guard si <strong>progetta</strong> per
 l'espansione, non si rinvia.</p>
-<h3 id="non-rimuovere-perche-ritorna-sempre-vuoto">🚫 Non rimuovere «perché ritorna sempre vuoto»<a class="headerlink" href="#non-rimuovere-perche-ritorna-sempre-vuoto" title="Permanent link">&para;</a></h3>
-<p>È la trappola prevedibile: una funzione che non vieta nulla sembra codice morto.
-Rimuoverla riporta la conseguenza a essere una nota in un commento che nessuno cercherà —
-esattamente il problema che risolve.</p>
+<h3 id="non-rimuovere-questa-funzione">🚫 Non rimuovere questa funzione<a class="headerlink" href="#non-rimuovere-questa-funzione" title="Permanent link">&para;</a></h3>
+<p>Era la trappola prevedibile finché il gate era dormiente: una funzione che non vieta nulla
+sembra codice morto. ⭐ <strong>La previsione si è avverata al contrario</strong> — il gate ha
+funzionato esattamente come progettato — ed è il motivo per cui questa sezione resta:
+rimuovere il punto di innesto riporta la conseguenza a essere una nota in un commento che
+nessuno cercherà.</p>
 <h3 id="regole-chiave">Regole chiave<a class="headerlink" href="#regole-chiave" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Funzione <strong>pura</strong> (<code>fn_check_*</code>): non solleva per condizioni di dominio, non scrive. È
@@ -5405,7 +5457,14 @@ esattamente il problema che risolve.</p>
 <li>La riga inesistente è segnalata come <strong>motivo</strong> (riusando <code>E_RESO_NOT_FOUND</code>, già a
   catalogo) e non come eccezione, per restare coerenti col contratto della famiglia.</li>
 <li><code>STABLE</code>, sola lettura.</li>
+<li>Il <code>reason_key</code> è pensato per il frontend, ma ⚠️ <strong>oggi nessuna superficie lo rende</strong>:
+  la madre solleva con il <em>codice</em> e i motivi finiscono nel <code>context</code>, che si ferma in
+  <code>dbops.error_log</code>. L'operatore legge quindi il messaggio di catalogo, che è corretto e
+  completo. Le chiavi i18n ci sono e non costano nulla: il giro si chiuderà il giorno in
+  cui una <strong>capability</strong> del reso esporrà i motivi.</li>
 </ul>
+<p>Verifica: <code>db/pgtap/vendite/test-rinuncia-gate-accredito-v1.sql</code> (8 asserzioni, incluso
+il round-trip dell'auto-riparazione).</p>
 
 
 

@@ -5411,19 +5411,25 @@ display (codice articolo, UoM, numero documento) e presidia il perimetro.</p>
 <p>Nessun query param: le partite di un documento sono decine, quindi <strong>nessuna
 paginazione</strong> (come <code>GET /&lt;id&gt;/righe/</code>).</p>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
-<p>Envelope standard <code>success_response</code>, <code>data</code> con <strong>quattro sezioni</strong>:</p>
+<p>Envelope standard <code>success_response</code>, <code>data</code> con <strong>quattro sezioni</strong> più il
+contesto:</p>
 <table>
 <thead>
 <tr>
-<th>Sezione</th>
+<th>Campo</th>
 <th>Grana</th>
 <th>Fonte</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td><code>contesto</code></td>
+<td><code>"ORDINE"</code> | <code>"DDT"</code> — <strong>quale lista è il saldo del documento</strong></td>
+<td>il filtro della chiamata</td>
+</tr>
+<tr>
 <td><code>righe_ordine</code></td>
-<td>riga d'ordine — <strong>solo sul lato ordine</strong>, lista vuota sul DDT</td>
+<td>riga d'ordine (su entrambi i lati)</td>
 <td><code>vw_situazione_merce_ordine</code></td>
 </tr>
 <tr>
@@ -5443,8 +5449,15 @@ paginazione</strong> (come <code>GET /&lt;id&gt;/righe/</code>).</p>
 </tr>
 </tbody>
 </table>
+<p>⭐ <strong><code>contesto</code> non è ridondante</strong> (rev 2026-08-19). Fino a questa revisione
+<code>righe_ordine</code> era vuota sul DDT, e il client capiva «quale lista contare»
+guardando quale delle due fosse popolata. Adesso sono popolate entrambe, e
+quell'euristica conterebbe sul DDT il saldo dell'<strong>intera riga d'ordine</strong> —
+tutte le sue spedizioni — al posto di questa: un numero plausibile e sbagliato.
+Chi consuma legge <code>contesto</code>, non indovina.</p>
 <p>Esempio reale (l'ordine del §3 del brief pannello, la riga da 21 pezzi):</p>
-<div class="highlight"><pre><span></span><code>righe_ordine  riga 1 · ordinato 21 · tenuti 13 · fatturato 21
+<div class="highlight"><pre><span></span><code>contesto      ORDINE   (dal DDT sarebbe DDT, e il saldo sarebbe quello delle partite)
+righe_ordine  riga 1 · ordinato 21 · tenuti 13 · fatturato 21
                      · differenza −8 · da_spedire 3 · DA_ACCREDITARE
 partite       DDT0010839 · origine ORDINE · consegnato 21 · −8 · DA_ACCREDITARE
 accrediti     RESO0005122 · 5 · DOVUTA      RESO0005123 · 3 · FACOLTATIVA
@@ -5482,9 +5495,20 @@ riconsegne    RESO0005123 · residua 3 · DA_RICONSEGNARE
 <li>⚠️ <strong><code>da_spedire</code> non è <code>ordinato − consegnato</code></strong>: il <code>consegnato</code> di una
   partita include le ri-consegne. Viene dalla formula di
   <code>fn_ordine_ha_residuo_evasione</code>, l'unica del sistema.</li>
-<li><strong>Sul DDT <code>righe_ordine</code> è vuota di proposito</strong>: la domanda è <em>«cosa è successo
-  a QUESTA spedizione»</em>, non <em>«come stanno le partite che il DDT tocca»</em> — sono
-  due risposte diverse e la prima è quella che serve a chi apre un DDT.</li>
+<li>⭐ <strong>Sul DDT <code>righe_ordine</code> c'è, ma è filtrata sulla SPEDIZIONE</strong> (rev
+  2026-08-19, rilievo in-app): sono le righe d'ordine che <em>quel DDT ha toccato</em>,
+  non quelle dell'ordine intero. Servono a leggere i due livelli insieme — «la
+  riga d'ordine nel complesso sta così, questa spedizione così» — che prima
+  costringeva a cambiare schermata. <strong>Il saldo del documento resta quello delle
+  <code>partite</code></strong>: è precisamente ciò che <code>contesto</code> dichiara.
+  ⚠️ Il legame DDT→riga d'ordine si legge da <code>vendite.ordini_righe_fulfillment</code>,
+  la <strong>stessa</strong> fonte da cui <code>vw_partite_merce</code> deriva la propria <code>origine</code>. Non
+  si passa dalla partita: sarebbe la vista più costosa del sistema ri-valutata
+  per rispondere a un filtro. Verificato su <strong>tutti</strong> i DDT del database: le
+  righe d'ordine restituite coincidono con i <code>DISTINCT ordine_riga_id</code> delle
+  partite, zero divergenze.
+  ⚠️ Una riga di DDT <strong>senza origine ordine</strong> non ha riga d'ordine: la sezione
+  resta più corta delle <code>partite</code>, ed è corretto.</li>
 <li><strong>Le due code sono le stesse della coda di lavoro</strong>, con la stessa etichetta
   <code>DOVUTA</code> / <code>FACOLTATIVA</code>: il pannello non può contraddirle perché legge le
   stesse viste.</li>

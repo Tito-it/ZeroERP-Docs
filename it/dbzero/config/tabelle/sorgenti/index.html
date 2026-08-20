@@ -5505,6 +5505,42 @@
 </ul>
 </li>
 <li>
+<p><strong>Selettore etichetta</strong> (<code>label_selector</code>) — <em>aggiunta 20-08-2026</em>:</p>
+</li>
+<li>
+<p>la <strong>gemella</strong> di <code>key_selector</code>: quella dichiara la colonna con cui la riga
+    si <strong>trova</strong>, questa la colonna con cui il documento si <strong>nomina</strong> — il
+    numero che l'operatore riconosce (<code>DDT0010839</code>, <code>ORD0000227</code>, <code>RESO0005122</code>);</p>
+</li>
+<li>non è uniforme, ed è per questo che è un <strong>dato</strong> e non un <code>CASE</code> dentro una
+    funzione: <code>numero</code> su preventivi, contratti, ordini, DDT, resi e fatture;
+    <code>codice</code> su offerte commerciali e commesse;</li>
+<li><strong><code>NULL</code> = la sorgente non ha un numero leggibile</strong> (<code>ATTIVITA</code>,
+    <code>ATTIVITA_CONSUMI</code> e le cinque <code>*_RIGA</code>). Non è un errore, e <strong>non spegne</strong>
+    la risoluzione dell'id;</li>
+<li>la legge <a href="../../../vendite/funzioni/fn_get_sorgente_documento_ref/"><code>vendite.fn_get_sorgente_documento_ref</code></a>
+    con <code>format(%I)</code>;</li>
+<li>vincolata dal check <code>chk_sorgenti_label_selector_identificatore</code>: o <code>NULL</code>, o
+    un identificatore PostgreSQL minuscolo non quotato.</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>Il CHECK è igiene contro il REFUSO, non contro l'injection</strong> — quella la
+copre <code>%I</code>. Un nome sbagliato non darebbe nessun errore: il resolver cattura
+<code>undefined_column</code> e risponde <code>NULL</code>, e l'unico sintomo sarebbe una <strong>colonna
+vuota a video</strong>. Il cancello che verifica l'esistenza reale della colonna sta
+nel pgTAP (<code>test-fn-list-commessa-attivita-provenienza-v1</code>, test 10), perché
+un <code>CHECK</code> non può interrogare <code>pg_attribute</code>.</p>
+<p>⭐ E un secondo invariante (test 11) tiene la coerenza con <code>area</code>: una
+sorgente <strong>sfogliabile</strong> deve avere anche un numero. Senza, la colonna
+«Origine» della lista attività resterebbe vuota per sempre su quel dominio.</p>
+<p>⚠️ <strong>Le cinque <code>*_RIGA</code> non sono nel CSV di seed.</strong> Misurato il 20-08-2026:
+<code>config.sorgenti</code> ha <strong>15 righe nel database e 10 nel CSV</strong> — gli id 3, 5, 7,
+9, 11 esistono solo nel DB. <code>loadUpdateData</code> non tocca chi non trova, quindi
+restano a <code>NULL</code>, che per loro è il valore giusto. È una divergenza
+preesistente, non una dimenticanza di questa colonna.</p>
+</blockquote>
+<ul>
+<li>
 <p><strong>Audit</strong>:</p>
 </li>
 <li>

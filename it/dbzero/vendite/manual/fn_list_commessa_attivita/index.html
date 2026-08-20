@@ -5310,6 +5310,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#la-provenienza-della-riga-dal-20-08-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        La provenienza della riga (dal 20-08-2026)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -5376,11 +5393,20 @@ Restituisce il dettaglio righe di una commessa (<code>commesse_attivita</code>) 
 <li>Paginazione:</li>
 <li><code>p_limit</code> default <code>1000</code>, massimo <code>10000</code></li>
 <li><code>p_offset</code> minimo <code>0</code></li>
-<li>Ordinamento (dal 02-08-2026):</li>
-<li><code>p_order_by</code> — nome della colonna, <strong>whitelist chiusa</strong> di 7 voci:
+<li>Ordinamento (dal 02-08-2026, esteso il 16 e il 20-08-2026):</li>
+<li><code>p_order_by</code> — nome della colonna, <strong>whitelist chiusa</strong> di 15 voci:
     <code>data_attivita</code>, <code>competenza_mese</code>, <code>segment_key</code>, <code>quantita</code>,
-    <code>prezzo_snapshot</code>, <code>stato_approvazione</code>, <code>stato_emissione</code> (più <code>id</code>).</li>
+    <code>prezzo_snapshot</code>, <code>stato_approvazione</code>, <code>stato_emissione</code> (più <code>id</code>);
+    <code>fatturata_il</code>, <code>fattura_numero</code> (16-08); <code>tipo_movimento</code>,
+    <code>articolo_codice</code>, <code>articolo_descrizione</code>, <code>sorgente_codice</code>,
+    <code>sorgente_documento_numero</code>, <code>gruppo_key</code> (20-08).</li>
 <li><code>p_order_dir</code> — <code>asc</code> (default) o <code>desc</code>.</li>
+<li>⚠️ <strong>La whitelist e il catalogo <code>ui.lista_colonna</code> si muovono insieme.</strong> Una
+    colonna dichiarata a catalogo con <code>ordinabile = t</code> su un nome che questa
+    mappa non conosce <strong>non</strong> produce una freccia inerte: fa <strong>rompere la
+    lista</strong> al primo click, perché il ramo qui sotto è fail-loud e deve
+    restarlo. Chi aggiunge una colonna a catalogo aggiunge il nome qui nello
+    stesso giro.</li>
 <li><code>NULL</code>/vuoto ⇒ <strong>ordine storico <code>ca.id</code></strong>: chi non chiede niente ottiene
     esattamente il risultato di prima.</li>
 <li>Un nome fuori whitelist <strong>solleva</strong> <code>E_PARAMETRO_INVALIDO</code>: non ripiega sul
@@ -5401,8 +5427,14 @@ convertibile a <code>&lt;ListaConfigurabile&gt;</code> prima di questa revisione
 <p>ℹ️ L'<code>ORDER BY</code> non è parametrizzabile, quindi la query passa da <code>format()</code>.
 È sicuro perché l'espressione <strong>non viene mai dal parametro</strong>: viene da un
 <code>CASE</code> chiuso che mappa nome → espressione. I valori restano parametri.</p>
-<p>ℹ️ Nessun <code>NULLS LAST</code>: tutte e sette le colonne ordinabili sono <code>NOT NULL</code>.
-Scriverlo suggerirebbe una nullabilità che non esiste.</p>
+<p>⚠️ <strong><code>NULLS LAST</code> esplicito in entrambi i versi</strong> (dal 16-08-2026). La nota
+precedente — «nessun <code>NULLS LAST</code>: tutte le colonne ordinabili sono <code>NOT
+NULL</code>» — è <strong>superata</strong>: da agosto la whitelist contiene colonne nullable
+(<code>fatturata_il</code>, <code>sorgente_documento_numero</code>), e sul <code>DESC</code> il default di
+PostgreSQL mette i <code>NULL</code> in <strong>testa</strong>. Chi ordina per una colonna vuole
+vedere per prime le righe che quel valore ce l'hanno; scriverlo per entrambi
+i versi evita che l'ordinamento si comporti in due modi a seconda della
+freccia.</p>
 </blockquote>
 <hr />
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
@@ -5411,9 +5443,66 @@ Scriverlo suggerirebbe una nullabilità che non esiste.</p>
 <li>identificativi (<code>id</code>, <code>commessa_id</code>, <code>segment_key</code>)</li>
 <li>dati di competenza/quantita`/prezzo</li>
 <li>stati (<code>stato_approvazione</code>, <code>stato_emissione</code>)</li>
-<li>classificazione sorgente (<code>sorgente_tipo_id</code>, <code>sorgente_codice</code>)</li>
+<li>classificazione sorgente (<code>sorgente_tipo_id</code>, <code>sorgente_codice</code>, <code>sorgente_uid</code>,
+  <code>sorgente_area</code>)</li>
+<li>legame con la fattura (<code>fatturata</code>, <code>fatturata_il</code>, <code>fattura_id</code>,
+  <code>fattura_numero</code>, <code>fattura_stato</code>) — dal 16-08-2026</li>
 <li><code>meta</code> e <code>data_update</code></li>
 </ul>
+<h4 id="la-provenienza-della-riga-dal-20-08-2026">La provenienza della riga (dal 20-08-2026)<a class="headerlink" href="#la-provenienza-della-riga-dal-20-08-2026" title="Permanent link">&para;</a></h4>
+<p>Cinque colonne che rispondono a <strong>da dove viene questa riga</strong>, ed è la domanda
+con cui nasce la fattura: il documento si separa per <strong>gruppo fatturabile</strong>, una
+fattura per documento sorgente.</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Cosa dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tipo_movimento</code></td>
+<td><code>NORMALE</code> / <code>RETTIFICA</code> / <code>ONERE</code>. Prima una rettifica si distingueva <strong>solo</strong> perché la quantità è negativa</td>
+</tr>
+<tr>
+<td><code>articolo_codice</code>, <code>articolo_descrizione</code></td>
+<td>di cosa parla la riga: prima usciva il solo <code>articolo_id</code> uuid</td>
+</tr>
+<tr>
+<td><code>sorgente_documento_numero</code></td>
+<td>il numero che l'operatore legge (<code>DDT0010839</code>), accanto all'id nudo</td>
+</tr>
+<tr>
+<td><code>gruppo_key</code></td>
+<td>l'unità con cui nasce la fattura, da <code>vendite.fn_build_gruppo_fatturabile_key</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>🔴 <strong>Perché sono cinque e non quattro.</strong> Le righe <code>RETTIFICA</code> e <code>ONERE</code> sono
+<strong>senza documento sorgente per progetto</strong> — <code>fn_accredita_riga_reso</code> le scrive
+con la sorgente a <code>NULL</code>, e il <code>CHECK</code> sulla tabella impone la coppia
+tutta-vuota o tutta-piena. Misurato il 20-08-2026: <strong>9 righe su 98</strong>, cioè il
+<strong>100%</strong> delle righe di nota di credito. Su quelle, <code>sorgente_documento_numero</code>
+è vuoto — proprio dove la colonna serviva.</p>
+<p><code>gruppo_key</code> risponde comunque, e risponde la cosa giusta: su una riga senza
+sorgente vale <code>MAN:&lt;commessa_id&gt;</code>, cioè <strong>il gruppo «oneri di commessa»</strong>, che
+è davvero il contenitore da cui quella riga verrà fatturata. Le due colonne
+rispondono a due domande diverse — <em>«da quale documento discende»</em> e <em>«in che
+gruppo verrà fatturata»</em> — che sulle righe normali coincidono e sulle
+sourceless no.</p>
+<p>⭐ <strong>E non è un difetto del documento</strong>: <code>fn_build_fattura_key</code> porta la
+<strong>natura</strong>, quindi una rettifica non finisce nella fattura ordinaria in nessun
+caso. Il gruppo è l'unità dell'<strong>emissione mirata</strong>, non del documento.</p>
+<p>ℹ️ <code>sorgente_documento_id</code> e <code>sorgente_documento_numero</code> arrivano da <strong>una
+sola</strong> chiamata a <a href="../../funzioni/fn_get_sorgente_documento_ref/"><code>vendite.fn_get_sorgente_documento_ref</code></a>,
+che dal 20-08-2026 sostituisce <code>fn_get_sorgente_documento_id</code>: due funzioni
+gemelle avrebbero voluto due letture per riga e due copie della stessa regola
+di risoluzione polimorfa.</p>
+<p>⚠️ Entrambe sono <code>NULL</code> anche quando il documento <strong>esiste ma non è visibile</strong>
+a chi chiede (RLS): l'azione «apri» va nascosta, e il numero non si mostra.</p>
+</blockquote>
 <hr />
 <h3 id="esempio-duso">Esempio d'uso<a class="headerlink" href="#esempio-duso" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1">-- Con ordinamento esplicito (la lista attività della commessa apre così:</span>
