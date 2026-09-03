@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.55">
+      <meta name="generator" content="zensical-0.0.58">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.20815dad.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
       
       
 
@@ -344,6 +344,12 @@
   
     
       
+      
+        
+      
+        
+      
+        
       
         
       
@@ -2155,6 +2161,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2207,6 +2223,60 @@
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/ai-assistant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Ai Assistant
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/amm-software/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Amm. Software
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
               
             
               
@@ -2351,6 +2421,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../backend/documenti/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documenti
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../backend/magazzino/" class="md-nav__link">
         
   
@@ -2405,6 +2502,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../backend/pratiche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pratiche
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../backend/storico/" class="md-nav__link">
         
   
@@ -2413,6 +2537,33 @@
     
   
   Storico
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Ui
 
     
   </span>
@@ -2536,6 +2687,12 @@
   
     
     
+      
+        
+      
+        
+      
+        
       
         
       
@@ -3124,6 +3281,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../termini-di-pagamento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Termini di pagamento
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../documenti-e-stampe/" class="md-nav__link">
         
   
@@ -3240,6 +3424,60 @@
     
   
   Configurazione e responsività delle liste
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../numerazione-documenti-e-codici/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sistema numerazione generico per codici e documenti
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../iva-risolutore-di-riga/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Il risolutore IVA di riga
 
     
   </span>
@@ -6259,7 +6497,7 @@ trigger nello schema <code>storico</code>.</p>
 <div class="highlight"><pre><span></span><code>Schema operativo (es. anagrafiche)
 └── soggetti                        -- tabella operativa
     ├── colonna storicizza BOOLEAN  -- flag per-record (default true se configurato)
-    └── trigger trgx_z90_soggetti_upd_dlt_storico
+    └── trigger trg_soggetti_z90_storico_upd_dlt
         └── BEFORE UPDATE OR DELETE → script.trgfn_storico_generic('soggetto_id')
 
 Schema storico
@@ -6736,12 +6974,30 @@ dbops
 <li>Risolve l'ambito (esclude <code>storico</code>)</li>
 <li>Per ogni tabella: verifica che <code>storico.&lt;tabella&gt;</code> esista</li>
 <li>Risolve la colonna FK (default <code>&lt;tabella&gt;_id</code>, override via <code>STORICO_FK</code>)</li>
-<li>Genera il nome trigger dal template (default: <code>trgx_z90_{table}_upd_dlt_storico</code>)</li>
+<li>Genera il nome trigger dal template (default: <code>trg_{table}_z90_storico_upd_dlt</code>)</li>
 <li>Verifica esistenza per strategia (<code>BY_NAME</code>, <code>BY_FUNCTION</code>, <code>BOTH</code>)</li>
-<li>Se non esiste: crea il trigger</li>
-<li>Opzionalmente rimuove trigger legacy separati (<code>drop_legacy_ud=true</code> in params)</li>
+<li>Se non esiste: crea il trigger
+~~7. Opzionalmente rimuove trigger legacy separati (<code>drop_legacy_ud=true</code> in params)~~</li>
 </ol>
-<p><strong>Naming convention del trigger:</strong> il prefisso <code>trgx_z90_</code> garantisce che il trigger di storico venga eseguito per ultimo nell'ordine alfabetico PostgreSQL, dopo tutti i trigger di guard e validazione.</p>
+<p>⛔ <strong>Il passo 7 non esiste più (rev 2026-09-01).</strong> Il ramo <code>drop_legacy_ud</code> è
+stato rimosso dal motore (<code>20260901-01</code>), e non perché la migrazione fosse
+finita: <strong>cancellava un nome che non è mai esistito</strong>. Puntava a
+<code>trg_{table}_upd_storico</code> / <code>trg_{table}_dlt_storico</code>, mentre i trigger legacy
+davvero creati si chiamavano <code>trg_&lt;tab&gt;_upd_dlt_storico_&lt;tab&gt;</code> e quelli di oggi
+<code>trg_&lt;tab&gt;_z90_storico_upd_dlt</code> — tre forme diverse, e il <code>DROP TRIGGER IF
+EXISTS</code> non poteva agganciare le altre due. Il flag era per giunta
+<code>COALESCE(..., false)</code>: il ramo non è mai stato eseguito nemmeno per sbaglio.</p>
+<p><strong>Naming convention del trigger:</strong> la forma è <code>trg_&lt;tabella&gt;_z90_storico_upd_dlt</code>,
+e l'infisso <code>_z90_</code> garantisce che il trigger di storico venga eseguito per
+ultimo nell'ordine alfabetico PostgreSQL, dopo tutti i trigger di guard e
+validazione.</p>
+<blockquote>
+<p>📌 <strong>Rettifica del 2026-09-01</strong>: questa riga diceva <em>«il prefisso <code>trgx_z90_</code>»</em>.
+Nel database non esiste <strong>nessun</strong> trigger che cominci per <code>trgx_</code> — i 118
+trigger di storicizzazione usano tutti la forma qui sopra. ⚠️ E la differenza
+non è cosmetica: chi cercasse i trigger di storico per prefisso non ne
+troverebbe <strong>nemmeno uno</strong>.</p>
+</blockquote>
 <hr />
 <h2 id="procedure-di-manutenzione">Procedure di manutenzione<a class="headerlink" href="#procedure-di-manutenzione" title="Permanent link">&para;</a></h2>
 <h3 id="sincronizzazione-catalogo-proc_sync_storico_set_storicizza">Sincronizzazione catalogo: <code>proc_sync_storico_set_storicizza</code><a class="headerlink" href="#sincronizzazione-catalogo-proc_sync_storico_set_storicizza" title="Permanent link">&para;</a></h3>
@@ -6793,7 +7049,7 @@ dbops
 <p><strong>Trigger BEFORE, non AFTER</strong>: il trigger deve essere <code>BEFORE UPDATE OR DELETE</code> perche modifica <code>NEW.storicizza</code>. L'uso di AFTER impedirebbe il reset del flag.</p>
 </li>
 <li>
-<p><strong>Prefisso <code>trgx_z90_</code></strong>: garantisce l'esecuzione per ultima nell'ordine alfabetico, dopo tutti i trigger di guard e validazione.</p>
+<p><strong>Infisso <code>_z90_</code></strong> (forma <code>trg_&lt;tabella&gt;_z90_storico_upd_dlt</code>): garantisce l'esecuzione per ultima nell'ordine alfabetico, dopo tutti i trigger di guard e validazione.</p>
 </li>
 <li>
 <p><strong>Colonna <code>storicizza</code> obbligatoria</strong>: la tabella operativa deve avere la colonna <code>storicizza BOOLEAN</code> per poter usare il trigger generico. Se il flag e <code>FALSE</code>, il record non viene storicizzato.</p>
@@ -6954,7 +7210,7 @@ dbops
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.e886cdf1.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       
