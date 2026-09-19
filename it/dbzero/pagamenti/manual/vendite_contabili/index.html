@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5677,10 +5677,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chi-la-vede-la-rls-del-perimetro-incassi-2026-08-22" class="md-nav__link">
+  <a href="#il-codice-viene-dal-registro-e-la-distinta-sa-di-chi-e-2026-09-15" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        🔒 Chi la vede — la RLS del perimetro incassi (2026-08-22)
+        🔢 Il codice viene dal registro, e la distinta sa di chi è (2026-09-15)
       </span>
     </span>
   </a>
@@ -5688,10 +5688,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#i-cinque-guard-che-la-difendono" class="md-nav__link">
+  <a href="#chi-la-vede-la-rls-del-perimetro-incassi-2026-08-22-corretta-il-2026-09-15" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        I cinque guard che la difendono
+        🔒 Chi la vede — la RLS del perimetro incassi (2026-08-22, corretta il 2026-09-15)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#i-guard-che-la-difendono" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        I guard che la difendono
       </span>
     </span>
   </a>
@@ -5742,7 +5753,13 @@ centro riscossione e data contabile, con eventuale dettaglio del canale
 <hr />
 <h3 id="campi-chiave-semantica">Campi chiave (semantica)<a class="headerlink" href="#campi-chiave-semantica" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>codice</code>: identificativo testata contabile.</li>
+<li><code>codice</code>: identificativo testata contabile. ⭐ <strong>Dal 2026-09-15 è un numero
+  di registro</strong> — <code>DIS-&lt;SIGLA&gt;-&lt;ANNO&gt;-&lt;7 cifre&gt;</code> — non più un'etichetta da
+  DEFAULT (<code>VC_…</code>): vedi la sezione «Il codice viene dal registro» qui sotto.</li>
+<li><code>emittente_soggetto_ruolo_id</code> (<code>NOT NULL</code>, dal 2026-09-15): <strong>di chi è</strong> la
+  distinta. È l'input del numeratore e la colonna su cui passa la RLS.</li>
+<li><code>registro_id</code> / <code>anno</code>: il sezionale e l'anno su cui il codice è stato
+  numerato, scritti insieme al codice; <code>NULL</code> sul pregresso <code>VC_…</code>.</li>
 <li><code>centro_riscossione_id</code>: riferimento principale al centro riscossione.</li>
 <li><code>ente_incasso_id</code>: ente/canale specifico (opzionale).</li>
 <li><code>stato_id</code>: stato della testata contabile.</li>
@@ -5755,7 +5772,8 @@ centro riscossione e data contabile, con eventuale dettaglio del canale
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>codice</code> univoco.</li>
+<li><code>codice</code> univoco: l'identità della distinta è la <strong>stringa nuda</strong>, come per la
+  commessa (sigla e anno stanno dentro il codice).</li>
 <li>Ogni testata e` collegata a un solo centro riscossione.</li>
 <li>Se <code>ente_incasso_id</code> e<code>valorizzato, deve essere coerente con</code>centro_riscossione_id` della testata (guard applicativa).</li>
 <li>⚠️ Una distinta <strong>nata da una sistemazione</strong> non si collega a un lotto di
@@ -5845,7 +5863,131 @@ economico è quello che il modello rende inutile.</em></p>
 conferma la distinta si annulla, dopo no — una testata <em>senza</em> stato non sarebbe
 né l'uno né l'altro, e passerebbe i filtri di entrambi. Dal 2026-08-21 la colonna
 è <code>NOT NULL</code> con default <code>BOZZA</code>.</p>
-<h3 id="chi-la-vede-la-rls-del-perimetro-incassi-2026-08-22">🔒 Chi la vede — la RLS del perimetro incassi (2026-08-22)<a class="headerlink" href="#chi-la-vede-la-rls-del-perimetro-incassi-2026-08-22" title="Permanent link">&para;</a></h3>
+<h3 id="il-codice-viene-dal-registro-e-la-distinta-sa-di-chi-e-2026-09-15">🔢 Il codice viene dal registro, e la distinta sa di chi è (2026-09-15)<a class="headerlink" href="#il-codice-viene-dal-registro-e-la-distinta-sa-di-chi-e-2026-09-15" title="Permanent link">&para;</a></h3>
+<p>Fino al 2026-09-15 il <code>codice</code> nasceva da un <strong>DEFAULT di colonna</strong>
+(<code>VC_&lt;timestamp&gt;_&lt;md5&gt;</code>) e, sulla strada delle sistemazioni, da una seconda
+composizione (<code>SIS_&lt;atto&gt;_&lt;timestamp&gt;</code>): un'etichetta unica, non un numero.
+Da quel giorno la distinta entra nella <strong>numerazione standard</strong> — il meccanismo
+è quello della <a href="../../../../guide/numerazione-documenti-e-codici/">guida</a>: famiglia
+<code>DISTINTA</code> in <code>vendite.famiglie_documento</code>, <strong>un registro per emittente</strong>
+(<code>DIS-&lt;sr&gt;</code>, prefisso <code>DIS-</code>, 7 cifre, reset annuale, anno nel numero), e il
+trigger <code>trg_vendite_contabili_a10_gen_codice_ins</code> che chiama
+<code>vendite.fn_assegna_numero_documento</code> <strong>alla creazione</strong>, come ordine e commessa.</p>
+<table>
+<thead>
+<tr>
+<th>Cosa</th>
+<th>Com'è</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>forma</td>
+<td><code>DIS-&lt;SIGLA&gt;-&lt;ANNO&gt;-&lt;NNNNNNN&gt;</code>, es. <code>DIS-ACME-2026-0000001</code> — la sigla è <code>emittenti_fiscali.codice</code>, passata come corpo (come la commessa)</td>
+</tr>
+<tr>
+<td>identità</td>
+<td>la stringa nuda: <code>uq_vendite_contabili_codice</code> resta com'è; con un registro per emittente la sigla è ciò che distingue due <code>…-2026-0000001</code></td>
+</tr>
+<tr>
+<td>momento</td>
+<td><code>BEFORE INSERT</code>: il codice è la maniglia con cui si lavora la distinta da subito; i buchi da bozza annullata sono accettati, come per l'ordine</td>
+</tr>
+<tr>
+<td>anno</td>
+<td>da <code>data_contabile</code>: una distinta datata 31/12 e inserita il 2/1 è dell'anno vecchio. <code>presidia_data_documento = false</code>: la distinta di ieri inserita oggi è un caso normale</td>
+</tr>
+<tr>
+<td>codice fornito</td>
+<td>rispettato (no-op), per le fixture. ⛔ Non è una porta per le madri: <code>test-distinta-numerazione-registro-v1</code> (test 12/13) pretende che nessuna funzione viva passi <code>codice</code></td>
+</tr>
+<tr>
+<td>pregresso</td>
+<td>le righe <code>VC_…</code> restano così, con <code>registro_id</code> e <code>anno</code> <code>NULL</code> (guida §6.6): forma diversa, non collidono</td>
+</tr>
+</tbody>
+</table>
+<p>⭐ <strong>Un registro appartiene a un emittente, e la distinta era l'unico documento
+numerabile che non dichiarava il proprio.</strong> Da qui le tre colonne: l'emittente
+(l'input), <code>registro_id</code> e <code>anno</code> (l'output). L'emittente si risolve in <strong>una
+sede sola</strong>, <code>pagamenti.fn_get_emittente_distinta</code>, applicata dal trigger
+<code>trg_vendite_contabili_a10_emittente_ins_upd</code> a ogni INSERT e chiamata dalla
+madre <code>fn_get_or_create_vendite_contabile</code> per la <strong>chiave di riuso</strong> (che ora
+comprende l'emittente):</p>
+<table>
+<thead>
+<tr>
+<th>Livello</th>
+<th>Se…</th>
+<th>Allora</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>l'emittente dato non è un emittente fiscale</td>
+<td><code>E_PAGAMENTI_CHIAMATA_NON_VALIDA</code> (TECNICO)</td>
+</tr>
+<tr>
+<td>1</td>
+<td>è dato; se c'è anche il canale, deve essere il suo</td>
+<td>altrimenti <code>E_CONTABILE_CANALE_DI_ALTRO_EMITTENTE</code> (campo <code>ente_incasso_id</code>)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>c'è solo il canale</td>
+<td>il suo emittente (canale → conto → soggetto-ruolo → emittente); un canale che non porta a un emittente è <code>E_CONFIG_MANCANTE</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>c'è un operatore in sessione</td>
+<td><code>script.fn_resolve_emittente_for_user</code> (la riserva è di chi agisce; legge prima l'emittente attivo)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>niente</td>
+<td><code>E_CONTABILE_EMITTENTE_OBBLIGATORIO</code> (campo <code>emittente_fiscale_id</code>): il super admin sceglie nel form</td>
+</tr>
+</tbody>
+</table>
+<p>⛔ <strong>Nessun «default dell'installazione»</strong>: dichiarare di un emittente il denaro
+di un altro è l'attribuzione che la numerazione per emittente esiste per
+impedire. La madre <code>fn_get_or_create_vendite_contabile</code> ha un parametro in coda
+<code>p_emittente_fiscale_id</code> (la PK, ciò che backend e frontend conoscono) e, se
+manca, deriva l'emittente dal <strong>lotto</strong> — la distinta di un fondo è
+dell'emittente del lotto, chiunque lanci il giro; un lotto invisibile è TECNICO,
+non si cade sulla sessione. La sistemazione lo prende dall'<strong>atto</strong>, la
+correzione lo <strong>copia</strong> dalla distinta corretta (stesso registro, progressivo
+successivo). Su <code>UPDATE … SET emittente = NULL</code> il trigger <strong>non</strong> ri-riempie
+dalla sessione: parla il vincolo.</p>
+<p>⚠️ <strong>L'ordine dei <code>BEFORE ROW</code> regge sul nome</strong>: <code>a10_emittente</code> (risolve) &lt;
+<code>a10_gen_codice</code> (numera) &lt; <code>a10_guard_emittente_scope</code> (giudica). Chi rinomina
+uno dei tre sposta la risoluzione dopo chi la usa.</p>
+<p>⚠️ <strong>E la FK sul registro ha un effetto nell'altro verso</strong> (2026-09-18): una
+distinta numerata <strong>blocca la disattivazione del suo registro</strong> <code>DIS-&lt;sr&gt;</code>. Il
+guard lo monta l'automazione ATTIVO da sola sulla FK, e — non avendo la distinta
+una colonna <code>attivo</code> ma uno <code>stato_id</code> — blocca sull'<strong>esistenza</strong>: una distinta
+annullata pesa come una confermata, e una distinta non si cancella. È l'ottavo
+guard su <code>registri_fatturazione</code> e il primo fuori da <code>vendite</code>;
+<code>script.fn_check_registro_disattivabile</code> lo anticipa col motivo <code>HA_DISTINTE</code>,
+così il cestino del registro si spegne prima del click (pgTAP
+<code>script/test-fn-check-registro-disattivabile-v1</code>, test 6-9). Il perché e il
+meccanismo stanno nella scheda del
+<a href="../../../vendite/manual/registri_fatturazione/">registro</a>, non qui.</p>
+<p>Brief: brief-db-distinta-numerata-sul-registro (<code>docs/it/dev/work-done/brief-db-distinta-numerata-sul-registro</code>).</p>
+<h3 id="chi-la-vede-la-rls-del-perimetro-incassi-2026-08-22-corretta-il-2026-09-15">🔒 Chi la vede — la RLS del perimetro incassi (2026-08-22, corretta il 2026-09-15)<a class="headerlink" href="#chi-la-vede-la-rls-del-perimetro-incassi-2026-08-22-corretta-il-2026-09-15" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>⭐ <strong>Dal 2026-09-15 il perimetro è la colonna <code>emittente_soggetto_ruolo_id</code></strong>
+(<code>20260915-31</code>), nella forma di <code>rls_fatturazione_lotti_ef_whitelist</code>: il
+ramo «senza canale = di tutti» descritto qui sotto <strong>non esiste più</strong>, né
+sulla testata né sui satelliti (<code>20260915-32</code>: righe <code>20260822-24</code> e
+manifesto dei lotti <code>20260910-18</code>, che portavano lo stesso ramo). Una
+distinta interna è del suo emittente, come il lotto o l'atto da cui nasce;
+le sue righe la seguono per la sola testata, senza bisogno della fattura. Il
+guard di scrittura è in modo <code>soggetto_ruolo</code> sulla stessa colonna. Il testo
+del 22-08 resta sotto perché spiega <strong>perché</strong> il perimetro nacque dal conto
+e perché è <code>FOR ALL</code>: quelle due ragioni valgono ancora.</p>
+</blockquote>
 <p>Policy <code>rls_vendite_contabili_perimetro_incasso</code>, <strong><code>FOR ALL</code></strong>, gate
 <code>OPERATORE</code> fail-closed. Il perimetro viene dal <strong>conto di incasso</strong> e non dalla
 fattura (<strong>D5</strong>): una distinta è un estratto conto e la fattura non ce l'ha — un
@@ -5856,7 +5998,8 @@ tutti</strong>, che è peggio di visibile a chi non dovrebbe.</p>
         → soggetti_ruoli_conti_bancari.soggetto_ruolo_id
             → emittenti_fiscali → whitelist dell'operatore
 </code></pre></div>
-<p>⭐ <strong>La distinta senza canale (<code>ente_incasso_id IS NULL</code>) resta visibile a tutti</strong>,
+<p>⭐ <strong>La distinta senza canale (<code>ente_incasso_id IS NULL</code>) resta visibile a tutti</strong>
+<em>(⚠️ vero fino al 2026-09-15: vedi il riquadro in testa alla sezione)</em>,
 e la condizione sta <strong>in chiaro nel predicato</strong>, non dentro una funzione: chi
 legge la policy deve vedere l'eccezione. Non è generosità, è la <strong>verità del
 modello</strong> — le distinte interne (fondo fattura, compensazione) le fabbrica il
@@ -5881,14 +6024,17 @@ istante.</strong> Un perimetro che si chiude su una riga appena creata non nasco
 non è solo «più avanti»: il risolutore che regge il predicato è <code>SECURITY
 DEFINER</code> e gira come proprietario, quindi con il <code>FORCE</code> rientrerebbe sotto la
 policy della tabella che sta leggendo e nascerebbe una <strong>ricorsione</strong>.</p>
-<p>⚠️ <code>zeroerp_batch_fatturazione</code> ha <code>BYPASSRLS</code>: i percorsi batch non cambiano.</p>
+<p>⚠️ <code>zeroerp_batch_fatturazione</code> ha <code>BYPASSRLS</code>, ma dal 2026-09-05 nessun
+processo lo usa: ogni giro corre con un utente tecnico per (processo × azienda),
+dentro il proprio perimetro — il livello 3 della sede unica risolve anche per lui.</p>
 <p>⭐ <strong>La policy nasconde, il trigger rifiuta.</strong> Il guard di scrittura
-<code>trg_vendite_contabili_a10_guard_emittente_scope_ins_upd</code> (modo <code>ente_incasso</code>)
+<code>trg_vendite_contabili_a10_guard_emittente_scope_ins_upd</code> (modo <code>ente_incasso</code>
+fino al 2026-09-15, poi <code>soggetto_ruolo</code> sulla colonna emittente)
 impedisce di <strong>aprire una distinta sul canale di un altro emittente</strong> e lo
 <strong>spiega</strong>; un <code>WITH CHECK</code> da solo direbbe «new row violates row-level security
 policy», che è vero e inservibile.</p>
 <hr />
-<h3 id="i-cinque-guard-che-la-difendono">I cinque guard che la difendono<a class="headerlink" href="#i-cinque-guard-che-la-difendono" title="Permanent link">&para;</a></h3>
+<h3 id="i-guard-che-la-difendono">I guard che la difendono<a class="headerlink" href="#i-guard-che-la-difendono" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -5897,6 +6043,14 @@ policy», che è vero e inservibile.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>trgfn_vendite_contabili_emittente</code> <em>(2026-09-15)</em></td>
+<td>che una distinta nasca <strong>senza sapere di chi è</strong>, o con un canale di un altro emittente: applica la sede unica <code>fn_get_emittente_distinta</code></td>
+</tr>
+<tr>
+<td><code>trgfn_vendite_contabili_gen_codice</code> <em>(2026-09-15)</em></td>
+<td>non un guard: il <strong>numeratore</strong> sul registro <code>DISTINTA</code> dell'emittente</td>
+</tr>
 <tr>
 <td><code>trgfn_vendite_contabili_guard_transizione</code></td>
 <td>i salti di stato che la matrice non ammette</td>
@@ -5914,8 +6068,8 @@ policy», che è vero e inservibile.</p>
 <td>le incoerenze fra <strong>centro</strong> ed <strong>ente</strong> <em>(dal 2026-08-22 non guarda più le sistemazioni: la colonna che le nominava non esiste)</em></td>
 </tr>
 <tr>
-<td><code>script.trgfn_guard_emittente_scope('ente_incasso','ente_incasso_id')</code></td>
-<td>di <strong>aprire una distinta sul canale di un altro emittente</strong> <em>(2026-08-22)</em></td>
+<td><code>script.trgfn_guard_emittente_scope('soggetto_ruolo','emittente_soggetto_ruolo_id')</code></td>
+<td>di <strong>scrivere una distinta di un emittente fuori dal proprio perimetro</strong> <em>(dal 2026-09-15; fino ad allora in modo <code>ente_incasso</code> sul canale)</em></td>
 </tr>
 </tbody>
 </table>
@@ -5976,10 +6130,14 @@ policy», che è vero e inservibile.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

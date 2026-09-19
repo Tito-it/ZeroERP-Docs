@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5737,6 +5737,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-09-17-sospetto-si-calcola-una-volta-non-per-partita-d14" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-09-17 — <code>sospetto</code> si calcola una volta, non per partita (D14)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6124,6 +6135,38 @@ partite superava la merce realmente uscita, e l'invariante <em>«i pezzi si spos
 non si moltiplicano»</em> non era vero. Ora lo è.</p>
 <p>La quantità fisica resta dov'è sempre stata: <code>vendite.ddt_righe.quantita</code>.</p>
 <hr />
+<h3 id="rev-2026-09-17-sospetto-si-calcola-una-volta-non-per-partita-d14">🔄 rev 2026-09-17 — <code>sospetto</code> si calcola una volta, non per partita (D14)<a class="headerlink" href="#rev-2026-09-17-sospetto-si-calcola-una-volta-non-per-partita-d14" title="Permanent link">&para;</a></h3>
+<p>ChangeSet <code>20260917-01</code>. Registro: <code>migliorie-generali-da-test-valutazione.md</code>
+§3 D14. <strong>Niente cambia nel risultato</strong>: stesse colonne, stesse righe, stesso
+significato di <code>sospetto_duplicato_ordine</code>. Cambia <strong>quante volte</strong> la vista
+paga le policy RLS per calcolarlo.</p>
+<p><strong>Il difetto.</strong> La CTE <code>sospetto</code> era un <code>EXISTS</code> correlato a quattro tabelle,
+che il planner eseguiva <strong>riga per riga</strong>: per ogni partita ri-scandiva
+<code>ddt_righe</code>, <code>ordini_righe_fulfillment</code> e <code>ordini_righe</code>, e ogni riga scandita
+pagava la propria policy. Da owner non si vede (nessuna policy); come
+applicazione sì — misura del 2026‑09‑17 su dbdev, 36 partite: la vista intera
+<strong>18 ms da owner, 396 ms da app</strong>, di cui 322 nella sola <code>sospetto</code>.</p>
+<p>⚠️ E chi la paga è la <strong>capability del DDT</strong> (<code>script.fn_available_actions_ddt</code>),
+che legge la vista due volte per un documento solo — lister e diagnosi, entrambe
+in <code>JOIN</code> con la vista, e il filtro sul documento non entra nelle CTE
+materializzate: ogni chiamata ricalcola le partite di tutti i DDT. ~850 ms per
+DDT come app, cioè il drawer a ogni apertura, e ogni pgTAP che itera i DDT vivi.</p>
+<p><strong>La forma nuova.</strong> L'<code>EXISTS</code> diceva «la coppia (DDT, articolo) di questa riga
+sta nell'insieme delle coppie coperte da un ordine collegato al DDT». Quell'insieme
+si costruisce <strong>una volta</strong> (<code>articoli_ordinati_per_ddt</code>, <code>DISTINCT</code>) e
+<code>sospetto</code> diventa il <code>JOIN</code> delle righe senza fulfillment su quella coppia.
+Le tre condizioni dell'avviso restano tutte e tre. Entrambe le CTE sono
+<code>AS MATERIALIZED</code>: senza, il planner le inlina e torna al ciclo per riga.</p>
+<p><strong>Misurato prima di scrivere</strong> (solo <code>SELECT</code>, transazione ritirata): vista
+intera come app <strong>375 → 88 ms</strong>, <code>EXCEPT ALL</code> nei due versi a zero righe.
+⚠️ Il prezzo, dichiarato: la lettura di <strong>una</strong> riga (<code>WHERE ddt_riga_id = x</code>)
+sale di ~12 ms, perché l'insieme si calcola intero anche quando serve una riga.
+Chi legge una riga è il pgTAP della vista e la situazione merce di un documento;
+chi la legge intera è la capability, cioè il drawer.</p>
+<p>Presidio: <code>test-vw-partite-merce-v1.sql</code> test 11, che <strong>costruisce</strong> il caso
+segnalato e quello legittimo — il dato vivo non ne contiene nessuno, e
+un'equivalenza sulle righe di oggi non proverebbe il ramo.</p>
+<hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
   <br>
@@ -6187,10 +6230,14 @@ non si moltiplicano»</em> non era vero. Ora lo è.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

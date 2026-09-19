@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5698,6 +5698,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-09-13-da-dove-arriva-larticolo-tre-colonne-di-approvvigionamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-09-13 — da dove arriva l'articolo: tre colonne di approvvigionamento
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5746,7 +5757,7 @@
 <ul>
 <li><strong>classificazione</strong> (tipologia, gruppo, voce di spesa);</li>
 <li><strong>fiscalità</strong> (IVA, conti contabili di vendita/acquisto);</li>
-<li><strong>logistica/serializzazione</strong> (<code>requires_serial</code>);</li>
+<li><strong>logistica/tracciabilità</strong> (<code>requires_serial</code>, <code>requires_lotto</code> — due domande <strong>indipendenti</strong>, vedi sotto);</li>
 <li><strong>distinta base leggera</strong> (<code>is_composito</code>, via tabella componenti);</li>
 <li><strong>aspetti documentali</strong> (<code>voce_utility</code>).</li>
 </ul>
@@ -5821,7 +5832,7 @@ risponde la sua risposta </strong>vince** — nemmeno l'uso della fornitura la s
 <p>⛔ <strong>E il suo <code>NULL</code> SIGNIFICA qualcosa: «non ho un'opinione sull'IVA».</strong> Non e<code>un dato mancante da bonificare, ed e</code> il motivo per cui la colonna e<code>nullabile.
 Renderla</code>NOT NULL<code>«per igiene» spegnerebbe il secondo gradino — quello che
 legge il tipo d'uso della fornitura — perche</code> il risolutore non avrebbe piu<code>modo di sapere quando l'articolo non ha niente da dire.
-* **Flag funzionali**:</code>is_composito<code>(distinta),</code>is_solo_componente<code>(solo componente),</code>requires_serial<code>(serializzazione),</code>voce_utility<code>(voce utility)
+* **Flag funzionali**:</code>is_composito<code>(distinta),</code>is_solo_componente<code>(solo componente),</code>requires_serial<code>(serializzazione),</code>requires_lotto<code>(partita, dal 2026-09-14),</code>voce_utility<code>(voce utility)
 * **Note**:</code>note_target_tipo<code>,</code>note_id<code>(FK composita verso</code>catalogo.note<code>)
 * **Tecnico**:</code>meta JSONB<code>,</code>attivo BOOLEAN<code>(default</code>true<code>),</code>storicizza BOOLEAN<code>(default</code>true<code>),</code>tx_id UUID<code>* **Audit**:</code>user_insert<code>,</code>user_update<code>,</code>data_insert<code>,</code>data_update`</p>
 </blockquote>
@@ -5909,7 +5920,25 @@ la creazione dell'articolo.</p>
 <h3 id="best-practice">Best practice<a class="headerlink" href="#best-practice" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Normalizzazione codice</strong>: valuta un trigger di normalizzazione (trim/uppercase opzionale) e <strong>protezione update</strong> del campo <code>codice</code>.</li>
-<li><strong>Serializzazione</strong>: se <code>requires_serial=true</code>, prevedi controlli lato movimento (carico/scarico) e vincoli di coerenza.</li>
+<li><strong>Serializzazione e lotto — due booleani, non un enum</strong> (magazzino Lotto 1, 2026-09-14):
+  <code>requires_serial</code> dice <em>«ogni pezzo ha una matricola»</em> → <code>magazzino.assets</code>, una riga per
+  pezzo, <code>|qta| = 1</code> sul movimento; <code>requires_lotto</code> dice <em>«ogni carico appartiene a una
+  partita»</em> → <code>magazzino.lotti</code>, con data d'arrivo e scadenza. Un articolo può volerne uno,
+  entrambi o nessuno (reagente / apparecchiatura / dispositivo medico). Li legge la
+  <strong>primitiva di scrittura del magazzino</strong> (Lotto 2): un movimento senza il lotto o il
+  seriale che l'articolo pretende è rifiutato lì.
+  ⚠️ <strong>Non sono simmetrici nel comportamento</strong>: <code>requires_serial</code> è anche un <strong>flag di
+  struttura BoM</strong> — congelato da <code>trgfn_articoli_guard_flags_struttura_bom_attiva</code> insieme a
+  <code>is_composito</code>/<code>is_solo_componente</code> quando l'articolo è padre di una distinta attiva,
+  registrato in <code>dbops.lock_columns_conditional</code>, e il drawer lo disabilita via
+  <code>non_editable_fields</code>. <code>requires_lotto</code> è <strong>fuori</strong> da quel guard e da quel registro per
+  decisione (analisi carico/scarico §7-quater p.3: una partita non è struttura di
+  composizione): chi lo espone nel drawer <strong>non</strong> deve copiare il lucchetto. Dal 2026-09-18
+  <code>requires_lotto</code> è in <code>vw_articoli_dettaglio</code> (in coda, <code>20260918-10</code>) e la primitiva di
+  magazzino lo fa rispettare (<code>E_MAG_LOTTO_OBBLIGATORIO</code>/<code>_NON_AMMESSO</code>); il drawer lo prende
+  con la richiesta BE/FE del Lotto 2. <code>gestito_a_magazzino</code> è la prima cosa che la primitiva
+  guarda (<code>E_MAG_ARTICOLO_NON_GESTITO</code>, campo <code>articolo_id</code>), e la spia
+  <code>dbops.vw_articoli_a_magazzino_prontezza</code> dice se almeno un articolo attivo è marcato.</li>
 <li><strong>IVA e conti contabili</strong>: applica regole applicative per la coerenza tra <code>iva_id</code> e tipo articolo (es. voci esenti).</li>
 <li><strong><code>meta</code> JSONB</strong>: usa chiavi stabili (namespace logici: <code>utility.*</code>, <code>ui.*</code>, <code>calc.*</code>) e considera indici GIN se interrogato.</li>
 <li><strong>Storicizza</strong> anziché cancellare: usa <code>attivo=false</code> e lascia che i trigger di storico fotografino le modifiche.</li>
@@ -5944,6 +5973,50 @@ erDiagram
 </div>
 
 <hr />
+<h3 id="rev-2026-09-13-da-dove-arriva-larticolo-tre-colonne-di-approvvigionamento">🔄 rev 2026-09-13 — da dove arriva l'articolo: tre colonne di approvvigionamento<a class="headerlink" href="#rev-2026-09-13-da-dove-arriva-larticolo-tre-colonne-di-approvvigionamento" title="Permanent link">&para;</a></h3>
+<p>Nate con <code>20260913-05</code> (e <code>-10</code>/<code>-11</code> per il default), brief
+<code>brief-db-modifiche-certe-ciclo-vendita-e-articolo</code>, sezione 3.</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Che cosa dice</th>
+<th>Vuoto ammesso?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>modo_approvvigionamento_id</code></td>
+<td><strong>da dove arriva la merce</strong>: acquisto, produzione, stock, non applicabile — vocabolario <a href="../../../config/tabelle/modi_approvvigionamento/">config.modi_approvvigionamento</a></td>
+<td>no, default <strong>acquisto</strong></td>
+</tr>
+<tr>
+<td><code>gestito_a_magazzino</code></td>
+<td>l'articolo <strong>movimenta giacenza</strong></td>
+<td>no, default <strong>no</strong></td>
+</tr>
+<tr>
+<td><code>lead_time_giorni</code></td>
+<td>giorni fra «lo chiedo» e «ce l'ho»</td>
+<td>sì: per una prestazione non significa niente, e <code>0</code> non è «non si applica»</td>
+</tr>
+</tbody>
+</table>
+<p>⭐ <strong>Perché tre domande e non una.</strong> «Da dove arriva» non dice «passa da
+magazzino» — una merce può essere consegnata direttamente dal fornitore — e
+nessuna delle due si deduce dalla natura di vendita, che dice invece <em>dove va</em>
+la riga venduta. Sono domande diverse, e vanno tenute separate anche quando oggi
+le risposte coincidono.</p>
+<p>⚠️ <strong>Al rilascio tutti gli articoli risultano «non a magazzino».</strong> Il default è
+volutamente prudente — nessun articolo comincia a movimentare giacenza per
+distrazione — ma la conseguenza è che la merce <strong>va marcata</strong>: è un lavoro di
+dato, e il magazzino, finché non lo si fa, si comporta come se non ci fosse
+merce, senza nessun errore. Il controllo di prontezza sta nel catalogo dei
+presidi (<code>dbops.presidi</code>), non in un rosso.</p>
+<p>Le tre colonne escono dalla vista
+<a href="../../views/vw_articoli_dettaglio/">vw_articoli_dettaglio</a> (con la
+decodifica del modo) e sono configurate come colonne della lista articoli,
+<strong>spente</strong> finché il backend non le proietta.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -6001,10 +6074,14 @@ erDiagram
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5865,6 +5865,22 @@ suo complemento.</p>
 processo muore la sessione sparisce; se sta riconnettendo non c'è — ed è vero.
 Nessun battito sul giornale, nessuna tabella nuova. Il backend si presenta con
 <code>application_name = codice del processo</code> (una riga in <code>notify_listener</code>).</p>
+<p>⛔ <strong>E il verdetto poggia sull'<em>esistenza</em> della sessione, non su <code>backend_start</code></strong>
+(rev <code>20260914-01</code>). <code>pg_stat_activity</code> mostra a <strong>tutti</strong> la riga di ogni
+sessione (<code>pid</code>, <code>usename</code>, <code>application_name</code>), ma <strong>maschera</strong> le altre
+colonne — <code>backend_start</code>, <code>state</code>, <code>query</code> — a chi non è lo stesso utente della
+sessione né membro di <code>pg_read_all_stats</code>; e una vista non cambia l'utente che
+<code>pg_stat_get_activity()</code> guarda. Fino al 14-09 il ramo leggeva <code>viva_dal IS NOT
+NULL</code>: <strong>OK</strong> per <code>zeroerp_app</code> (la sessione del listener è sua) e <strong>MUTO</strong> per
+chiunque altro — <code>titodb</code> compreso, cioè <code>fn_conta_presidio</code>, che conta per il
+digest. Il primo digest della giornaliera ha contato 1 su un listener vivo da 31
+ore, e il perimetro <code>LIBERO</code> del presidio ha protestato: <em>«il conteggio dice 1 ma
+da qui la vista risponde vuota»</em>. Era la vista a dare due verdetti, e quello vero
+era dell'app. ⇒ <code>ultimo_segno_di_vita</code> per <code>SESSIONE</code> è <strong>informazione</strong> («da
+quando»), non verdetto: è <code>NULL</code> per chi non può leggerlo, e lo stato dice <code>OK</code>
+lo stesso. Il caso «sessione di un altro utente» sta nel test 19 del pgTAP
+(<code>dbops/test-vw-processi-programmazione.sql</code>), costruito con <code>dblink</code> dove il
+DSN lo permette e <strong>dichiarato</strong> con <code>skip()</code> dove no.</p>
 <p>⛔ <strong>Il limite, dichiarato</strong>: il catalogo non sa quali processi sono <strong>accesi su
 questo host</strong> (<code>abilita</code> sta nel deploy). Oggi non morde — ogni sveglia accesa è
 universale, e <code>run_fatturazione_batch</code> è spento per decisione di prodotto
@@ -6018,10 +6034,14 @@ rosso il test, invece di produrre un falso allarme in produzione.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

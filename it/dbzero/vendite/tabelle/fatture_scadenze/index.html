@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5611,10 +5611,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tre-casi-in-cui-zero-rate-e-la-risposta-giusta" class="md-nav__link">
+  <a href="#i-tre-casi-della-base-e-dal-17-09-2026-il-negativo-ha-una-rata" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        ⚖️ Tre casi in cui zero rate è la risposta giusta
+        ⚖️ I tre casi della base — e dal 17-09-2026 il negativo ha UNA rata
       </span>
     </span>
   </a>
@@ -5721,6 +5721,9 @@
 <p><strong>Funzioni che la scrivono:</strong></p>
 <p>• <a href="../../funzioni/fn_genera_scadenze_fattura/">vendite.fn_genera_scadenze_fattura</a> — per una fattura
 • <a href="../../funzioni/fn_genera_scadenze_lotto/">vendite.fn_genera_scadenze_lotto</a> — wrapper di lotto</p>
+<p><strong>Chi la legge per la lista e per i saldi:</strong></p>
+<p>• <a href="../../views/vw_fatture_scadenze_lista/">vendite.vw_fatture_scadenze_lista</a> — una riga per rata col suo documento, <strong>senza</strong> saldi
+• <a href="../../../pagamenti/funzioni/fn_get_saldi_rate/">pagamenti.fn_get_saldi_rate</a> — il nucleo dei saldi (residuo · in lavorazione · incassato), con l'imputazione dei movimenti senza rata</p>
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
@@ -5803,7 +5806,7 @@ sulla prima».</p>
 entrambe le colonne non esistono più.</p>
 </blockquote>
 <hr />
-<h3 id="tre-casi-in-cui-zero-rate-e-la-risposta-giusta">⚖️ Tre casi in cui zero rate è la risposta giusta<a class="headerlink" href="#tre-casi-in-cui-zero-rate-e-la-risposta-giusta" title="Permanent link">&para;</a></h3>
+<h3 id="i-tre-casi-della-base-e-dal-17-09-2026-il-negativo-ha-una-rata">⚖️ I tre casi della base — e dal 17-09-2026 il negativo ha UNA rata<a class="headerlink" href="#i-tre-casi-della-base-e-dal-17-09-2026-il-negativo-ha-una-rata" title="Permanent link">&para;</a></h3>
 <p>Una fattura <strong>senza rate non è una fattura difettosa</strong>. Su questi casi non va
 costruito nessun allarme:</p>
 <table>
@@ -5822,8 +5825,8 @@ costruito nessun allarme:</p>
 </tr>
 <tr>
 <td><code>&lt; 0</code></td>
-<td>zero rate, <strong>log non critico</strong></td>
-<td>saldo a favore del cliente. Il <code>CHECK (importo &gt;= 0)</code> aveva già deciso che un documento a credito non si rateizza; il log c'è perché a volte è un fondo configurato male, e la differenza la vede una persona</td>
+<td><strong>una rata</strong>, importo = la base <strong>col segno</strong>, alla <strong>prima data del termine</strong>; <strong>log non critico</strong></td>
+<td>è la <strong>nota di credito</strong> (P-5, decisione di Tid del 17-09-2026). Fino a quel giorno: zero rate, e un <code>CHECK (importo &gt;= 0)</code> che lo vietava. Il log resta perché a volte un totale negativo è un fondo configurato male, e la differenza la vede una persona</td>
 </tr>
 <tr>
 <td><code>IS NULL</code></td>
@@ -5832,13 +5835,32 @@ costruito nessun allarme:</p>
 </tr>
 </tbody>
 </table>
+<p>⭐ <strong>Perché la nota di credito ha una rata.</strong> Una riga contabile <em>senza</em> rata
+non incontra nessuna capienza: il guard della rata esce subito su
+<code>scadenza_id IS NULL</code>, e un guard a livello documento non esiste. Finché la nota
+di credito non aveva una rata, «il cliente paga la nota di credito» (un +15 su
+un credito di −20, verso sbagliato) o la rimessa che compensa (100 sulla
+fattura, −20 sulla nota) entravano <strong>in silenzio</strong>. Con la rata passano dal
+guard di D14-c come tutte le altre righe: il verso giusto entra, quello
+sbagliato si <strong>segnala</strong> e si forza. Non è un allargamento del modello: è un
+buco chiuso.</p>
+<p>⚠️ <strong>Una rata, qualunque cosa dica il termine.</strong> Un termine a due rate su una
+nota di credito produce comunque una rata sola, alla data della <em>prima</em>
+(<code>primo_offset_giorni</code>, <code>fine_mese</code> compresi): il legame con la fattura
+rettificata è lineage, non piano rate. Lo snapshot in testata e il <code>meta</code> della
+rata portano <code>rata_unica_credito = true</code>; nello snapshot <code>numero_rate</code> vale 1 —
+descrive il piano <strong>applicato</strong> — e il termine d'origine resta leggibile da
+<code>termine_pagamento_id</code> e <code>codice_interno</code>.</p>
 <hr />
 <h3 id="campi-chiave-semantica">Campi chiave (semantica)<a class="headerlink" href="#campi-chiave-semantica" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>fattura_id</code> → FK alla testata, <code>ON DELETE CASCADE</code>.</li>
 <li><code>numero_rata</code> → progressivo da 1, <strong>univoco per fattura</strong>.</li>
 <li><code>data_scadenza</code> → data di esigibilità della rata.</li>
-<li><code>importo</code> → quanto si paga a quella data (<code>&gt;= 0</code>).</li>
+<li><code>importo</code> → quanto si regola a quella data, <strong>col segno del documento</strong>:
+  positivo su una fattura, negativo sulla rata unica di una nota di credito.
+  Lo zero è ammesso (raggiungibile per arrotondamento su un micro-documento a
+  più rate).</li>
 <li><code>meta</code> → estensioni JSONB; oggi la generazione vi scrive <code>modalita_codice</code> e
   <code>termine_codice_interno</code>, cioè con che cosa e in base a quale regola è nata.</li>
 </ul>
@@ -5846,8 +5868,12 @@ costruito nessun allarme:</p>
 <h3 id="vincoli-e-congelamento">🔒 Vincoli e congelamento<a class="headerlink" href="#vincoli-e-congelamento" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>PK</strong> <code>id</code>; <strong>FK</strong> <code>fattura_id</code> con <code>ON DELETE CASCADE</code>;
-  <strong>UNIQUE</strong> <code>(fattura_id, numero_rata)</code>; <strong>CHECK</strong> <code>importo &gt;= 0</code>;
-  indice su <code>data_scadenza</code>.</li>
+  <strong>UNIQUE</strong> <code>(fattura_id, numero_rata)</code>; indice su <code>data_scadenza</code>.
+  ⛔ Fino al 17-09-2026 c'era un <strong>CHECK</strong> <code>importo &gt;= 0</code>: tolto, perché la
+  regola vera — <em>il segno della rata è il segno del documento</em> — non sta in un
+  vincolo di tabella ma nella <strong>numerazione</strong> (<code>fn_assign_numero_fattura</code>:
+  somma delle rate = totale a pagare, col segno) e nell'<strong>unico scrittore</strong>,
+  che il segno lo prende dalla base.</li>
 <li><strong>Congelamento oltre la soglia fiscale.</strong> Un trigger di guard impedisce
   <code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code> sulle rate di una fattura che ha superato
   DRAFT/EMESSA: da lì in poi il documento è uno snapshot fiscale e il suo piano
@@ -5862,7 +5888,9 @@ costruito nessun allarme:</p>
 <p>Insieme alle rate, la generazione scrive in testata
 <code>vendite.fatture.termine_pagamento_snapshot</code>: i <strong>valori</strong> del termine usato —
 rate, offset, intervallo, fine mese, arrotondamento — con l'<code>id</code> accanto come sola
-provenienza.</p>
+provenienza. Sulla nota di credito lo snapshot dice <code>numero_rate = 1</code> e
+<code>rata_unica_credito = true</code>: descrive il piano <strong>applicato</strong>, e spiega perché
+differisce dal termine.</p>
 <p>È la ragione per cui non serve risalire al catalogo per capire un documento
 emesso: se domani il termine cambia, quella fattura continua a spiegare le rate
 che ha.</p>
@@ -5960,10 +5988,14 @@ termine che l'ha prodotta perché quel termine viaggia con lei.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

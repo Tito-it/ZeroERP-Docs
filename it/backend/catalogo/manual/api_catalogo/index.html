@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -6921,6 +6921,24 @@ il motivo via tooltip i18n (chiavi <code>catalogo.motivo_*</code>).</p>
 <td>Natura di vendita (FK <code>config.nature_vendita</code>): decide l'instradamento post-accettazione del modello split (ORDINE/COMMESSA/CONTRATTO). Se omesso → default DB <code>MERCE</code>. <strong>Mai null esplicito</strong> (colonna NOT NULL): risponde <code>E_CATALOGO_VALIDATION</code></td>
 </tr>
 <tr>
+<td><code>modo_approvvigionamento_id</code></td>
+<td>int</td>
+<td>No</td>
+<td><strong>Da dove arriva</strong> l'articolo (FK <code>config.modi_approvvigionamento</code>: <code>ACQUISTO</code> / <code>PRODUZIONE</code> / <code>STOCK</code> / <code>NON_APPLICABILE</code> — 2026-09-14, Blocco B di <code>brief-db-modifiche-certe-ciclo-vendita-e-articolo</code>). Dimensione <strong>ortogonale</strong> alla natura di vendita (dice dove <em>va</em> la riga, non da dove <em>viene</em>). Se omesso → default DB <code>ACQUISTO</code>. <strong>Mai null esplicito</strong> (NOT NULL): <code>E_CATALOGO_VALIDATION</code> col campo. Lookup: <code>GET /core/lookup/codici/?rel=config.modi_approvvigionamento</code></td>
+</tr>
+<tr>
+<td><code>gestito_a_magazzino</code></td>
+<td>bool</td>
+<td>No</td>
+<td>L'articolo <strong>movimenta giacenza</strong>. Default DB <code>false</code> (fail-safe: nessun articolo comincia a movimentare per distrazione). ⚠️ Non si deriva da natura <code>MERCE</code>: una merce può essere venduta senza passare da giacenza</td>
+</tr>
+<tr>
+<td><code>lead_time_giorni</code></td>
+<td>int</td>
+<td>No</td>
+<td>Giorni fra richiesta e disponibilità. <strong>Nullable per modello</strong>: per una prestazione non significa niente, e <code>0</code> non è «non si applica». Negativo → <code>E_CATALOGO_VALIDATION</code> col campo (anticipa il CHECK)</td>
+</tr>
+<tr>
 <td><code>meta</code></td>
 <td>object</td>
 <td>No</td>
@@ -6966,6 +6984,14 @@ immutabilita' (Fase 5):</p>
   (<code>ORDINE</code> / <code>COMMESSA</code> / <code>CONTRATTO</code>). Il FE inizializza il Select
   "Natura di vendita" del drawer da <code>natura_vendita_id</code>; gli stessi campi
   sono disponibili anche nelle righe della lista (§1.1).</li>
+<li>Approvvigionamento (2026-09-14, da <code>vw_articoli_dettaglio</code>):
+  <code>modo_approvvigionamento_id</code>, <code>modo_approvvigionamento_codice_interno</code>,
+  <code>modo_approvvigionamento_descrizione</code> (⛔ non <code>_codice</code>: il valore viene
+  dalla colonna immutabile, linee-guida-sql §6c), <code>gestito_a_magazzino</code>,
+  <code>lead_time_giorni</code>. ⚠️ <code>ARTICOLI_DETAIL_COLUMNS</code> è una proiezione <strong>per
+  nome</strong>: una colonna nuova della vista non esce finché nessuno la nomina —
+  le tre colonne della lista 26 (<code>ui.lista_colonna</code> 747-749) sono nate
+  <code>attivo = f</code> e accese nello stesso commit di questa proiezione.</li>
 </ul>
 <h3 id="14-aggiorna-articolo">1.4 Aggiorna articolo<a class="headerlink" href="#14-aggiorna-articolo" title="Permanent link">&para;</a></h3>
 <table>
@@ -8103,10 +8129,14 @@ sono ancora dirette e vanno considerate debito tecnico noto.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

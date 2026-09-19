@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5633,6 +5633,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#chi-legge-chi-scrive-la-postura-di-zeroerp_app-rev-2026-09-19" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Chi legge, chi scrive — la postura di <code>zeroerp_app</code> <em>(rev 2026-09-19)</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#considerazioni-di-progettazione" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5766,7 +5777,47 @@ storico: le righe vecchie hanno l'autore vuoto per sempre e non sono sanabili.</
   attorno a un corpo job <strong>Python</strong>. <code>SECURITY DEFINER</code> (i ruoli batch headless non hanno
   DML diretto sulla tabella, solo <code>EXECUTE</code>). Advisory lock di sessione opzionale per
   anti-overlap fra run dello stesso job (per <code>lock_key</code>).</li>
+<li><strong>Canale fuori transazione</strong> (il run che fallisce) → <code>zeroerp_log</code>, che ha il
+  solo <code>INSERT</code> (<code>90_end/20260905-38</code>).</li>
 </ul>
+<h3 id="chi-legge-chi-scrive-la-postura-di-zeroerp_app-rev-2026-09-19">Chi legge, chi scrive — la postura di <code>zeroerp_app</code> <em>(rev 2026-09-19)</em><a class="headerlink" href="#chi-legge-chi-scrive-la-postura-di-zeroerp_app-rev-2026-09-19" title="Permanent link">&para;</a></h3>
+<p>Il ruolo applicativo <strong>legge</strong> questo giornale e <strong>non lo scrive</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Privilegio</th>
+<th><code>zeroerp_app</code></th>
+<th>Perché</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>USAGE</code> sullo schema</td>
+<td>sì</td>
+<td>risolvere i nomi (e il presidio dei riferimenti morti)</td>
+</tr>
+<tr>
+<td><code>SELECT</code> sulla tabella e su <code>vw_job_run_da_guardare</code></td>
+<td>sì</td>
+<td>lista dei processi automatici e corse di un processo, riepilogo giri e liveness, esiti delle corsie di fatturazione, <code>job_liveness</code> nel digest — cinque lettori nel backend</td>
+</tr>
+<tr>
+<td><code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code></td>
+<td><strong>no</strong></td>
+<td>la porta di scrittura sono le due funzioni <code>SECURITY DEFINER</code> qui sopra; un giornale non si cancella</td>
+</tr>
+</tbody>
+</table>
+<p>Sede: <code>scripts/sql/provision_db_roles.sql</code> (blocco <code>maintenance</code>, in fondo) e il
+changeSet gemello <code>90_end/20260919-08</code> per i database già provisionati.
+<code>maintenance</code> <strong>non</strong> entra nella whitelist del provisioning, che darebbe SIUD
+pieno. Presidio: <code>db/pgtap/maintenance/test-app-postura-job-run-log-v1.sql</code>.</p>
+<p>⚠️ Fino al 2026-09-19 il <code>SELECT</code> esisteva <strong>solo sul database di sviluppo</strong>,
+dato a mano, e il provisioning diceva «l'app non ne legge né scrive le
+tabelle». È emerso quando i test Django in CI sono passati a connettersi come
+<code>zeroerp_app</code>: sedici rossi su <code>list_processi</code>/<code>list_job_runs</code>. Regola:
+<a href="../../../../linee-guida-sql/">linee-guida-sql §11.9</a> — un privilegio che esiste su una
+sola macchina è un ricordo, non una configurazione.</p>
 <h3 id="considerazioni-di-progettazione">Considerazioni di Progettazione<a class="headerlink" href="#considerazioni-di-progettazione" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Permette la <strong>tracciabilità completa</strong> delle esecuzioni, con dettagli utili per debug e audit.</li>
@@ -5847,10 +5898,14 @@ storico: le righe vecchie hanno l'autore vuoto per sempre e non sono sanabili.</
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

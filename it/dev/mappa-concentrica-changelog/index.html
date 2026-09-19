@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5581,6 +5581,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#14-settembre-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        14 settembre 2026
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#10-settembre-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5742,6 +5753,228 @@ documenti ancora in movimento.</p>
 documenti vivono anche nei <code>COMMENT</code> SQL e in changeSet già mergiati, che non
 si toccano: l'URL di questo changelog deve restare uno.</p>
 </blockquote>
+<hr />
+<h2 id="14-settembre-2026">14 settembre 2026<a class="headerlink" href="#14-settembre-2026" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>Copre il periodo <strong>11 – 14 settembre</strong>. Quattro giorni, <strong>103 changeSet</strong>
+(25 in <code>dbops</code>, 23 in <code>vendite</code>, 10 in <code>anagrafiche</code>, 8 in <code>script</code>, 4 in
+<code>storico</code>) e <strong>undici documenti chiusi in <code>work-done</code></strong>. Anche qui si scrive
+per <strong>temi</strong>: sono sei.</p>
+<p>⚠️ Due brief di questo periodo restano in <code>work-in-progress</code> per scelta, non
+per incompiutezza: quello delle <strong>modifiche certe</strong> ha un fatto di modello
+dichiarato e non deciso (il verbo per la promessa di consegna), e quello delle
+<strong>fixture che costruiscono il mondo</strong> tiene in coda il pezzo nuovo di D6.
+Sono linkati dove stanno.</p>
+<p>⭐ <strong>Il tema portante è ancora la CATENA DI VERIFICA, ma stavolta dal verso
+dei presidi che si guardano allo specchio.</strong> Il 10 settembre i presidi avevano
+ricevuto un catalogo e un destinatario; in questi quattro giorni <strong>tre di loro
+hanno mentito</strong> — il digest contava 784 riferimenti morti che non c'erano, un
+listener vivo risultava <code>MUTO</code>, un checker dava una risposta diversa per ruolo
+— e in tutti e tre i casi la causa stava nel <strong>metro</strong>, non nel misurato. È
+il motivo per cui la lezione che resta non è «un presidio in più» ma <em>un
+presidio si prova dal percorso che lo attraversa</em>.</p>
+</blockquote>
+<p><strong>Anello 0 — Lo storico porta il proprio perimetro, e il perimetro finisce di
+chiudersi.</strong> Il cantiere del perimetro si chiude formalmente l'11 settembre con
+l'ultima famiglia armata (<code>arrotondamenti_scope</code>) e un ritiro
+(<code>attivita_fatturabili_log</code>): registro del debito da 33 a <strong>10</strong> righe, tutte
+decisioni di modello o cantieri di un altro dominio. Ma il criterio transitivo
+<strong>non vede lo <code>storico</code></strong> — le shadow sono gemelle delle madri, non figlie — e
+lì il dato vivo di <code>vendite.fatture</code> era protetto da due policy mentre <strong>ogni
+sua versione precedente era leggibile da chiunque</strong>. La decisione portante è che
+lo scope <strong>si cattura, non si deriva</strong>: una riga di storico è un fatto datato,
+e il suo perimetro fa parte del fatto — se si ricalcolasse dalla madre viva, il
+presente riscriverebbe la visibilità del passato. Ogni shadow prende
+<code>origine_schema</code> (cinque shadow erano <strong>condivise</strong> fra <code>vendite</code> e <code>acquisti</code>
+senza saperlo: due <code>BIGSERIAL</code> nella stessa colonna, e la chiusura dello
+snapshot chiudeva quello dell'altro schema) e <code>scope_emittente_fiscale_id</code>,
+scritti dal trigger una volta sola; la mappa <code>dbops.storico_scope_policy</code> dice
+per ogni madre <em>dove</em> sta lo scope (colonna EF, colonna SR, risalita al padre —
+con <strong>ripiego sull'archivio del padre</strong> quando un <code>DELETE … CASCADE</code> l'ha già
+cancellato — o via billing account), ed è anche il presidio. <strong>37 shadow armate</strong>
+con policy generata, 65.751 versioni attribuite, <code>REVOKE DELETE</code> all'app su
+tutto lo schema, e le shadow nuove nascono armate dal generatore. ⭐
+<code>dbops.audit_log</code> era la stessa famiglia di difetto e un rimedio <strong>diverso</strong>:
+non è un registro di dominio (ci scrivono solo <code>dbops</code> e <code>maintenance</code>), quindi
+il presidio non è una policy ma un <strong>cancello</strong> alla scrittura, più il <code>REVOKE</code>
+di <code>UPDATE</code>/<code>DELETE</code> all'app dichiarato nel loop dei grant — <em>un registro di
+audit modificabile da chi è auditato non è un registro</em>. Nello stesso giro
+<code>shop.ricevute</code> viene armata (12-09, il debito scende a <strong>8</strong>), il benchmark RLS
+«pre/post ENABLE» viene ritirato dalla documentazione perché sbagliato nella
+premessa (la canonica è plpgsql: il predicato non è indicizzabile), e il 13-09
+cade <strong>D13</strong>: come <code>zeroerp_app</code>, l'operatore di un emittente <strong>non di default</strong>
+non riusciva a creare un billing account, perché il <code>RETURNING</code> chiedeva di
+vedere la riga <em>prima</em> che il trigger <code>AFTER</code> scrivesse il legame e il resolver
+ricadeva su un'altra azienda. Ora <em>un BA non ancora collegato appartiene a chi
+lo sta creando</em> — riserva a tre livelli, e la seconda copia della regola
+(<code>fn_get_emittente_fiscale_pk</code>) delega; lato BE le tre copie inline della regola
+vecchia delegano a <code>fn_check_ba_visible_for_emittenti</code>. Vedi
+brief-db-perimetro-emittente-righe-documento.md (<code>docs/it/dev/work-done/brief-db-perimetro-emittente-righe-documento.md</code>) §12,
+brief-db-rls-storico-scope-congelato.md (<code>docs/it/dev/work-done/brief-db-rls-storico-scope-congelato.md</code>),
+brief-db-ba-riserva-emittente-operatore-d13.md (<code>docs/it/dev/work-done/brief-db-ba-riserva-emittente-operatore-d13.md</code>).</p>
+<p><strong>Anello 0 — I processi automatici hanno un contratto di vitalità.</strong> Dei sei
+processi che il backend dichiara di svegliare, due avevano un presidio che si
+accorge se smettono di girare; gli altri quattro no — e <code>send_pending_emails</code>,
+che gira ogni cinque minuti, era rimasto <strong>non installato</strong> senza che nessuno se
+ne accorgesse. <em>Il discriminante non è «ogni quanto gira»: è «qualcuno aspetta
+l'esito, e in quanto tempo se ne accorge?»</em>. La tolleranza diventa un dato di
+catalogo (<code>dbops.processi.tolleranza_minuti</code>, che esce da <code>sveglie.json</code>), il
+panorama dice <code>MUTO</code> e <code>MAI_PARTITO</code>, il listener si presidia dalla <strong>sessione</strong>
+(<code>pg_stat_activity</code> + <code>application_name</code>, un fatto e non una dichiarazione), le
+email e la coda stampa hanno la loro vista <code>ZERO</code>, e un <strong>guardiano pgAgent</strong>
+accoda su <code>coda_lavori</code> la notifica se il digest stesso tace — <em>chi guarda il
+guardiano</em>. ⚠️ Il primo digest utile (14-09) ha contato un <code>MUTO</code> su un listener
+<strong>vivo</strong>: <code>pg_stat_activity</code> maschera <code>backend_start</code> a chi non è lo stesso
+utente della sessione, e il pgTAP non poteva vederlo perché usava la propria
+sessione. Corretto leggendo l'<strong>esistenza</strong> della riga, che è visibile a
+chiunque, con un test che costruisce la sessione altrui via <code>dblink</code>. Sullo
+stesso asse, «una mail stampata a video non è una mail inviata»: il digest era
+stato dichiarato <code>SENT</code> su un host col placeholder SMTP del seed, e ora esiste lo
+stato <code>SIMULATA</code> (terminale e voluto), con <code>inviato_at</code> a NULL. E il cantiere dei
+presidi si chiude scoprendo che <strong>il presidio dei presidi mentiva</strong>: 784
+riferimenti morti nel digest contro zero nella lettura diretta, perché la
+funzione ereditava il <code>search_path</code> blindato della <code>DEFINER</code> che la chiamava e
+non risolveva più <code>plpgsql_check</code> in <code>public</code> — <em>una funzione che dipende dal
+<code>search_path</code> del chiamante non ha un comportamento, ne ha uno per chiamante</em>.
+Il primo settimanale (14-09) ne ha trovato un terzo: il checker dava una
+risposta <strong>per ruolo</strong> su una <code>SECURITY DEFINER</code> di un altro proprietario
+(ottava classe <code>FP_DEFINER_PRIVILEGIO</code>, e l'esenzione pgAgent del registro
+<strong>segue la macchina</strong>). ⚠️ Nel working tree del 14-09, non ancora consolidato:
+<code>job_liveness</code> del backend prendeva l'esito dalla riga più recente — cioè dalla
+propria corsa in esecuzione — e <code>last_ok</code> è sostituito da <code>in_corso</code> +
+<code>ultima_conclusa</code> nelle tre sedi. Aperto: far partire o riavviare un processo
+<strong>dall'interfaccia</strong> — «Esegui ora» passa dalla coda e non aspetta l'host, il
+brief DB è scritto; «Riavvia» resta dietro la decisione su che cosa sia un host.
+✅ <em>Aggiornamento del 18-09</em>: «Esegui ora» è <strong>in esercizio dal 15-09</strong> (DB, BE,
+FE e collaudo in-app: due run <code>origine = COMMAND</code> sul giornale), l'analisi è
+archiviata in <code>work-done/</code>; «Riavvia» non è avviato e la sua D1 (l'host) sta
+fra le «Decisioni aperte» della mappa.
+Vedi
+brief-db-quattro-processi-senza-presidio.md (<code>docs/it/dev/work-done/brief-db-quattro-processi-senza-presidio.md</code>),
+brief-db-stato-email-console-non-e-inviata.md (<code>docs/it/dev/work-done/brief-db-stato-email-console-non-e-inviata.md</code>),
+brief-db-un-destinatario-per-i-presidi.md (<code>docs/it/dev/work-done/brief-db-un-destinatario-per-i-presidi.md</code>) §13-§14,
+analisi-riavvio-processi-da-interfaccia.md (<code>docs/it/dev/work-done/analisi-riavvio-processi-da-interfaccia.md</code>),
+brief-db-avvio-manuale-di-un-processo.md (<code>docs/it/dev/work-done/brief-db-avvio-manuale-di-un-processo.md</code>).</p>
+<p><strong>Anello 0 + 1 — Il software che serviva dati morti.</strong> Nato dalla coda del
+cantiere dello storico, dove si stava per scrivere codice che mostrasse la
+storia di una tabella già dismessa: la domanda diventa <em>c'è software in
+servizio il cui unico lavoro è tenere in vita dati — o nomi — che il modello ha
+già lasciato?</em> Otto voci, tutte chiuse il 12-09: la vista col nome vecchio
+<code>anagrafiche.risorse_umane_auth_user</code> (una proiezione filtrata su <code>OPERATORE</code>
+che rispondeva <strong>zero righe</strong> in silenzio su un'identità portale) ritirata con i
+lettori DB riscritti sulla <strong>madre</strong> <code>identita_digitali</code> e un guard scritto a
+mano; le shadow legacy droppate; <code>dbops._defaults_backup_usercols</code> e
+<code>public.version_info</code> <strong>droppate</strong> (la seconda in due giri: nata nel
+provisioning come <code>postgres</code>, si ritira nel provisioning — <em>ciò che nasce nel
+provisioning si ritira nel provisioning</em>); l'alias «deprecato»
+<code>get_emittenti_ids</code> con nove chiamanti, due ripieghi su forme di <code>meta</code> che
+nessuno scrive più, e <code>isAdmin</code> sul frontend. ⛔ La lezione: <em>«tenere per
+sicurezza» è la forma da cui ogni voce di quell'elenco è nata</em>, e il precedente
+mostra dove porta — a un endpoint a 500 e a una policy scritta per sei righe di
+test. ⭐ Il giorno dopo la CI ha detto due cose che lo scratch locale non poteva
+vedere: le 15 shadow create a mano in <code>00_schema</code> nascevano senza
+<code>origine_schema</code> su un DB da zero (convergenza in <code>ci_apply</code>), e sotto c'era una
+<strong>seconda causa, non di oggi</strong>: <code>zeroerp_app</code> non aveva nessuna sede che gli
+desse <code>django.auth_user</code> — su dev il GRANT era <strong>dato a mano</strong>, e lo scratch
+copiava le ACL di dev insieme allo schema. <em>Un privilegio che esiste su una
+macchina è un ricordo, non una configurazione</em>: lo schema <code>django</code> entra nel
+provisioning, il passo in CI si sposta dopo entrambi i migratori, e un pgTAP
+pinna la postura. Vedi
+analisi-software-per-dati-morti.md (<code>docs/it/dev/work-done/analisi-software-per-dati-morti.md</code>).</p>
+<p><strong>Anello 0 — La postura degli oggetti si presidia per criterio, e il registro
+della CI cala.</strong> Le tre <code>SECURITY DEFINER</code> di <code>postgres</code> senza <code>search_path</code> —
+una sul percorso di 305 trigger <code>tx_id</code> — hanno il pin (12-09), nella timeline
+normale e senza superuser, col <strong>prestito di proprietà</strong> via
+<code>fn_sync_functions_owner</code>. ⚠️ Con una lezione presa dal verso opposto: la forma
+«prudente» <code>pg_catalog, pg_temp</code> avrebbe <strong>accecato</strong> <code>dblink</code>, che vive in
+<code>public</code>, dentro un <code>WHEN OTHERS</code> — spegnendo il tracciamento delle transazioni
+<strong>senza un rosso da nessuna parte</strong>. <em>Una forma canonica uguale per tutte non
+esiste: si decide per funzione, guardando ciò che chiama.</em> Il terzo invariante di
+D5 ha ora il suo pgTAP sul catalogo (<code>test-security-definer-search-path-v1</code>),
+come i primi due. Sul registro della CI il triage è partito <strong>dal perimetro</strong>:
+21 file (le <code>fn_scope_*</code>, il fail-closed, le <code>rls/</code>) morivano nella fixture
+perché <strong>cercavano</strong> i soggetti fra i dati esistenti, e su un database
+ricostruito <code>anagrafiche</code> è a zero — riscritti con fixture che <strong>costruiscono</strong>
+il mondo, e nessun ramo <code>skip</code> residuo. Il registro passa da 406 (09-09) a 403
+(12-09) a <strong>372</strong> (14-09), e i RIENTRATI li toglie ora uno script che legge il
+log della corsa, non una mano. Lato applicazione, D15: <code>skip_area_check</code> era
+<strong>muto</strong> su 15 view che dichiaravano anche <code>area_funzionale</code> — sei delle quali
+scrivevano senza permesso — e le famiglie hanno deciso quale delle due parole
+vale; le due vulnerabilità npm e <code>weasyprint 70</code> sanate senza dipendenze nuove.
+Vedi
+brief-db-fixture-che-costruiscono-d7-d6-d4.md (<code>docs/it/dev/work-done/brief-db-fixture-che-costruiscono-d7-d6-d4.md</code>),
+migliorie-generali-da-test-valutazione.md (<code>docs/it/dev/work-in-progress/migliorie-generali-da-test-valutazione.md</code>) §D4-D7 e §D13,
+migliorie-generali-BE-FE-da-test-valutazione.md (<code>docs/it/dev/work-in-progress/migliorie-generali-BE-FE-da-test-valutazione.md</code>) §D1, §D15.</p>
+<p><strong>Anello 3 (vendite) — Il rilancio rivede le proprie commesse.</strong> Trovato dal
+collaudo in-app dell'esito parziale, prova 5: ripristinate le ROOT, «Riprova
+step» portava il lotto a <code>COMPLETATO</code> <strong>senza emettere niente</strong>, perché la
+discovery scartava le commesse <code>TRATTENUTA</code> — anche quando a trattenerle era il
+lotto stesso che stava riprovando. L'auto-esclusione esisteva, ma solo
+nell'emit, un cancello più a valle che non veniva mai raggiunto. La parte comune
+ai due predicati ha ora <strong>una sede</strong> (<code>fn_classe_emittibilita_per_giro</code>, SQL
+<code>IMMUTABLE</code> che il planner inlina: <em>una riga trattenuta soltanto dal mio giro,
+per il mio giro è pronta</em>), e gli esiti <code>ERRORE</code> <strong>contano nel verdetto</strong> del
+lotto. ⭐ Sotto c'era un <strong>secondo difetto</strong>, nell'orchestratore: i task a valle
+del pull erano <code>COMPLETATO</code> a vuoto e il resolver li saltava come «già fatti»
+su un input appena cambiato — <em>a valle di un task eseguito in questo giro nessun
+task si salta</em>; <code>RESUME_STEP</code> era una distinzione senza differenza ed è ritirato.
+E sotto ancora: <code>fn_cleanup_fatture_by_ids</code> usciva su «zero fatture» e non
+liberava <strong>nessuna</strong> attività di un lotto fermo prima della generazione. Il
+collaudo chiude verde, e con lui la linea del fan-out <strong>per intero</strong>. Nello
+stesso giro <code>ANNULLATA</code> prende <code>applica_lotto</code> (il catalogo diceva il falso), e
+la <strong>roadmap fatturazione</strong> viene archiviata: tre riverifiche in fila avevano
+aggiunto un blocco senza togliere il precedente, e il documento si leggeva a
+quattro date sovrapposte — lo stato delle voci aperte vive ora in una riga
+ciascuna in <code>PROJECT_CONTEXT.md</code>. Vedi
+brief-db-rilancio-step-non-rivede-le-proprie-commesse.md (<code>docs/it/dev/work-done/brief-db-rilancio-step-non-rivede-le-proprie-commesse.md</code>),
+collaudo-in-app-esito-parziale-pull-commessa.md (<code>docs/it/dev/work-done/collaudo-in-app-esito-parziale-pull-commessa.md</code>),
+brief-be-fan-out-isolato-e-esito-parziale.md (<code>docs/it/dev/work-done/brief-be-fan-out-isolato-e-esito-parziale.md</code>),
+fatturazione-roadmap.md (<code>docs/it/dev/work-done/fatturazione-roadmap.md</code>).</p>
+<p><strong>Anello 1 + 3 — L'articolo dice da dove arriva, la riga d'ordine sa quando, la
+commessa si legge.</strong> Tre buchi del modello, tutti <em>certi</em> perché nessuna delle
+decisioni aperte su magazzino e produzione li cambia — ed è il filtro che ha
+prodotto il brief: fra due analisi contigue (commessa/produzione e magazzino) si
+è estratto ciò che vale in qualunque esito. <strong>Blocco A</strong>: non esisteva alcuna
+data di consegna in tutto il database — <code>vendite.ordini_righe</code> e
+<code>acquisti.ordini_righe</code> prendono richiesta e conferma (con la convenzione dei
+nomi <em>non marcato = nostro, marcato = della controparte</em>), <code>preventivi_righe</code> la
+sola richiesta, che il push porta sull'ordine; niente CHECK fra le due date e
+niente colonna di testata (il <code>min</code> lo dà la vista di lista); il <strong>ritardo</strong> vive
+in <code>vw_situazione_merce_ordine</code>, dove c'è già il residuo, e distingue «in tempo»
+da «niente da spedire». <strong>Blocco B</strong>: nasce il vocabolario
+<code>config.modi_approvvigionamento</code> (acquisto / produzione / stock / non
+applicabile) e <code>catalogo.articoli</code> prende <code>modo_approvvigionamento_id</code>,
+<code>gestito_a_magazzino</code> (default fail-safe <code>false</code>) e <code>lead_time_giorni</code> — è il
+perno da cui partiranno acquisti e magazzino, il prossimo cantiere. <strong>Blocco C</strong>:
+<code>vendite.commesse</code> ha <code>descrizione</code>, <code>data_apertura</code> e un responsabile che è una
+<strong>risorsa umana</strong>, come in <code>pratiche</code>; <code>PATCH /commesse/&lt;id&gt;/</code> e un lookup
+dedicato <code>GET /anagrafiche/risorse-umane/lookup/</code>. <strong>B-bis</strong>:
+<code>famiglie_documento.colonna_billing_account</code> diventa facoltativa come
+<code>colonna_serie</code> — la porta per il primo documento senza cliente, l'ordine di
+acquisto. ⭐ Due cose emerse facendolo: il <code>DEFAULT</code> di una colonna che punta a
+un seed di <code>80_data</code> (o a una funzione che lo legge) <strong>non può stare in
+<code>00_schema</code></strong> — tre passi, come <code>natura_vendita_id</code>; e <code>E_ATTIVO_REQUIRE</code>, il
+codice del require generato dal framework ATTIVO, è <strong>TECNICO</strong> anche quando il
+dato sbagliato l'ha scelto una persona — il service pre-verifica e risponde 400,
+candidato allo split. ⚠️ Dichiarato e non deciso: le righe d'ordine si scrivono
+solo in <code>DRAFT</code>, ma la promessa di consegna si decide alla conferma — serve un
+verbo suo. ⚠️ E <code>fn_crea_revisione_preventivo</code> non copia la data richiesta sulla
+nuova revisione. Vedi
+brief-db-modifiche-certe-ciclo-vendita-e-articolo.md (<code>docs/it/dev/work-done/brief-db-modifiche-certe-ciclo-vendita-e-articolo.md</code>),
+§5.5 e §10.</p>
+<p><strong>In breve, senza un tema proprio</strong> — la <strong>copertura della doc API</strong> rimisurata
+il 12-09 (613 rotte, la misura vecchia contava come «coperte» rotte servite da
+segnaposto, e <code>pagamenti</code> passa da 1/25 a 25/25 con una pagina sola); le
+<strong>rotte senza porta</strong> (D7) hanno tutte una risposta scritta (due candidate al ritiro,
+una schermata da aprire: il registro email dell'operatore); l'<strong>area funzionale
+dell'assistente AI</strong> ha il brief e attende la riga di catalogo, perché la
+decisione è che lo usino anche gli operatori; l'analisi dell'osservabilità
+riletta contro il repo (B e C erano «mossi da fuori» dal cantiere dei presidi);
+in <code>api.md</code> cinque voci dicevano ancora «la testata ha la RLS, il figlio no» e
+ora il fatto sta in una sede sola; e in <code>AGENTS.md</code> tre regole nuove nate da
+altrettanti incidenti — <em>un privilegio su una macchina è un ricordo</em>,
+<code>unittest.TestCase</code> non è <code>SimpleTestCase</code>, e dove si legge l'errore vero di un
+pgTAP in CI (nel log del container, non nella baseline).</p>
 <hr />
 <h2 id="10-settembre-2026">10 settembre 2026<a class="headerlink" href="#10-settembre-2026" title="Permanent link">&para;</a></h2>
 <blockquote>
@@ -5923,8 +6156,8 @@ emittenti.
 ⛔ <strong>Ma di questo dominio è stato provato il percorso, mai l'esito</strong>: lo schema
 ha ancora zero righe, nessuno ha aperto una distinta o abbinato un incasso, e il
 collaudo in-app è <strong>aperto</strong>. Vedi
-brief-db-posting-e-abbinamento-rata.md (<code>docs/it/dev/work-in-progress/brief-db-posting-e-abbinamento-rata.md</code>),
-brief-be-fe-posting-e-abbinamento-rata.md (<code>docs/it/dev/work-in-progress/brief-be-fe-posting-e-abbinamento-rata.md</code>),
+brief-db-posting-e-abbinamento-rata.md (<code>docs/it/dev/work-done/brief-db-posting-e-abbinamento-rata.md</code>),
+brief-be-fe-posting-e-abbinamento-rata.md (<code>docs/it/dev/work-done/brief-be-fe-posting-e-abbinamento-rata.md</code>),
 collaudo-in-app-incassi-distinte-e-sistemazioni.md (<code>docs/it/dev/work-in-progress/collaudo-in-app-incassi-distinte-e-sistemazioni.md</code>).</p>
 <p><strong>Anello 3 (vendite) — Il lavoro che non torna indietro.</strong> Le tre porte di reset
 della fatturazione — elimina fattura, riporta il lotto a DRAFT, annulla il lotto
@@ -6521,10 +6754,14 @@ prosegue nella tabella sopra.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

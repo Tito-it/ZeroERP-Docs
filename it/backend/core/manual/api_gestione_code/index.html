@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5833,9 +5833,17 @@ area <code>core</code>. I POST richiedono <code>Idempotency-Key</code> (header).
   giusto bisognava aprire l'<code>OnCalendar</code> in un altro file, che nessuno
   rileggeva. Due scritture dello stesso fatto, e la divergenza sarebbe stata
   <strong>muta</strong> — un pallino verde su un worker fermo.</li>
-<li>⚠️ Il contratto della risposta <strong>non cambia</strong>: <code>{last_run_at, attivo,
-  last_ok}</code> per worker, e un worker mai girato resta <code>{attivo: false}</code>
-  esplicito.</li>
+<li>⚠️ Il contratto della risposta per worker è <code>{last_run_at, attivo, in_corso,
+  ultima_conclusa}</code> (dal 2026-09-14; fino a quel giorno <code>{last_run_at, attivo,
+  last_ok}</code>), e un worker mai girato resta <code>{attivo: false}</code> esplicito.
+  ⛔ <strong><code>last_ok</code> non c'è più, ed è una scelta</strong>: era l'esito dell'ultima corsa
+  <em>conclusa</em> accanto alla data della corsa <em>più recente</em> — due corse in una
+  riga. Ora la riga più recente è il segno di vita (<code>last_run_at</code>, <code>attivo</code>,
+  <code>in_corso</code> = è ancora aperta) e l'esito viaggia <strong>con la sua data</strong> in
+  <code>ultima_conclusa = {started_at, ended_at, ok}</code> (<code>null</code> se nessuna corsa è
+  mai stata chiusa; <code>ok</code> può essere <code>null</code>: la colonna è nullable e nessun
+  CHECK la lega a <code>ended_at</code>). Il badge rende solo <code>attivo</code> e <code>last_run_at</code>;
+  il digest dei presidi e il pannello degli esiti rendono anche il resto.</li>
 <li>⚠️ Se un worker arrivasse senza tolleranza dichiarata il service ripiega su 10
   minuti per non spegnere il badge, ma è una configurazione incompleta e la CI
   la rifiuta (<code>test_worker_del_badge_hanno_una_tolleranza</code>).</li>
@@ -6045,8 +6053,13 @@ sono incluse (lì non c'è niente di nascosto da dichiarare).</p>
 <span class="w">    </span><span class="nt">"coda_lavori"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"pending"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"in_corso"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">},</span>
 <span class="w">    </span><span class="nt">"coda_stampa"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"pending"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">"in_corso"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">},</span>
 <span class="w">    </span><span class="nt">"worker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"coda_lavori"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"last_run_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-07-21 22:47:07+02"</span><span class="p">,</span><span class="w"> </span><span class="nt">"attivo"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"last_ok"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
-<span class="w">      </span><span class="nt">"coda_stampa"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"last_run_at"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">"attivo"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">"last_ok"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span>
+<span class="w">      </span><span class="nt">"coda_lavori"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"last_run_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-07-21T22:47:07+02:00"</span><span class="p">,</span><span class="w"> </span><span class="nt">"attivo"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"in_corso"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"ultima_conclusa"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"started_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-07-21T22:47:07+02:00"</span><span class="p">,</span>
+<span class="w">                             </span><span class="nt">"ended_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-07-21T22:47:08+02:00"</span><span class="p">,</span><span class="w"> </span><span class="nt">"ok"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"coda_stampa"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"last_run_at"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">"attivo"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">"in_corso"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">                       </span><span class="nt">"ultima_conclusa"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div></li>
@@ -6222,10 +6235,14 @@ query nuova.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

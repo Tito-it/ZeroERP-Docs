@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5239,6 +5239,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#176-la-riga-di-comando-sta-nel-json-comando-e-__comando__-dal-2026-09-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        17.6) La riga di comando sta nel JSON — <code>comando</code> e <code>__COMANDO__</code> (dal 2026-09-14)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#177-avvio_manuale-accanto-ad-abilita-e-come-si-vede-a-video-un-run-lanciato-a-mano-dal-2026-09-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        17.7) <code>avvio_manuale</code> accanto ad <code>abilita</code> — e come si vede a video un run lanciato a mano (dal 2026-09-15)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6347,6 +6369,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#176-la-riga-di-comando-sta-nel-json-comando-e-__comando__-dal-2026-09-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        17.6) La riga di comando sta nel JSON — <code>comando</code> e <code>__COMANDO__</code> (dal 2026-09-14)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#177-avvio_manuale-accanto-ad-abilita-e-come-si-vede-a-video-un-run-lanciato-a-mano-dal-2026-09-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        17.7) <code>avvio_manuale</code> accanto ad <code>abilita</code> — e come si vede a video un run lanciato a mano (dal 2026-09-15)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6686,7 +6730,9 @@ Dopo i GRANT del ruolo batch:  <code>sudo systemctl enable --now zeroerp-coda-st
 <p>Gli unit <strong>non si scrivono più a mano</strong>: i template sono versionati in
 <a href="../../../../../backend/deploy/systemd/"><code>backend/deploy/systemd/</code></a> —
 <code>zeroerp-coda-lavori.service|.timer</code> e <code>zeroerp-coda-stampa.service|.timer</code> — con
-placeholder per-host <code>__APP_DIR__</code> / <code>__APP_USER__</code> / <code>__ONCALENDAR__</code>.
+placeholder per-host <code>__APP_DIR__</code> / <code>__APP_USER__</code> / <code>__ONCALENDAR__</code> e, dal
+2026-09-14, <code>__COMANDO__</code> (la riga di comando, campo <code>comando</code> di <code>sveglie.json</code>
+— §17.6).
 <code>install-timers.sh</code> (§16.0) li renderizza (sostituzione placeholder) e li copia in
 <code>/etc/systemd/system</code>. Per cambiare un unit si <strong>edita il template</strong> e si ri-lancia
 l'installer: le modifiche passano da PR come qualsiasi codice, e la CI
@@ -6735,11 +6781,11 @@ la <strong>sede unica</strong> del dichiarato di deploy. Lo leggono in due:</p>
 <tbody>
 <tr>
 <td><code>backend/bin/install-timers.sh</code></td>
-<td>l'<code>OnCalendar</code> da sostituire nei template e la lista di cosa abilitare</td>
+<td>l'<code>OnCalendar</code> <strong>e il comando</strong> (<code>__COMANDO__</code>, dal 2026-09-14) da sostituire nei template, e la lista di cosa abilitare</td>
 </tr>
 <tr>
 <td><code>apps.core.services.sveglie</code> (backend)</td>
-<td>la <code>tolleranza_minuti</code>, cioè entro quanto l'ultimo run di un processo vale ancora come segno di vita</td>
+<td>le unit di ogni processo (per la mail del guardiano del digest), la cadenza da confrontare col contratto (<code>test_contratto_liveness_vs_deploy</code>), il <code>comando</code> che «Esegui ora» lancia come sottoprocesso (§17.6) e <code>avvio_manuale</code> (§17.7). ⚠️ Fino al 2026-09-11 qui c'era «la <code>tolleranza_minuti</code>»: il contratto di liveness vive in <code>dbops.processi</code>, e il JSON <strong>rifiuta</strong> il campo</td>
 </tr>
 </tbody>
 </table>
@@ -6856,9 +6902,11 @@ confronto <code>GIRA_E_NON_REGISTRA</code> su quel job — cioè il rilevatore d
 <h3 id="174-aggiungere-una-sveglia">17.4) Aggiungere una sveglia<a class="headerlink" href="#174-aggiungere-una-sveglia" title="Permanent link">&para;</a></h3>
 <ol>
 <li>una voce in <code>deploy/sveglie.json</code> (il <strong>perché</strong> delle scelte va nel template,
-   qui il valore — due programmi devono poterlo leggere);</li>
+   qui il valore — due programmi devono poterlo leggere), <strong>con il suo
+   <code>comando</code></strong> (l'argv dopo <code>run-command.sh</code>, come lista di token — §17.6);</li>
 <li>la coppia <code>deploy/systemd/&lt;unit&gt;.{service,timer}</code> — solo il <code>.service</code> se è un
-   servizio sempre acceso;</li>
+   servizio sempre acceso; l'<code>ExecStart</code> è
+   <code>__APP_DIR__/bin/run-command.sh __COMANDO__</code>, <strong>mai</strong> la riga scritta a mano;</li>
 <li><code>sudo backend/bin/install-timers.sh</code>.</li>
 </ol>
 <p>⚠️ <strong>Modifiche agli unit si fanno sui template</strong>, mai in <code>/etc/systemd/system</code>:
@@ -6911,6 +6959,111 @@ install». ⛔ Un <code>--dry-run</code> che salta <code>systemctl</code> avrebb
 bash<span class="w"> </span>backend/scripts/tests/test-install-timers.sh
 </code></pre></div>
 <p>⚠️ Resta scoperto il caso «<code>systemctl enable</code> fallisce»: lo stub esce sempre <code>0</code>.</p>
+<h3 id="176-la-riga-di-comando-sta-nel-json-comando-e-__comando__-dal-2026-09-14">17.6) La riga di comando sta nel JSON — <code>comando</code> e <code>__COMANDO__</code> (dal 2026-09-14)<a class="headerlink" href="#176-la-riga-di-comando-sta-nel-json-comando-e-__comando__-dal-2026-09-14" title="Permanent link">&para;</a></h3>
+<p>⭐ <strong>Perché.</strong> «Esegui ora» dal drawer dei processi
+(analisi-riavvio-processi-da-interfaccia.md §4.1-bis (<code>docs/it/dev/work-done/analisi-riavvio-processi-da-interfaccia.md</code>),
+brief brief-db-avvio-manuale-di-un-processo.md (<code>docs/it/dev/work-done/brief-db-avvio-manuale-di-un-processo.md</code>))
+lancia <strong>lo stesso comando del timer, meno l'orario</strong> — e il backend non può
+leggerlo da un file <code>.service</code>. Fino al 14-09 la riga viveva <strong>solo</strong> lì
+(<code>ExecStart=… run-command.sh digest_presidi --cadenza settimanale</code>).</p>
+<p>⇒ Ogni voce di <code>sveglie.json</code> porta <code>comando</code> (l'argv dopo <code>run-command.sh</code>,
+come <strong>lista</strong> di token) e ogni template <code>.service</code> porta
+<code>ExecStart=__APP_DIR__/bin/run-command.sh __COMANDO__</code>, che l'installer rende
+come già <code>__ONCALENDAR__</code>. <strong>Una sede sola</strong>: la riga che il timer esegue <em>è</em>
+quella che il pulsante eseguirà, e non possono divergere.</p>
+<p>⛔ Un <code>comando</code> nel JSON <em>accanto</em> a una riga cablata nel template sarebbe la
+seconda sede — quella che resta indietro, e qui «indietro» vuol dire un pulsante
+che lancia una cosa diversa dal timer, <strong>senza che nessuna delle due fallisca</strong>.
+Lo presidia <code>test-install-timers.sh</code>: test 6 (nessun template con <code>ExecStart</code>
+cablato) e test 7 (l'unit reso porta esattamente l'argv del JSON).</p>
+<table>
+<thead>
+<tr>
+<th>Regola</th>
+<th>Perché</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lista di token, mai una stringa</td>
+<td>systemd spezza l'<code>ExecStart</code> sugli spazi, <code>subprocess</code> passa il token intero: «come si spezza» sarebbe una regola scritta due volte</td>
+</tr>
+<tr>
+<td>whitelist stretta sui token (niente spazi, quote, <code>%</code>, <code>$</code>, <code>\|</code>, <code>&amp;</code>)</td>
+<td><code>%x</code> è uno specifier systemd, <code>$VAR</code> si espande, <code>\|</code>/<code>&amp;</code> sono del <code>sed</code> dell'installer; si allarga quando un comando <strong>vero</strong> ne ha bisogno</td>
+</tr>
+<tr>
+<td>il primo token è un management command <strong>che esiste</strong></td>
+<td>un refuso non fallisce in CI ma sull'host, alla prima corsa (<code>test_sveglie.py</code>, test 13)</td>
+</tr>
+<tr>
+<td>obbligatorio anche per <code>forma = servizio</code></td>
+<td>ogni <code>.service</code> ha un <code>ExecStart</code>; una regola con un'eccezione sono due regole</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Sugli host <strong>non cambia niente</strong>: gli otto <code>ExecStart</code> resi sono identici a
+prima, perché il campo è nato dalla riga che ogni template eseguiva. Cambia il
+template, non l'unit installato — un re-install lo riscrive uguale.</p>
+<p>⛔ <code>timeout_minuti</code> (D-B dell'analisi) <strong>non è un campo, per decisione</strong>
+(Tid, 15-09, piano §3.2 e brief §8.5): il tetto del sottoprocesso è <strong>unico</strong>
+e sta nell'handler (<code>TETTO_SOTTOPROCESSO_SECONDI = 300</code>, <code>avvio_manuale.py</code>),
+pinnato da <code>test_avvio_manuale_tetto</code> sotto la metà della tolleranza del
+drenatore e sotto la soglia del reaper. Un tetto per sveglia non avrebbe un
+lettore che lo distingua: chi supera il tetto unico <strong>non è candidato</strong>, e
+quella è la riga sotto.</p>
+<h3 id="177-avvio_manuale-accanto-ad-abilita-e-come-si-vede-a-video-un-run-lanciato-a-mano-dal-2026-09-15">17.7) <code>avvio_manuale</code> accanto ad <code>abilita</code> — e come si vede a video un run lanciato a mano (dal 2026-09-15)<a class="headerlink" href="#177-avvio_manuale-accanto-ad-abilita-e-come-si-vede-a-video-un-run-lanciato-a-mano-dal-2026-09-15" title="Permanent link">&para;</a></h3>
+<p>⭐ <strong>Due campi, due domande.</strong> <code>abilita</code> dice se il <strong>timer</strong> è acceso su questa
+installazione; <code>avvio_manuale</code> dice se il <strong>pulsante</strong> «Esegui ora» ha senso su
+questa sveglia. Sono indipendenti per modello: i due giri di fatturazione sono
+<code>abilita: false</code> oggi per un'altra ragione (SDI sospeso) e restano
+<code>avvio_manuale: false</code> anche il giorno in cui si accendono — un giro di
+fatturazione è lungo per natura e terrebbe fermo il drenatore, che mentre
+aspetta il sottoprocesso non drena altro (decisione 2a di Tid, brief §8.5).
+Il drenatore stesso è <code>false</code> («Esegui ora» lo esegue lui); il listener è
+<code>false</code> per natura (servizio: non c'è una corsa da lanciare, e un <code>true</code> è
+rifiutato). <strong>Obbligatorio</strong> su ogni voce, come <code>abilita</code>: con un default il
+silenzio varrebbe qualcosa. L'installer <strong>non</strong> lo legge — non è un fatto di
+systemd.</p>
+<p><strong>Chi lo legge</strong>: <code>avvio_manuale.motivi_esegui_ora</code> (il predicato «si può
+lanciare a mano?»), che risponde alla capability <code>can_esegui_ora</code> nel dettaglio
+del processo, al rifiuto di <code>POST processi/&lt;codice&gt;/esegui-ora/</code> e al
+ricontrollo dell'handler nel drenatore — <strong>una sede, tre lettori</strong>, così il
+tooltip del pulsante spento e il 4xx non possono dire due cose diverse.</p>
+<p><strong>Come si vede a video un run lanciato a mano</strong>, e dove guardare se non torna:</p>
+<table>
+<thead>
+<tr>
+<th>Dove</th>
+<th>Che cosa si vede</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>Amministrazione → Processi automatici → drawer → «Sveglie»</em></td>
+<td>la riga della sveglia col pulsante <strong>spento e il motivo</strong> finché il lavoro è vivo («già in coda, lavoro #id»); si riaccende da sé alla riapertura, quando il lavoro è finito</td>
+</tr>
+<tr>
+<td><em>Strumenti → Code di lavoro</em></td>
+<td>il lavoro <code>ESEGUI_PROCESSO</code> con la chiave <code>esegui:&lt;unit&gt;</code>: <code>PENDING</code> → <code>IN_CORSO</code> → <code>FATTO</code> (result con <code>exit_code</code>, <code>durata_ms</code>, <code>coda_output</code>) oppure <code>ERRORE</code> terminale (<code>E_PROCESSO_AVVIO_FALLITO</code> con l'exit code, <code>E_PROCESSO_AVVIO_TROPPO_LUNGO</code> oltre i 300 s)</td>
+</tr>
+<tr>
+<td><em>drawer del processo ESEGUITO → «Ultime corse»</em></td>
+<td>il run del <strong>comando</strong>, con <code>origine = COMMAND</code> e lo <strong>username di chi ha premuto</strong> (<code>registered_job</code> li legge dall'ambiente del sottoprocesso: <code>ZEROERP_JOB_ORIGINE</code>, <code>ZEROERP_JOB_AUTH_USER_ID</code>) — non <code>CRON</code>, che è la corsa del timer</td>
+</tr>
+<tr>
+<td>panorama <code>dbops.vw_processi_programmazione</code></td>
+<td><code>avvio_manuale \| SU_RICHIESTA \| f</code>: il processo del gesto non ha una cadenza e non ha un run suo (§8.2.1 del brief: l'audit del gesto è la riga di coda)</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong>Un run a mano mentre il timer sta girando</strong> produce una riga di <em>skip</em> nel
+giornale del comando (il lock di <code>fn_job_run_start</code>), non due corse: il lavoro
+esce <code>FATTO</code> con exit 0. È ciò che succede oggi a chi lancia da shell.</p>
+<p>⛔ <strong>Finché il tipo <code>ESEGUI_PROCESSO</code> è <code>attivo = false</code></strong> il verbo risponde
+<code>E_JOB_TYPE_NON_ATTIVO</code> (501): è il cancello voluto (regola del binding), non
+un difetto. L'accensione la chiede il BE a handler in servizio, ed è una riga
+del CSV <code>coda_lavori_tipi</code> a carico del team DB (brief §10.4).</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -6968,10 +7121,14 @@ bash<span class="w"> </span>backend/scripts/tests/test-install-timers.sh
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5704,7 +5704,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 31-08-2026)</p>
+<p>(latest review 14-09-2026)</p>
 <p>Cancella un atto di fondo fattura <strong>che non è ancora diventato un fatto</strong> —
 oppure <strong>rifiuta, dicendo perché</strong>.</p>
 <hr />
@@ -5777,6 +5777,18 @@ di scriverlo inline e chiama questa.</p>
 <p>ℹ️ Il legame verso <code>vendite.fatture_fondi_fattura</code> <strong>non è una FK</strong> — quella
 tabella non ha <code>fondo_source_id</code> — ma la terna <em>(figlia, sorgente, tipo)</em>, che
 è esattamente come lo scrive <code>fn_applica_fondi_fattura</code>.</p>
+<p>⭐ <strong>Rev 14-09-2026 — il primo <code>DELETE</code> apre una porta.</strong> Dal guard del
+contenuto della distinta
+(<a href="../../../pagamenti/funzioni/trgfn_vendite_contabili_righe_guard_contenuto/">trgfn_vendite_contabili_righe_guard_contenuto</a>,
+D17) cancellare una riga contabile passa da
+<code>script.fn_check_riga_contabile_eliminabile</code>, che sotto una <code>GENERATA</code> risponde
+<em>«non è compilata a mano»</em>: quel predicato è il cestino dell'<strong>operatore</strong>, e
+qui non c'è un operatore — c'è il giro che ha prodotto quelle righe, e che ha
+già letto il <strong>suo</strong> criterio (punto 2). La funzione lo dichiara con
+<code>SET LOCAL zeroerp.allow_contabile_riga_delete_override = 'on'</code> prima del
+<code>DELETE</code> delle righe, e lo <strong>richiude</strong> subito dopo. Stesso contratto di
+<code>script.fn_change_user_emittenti_scope</code> sulla sua porta. Nessun predicato e
+nessun conteggio è cambiato.</p>
 </blockquote>
 <hr />
 <h3 id="due-conseguenze-da-conoscere-prima-di-chiamarla">⚠️ Due conseguenze da conoscere prima di chiamarla<a class="headerlink" href="#due-conseguenze-da-conoscere-prima-di-chiamarla" title="Permanent link">&para;</a></h3>
@@ -5873,10 +5885,14 @@ tabella non ha <code>fondo_source_id</code> — ma la terna <em>(figlia, sorgent
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

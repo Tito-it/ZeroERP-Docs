@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5633,6 +5633,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#dentro-una-security-definer-il-criterio-risponde-per-la-persona-sbagliata-rev-2026-09-18" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⛔ Dentro una <code>SECURITY DEFINER</code> il criterio risponde per la persona sbagliata (rev 2026-09-18)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#logica-di-controllo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5757,12 +5768,19 @@ sull'emittente fiscale della riga.</p>
 <p><strong><code>ente_incasso</code></strong> <em>(dal 2026-08-22)</em>: la colonna contiene un
   <code>ente_incasso_id</code>; l'emittente si risolve via il <strong>conto di incasso</strong> del
   canale (<code>enti_incasso → soggetti_ruoli_conti_bancari → emittenti_fiscali</code>).
-  Usato su <code>pagamenti.vendite_contabili</code> (colonna <code>ente_incasso_id</code>).</p>
+  Usato su <code>pagamenti.vendite_contabili</code> (colonna <code>ente_incasso_id</code>) <strong>fino al
+  2026-09-15</strong>: da quel giorno la distinta porta il suo emittente in colonna e
+  il guard è montato in modo <code>soggetto_ruolo</code> su <code>emittente_soggetto_ruolo_id</code>
+  (<code>20260915-31</code>) — la coerenza canale↔emittente la garantisce prima
+  <code>pagamenti.fn_get_emittente_distinta</code>, quindi il canale è in perimetro per
+  costruzione, e due guard sulla stessa domanda sarebbero due frasi per lo
+  stesso rifiuto. Oggi il modo non ha montaggi.</p>
 </li>
 <li>
 <p><strong><code>contabile</code></strong> <em>(dal 2026-08-22)</em>: la colonna contiene un <code>contabile_id</code>; si
-  passa dalla testata e poi dal suo canale. Usato su
-  <code>pagamenti.vendite_contabili_righe</code> (colonna <code>contabile_id</code>).</p>
+  passa dalla testata — <em>dal 2026-09-15 dalla sua colonna emittente, prima dal
+  suo canale</em>. Usato su <code>pagamenti.vendite_contabili_righe</code> (colonna
+  <code>contabile_id</code>).</p>
 </li>
 </ul>
 <p>⭐ Gli ultimi due sono <strong>D5</strong>: quando il denaro arriva in banca non ha ancora
@@ -5785,9 +5803,11 @@ il proprietario del documento, come sua.</p>
 <p>⭐ <strong>Il rimedio</strong>: la risoluzione è passata a
 <a href=".././fn_resolve_emittente_fiscale_id/">fn_resolve_emittente_fiscale_id</a>,
 che è <code>SECURITY DEFINER</code> e legge tutto. Qui resta solo l'<strong>applicazione</strong> della
-decisione. Il ramo «non risolvibile» <strong>rimane e serve</strong> — una distinta interna
-(fondo fattura, compensazione) non è il canale di nessuno — ma adesso raccoglie
-solo ciò che davvero non ha padrone, non i documenti altrui.</p>
+decisione. Il ramo «non risolvibile» <strong>rimane e serve</strong> per i dati non ancora
+collegati (una riga senza fattura né canale) — ma adesso raccoglie solo ciò che
+davvero non ha padrone, non i documenti altrui. ⚠️ <em>Fino al 2026-09-15 vi
+cadeva anche la distinta interna («non è il canale di nessuno»): oggi la
+distinta sa di chi è, e non ci passa più.</em></p>
 <hr />
 <h3 id="la-porta-chiusa-il-2026-09-04">⛔ La porta chiusa il 2026-09-04<a class="headerlink" href="#la-porta-chiusa-il-2026-09-04" title="Permanent link">&para;</a></h3>
 <p>Fino a questa data il primo passo diceva: <em>«nessun utente in sessione? è un job
@@ -5837,6 +5857,25 @@ che una migrazione imposta per dire «sono io» — sarebbe di nuovo un cartello
 racconta di solito: quel ruolo ha <code>BYPASSRLS</code>, quindi è proprio ciò che continua
 a passare. Sarà il <strong>ritiro del ruolo</strong> (nel provisioning) a rendere questo
 cancello efficace anche su di lui.</p>
+<h3 id="dentro-una-security-definer-il-criterio-risponde-per-la-persona-sbagliata-rev-2026-09-18">⛔ Dentro una <code>SECURITY DEFINER</code> il criterio risponde per la persona sbagliata (rev 2026-09-18)<a class="headerlink" href="#dentro-una-security-definer-il-criterio-risponde-per-la-persona-sbagliata-rev-2026-09-18" title="Permanent link">&para;</a></h3>
+<p><code>row_security_active()</code> risponde per il <code>current_user</code>, e dentro una funzione <code>SECURITY
+DEFINER</code> il <code>current_user</code> è il <strong>proprietario</strong> della funzione — che qui possiede anche le
+tabelle, con la row level security abilitata ma non forzata: la risposta è <strong>false</strong>, sempre,
+chiunque abbia chiamato. Provato il 18-09 su dbdev, stessa sessione applicativa senza GUC, in
+una transazione annullata: la stessa riga era rifiutata scritta direttamente e <strong>passava</strong> via
+<code>config.fn_accoda_email_sistema</code> (DEFINER del proprietario). Per la primitiva di magazzino
+(<code>fn_scrivi_movimento</code>, DEFINER per costruzione della porta) sarebbe stata la porta aperta a
+ogni processo senza identità.</p>
+<p>⭐ <strong>La rev</strong>: se non c'è utente in sessione, la RLS «non è attiva» <strong>ma</strong> si sta dentro una
+DEFINER (<code>current_user &lt;&gt; session_user</code>: <code>session_user</code> resta il login role, l'unico nome che
+dice chi scrive davvero), il guard risolve comunque l'emittente della riga e, se la riga <strong>ha
+un padrone</strong>, si ferma con <code>E_SCOPE_SENZA_UTENTE</code>; una riga <strong>senza padrone</strong> passa come prima —
+è il caso delle email di sistema (emittente <code>NULL</code>), da cui dipende il reset password senza
+sessione. Non è una seconda scrittura della regola di esenzione: il criterio resta
+<code>row_security_active</code>, si aggiunge il solo caso in cui quella funzione guarda l'altro.
+Consumatori DEFINER censiti al 18-09: <code>fn_accoda_email_sistema</code>, <code>fn_chiudi_email_sistema</code>
+(entrambe a emittente <code>NULL</code>, invariate). Presidi: <code>test-guard-emittente-senza-utente.sql</code>
+(7-8) e <code>magazzino/test-porta-ledger-v1.sql</code> (13-14: la primitiva senza identità si ferma).</p>
 <p>⭐ <strong>Gli altri sette trigger che leggono <code>app.current_user_id</code> non sono stati
 toccati</strong>, ed è una scelta: i cinque <code>*_default_emittente</code> non <em>concedono</em>
 niente — riempiono un valore di comodo, e poi è questo guard a decidere se la
@@ -5854,7 +5893,7 @@ riga entra.</p>
 <li>Risolve <code>emittente_fiscale_id</code> chiamando
    <code>script.fn_resolve_emittente_fiscale_id(modo, valore)</code> — <strong>fuori</strong> dalla row
    security. Se non risolvibile → <strong>skip</strong> (nessun padrone: dati non ancora
-   collegati, oppure una distinta interna).</li>
+   collegati; <em>dal 2026-09-15 non più la distinta interna, che sa di chi è</em>).</li>
 <li>Chiama <code>script.fn_check_user_emittente_scope()</code>.
    Se <code>false</code> → errore via <code>script.fn_log_and_raise_error</code> con codice <code>E_SCOPE_EMITTENTE</code>.</li>
 </ol>
@@ -5972,10 +6011,14 @@ riga entra.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

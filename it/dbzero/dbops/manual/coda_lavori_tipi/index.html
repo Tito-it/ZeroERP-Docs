@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5622,10 +5622,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#primo-tipo-seed" class="md-nav__link">
+  <a href="#i-tipi-a-catalogo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Primo tipo seed
+        I tipi a catalogo
       </span>
     </span>
   </a>
@@ -5668,7 +5668,7 @@
 </p>
 </blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 20-07-2026)</p>
+<p>(latest review 14-09-2026)</p>
 <p><code>dbops.coda_lavori_tipi</code> è il <strong>registry dei tipi di job</strong> della coda lavori
 generica (<a href=".././coda_lavori/">dbops.coda_lavori</a>). Una riga per
 <code>job_type</code>: il DB <strong>valida</strong> il tipo all'enqueue e porta i <strong>default per-tipo</strong>
@@ -5723,19 +5723,37 @@ domande diverse, e servono due presidi.</p>
 </ol>
 <blockquote>
 <p><strong>Un nuovo tipo di job = un seed qui + un handler BE. Zero DDL.</strong> Il dispatch
-è worker-based (non in-transazione), quindi il tipo può nascere <code>attivo=true</code>:
-in assenza dell'handler i job restano semplicemente <code>PENDING</code> finché il worker
-non atterra, senza abortire nessuna transazione di dominio.</p>
+è worker-based (non in-transazione), quindi un tipo senza handler non abortisce
+nessuna transazione di dominio.</p>
+<p>⛔ <strong>Ma NON può nascere <code>attivo=true</code>, e questa riga lo diceva fino al
+2026-09-14.</strong> Diceva: <em>«in assenza dell'handler i job restano semplicemente
+<code>PENDING</code> finché il worker non atterra»</em>. Era vero prima del drenatore, e non
+lo è più: <code>draina_coda_lavori</code> <strong>claima</strong> il lavoro, <code>get_handler</code> solleva
+<code>E_CODA_HANDLER_NON_REGISTRATO</code> e il lavoro va in <code>ERRORE</code> (al primo colpo,
+se <code>max_tentativi = 1</code>) — visibile in <code>vw_coda_lavori_da_guardare</code>, non in
+attesa. ⇒ <strong>Regola del binding</strong>: il tipo nasce <strong><code>attivo = false</code></strong> e il DB
+lo accende quando il backend dichiara l'handler in servizio. L'ordine lo
+fissano due guardrail del backend, non una convenzione:
+<code>test_nessun_handler_orfano</code> (handler registrato prima del seed → rosso) e
+<code>test_ogni_tipo_attivo_ha_un_handler</code> (tipo acceso prima dell'handler →
+rosso). Precedenti: <code>NOTIFICA_DIGEST_MUTO</code> (nato spento l'11-09, acceso la
+sera stessa), <code>ESEGUI_PROCESSO</code> (nato spento il 14-09, acceso il 15-09 a
+handler dichiarato in servizio — <code>brief-db-avvio-manuale-di-un-processo</code> §11).
+⚠️ L'accensione è <strong>una cella del CSV</strong>, non un changeSet: il mirror è
+<code>runOnChange</code> e rilegge il file al migrate. Va applicata <strong>dopo</strong> il deploy
+del backend che registra l'handler, mai prima — l'ordine è
+DB (spento) → BE → DB (acceso), e il secondo guardrail è ciò che lo pinna.</p>
 </blockquote>
 <hr />
-<h3 id="primo-tipo-seed">Primo tipo seed<a class="headerlink" href="#primo-tipo-seed" title="Permanent link">&para;</a></h3>
+<h3 id="i-tipi-a-catalogo">I tipi a catalogo<a class="headerlink" href="#i-tipi-a-catalogo" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
 <th>codice</th>
 <th>handler_code</th>
 <th>run_as_default</th>
-<th>descrizione</th>
+<th>processo (canale)</th>
+<th>che cosa fa</th>
 </tr>
 </thead>
 <tbody>
@@ -5743,19 +5761,54 @@ non atterra, senza abortire nessuna transazione di dominio.</p>
 <td><code>FATTURAZIONE_GIRO</code></td>
 <td><code>fatturazione_giro_default</code></td>
 <td><code>OPERATORE</code></td>
+<td><code>FATTURAZIONE_GIRO</code> (<code>CODA</code>)</td>
 <td>Giro fatturazione on-demand (C-3).</td>
 </tr>
 <tr>
 <td><code>FATTURAZIONE_NUMERA</code></td>
 <td><code>fatturazione_numera_default</code></td>
 <td><code>OPERATORE</code></td>
+<td><code>FATTURAZIONE_NUMERA</code> (<code>CODA</code>)</td>
 <td>Numerazione di perimetro (C-4).</td>
+</tr>
+<tr>
+<td><code>CHIUSURA_SCADENZE</code></td>
+<td><code>chiusura_scadenze_default</code></td>
+<td><code>OPERATORE</code></td>
+<td><code>chiusura_scadenze_daily</code> (<code>CODA_AUTOMATICA</code>)</td>
+<td>Chiusura per scadenza degli stati gestionali, un emittente alla volta: lo accoda pgAgent con l'identità tecnica dell'emittente.</td>
+</tr>
+<tr>
+<td><code>NOTIFICA_DIGEST_MUTO</code></td>
+<td><code>notifica_digest_muto_default</code></td>
+<td><code>SISTEMA</code></td>
+<td><code>guardiano_digest</code> (<code>PGAGENT</code>)</td>
+<td>Avvisa una persona che il digest dei presidi ha smesso di girare (uno al giorno).</td>
+</tr>
+<tr>
+<td><code>ESEGUI_PROCESSO</code></td>
+<td><code>esegui_processo_default</code></td>
+<td><code>OPERATORE</code></td>
+<td><code>avvio_manuale</code> (<code>CODA</code>)</td>
+<td>«Esegui ora» su una sveglia di deploy: il drenatore lancia il comando del timer come sottoprocesso, con l'identità di chi ha premuto. <code>max_tentativi 1</code>: un processo caduto a metà non è idempotente. Nato spento il 14-09, acceso il 15-09 a handler in servizio (brief <code>brief-db-avvio-manuale-di-un-processo</code>).</td>
 </tr>
 </tbody>
 </table>
-<p>⭐ Entrambi appartengono a un processo di classe <code>DOMINIO</code>: la coda li accetta
-<strong>solo</strong> come <code>OPERATORE</code>, con lo scope di chi li richiede.</p>
-<p>Brief: <code>brief-db-coda-lavori-generica</code> §2 e §4.</p>
+<p>⭐ I due giri di fatturazione appartengono a un processo di classe <code>DOMINIO</code>:
+la coda li accetta <strong>solo</strong> come <code>OPERATORE</code>, con lo scope di chi li richiede
+(guard di classe, sopra).</p>
+<p>⭐ <strong>Il canale del processo e il <code>run_as</code> del tipo si accordano, e non è un
+caso</strong> (dal 2026-09-14, <code>db/pgtap/dbops/test-coda-tipi-canale-e-run-as.sql</code>):
+<code>CODA ⇒ OPERATORE</code> (lo accoda una persona, l'identità è la sua — è la
+definizione del canale); <code>PGAGENT ⇒ SISTEMA</code> (una macchina non ha un nome da
+prestare: se il lavoro vuole un'identità, il canale è <code>CODA_AUTOMATICA</code>);
+nessun tipo sotto un <code>COMMAND</code> (lo esegue systemd, non il drenatore). Non c'è
+un guard a DB per questo — la posta è l'audit, non il perimetro — e il seed lo
+presidia quel pgTAP.</p>
+<p>Brief: <code>brief-db-coda-lavori-generica</code> §2 e §4;
+<code>brief-db-processi-automatici-identita-e-perimetro</code> §5;
+<code>brief-db-quattro-processi-senza-presidio</code> §10.2;
+<code>brief-db-avvio-manuale-di-un-processo</code> §8.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -5813,10 +5866,14 @@ non atterra, senza abortire nessuna transazione di dominio.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

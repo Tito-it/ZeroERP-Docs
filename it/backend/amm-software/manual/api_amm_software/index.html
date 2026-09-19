@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5952,15 +5952,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-processi-automatici-i-presidi" class="md-nav__link">
+  <a href="#6-processi-automatici-i-presidi-e-esegui-ora" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. Processi automatici — i presidi
+        6. Processi automatici — i presidi e «Esegui ora»
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="6. Processi automatici — i presidi">
+    <nav class="md-nav" aria-label="6. Processi automatici — i presidi e «Esegui ora»">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -5968,6 +5968,39 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         6.1 GET /api/v1/amm-software/processi/presidi/
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#61-bis-get-apiv1amm-softwareprocessipresidiconteggi-la-testata-sola-per-il-pallino" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6.1-bis GET /api/v1/amm-software/processi/presidi/conteggi/ — la testata sola, per il pallino
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-post-apiv1amm-softwareprocessicodiceesegui-ora-esegui-ora-su-una-sveglia" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6.2 POST /api/v1/amm-software/processi/{codice}/esegui-ora/ — «Esegui ora» su una sveglia
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-sveglie-nel-dettaglio-get-processicodice" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6.3 <code>sveglie&#91;&#93;</code> nel dettaglio — <code>GET processi/{codice}/</code>
       </span>
     </span>
   </a>
@@ -7397,10 +7430,11 @@ non e' sufficiente per request crafted.</p>
 <span class="w">  </span><span class="s2">"https://host/api/v1/amm-software/emittenti-fiscali/form-defaults/"</span>
 </code></pre></div>
 <hr />
-<h2 id="6-processi-automatici-i-presidi">6. Processi automatici — i presidi<a class="headerlink" href="#6-processi-automatici-i-presidi" title="Permanent link">&para;</a></h2>
-<p>⚠️ <strong>Di questa famiglia qui c'e' solo l'endpoint dei presidi.</strong> Le altre cinque
-rotte (<code>GET processi/</code>, <code>GET processi/{codice}/</code>, <code>POST processi/{codice}/run/</code>,
-<code>GET|POST processi/{codice}/identita/</code>, <code>POST .../identita/riattiva/</code>) esistono e
+<h2 id="6-processi-automatici-i-presidi-e-esegui-ora">6. Processi automatici — i presidi e «Esegui ora»<a class="headerlink" href="#6-processi-automatici-i-presidi-e-esegui-ora" title="Permanent link">&para;</a></h2>
+<p>⚠️ <strong>Di questa famiglia qui ci sono due endpoint su sette</strong>: i presidi (§6.1) e
+«Esegui ora» (§6.2), con la parte del dettaglio che lo alimenta (§6.3). Le altre
+rotte (<code>GET processi/</code>, <code>GET processi/{codice}/</code>, <code>GET processi/{codice}/run/</code>,
+<code>POST processi/{codice}/identita/</code>, <code>POST .../identita/riattiva/</code>) esistono e
 <strong>non sono documentate</strong>: e' un debito dichiarato, non un'omissione da leggere
 come «non ci sono». Contratto vivo: <code>/api/docs/</code>.</p>
 <h3 id="61-get-apiv1amm-softwareprocessipresidi">6.1 GET /api/v1/amm-software/processi/presidi/<a class="headerlink" href="#61-get-apiv1amm-softwareprocessipresidi" title="Permanent link">&para;</a></h3>
@@ -7412,9 +7446,12 @@ descrizione.</p>
 di DEBITO che deve CALARE»</em>, e il backend lo consegna in <code>descrizione</code> leggendolo
 con <code>obj_description</code>. ⛔ Un elenco di eccezioni scritto nel backend o nel
 frontend sarebbe la seconda sede della stessa decisione, e la seconda diverge.</p>
-<p>⛔ <strong>Quante siano non è scritto da nessuna parte, ed è una scelta.</strong> L'elenco è
-<code>PRESIDI_PROCESSI</code> in <code>apps/core/db/processi_repository.py</code>, qualificato collo
-schema (ci sono viste di <code>dbops</code> <strong>e</strong> di <code>maintenance</code>). Un numero copiato
+<p>⛔ <strong>Quante siano non è scritto da nessuna parte, ed è una scelta.</strong> Dal
+2026-09-10 l'elenco è il <strong>catalogo</strong> <code>dbops.presidi</code> (natura <code>ZERO</code>), letto da
+<code>PresidiRepository.stato_presidi</code>; fino a quel giorno era la costante
+<code>PRESIDI_PROCESSI</code> di <code>processi_repository.py</code>, oggi rimossa. Il nome della vista
+esce qualificato collo schema (ci sono viste di <code>dbops</code> <strong>e</strong> di <code>maintenance</code>).
+Un numero copiato
 accanto a un elenco che cresce invecchia in silenzio: fino al 2026-09-07 il
 docstring della view diceva «i SEI presidi» e alla stessa data l'elenco ne
 contava dieci.</p>
@@ -7428,10 +7465,14 @@ per primo.</p>
 <span class="w">        </span><span class="nt">"descrizione"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PRESIDIO: i processi automatici la cui sveglia e la cui ultima corsa non tornano. DEVE restare VUOTA. …"</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">"conteggio"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">        </span><span class="nt">"righe"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"processo_codice"</span><span class="p">:</span><span class="w"> </span><span class="s2">"apply_storicizza_weekly"</span><span class="p">,</span><span class="w"> </span><span class="nt">"stato"</span><span class="p">:</span><span class="w"> </span><span class="s2">"GIRA_E_NON_REGISTRA"</span><span class="p">,</span><span class="w"> </span><span class="nt">"…"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">],</span>
-<span class="w">        </span><span class="nt">"troncato"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">        </span><span class="nt">"troncato"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"elencabili"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"errore"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"da_guardare"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">"con_righe"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">    </span><span class="nt">"con_righe"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"non_letti"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -7463,6 +7504,18 @@ per primo.</p>
 <td><code>troncato</code></td>
 <td>le righe mostrate non sono tutte — senza, venti su duecento si leggerebbero come «sono venti»</td>
 </tr>
+<tr>
+<td><code>elencabili</code></td>
+<td><code>false</code> sulle viste con perimetro (<code>security_invoker</code>): il conteggio arriva da <code>fn_conta_presidio</code>, le righe <strong>no</strong>, per contratto — «non elencabile» e «niente da elencare» vanno distinti</td>
+</tr>
+<tr>
+<td><code>errore</code></td>
+<td>il presidio <strong>non si è potuto leggere</strong>: <code>conteggio</code> è <code>null</code> e qui c'è il perché. ⛔ Non è uno zero: il verde vuol dire «visto e vuoto»</td>
+</tr>
+<tr>
+<td><code>da_guardare</code></td>
+<td><code>true</code> se ha righe <strong>oppure</strong> non è stato letto. È la stessa domanda che la testata conta (<code>con_righe</code> + <code>non_letti</code>), decisa <strong>nella riga</strong> dal repository: il pannello la legge e non la ricalcola (2026-09-15, tolta la copia in <code>PresidiProcessiPanel.vue</code>)</td>
+</tr>
 </tbody>
 </table>
 <p>⚠️ <strong>Le colonne di <code>righe</code> non sono un contratto fisso</strong>: ogni presidio ha la sua
@@ -7479,6 +7532,191 @@ giornale): il suo stesso <code>COMMENT</code> lo dichiara e dice quando va tolto
 <div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer &lt;token&gt;"</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span><span class="s2">"https://host/api/v1/amm-software/processi/presidi/"</span>
 </code></pre></div>
+<p>⭐ <strong>Dal 2026-09-18 la risposta porta anche <code>totale</code></strong> (quanti presidi <code>ZERO</code>
+sono stati guardati): è la stessa testata di §6.1-bis, calcolata da <strong>una</strong>
+funzione (<code>_testata_presidi</code> in <code>processi_service.py</code>) per i due lettori.</p>
+<h3 id="61-bis-get-apiv1amm-softwareprocessipresidiconteggi-la-testata-sola-per-il-pallino">6.1-bis GET /api/v1/amm-software/processi/presidi/conteggi/ — la testata sola, per il pallino<a class="headerlink" href="#61-bis-get-apiv1amm-softwareprocessipresidiconteggi-la-testata-sola-per-il-pallino" title="Permanent link">&para;</a></h3>
+<p><strong>Scopo.</strong> I tre numeri della testata — <code>totale</code>, <code>con_righe</code>, <code>non_letti</code> —
+<strong>senza</strong> le prime righe. È la sorgente del <strong>pallino dei presidi</strong> in topbar
+(decisione #8 di Tid, 2026-09-18; piano
+<code>piano-be-fe-osservabilita-pallino-e-superfici.md</code> §2): un contatore ambientale
+letto ogni cinque minuti da ogni scheda aperta, che non deve pagare le righe di
+esempio.</p>
+<p><strong>Contesto.</strong> Stesso giro di §6.1 (<code>PresidiRepository.stato_presidi(con_righe=False)</code>:
+stesse viste <code>ZERO</code> dal catalogo, stesso <code>fn_conta_presidio</code>, stesso isolamento
+per presidio), stessa porta (<code>AdminAPIView</code>). ⛔ È un parametro del repository e
+non un secondo metodo: una copia «senza righe» divergerebbe dalla prima al primo
+campo nuovo, e il pallino direbbe una cosa e il pannello un'altra. Il pannello,
+quando ricarica, <strong>passa i suoi numeri al pallino</strong> (<code>usePresidiPolling</code>
+osserva lo store): le due letture non possono raccontare due stati.</p>
+<p><strong>Input.</strong> Nessuno.</p>
+<p><strong>Output.</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"totale"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="nt">"con_righe"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"non_letti"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Significato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>totale</code></td>
+<td>quanti presidi <code>ZERO</code> sono stati guardati (compresi i non letti)</td>
+</tr>
+<tr>
+<td><code>con_righe</code></td>
+<td>quanti hanno righe: il numero <strong>rosso</strong> del pallino</td>
+</tr>
+<tr>
+<td><code>non_letti</code></td>
+<td>quanti non si sono potuti leggere: il numero <strong>giallo</strong> — cecità, non guasto, e non si somma agli accesi</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regole.</strong> Un presidio che non si legge <strong>non è un errore di questa risposta</strong>:
+è <code>non_letti + 1</code>, per contratto. Chi non passa la porta riceve 403 e il pallino
+<strong>non compare</strong> (il composable si spegne definitivamente su 403/401, come il
+badge delle code per chi non ha l'area core). ⚠️ La rotta sta sotto
+<code>processi/</code>, <strong>prima</strong> di <code>&lt;str:codice&gt;/</code> — stessa regola d'ordine di <code>presidi/</code>;
+il test <code>test_processi_presidi_conteggi_api.py</code> pinna che risolva a questa view
+e non al dettaglio di un processo chiamato «presidi».</p>
+<p><strong>Dipendenze DB.</strong> <code>dbops.presidi</code> (catalogo), <code>dbops.fn_conta_presidio</code>
+(<code>SECURITY DEFINER</code>, attraversa la RLS).</p>
+<h3 id="62-post-apiv1amm-softwareprocessicodiceesegui-ora-esegui-ora-su-una-sveglia">6.2 POST /api/v1/amm-software/processi/{codice}/esegui-ora/ — «Esegui ora» su una sveglia<a class="headerlink" href="#62-post-apiv1amm-softwareprocessicodiceesegui-ora-esegui-ora-su-una-sveglia" title="Permanent link">&para;</a></h3>
+<p>Accoda <strong>un</strong> lavoro <code>ESEGUI_PROCESSO</code> su <code>dbops.coda_lavori</code> per la sveglia di
+deploy indicata, con lo scope di chi preme (<code>run_as = OPERATORE</code>); il drenatore
+(<code>draina_coda_lavori</code>, ogni minuto) lancia <code>bin/run-command.sh &lt;comando&gt;</code> come
+sottoprocesso — <strong>la stessa riga del timer, meno l'orario</strong> — e il comando
+registra il suo run sotto il proprio processo con <code>origine = COMMAND</code> e
+l'utente di chi ha premuto. <strong>Il web non esegue niente.</strong> Brief:
+<code>work-done/brief-db-avvio-manuale-di-un-processo.md</code>; piano
+<code>piano-be-fe-avvio-manuale-di-un-processo.md</code>.</p>
+<p>⚠️ <strong>Porta</strong>: <code>AdminAPIView</code> (v1 solo <code>SUPER_ADMIN</code>, decisione di Tid del
+14-09). L'azione <code>processo_avvia</code> e' a catalogo ma <strong>non</strong> e' dichiarata sulla
+view — <code>AdminAPIView</code> non la leggerebbe, e un attributo che sembra un cancello
+e non lo e' sarebbe peggio di nessun attributo.</p>
+<p><strong>Header obbligatorio</strong>: <code>Idempotency-Key</code> (400 senza). E' la chiave HTTP del
+doppio submit; quella di <strong>business</strong> («una per unit sui lavori vivi»,
+<code>esegui:&lt;unit&gt;</code>) la scrive il backend, ed e' quella che fa dire «gia' in coda».</p>
+<p><strong>Request body</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"zeroerp-digest-presidi-giornaliero"</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>⛔ Si manda la <strong>unit</strong>, mai un comando: l'argv si risolve dal dichiarato di
+deploy (<code>backend/deploy/sveglie.json</code>), che e' la whitelist.</p>
+<p><strong>Response</strong> (200) — la forma del giro di fatturazione:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"job_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">4321</span><span class="p">,</span><span class="w"> </span><span class="nt">"stato"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PENDING"</span><span class="p">,</span><span class="w"> </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"zeroerp-digest-presidi-giornaliero"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Rifiuti, nell'ordine in cui si valutano — tutti PRIMA di accodare:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Codice</th>
+<th>Quando</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td><code>E_CODA_SCOPE_OPERATORE_INVALIDO</code></td>
+<td>il JWT non porta l'<code>identita_id</code>: lo stesso codice che il drenatore solleverebbe un minuto dopo, detto adesso a chi puo' fare qualcosa</td>
+</tr>
+<tr>
+<td>400</td>
+<td><code>E_VALIDATION_INPUT</code> (<code>fields: &#91;"unit"&#93;</code>)</td>
+<td><code>unit</code> assente / non stringa, oppure non fra le sveglie <strong>di quel</strong> processo</td>
+</tr>
+<tr>
+<td>404</td>
+<td><code>E_PROCESSO_NON_TROVATO</code></td>
+<td>il codice non e' nel registro</td>
+</tr>
+<tr>
+<td>422</td>
+<td><code>E_PROCESSO_SVEGLIA_NON_AVVIABILE_A_MANO</code></td>
+<td><code>forma = servizio</code>, o <code>avvio_manuale = false</code> nel dichiarato: non e' un candidato (natura, non stato)</td>
+</tr>
+<tr>
+<td>501</td>
+<td><code>E_PROCESSO_SVEGLIA_NON_ABILITATA</code></td>
+<td><code>abilita = false</code> su questa installazione: si accende dal deploy, non da qui</td>
+</tr>
+<tr>
+<td>409</td>
+<td><code>E_PROCESSO_AVVIO_GIA_IN_CODA</code></td>
+<td>esiste un lavoro <code>ESEGUI_PROCESSO</code> vivo (<code>PENDING</code>/<code>IN_CORSO</code>) con la stessa chiave; il <code>context</code> porta <code>job_id</code></td>
+</tr>
+<tr>
+<td>501</td>
+<td><code>E_JOB_TYPE_NON_ATTIVO</code></td>
+<td>il tipo di coda e' ancora <code>attivo = false</code> (regola del binding): e' il cancello voluto finche' l'handler non e' in release</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ I tre motivi 422/501/409 sono gli stessi — nello stesso ordine — della
+capability <code>can_esegui_ora</code> del dettaglio (§6.3): li produce <strong>lo stesso
+predicato</strong> (<code>avvio_manuale.motivi_esegui_ora</code>), quindi il tooltip del pulsante
+spento e il rifiuto non possono dire due cose diverse.</p>
+<p><strong>Gli esiti dell'esecuzione non passano da qui</strong>: <code>E_PROCESSO_AVVIO_FALLITO</code>
+(exit ≠ 0) ed <code>E_PROCESSO_AVVIO_TROPPO_LUNGO</code> (oltre il tetto di 300 s, figlio
+ucciso) finiscono in <code>coda_lavori.ultimo_errore</code>, terminali, e si leggono in
+<em>Strumenti → Code di lavoro</em>; la diagnosi del comando sta nel run del
+processo eseguito (tab «Ultime corse» del suo drawer).</p>
+<p><strong>Esempio curl:</strong></p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer &lt;token&gt;"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">"Idempotency-Key: </span><span class="k">$(</span>uuidgen<span class="k">)</span><span class="s2">"</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"unit":"zeroerp-digest-presidi-giornaliero"}'</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="s2">"https://host/api/v1/amm-software/processi/digest_presidi/esegui-ora/"</span>
+</code></pre></div>
+<h3 id="63-sveglie-nel-dettaglio-get-processicodice">6.3 <code>sveglie&#91;&#93;</code> nel dettaglio — <code>GET processi/{codice}/</code><a class="headerlink" href="#63-sveglie-nel-dettaglio-get-processicodice" title="Permanent link">&para;</a></h3>
+<p>Il dettaglio porta <code>sveglie</code>, una riga per unit dichiarata per quel processo
+(zero, una o piu'): il <strong>dichiarato</strong> di deploy (cio' che il client mostra) e la
+<strong>capability</strong> (cio' su cui decide), nella famiglia 1 dei nomi di <code>api.md</code>
+§Capability di riga (motivo e chiave discendono dal flag).</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"zeroerp-digest-presidi-settimanale"</span><span class="p">,</span><span class="w"> </span><span class="nt">"forma"</span><span class="p">:</span><span class="w"> </span><span class="s2">"timer"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"comando"</span><span class="p">:</span><span class="w"> </span><span class="err">\</span><span class="p">[</span><span class="s2">"digest_presidi"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--cadenza"</span><span class="p">,</span><span class="w"> </span><span class="s2">"settimanale"</span><span class="err">\</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"oncalendar"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Mon *-*-* 07:30"</span><span class="p">,</span><span class="w"> </span><span class="nt">"abilita"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"avvio_manuale"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"nota"</span><span class="p">:</span><span class="w"> </span><span class="s2">"…"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"can_esegui_ora"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"can_esegui_ora_reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"E_PROCESSO_AVVIO_GIA_IN_CODA"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"can_esegui_ora_reason_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"amministrazione.processi.esegui_ora_blocco.gia_in_coda"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"can_esegui_ora_dettaglio"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"job_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">4321</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Significato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>can_esegui_ora</code></td>
+<td><strong>derivato</strong> dal motivo (<code>reason is None</code>), mai calcolato a parte</td>
+</tr>
+<tr>
+<td><code>can_esegui_ora_reason</code></td>
+<td>il codice macchina del <strong>primo</strong> motivo, o <code>null</code></td>
+</tr>
+<tr>
+<td><code>can_esegui_ora_reason_key</code></td>
+<td>la chiave i18n del tooltip — una per motivo, fissata nei locales del client</td>
+</tr>
+<tr>
+<td><code>can_esegui_ora_dettaglio</code></td>
+<td>i parametri <strong>con nome</strong> della frase (<code>{job_id}</code>), o <code>null</code></td>
+</tr>
+</tbody>
+</table>
+<p>⭐ Il client la legge con <code>bloccoAttivo(riga, 'can_esegui_ora',
+'can_esegui_ora')</code> / <code>motivoBloccoRiga(...)</code> (<code>ProcessoDrawer.vue</code>, tab
+«Sveglie»); il test <code>test_processi_esegui_ora</code> (17-18) pinna che i nomi emessi
+siano quelli letti e che le tre chiavi esistano in <code>it.json</code> e <code>en.json</code>. I
+lavori vivi si leggono con <strong>una</strong> query per tutte le unit del processo.</p>
 <hr />
 <h2 id="regole-trasversali">Regole trasversali<a class="headerlink" href="#regole-trasversali" title="Permanent link">&para;</a></h2>
 <ul>
@@ -7815,10 +8053,14 @@ giornale): il suo stesso <code>COMMENT</code> lo dichiara e dice quando va tolto
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

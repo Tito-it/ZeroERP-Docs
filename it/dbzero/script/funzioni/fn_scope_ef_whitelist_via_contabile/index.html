@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5589,10 +5589,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#su-una-distinta-interna-risponde-false-ed-e-voluto" class="md-nav__link">
+  <a href="#su-una-distinta-interna-risponde-per-il-suo-emittente-2026-09-15" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        ⚠️ Su una distinta INTERNA risponde <code>false</code>, ed è voluto
+        ⭐ Su una distinta INTERNA risponde per il <strong>suo</strong> emittente (2026-09-15)
       </span>
     </span>
   </a>
@@ -5659,27 +5659,34 @@
 
 <h2 id="documentazione-concettuale-funzione-scriptfn_scope_ef_whitelist_via_contabile">📘 Documentazione Concettuale – Funzione <code>script.fn_scope_ef_whitelist_via_contabile</code><a class="headerlink" href="#documentazione-concettuale-funzione-scriptfn_scope_ef_whitelist_via_contabile" title="Permanent link">&para;</a></h2>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(rev 2026-08-22)</p>
+<p>(rev 2026-08-22, corretta il 2026-09-15)</p>
 <p>Dice se l'operatore ha scope su una <strong>distinta contabile</strong>: risolve
-<code>distinta → canale → conto → soggetto → emittente</code> e delega alla canonica.</p>
-<p>Serve alla policy della <strong>riga</strong> contabile, che il canale non ce l'ha in colonna:
-ce l'ha la sua testata. Gemella di
+<code>distinta → emittente</code> (dal 2026-09-15 leggendo la colonna
+<code>emittente_soggetto_ruolo_id</code> della testata; fino ad allora
+<code>distinta → canale → conto → soggetto → emittente</code>) e delega alla canonica.</p>
+<p>Serve alle policy dei <strong>satelliti</strong> della distinta — le righe e il manifesto dei
+lotti — che l'emittente non ce l'hanno in colonna: ce l'ha la loro testata.
+Gemella di
 <a href=".././fn_scope_ef_whitelist_via_ente_incasso/">fn_scope_ef_whitelist_via_ente_incasso</a>,
 che parte invece dal canale.</p>
 <hr />
-<h3 id="su-una-distinta-interna-risponde-false-ed-e-voluto">⚠️ Su una distinta INTERNA risponde <code>false</code>, ed è voluto<a class="headerlink" href="#su-una-distinta-interna-risponde-false-ed-e-voluto" title="Permanent link">&para;</a></h3>
-<p>Le distinte <strong>interne</strong> — fondo fattura, compensazione — nascono <strong>senza canale</strong>
-per disegno: non arrivano da nessun flusso, le fabbrica il sistema. La catena si
-interrompe, l'emittente resta <code>NULL</code>, la canonica risponde <code>false</code>.</p>
-<p>⭐ Ed è esattamente ciò che serve: <strong>le righe di una distinta interna non devono
-vedersi in giro</strong>, e a dire di chi è quel denaro è la <strong>fattura che la riga
-porta</strong>.</p>
-<blockquote>
-<p>⚠️ Che la <strong>testata</strong> di quella distinta sia invece visibile a tutti è una
-decisione <strong>diversa</strong>, e sta scritta <strong>nella policy</strong> — <code>ente_incasso_id IS
-NULL</code>, in chiaro — non qui dentro. Chi legge la policy deve vedere l'eccezione,
-non scoprirla dentro una funzione.</p>
-</blockquote>
+<h3 id="su-una-distinta-interna-risponde-per-il-suo-emittente-2026-09-15">⭐ Su una distinta INTERNA risponde per il <strong>suo</strong> emittente (2026-09-15)<a class="headerlink" href="#su-una-distinta-interna-risponde-per-il-suo-emittente-2026-09-15" title="Permanent link">&para;</a></h3>
+<p>Le distinte <strong>interne</strong> — fondo fattura, sistemazione — nascono <strong>senza canale</strong>
+per disegno: non arrivano da nessun flusso, le fabbrica il sistema. Fino al
+2026-09-15 la catena per canale si interrompeva, l'emittente restava <code>NULL</code> e
+la canonica rispondeva <code>false</code> a tutti — <em>«le righe di una distinta interna non
+devono vedersi in giro, e a dire di chi è quel denaro è la fattura che la riga
+porta»</em>. Nel frattempo la <strong>testata</strong> era visibile a tutti per una scelta scritta
+nella policy (<code>ente_incasso_id IS NULL</code>).</p>
+<p>Dal brief
+distinta-numerata-sul-registro (<code>docs/it/dev/work-done/brief-db-distinta-numerata-sul-registro</code>)
+<strong>la distinta sa di chi è</strong>: porta l'emittente in colonna (risolto alla nascita
+in una sede sola — dato, canale, operatore in sessione, o rifiuto — e per una
+distinta di fondi è l'emittente del <strong>lotto</strong>, per una sistemazione quello
+dell'<strong>atto</strong>). Quindi qui una distinta interna risponde <code>true</code> per il suo
+emittente e <code>false</code> per gli altri, e le sue righe si vedono dalla <strong>sola
+testata</strong>, senza passare dalla fattura. Il ramo «senza canale = di tutti» è
+sparito dalla testata (<code>20260915-31</code>) e dai satelliti (<code>20260915-32</code>).</p>
 <hr />
 <h3 id="perche-e-security-invoker-e-non-definer-e-perche-funziona-lo-stesso">🔴 Perché è <code>SECURITY INVOKER</code> e non <code>DEFINER</code> — e perché funziona lo stesso<a class="headerlink" href="#perche-e-security-invoker-e-non-definer-e-perche-funziona-lo-stesso" title="Permanent link">&para;</a></h3>
 <p>Legge <code>pagamenti.vendite_contabili</code>, <strong>la cui policy chiama questa funzione</strong>. Da
@@ -5765,10 +5772,14 @@ come <strong>prima</strong> delle sue tre strade.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

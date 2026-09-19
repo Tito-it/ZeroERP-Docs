@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5782,6 +5782,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-09-14-una-famiglia-puo-non-avere-un-billing-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-09-14 — una famiglia può <strong>non avere</strong> un billing account
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rev-2026-09-15-la-sesta-famiglia-distinta-la-prima-fuori-da-vendite" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-09-15 — la sesta famiglia: <code>DISTINTA</code>, la prima fuori da <code>vendite</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6079,6 +6101,73 @@ comandava anche l'altra.</p>
 <p>⭐ Una famiglia creata dal programma nasce <strong>non fiscale</strong>, ed è il limite già
 dichiarato: il registro della fattura si sceglie per tipo documento e natura, per
 una strada tutta sua.</p>
+<h3 id="rev-2026-09-14-una-famiglia-puo-non-avere-un-billing-account">🔄 rev 2026-09-14 — una famiglia può <strong>non avere</strong> un billing account<a class="headerlink" href="#rev-2026-09-14-una-famiglia-puo-non-avere-un-billing-account" title="Permanent link">&para;</a></h3>
+<p><code>colonna_billing_account</code> diventa facoltativa (<code>20260914-07</code>): il vuoto è la
+dichiarazione che <strong>quella famiglia di documenti non ha un cliente</strong> — la
+controparte di un ordine d'acquisto è un fornitore, un ruolo di soggetto, non
+un billing account. È la stessa forma di <code>colonna_serie</code>, due righe sopra.</p>
+<p>Chi legge quella colonna lo sa:</p>
+<ul>
+<li>il controllo dei riferimenti (<code>trgfn_famiglie_documento_guard_riferimenti</code>)
+  verifica che la colonna esista <strong>solo se è dichiarata</strong>; tabella e colonna
+  del numero restano obbligatorie;</li>
+<li>le due funzioni della storia dell'emittente
+  (<a href="../../../anagrafiche/funzioni/fn_ba_ha_storia_emittente/">fn_ba_ha_storia_emittente</a>,
+  <a href="../../../anagrafiche/funzioni/fn_get_storia_emittente_ba/">fn_get_storia_emittente_ba</a>)
+  <strong>saltano</strong> le famiglie senza billing account già quando scelgono su quali
+  famiglie girare — una famiglia senza cliente non può contribuire alla storia
+  di nessun cliente;</li>
+<li>la funzione che crea una famiglia (<code>fn_crea_famiglia_documento</code>) non la
+  pretende più e trasforma il campo vuoto in «nessuno».</li>
+</ul>
+<p>⚠️ Il controllo di struttura <strong>non cambia</strong>: su una famiglia che ha già dei
+registri, passare da «nessuno» a un nome di colonna è un cambio come gli altri,
+e viene rifiutato.</p>
+<p>ℹ️ Al 2026-09-14 le cinque famiglie in servizio avevano tutte il billing
+account: questa revisione <strong>apre la porta</strong> al primo documento che non ce
+l'ha, non lo registra. <em>Diceva «sarà il cantiere acquisti a farlo»: è stata la
+distinta, il giorno dopo (sezione qui sotto).</em> Brief:
+<code>brief-db-modifiche-certe-ciclo-vendita-e-articolo</code>, sezione 3-bis.</p>
+<h3 id="rev-2026-09-15-la-sesta-famiglia-distinta-la-prima-fuori-da-vendite">🔄 rev 2026-09-15 — la sesta famiglia: <code>DISTINTA</code>, la prima fuori da <code>vendite</code><a class="headerlink" href="#rev-2026-09-15-la-sesta-famiglia-distinta-la-prima-fuori-da-vendite" title="Permanent link">&para;</a></h3>
+<p>La <strong>distinta contabile di incasso</strong> (<code>pagamenti.vendite_contabili</code>, colonna
+<code>codice</code>) entra nel catalogo (<code>20260915-33</code>): è la prima famiglia che vive in
+un altro schema, la prima <strong>senza billing account</strong> in servizio (la porta
+aperta il 14-09 la attraversa per prima lei) e, come la commessa, ha
+l'identità sulla <strong>stringa nuda</strong> — sigla dell'emittente e anno dentro il
+codice: <code>DIS-&lt;SIGLA&gt;-&lt;ANNO&gt;-&lt;7 cifre&gt;</code>. Senza serie, <code>presidia_data_documento</code>
+falso (la distinta di ieri inserita oggi è un caso normale), prefisso <code>DIS-</code>,
+7 cifre, anno nel numero.</p>
+<p>I registri <code>DIS-&lt;sr&gt;</code> nascono da <code>vendite.fn_provision_registri_famiglia</code>
+(<code>20260915-34</code>) per gli emittenti esistenti, e dal trigger di provisioning per
+quelli futuri. Il resto — come e quando la distinta prende il numero, e di chi
+è — sta nella scheda di
+<a href="../../../pagamenti/manual/vendite_contabili/">pagamenti.vendite_contabili</a>.</p>
+<p>⭐ <strong>Vive in un CSV dedicato (<code>famiglie_documento_distinta.csv</code>), non in
+<code>famiglie_documento.csv</code></strong>: una riga sola con <strong>tutte</strong> le colonne, e un loader
+numerato dopo i quattro mirror laterali, così la famiglia nasce col catalogo
+già completo (formato, serie, anno nel numero) invece di nascere monca e farsi
+completare dopo; il passo dei registri (<code>20260915-34</code>) la segue subito. ⚠️ <strong>La
+settima famiglia fa lo stesso</strong>: CSV suo, loader suo, numerato dopo, poi il suo
+passo che chiama <code>fn_provision_registri_famiglia</code>. Il commento di <code>20260830-14</code>
+che dice «una famiglia nuova è un append» è vero <strong>fino</strong> al 31-08.</p>
+<p>🔄 <strong>rev 2026-09-17 — il cancello di <code>20260831-03</code> conta per nome.</strong> Fino a
+quel giorno il passo dei registri per emittente pretendeva in <code>preConditions</code>
+<strong>esattamente 4</strong> famiglie attive diverse da <code>FATTURA</code> (<code>HALT</code>): una fotografia
+del catalogo del 31-08, che la sesta famiglia ha smentito. Sulla carta il CSV
+dedicato bastava (su un DB da zero <code>20260831-03</code> gira prima di <code>20260915-33</code>),
+ma <strong>in CI il migrate è morto lo stesso</strong> («Expected '4' got '5'»): in
+Liquibase 5.0.4 un changeSet <code>runOnChange</code> che contiene un change con <code>dbms:</code>
+viene ri-eseguito <strong>una volta</strong> all'update successivo alla sua prima
+esecuzione — il filtro che decide se ri-eseguire calcola il checksum senza il
+Database nello Scope e il change <code>dbms:</code> ne esce, quindi il checksum non torna
+— e in CI quell'update è la seconda invocazione (<code>--contexts=ci_apply</code>), che
+riparte <strong>dopo</strong> il seed della distinta. Da allora il cancello pretende che le
+<strong>quattro famiglie per cui è nato</strong> esistano (<code>IN ('DDT','ORDINE','COMMESSA',
+'RESO')</code>), come fanno i laterali, e il corpo chiama
+<code>fn_provision_registri_famiglia</code> invece di un INSERT ricopiato. Il fatto
+Liquibase vale per tutti i seed <code>runOnChange</code> con <code>dbms:</code>: un cancello su
+quanto c'è <em>oggi</em> in una tabella di catalogo è una mina che scoppia alla
+riga dopo, non un presidio.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -6136,10 +6225,14 @@ una strada tutta sua.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

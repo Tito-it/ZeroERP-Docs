@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5661,18 +5661,35 @@ degli stati della <strong>testata contabile vendite</strong>.</p>
 <hr />
 <h3 id="campi-chiave-semantica">Campi chiave (semantica)<a class="headerlink" href="#campi-chiave-semantica" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>codice</code>: codice stato funzionale (es. DRAFT, CHIUSA, ANNULLATA).</li>
+<li><code>codice</code>: codice stato funzionale (BOZZA, IMPORTATA, VALIDATA, CHIUSA, ANNULLATA).</li>
 <li><code>descrizione</code>: testo descrittivo dello stato.</li>
 <li><code>is_final</code>: indica se lo stato e` terminale.</li>
+<li><code>is_registrabile</code> <em>(18-09-2026, D20-d)</em>: «da questo stato si puo<code>registrare?».</code>true<code>**solo** su</code>VALIDATA<code>. La legge</code>pagamenti.fn_posta_contabile<code>(guard 3)
+  al posto del letterale</code>'VALIDATA'<code>— stesso codice</code>E_CONTABILE_NON_REGISTRABILE<code>,
+  stessa frase, cambia **chi lo dice** — e il dettaglio della distinta la espone
+  come</code>stato_is_registrabile<code>: «Registra» si spegne col motivo invece di finire in
+  409 (rilievo §1 del terzo collaudo). Una bandiera e non una</code>fn_check<code>: il
+  motivo e</code> uno e statico, lo stato. Default <code>false</code>, fail-closed su uno stato
+  nuovo. ⚠️ Il valore sta nel CSV (mirror <code>20260821-30</code>), mai in un <code>UPDATE</code>.</li>
 <li><code>ordine</code>: priorita`/sequenza di avanzamento stato.</li>
 <li><code>attivo</code>: abilita/disabilita stato per nuovi processi.</li>
-<li><code>meta</code>: estensioni configurative.</li>
+<li><code>meta</code>: estensioni configurative. Dal 2026-09-15 porta su <strong>tutte e cinque</strong>
+  le righe la chiave i18n <code>nessuna_azione_key</code> (<code>pagamenti.distinte.stato_info.&lt;stato&gt;</code>):
+  e<code>il testo che il drawer della distinta mostra per dire *dove si e</code><em> (bozza: si
+  digita · validata: pronta da registrare, il denaro non e<code>ancora registrato ·
+  registrata …). Il backend la trasporta come</code>stato_info_key<code>, il frontend la passa
+  a</code>DrawerActionsBar :info-key<code>: e</code> lo stesso meccanismo degli altri cataloghi di
+  stato, descritto in
+  <a href="../../../../dev/frontend/frontend-standards/">frontend-standards §«L'informazione di stato — prop <code>infoKey</code>»</a>.
+  ⚠️ Il testo </em><em>non</em>* sta qui: qui c'e<code>solo l'indirizzo i18n, e cambiarlo e</code> un
+  edit del CSV (<code>80_data/sql/pagamenti/vendite_contabili_stati.csv</code>), mai un <code>UPDATE</code>.</li>
 </ul>
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>codice</code> univoco.</li>
 <li>Stati finali marcati con <code>is_final = true</code>.</li>
+<li>Si registra <strong>solo</strong> dagli stati con <code>is_registrabile = true</code> — oggi <code>VALIDATA</code>.</li>
 <li><code>ordine</code> usato come supporto per ordinamento operativo.</li>
 </ul>
 <hr />
@@ -5739,10 +5756,14 @@ degli stati della <strong>testata contabile vendite</strong>.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

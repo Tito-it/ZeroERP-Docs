@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5600,6 +5600,50 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#il-criterio-del-ramo-2-non-e-chi-cancella-ma-cosa" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ Il criterio del ramo 2 non è <em>chi</em> cancella ma <em>cosa</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qui-cleanup_at-non-e-immutabile-e-va-saputo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Qui <code>cleanup_at</code> non è immutabile, e va saputo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#su-fatture_log-il-purge-ha-una-conseguenza" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⚠️ Su <code>fatture_log</code> il purge ha una conseguenza
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legge-oldcleanup_at" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⛔ Legge <code>OLD.cleanup_at</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5611,10 +5655,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#utilizzo-previsto" class="md-nav__link">
+  <a href="#verifica" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Utilizzo previsto
+        Verifica
       </span>
     </span>
   </a>
@@ -5651,32 +5695,75 @@
 <p>👀 <strong>Vedi anche</strong></p>
 <p><strong>Approfondimento tabelle:</strong></p>
 <p>• <a href="../../tabelle/fatture_log/">vendite.fatture_log</a><br />
-• <a href="../../tabelle/fatturazione_lotti_log/">vendite.fatturazione_lotti_log</a><br />
+• <a href="../../tabelle/fatturazione_lotti_log/">vendite.fatturazione_lotti_log</a>  </p>
+<p><strong>Approfondimento funzioni:</strong></p>
+<p>• <a href=".././trgfn_event_log_append_only/">vendite.trgfn_event_log_append_only</a> — il gemello su <code>event_log</code><br />
+• <a href="../../../dbops/funzioni/trgfn_cleanup_at_alla_nascita/">dbops.trgfn_cleanup_at_alla_nascita</a> — chi scrive la scadenza<br />
+• <a href="../../../dbops/funzioni/fn_purge_cleanup_expired/">dbops.fn_purge_cleanup_expired</a> — chi la ritira<br />
 </p>
 </blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 20-02-2026)<br />
-La funzione trigger <strong><code>vendite.trgfn_logs_guard_delete()</code></strong> blocca la cancellazione
-diretta dei log funzionali (<code>fatture_log</code>, <code>fatturazione_lotti_log</code>) salvo
-abilitazione esplicita di manutenzione.</p>
+<p>(rev 2026-09-18 — Passo D di <code>analisi-osservabilita-log.md</code>)<br />
+La funzione trigger <strong><code>vendite.trgfn_logs_guard_delete()</code></strong> protegge i log funzionali
+(<code>fatture_log</code>, <code>fatturazione_lotti_log</code>) dalla cancellazione <strong>accidentale</strong>,
+distinguendo però fra <strong>cancellare la storia</strong> e <strong>ritirare ciò che è scaduto</strong>.</p>
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Trigger <code>BEFORE DELETE</code> su:</li>
 <li><code>vendite.fatture_log</code></li>
 <li><code>vendite.fatturazione_lotti_log</code></li>
-<li><code>DELETE</code> consentito solo se almeno una delle GUC è attiva:</li>
-<li><code>zeroerp.maintenance_allow_delete_logs = on</code></li>
-<li><code>zeroerp.maintenance_reset_lotto_draft = on</code> (compatibilità reset tecnico)</li>
-<li>In assenza GUC attiva, la funzione alza errore bloccante.</li>
+<li><code>DELETE</code> <strong>ammesso</strong> in tre casi, in quest'ordine:</li>
+<li>una GUC di manutenzione è attiva — <code>zeroerp.maintenance_allow_delete_logs = on</code>
+     oppure <code>zeroerp.maintenance_reset_lotto_draft = on</code> (il reset tecnico di un lotto in
+     bozza);</li>
+<li><strong>la riga è scaduta</strong>: <code>cleanup_at IS NOT NULL AND cleanup_at &lt;= now()</code> — è la
+     retention che passa (dal 2026-09-18);</li>
+<li>— altrimenti la funzione solleva <code>E_DELETE_NOT_ALLOWED</code> (<code>NON_PERMESSO</code>) via
+     <code>script.fn_log_and_raise_error</code>, con tabella, <code>id</code> e <code>cleanup_at</code> nel contesto.</li>
+<li><code>cleanup_at</code> <strong>NULL</strong> = riga senza scadenza (nessuna regola <code>CLEANUP_AT</code> quando è nata):
+  non si cancella. In dubbio si conserva.</li>
 </ul>
+<hr />
+<h3 id="il-criterio-del-ramo-2-non-e-chi-cancella-ma-cosa">⭐ Il criterio del ramo 2 non è <em>chi</em> cancella ma <em>cosa</em><a class="headerlink" href="#il-criterio-del-ramo-2-non-e-chi-cancella-ma-cosa" title="Permanent link">&para;</a></h3>
+<p>È la stessa scelta fatta su <code>event_log</code> (D-8, 2026-08-22): il purge settimanale
+(<code>dbops.fn_purge_cleanup_expired</code>, lanciato da <code>fn_run_automations_cleanup</code>) cancella
+<strong>senza</strong> propagare GUC né riconoscere ruoli, e il guard lo lascia passare perché la riga
+ha passato la sua scadenza — non perché a cancellare sia il job.</p>
+<p>Fino al 2026-09-18 questo ramo non c'era, e le due tabelle non avevano <code>cleanup_at</code>: era
+la «mina latente» dichiarata in <code>test-cleanup-framework.sql</code> (13-16). Con la sola colonna
+aggiunta, il job sarebbe stato respinto ogni domenica — dal 2026-08-23 l'orchestratore non
+muore più, ma lascia una riga <code>ERROR</code> in <code>dbops.audit_log</code> (<code>BLOCKED_BY_TABLE</code>), per sempre.</p>
+<hr />
+<h3 id="qui-cleanup_at-non-e-immutabile-e-va-saputo">⚠️ Qui <code>cleanup_at</code> non è immutabile, e va saputo<a class="headerlink" href="#qui-cleanup_at-non-e-immutabile-e-va-saputo" title="Permanent link">&para;</a></h3>
+<p>Su <code>event_log</code> il veto sull'<code>UPDATE</code> rende la scadenza immutabile. Queste due tabelle
+l'<code>UPDATE</code> lo ammettono (<code>disabilitato</code>, <code>meta</code>, …): chi può scrivere può anche portare
+<code>cleanup_at</code> nel passato e poi cancellare. Non è un buco nuovo — quelle righe erano già
+modificabili, e il guard protegge dalla cancellazione <strong>accidentale</strong>, non dal dolo. Non si
+è aggiunto un veto sull'<code>UPDATE</code> di <code>cleanup_at</code>: sarebbe un cancello nuovo su tabelle che
+non sono append-only per progetto.</p>
+<h3 id="su-fatture_log-il-purge-ha-una-conseguenza">⚠️ Su <code>fatture_log</code> il purge ha una conseguenza<a class="headerlink" href="#su-fatture_log-il-purge-ha-una-conseguenza" title="Permanent link">&para;</a></h3>
+<p><code>trg_fatture_log_z90_sync_critical_ad</code> ricalcola <code>fatture.critical</code> (e <code>stato_esecuzione</code>
+su <code>fatturazione_lotti_fatture</code>) dopo ogni <code>DELETE</code>. Il purge di una riga <code>status = 'C'</code>
+non ancora <code>disabilitato</code> <strong>spegne</strong> il critico della fattura senza che nessuno l'abbia
+ammesso. Con 750 giorni di termine è una fattura ferma da due chiusure annuali: la scelta è
+che <code>critical</code> <strong>deriva</strong> dal registro e ne eredita la scadenza. Non si è aggiunta
+un'eccezione «se è vivo non scade»: un rifiuto di riga dentro il batch del purge blocca
+l'intera tabella per sempre, che è peggio.</p>
+<hr />
+<h3 id="legge-oldcleanup_at">⛔ Legge <code>OLD.cleanup_at</code><a class="headerlink" href="#legge-oldcleanup_at" title="Permanent link">&para;</a></h3>
+<p>Montare questo guard su una tabella <strong>senza</strong> la colonna fallisce a runtime — di proposito:
+un guard con un ramo di retention sta su una tabella che ha una scadenza.</p>
 <hr />
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>Nessun output funzionale (trigger guard: ritorna <code>OLD</code> in caso consentito).</p>
 <hr />
-<h3 id="utilizzo-previsto">Utilizzo previsto<a class="headerlink" href="#utilizzo-previsto" title="Permanent link">&para;</a></h3>
-<p>Usata come guardrail per evitare cancellazioni accidentali dei log;
-la pulizia è ammessa solo in processi tecnici controllati.</p>
+<h3 id="verifica">Verifica<a class="headerlink" href="#verifica" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>db/pgtap/vendite/test-logs-guard-delete.sql</code> — i rami 1 e 3 (GUC, riga viva).</li>
+<li><code>db/pgtap/vendite/test-registri-fatturazione-scadenza-alla-nascita.sql</code> — il ramo 2
+  (riga scaduta) e la conseguenza su <code>critical</code>.</li>
+</ul>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -5741,10 +5828,14 @@ la pulizia è ammessa solo in processi tecnici controllati.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

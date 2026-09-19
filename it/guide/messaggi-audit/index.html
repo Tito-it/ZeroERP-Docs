@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -6700,9 +6700,13 @@ dell'applicazione vengono riallineati a ogni passata <code>ci_apply</code> da un
 concede in blocco su tutte le tabelle: un <code>REVOKE</code> isolato sarebbe annullato alla
 passata successiva. La postura più stretta dei registri è <strong>dichiarata dentro
 quel loop</strong> (<code>90_end/ci_apply/20260205-41</code>), che concede a questi due solo
-<code>SELECT, INSERT</code> e revoca il resto. Chi aggiunge un registro append-only lo
-dichiara lì. Regola e motivazione: <a href="../../linee-guida-sql/">linee-guida-sql</a>, §11.8
-<em>«Una postura più stretta per <code>zeroerp_app</code> si dichiara nel loop dei grant»</em>.</p>
+<code>SELECT, INSERT</code> e revoca il resto — <strong>e</strong> in <code>scripts/sql/provision_db_roles.sql</code>
+(blocco «POSTURA DICHIARATA»), che in CI gira <strong>dopo</strong> quel loop, concede in
+blocco su tutte le tabelle ed è l'ultima parola. Chi aggiunge un registro
+append-only lo dichiara in <strong>entrambi</strong>, più il changeSet <code>90_end</code> forward che
+applica subito su dev. Regola e motivazione: <a href="../../linee-guida-sql/">linee-guida-sql</a>, §11.8
+<em>«Una postura più stretta per <code>zeroerp_app</code> si dichiara nel loop dei grant»</em>
+(le tre sedi, in tabella).</p>
 <p>Presidio: <code>db/pgtap/dbops/test-registri-append-only-postura-v1.sql</code> — verifica sia
 i privilegi a catalogo sia ciò che l'applicazione riesce a fare davvero.</p>
 <h3 id="chi-puo-scrivere-le-funzioni-il-perimetro-dal-2026-09-12">Chi può scrivere — le funzioni: il perimetro (dal 2026-09-12)<a class="headerlink" href="#chi-puo-scrivere-le-funzioni-il-perimetro-dal-2026-09-12" title="Permanent link">&para;</a></h3>
@@ -7010,10 +7014,14 @@ backfill, perché chi le scrisse non si può ricostruire.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

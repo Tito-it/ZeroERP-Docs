@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5691,7 +5691,7 @@
 </blockquote>
 <hr />
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 15-05-2026)
+<p>(latest review 14-09-2026)
 <code>vendite.fn_crea_revisione_preventivo(p_preventivo_id, p_user)</code> crea una <strong>nuova revisione</strong>
 di un preventivo vendita: copia testata, righe attive, componenti BoM e indirizzi.
 L'attivazione della revisione non e' piu' gestita qui: il flag <code>is_revision_attiva</code> e' stato
@@ -5719,7 +5719,57 @@ Allineato anche <code>script.fn_available_actions_preventivo</code> (<code>can_c
   <code>is_attiva</code> e' calcolata dinamicamente in <code>vendite.vw_preventivi</code> — la nuova rev
   DRAFT (non-abortita) rende automaticamente non-attiva la rev precedente.</li>
 <li><strong>Righe copiate</strong>: solo attive con <code>quantita &gt; 0</code>, <code>ORDER BY ordine, id</code>
-  (ordinamento deterministico necessario per il remap FK componenti).</li>
+  (ordinamento deterministico necessario per il remap FK componenti).
+  ⚠️ <strong>La copia ha un elenco ESPLICITO di colonne</strong>: una colonna nuova sulla
+  riga <strong>non passa</strong> finché qualcuno non la nomina qui. È il punto in cui una
+  colonna si perde senza errore — successo con la data di consegna.</li>
+<li><strong><code>data_consegna_richiesta_cliente</code> copiata</strong> (rev 2026-09-14, <code>20260914-13</code>):
+  la data che il cliente ha chiesto è un <strong>input della controparte</strong>, non una
+  promessa nostra da rinegoziare — la rev N+1 la eredita come eredita
+  articolo e quantità, e chi vuole cambiarla la cambia sulla riga. ⚠️ Fino a
+  quel giorno la revisione nasceva con la data a <code>NULL</code>: P-5 del brief
+  (<code>20260913-20</code>) aveva coperto il passaggio preventivo→ordine, non
+  rev N→N+1, e nessun pgTAP lo pinnava (segnalazione del BE). Presidio:
+  <code>db/pgtap/vendite/test-date-consegna-ordine-v1.sql</code>, test 11-13 (fixture
+  costruita: misura la stessa cosa su dbdev e in CI).</li>
+<li><strong>L'ancora si copia</strong> (rev 2026-09-15, <code>20260915-41</code>, D3 di Tid): la <strong>testata</strong> della
+  rev N+1 porta <code>emittente_fiscale_id</code> della rev N. Fino a quel giorno non era nell'elenco
+  esplicito delle colonne e lo riempiva il <strong>trigger di default di sessione</strong>: per un
+  operatore della stessa azienda lo stesso valore, ma per un super admin senza emittente
+  attivo la revisione <strong>sollevava</strong> (<code>E_…_EMITTENTE_NON_RISOLTO</code>) e con un emittente attivo
+  diverso nasceva incoerente col BA e la fermava <code>trgfn_preventivi_guard_emittente_ba</code> —
+  un difetto mascherato da un guard, quindi mai un dato sbagliato a terra, solo una
+  revisione impossibile. La revisione è <strong>lo stesso documento</strong>: copia l'ancora, come già
+  <a href=".././fn_crea_revisione_offerta/">fn_crea_revisione_offerta</a>. Trovato
+  censendo chi si appoggiava al default senza dirlo, nel ritiro delle copie
+  (<code>brief-db-emittente-di-default-un-bb-solo</code>, sezione 7.1). Presidio: test 18 di
+  <code>db/pgtap/script/test-trgfn-default-emittente-fiscale-v1.sql</code>.</li>
+<li><strong>Marche di approvazione prezzo copiate 1:1</strong> (rev 2026-09-14, <code>20260914-14</code>,
+  decisione di Tid): <code>stato_approvazione_prezzo</code> e
+  <code>pratica_approvazione_prezzo_id</code> passano sulla riga della rev N+1 come già
+  sui <strong>componenti</strong> di questa funzione e come in
+  <a href=".././fn_crea_revisione_offerta/">fn_crea_revisione_offerta</a>
+  (rev2 2026-06-01). La ragione è la stessa: i gate L3 scattano sull'<strong>edit</strong>,
+  non alla revisione, quindi lo stato è l'unico marcatore persistente che un
+  prezzo fuori policy è autorizzato o in attesa — azzerarlo faceva nascere la
+  rev N+1 con lo stesso prezzo e <strong>senza marca</strong> (com'era dal 2026-04-22:
+  colonne arrivate dopo la funzione, nominate dal rewrite del 15-05 solo per i
+  componenti). Una riga <code>PENDING</code> copiata resta congelata da
+  <a href="../../../script/funzioni/trgfn_righe_guard_pending/">trgfn_righe_guard_pending</a>.
+  ⚠️ <strong>Caveat, lo stesso dell'offerta e non deciso qui</strong>: la pratica resta
+  agganciata per id a <strong>entrambe</strong> le righe (rev N e N+1) e il suo <code>meta</code>
+  nomina la riga della rev N — chi approva dalla coda agisce su quella. Il
+  ciclo di vita della pratica su una revisione superata è del dominio
+  approvazioni (BE): <code>refactor-prezzi.md</code> §4.7.</li>
+<li><strong>Colonne di riga che NON si copiano, e perché</strong> — ⭐ <strong>elenco presidiato</strong>
+  da <code>db/pgtap/vendite/test-fn-crea-revisione-preventivo-riga-completa-v1.sql</code>
+  (test 1-2): ogni colonna di <code>preventivi_righe</code> deve essere o nominata nella
+  copia o dichiarata esclusa lì con la ragione, altrimenti il test è rosso —
+  la prossima colonna di riga non può più perdersi in silenzio.
+  <code>natura_vendita_id</code> — la deriva e la <strong>congela</strong> dall'articolo il trigger
+  <code>BEFORE INSERT</code> (<code>trgfn_preventivi_righe_set_natura_vendita</code>): nominarla
+  scriverebbe un valore che viene sovrascritto; <code>tx_id</code> — framework;
+  <code>id</code>, <code>data_insert</code>, <code>data_update</code> — identity e audit.</li>
 <li><strong>Componenti BoM copiati</strong> (15-05-2026): le righe <code>preventivi_righe_componenti</code>
   vengono copiate con FK remap <code>old_riga_id → new_riga_id</code> tramite
   <code>ROW_NUMBER() OVER (ORDER BY ordine, id)</code>. Solo componenti con <code>attivo IS TRUE</code>.
@@ -5758,6 +5808,12 @@ Allineato anche <code>script.fn_available_actions_preventivo</code> (<code>can_c
 </tr>
 </tbody>
 </table>
+<p>⚠️ La firma e la <code>RETURNS TABLE</code> sono ancorate con <code>%TYPE</code> <strong>negli ultimi
+changeSet</strong> (<code>20260914-13</code> e <code>-14</code>, com'erano in <code>20260515-04</code> e <code>20260628-21</code>):
+<code>20260805-25</code> le aveva ricopiate sciolte dal corpo vivo, che risolve i <code>%TYPE</code>
+al <code>CREATE</code>. L'identità della funzione non cambia (<code>bigint, text</code>). La funzione
+è dichiarata <code>SECURITY INVOKER</code> esplicito: madre a più scritture, gira come
+l'operatore che la chiama (RLS e scope emittente restano i suoi).</p>
 <hr />
 <h3 id="output">📦 Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <table>
@@ -5788,6 +5844,8 @@ Allineato anche <code>script.fn_available_actions_preventivo</code> (<code>can_c
 </table>
 <hr />
 <h3 id="codici-errore">Codici errore<a class="headerlink" href="#codici-errore" title="Permanent link">&para;</a></h3>
+<p>(prefisso <code>E_</code> dal <code>20260805-25</code>; i nomi senza prefisso restano a catalogo
+ritirati con <code>obsoleto_dal</code> — fino al 14-09-2026 questa tabella li citava ancora)</p>
 <table>
 <thead>
 <tr>
@@ -5797,15 +5855,15 @@ Allineato anche <code>script.fn_available_actions_preventivo</code> (<code>can_c
 </thead>
 <tbody>
 <tr>
-<td><code>PREV_REVISIONE_STATO_NON_AMMESSO</code></td>
+<td><code>E_PREV_REVISIONE_STATO_NON_AMMESSO</code></td>
 <td>Stato corrente diverso da <code>EMESSO</code> (rev 03-05-2026: <code>ACCETTATO</code> non piu' ammesso)</td>
 </tr>
 <tr>
-<td><code>PREV_REVISIONE_BOZZA_ESISTENTE</code></td>
+<td><code>E_PREV_REVISIONE_BOZZA_ESISTENTE</code></td>
 <td>Esiste gia' una revisione DRAFT per lo stesso numero</td>
 </tr>
 <tr>
-<td><code>PREV_STATO_CORRENTE_NON_TROVATO</code></td>
+<td><code>E_PREV_STATO_CORRENTE_NON_TROVATO</code></td>
 <td>Preventivo non trovato</td>
 </tr>
 <tr>
@@ -5888,10 +5946,14 @@ Allineato anche <code>script.fn_available_actions_preventivo</code> (<code>can_c
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5614,6 +5614,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#patch-apiv1venditecommesseid-la-testata-leggibile" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        PATCH <code>/api/v1/vendite/commesse/&lt;id&gt;/</code> — La testata leggibile
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#post-azione-di-stato-utente" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5724,6 +5735,10 @@ Contratto nel manuale del BB condiviso:
 <span class="w">    </span><span class="nt">"total_non_emesse"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"total_prezzo_da_riallineare"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"last_update"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-06-15T10:00:00"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"descrizione"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Impianto sede di Verona"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"data_apertura"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-09-01"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"responsabile_risorsa_umana_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"responsabile_display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bianchi Anna"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"capabilities"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">"available_actions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"chiudi"</span><span class="p">,</span><span class="w"> </span><span class="nt">"target_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CHIUSA"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vendite.commesse.azione_chiudi"</span><span class="p">,</span>
@@ -5763,6 +5778,16 @@ separate per design: display vs chiave interna stabile) — non sono un duplicat
   <code>total_approvate</code> / <code>total_non_approvate</code>, <code>total_emesse</code> / <code>total_non_emesse</code>,
   <code>total_prezzo_da_riallineare</code>.</li>
 <li><code>last_update</code> (ISO 8601, nullable): max tra update testata e ultima riga.</li>
+<li><strong>Testata leggibile</strong> (2026-09-14, Blocco C di
+  <code>brief-db-modifiche-certe-ciclo-vendita-e-articolo</code>): <code>descrizione</code> (nullable,
+  max 255), <code>data_apertura</code> (ISO, mai <code>null</code>: la scrive il default
+  <code>script.fn_data_operativa()</code> alla nascita), <code>responsabile_risorsa_umana_id</code> +
+  <code>responsabile_display</code> (nome della persona, dalla vista modello
+  <code>anagrafiche.vw_risorse_umane_dettaglio</code> — la stessa del lookup, così picker e
+  dettaglio la chiamano nello stesso modo; entrambi <code>null</code> senza responsabile). ⚠️ Non escono da <code>fn_get_commessa_stato</code>: il repository li
+  legge da <code>vendite.commesse</code> (<code>get_commessa_testata</code>) e il service li fonde
+  nello stesso payload — un secondo endpoint sarebbe una seconda chiamata per tre
+  colonne della stessa riga. Si scrivono con il <code>PATCH</code> qui sotto.</li>
 <li><code>capabilities</code> (2026-06-16): blob data-driven da <code>script.fn_available_actions_commessa</code>
   (pattern gemello di ordini/preventivi/offerte/contratti):</li>
 <li><code>available_actions</code>: array delle <strong>azioni di stato utente</strong> ammesse dallo stato
@@ -5777,6 +5802,35 @@ separate per design: display vs chiave interna stabile) — non sono un duplicat
 <ul>
 <li><code>400</code>: <code>commessa_id</code> non valido (<code>E_COMMESSA_VALIDATION</code>)</li>
 <li><code>404</code>: commessa non trovata (<code>E_COMMESSA_NOT_FOUND</code>)</li>
+</ul>
+<hr />
+<h2 id="patch-apiv1venditecommesseid-la-testata-leggibile">PATCH <code>/api/v1/vendite/commesse/&lt;id&gt;/</code> — La testata leggibile<a class="headerlink" href="#patch-apiv1venditecommesseid-la-testata-leggibile" title="Permanent link">&para;</a></h2>
+<p>Scrive <code>descrizione</code> e <code>responsabile_risorsa_umana_id</code> (2026-09-14, Blocco C del
+brief modifiche certe). <strong>PATCH parziale</strong>: si scrive solo ciò che il payload
+porta; <code>null</code> esplicito <strong>azzera</strong> (togliere il responsabile è un gesto
+legittimo). Risponde con il dettaglio aggiornato — lo stesso payload del <code>GET
+/stato/</code>. Permesso: livello d'area <code>vendite</code> (<code>change</code>), come le testate degli
+altri documenti; nessuna <code>Idempotency-Key</code> (aggiornamento parziale, api.md
+§PATCH).</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"descrizione"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Impianto sede di Verona"</span><span class="p">,</span><span class="w"> </span><span class="nt">"responsabile_risorsa_umana_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>Regole:</p>
+<ul>
+<li><code>data_apertura</code> <strong>non</strong> si scrive: la mette il default alla nascita, e una
+  chiave estranea è un <code>400</code> (<code>E_COMMESSA_VALIDATION</code>, whitelist chiusa).</li>
+<li>Il responsabile deve essere una <strong>risorsa umana attiva</strong>: il service lo
+  verifica prima dell'<code>UPDATE</code> e risponde <code>400</code> col campo
+  (<code>fields: &#91;"responsabile_risorsa_umana_id"&#93;</code>). ⚠️ A DB lo rifiuterebbe
+  comunque il require sul figlio (<code>trg_commesse_a10_risorse_umane_require_attivo_ins_upd</code>,
+  nato da <code>ci_apply</code>) — ma con <code>E_ATTIVO_REQUIRE</code>, che è di classe <code>TECNICO</code>
+  (500) e parla di trigger: non è una frase per l'operatore. Il guard DB resta
+  l'autorità, il service è il messaggio.</li>
+<li>Nessun guard di <strong>stato</strong>: il DB non ne mette, di proposito — la descrizione
+  di una commessa chiusa si può correggere.</li>
+<li>Zero righe toccate (commessa inesistente <strong>o fuori scope RLS</strong>) → <code>404</code>
+  <code>E_COMMESSA_NOT_FOUND</code>, come ogni dettaglio by-id.</li>
+<li>Il picker del responsabile è <code>GET /anagrafiche/risorse-umane/lookup/</code>
+  (cross-dominio, <code>skip_area_check</code>; envelope <code>{"results": &#91;...&#93;}</code>).</li>
 </ul>
 <hr />
 <h2 id="post-azione-di-stato-utente">POST — Azione di stato utente<a class="headerlink" href="#post-azione-di-stato-utente" title="Permanent link">&para;</a></h2>
@@ -5874,10 +5928,14 @@ separate per design: display vs chiave interna stabile) — non sono un duplicat
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

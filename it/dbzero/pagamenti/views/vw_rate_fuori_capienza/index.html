@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5681,8 +5681,15 @@
 
 <h2 id="documentazione-concettuale-vista-pagamentivw_rate_fuori_capienza">📘 Documentazione Concettuale – Vista <code>pagamenti.vw_rate_fuori_capienza</code><a class="headerlink" href="#documentazione-concettuale-vista-pagamentivw_rate_fuori_capienza" title="Permanent link">&para;</a></h2>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(rev 2026-08-22)</p>
-<p>L'elenco delle rate il cui residuo è <strong>uscito dalla banda</strong> <code>&#91;0, importo&#93;</code>.</p>
+<p>(rev 2026-09-18)</p>
+<p>L'elenco delle rate il cui residuo è <strong>uscito dalla banda</strong>: ha attraversato lo
+zero, oppure supera l'importo della rata in valore assoluto.</p>
+<p>⭐ <strong>Dal 17-09-2026 la banda non è più <code>&#91;0, importo&#93;</code>.</strong> Quella era la trappola
+del §5 del brief madre — un intervallo a estremi fissi che su una rata
+<strong>negativa</strong> (la nota di credito, P-5) si inverte — sciolta sul guard da D14-c e
+non su questa vista. Ora la forma è quella del guard: <strong>segno e valore
+assoluto</strong>, senza estremi da invertire. Sulle rate positive è identica a prima;
+sulla nota di credito i due motivi escono giusti — prima uscivano invertiti.</p>
 <p>🔴 <strong>Esiste per una ragione precisa.</strong> Il guard della rata <strong>accetta</strong> la
 registrazione fuori capienza, purché qualcuno la dichiari. Senza un elenco a
 valle quella dichiarazione sarebbe <em>«un modo per nascondere, non per
@@ -5696,22 +5703,34 @@ forzatura, e non in un lotto dopo.</p>
 <tr>
 <th><code>motivo</code></th>
 <th>Che cosa è successo</th>
-<th>Esempio</th>
+<th>Esempio (fattura)</th>
+<th>Esempio (nota di credito)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>SOVRA_INCASSATA</code></td>
-<td>è entrato più del dovuto: il residuo è <strong>negativo</strong></td>
+<td>il residuo ha <strong>attraversato lo zero</strong>: è entrato più del dovuto — su una nota di credito, rimborsato più del credito</td>
 <td>rata 100, incassato 110</td>
+<td>rata −20, rimborsato 30</td>
 </tr>
 <tr>
 <td><code>MOVIMENTO_CONTRARIO</code></td>
-<td>è uscito denaro dove non era entrato: il residuo <strong>supera l'importo</strong></td>
+<td>il residuo <strong>supera l'importo</strong> in valore assoluto: è uscito denaro dove non era entrato — su una nota di credito, è entrato denaro invece di uscire</td>
 <td>rata 100, rimborso 30 senza incasso</td>
+<td>rata −20, il cliente paga 15</td>
 </tr>
 </tbody>
 </table>
+<p>Il vocabolario resta a <strong>due</strong> valori: la sfumatura della nota di credito la
+dice l'etichetta, non un terzo codice.</p>
+<p>⭐ <strong>E dal 18-09-2026 l'etichetta ha il dato per dirla</strong>: la riga porta
+<code>natura_doc_codice_interno</code> e <code>natura_doc_descrizione</code> (in coda, <code>JOIN</code> interno
+su <code>config.nature_doc_fiscale</code>: la natura del documento è obbligatoria, quindi
+nessuna riga in meno). Il 17-09 la sfumatura era stata <em>affidata</em> all'etichetta
+senza darle la natura — una promessa fatta a metà. Il frontend ramifica sul
+<code>codice_interno</code> e mostra la descrizione; la lista 52 ha la colonna «Natura»
+(riga 767 del seed, spenta finché la chiave i18n non c'è).</p>
 <blockquote>
 <p>⭐ Il piano la chiamava <code>vw_rate_sovra_incassate</code>. Sarebbe stato un nome che
 <strong>dice meno di ciò che l'elenco contiene</strong>: fuori capienza si esce in due
@@ -5721,10 +5740,20 @@ della decisione originale — <em>pagato 110, rimborso 15 invece di 10</em>. Chi
 cambiato la regola.</p>
 </blockquote>
 <h3 id="come-si-decide-chi-entra">Come si decide chi entra<a class="headerlink" href="#come-si-decide-chi-entra" title="Permanent link">&para;</a></h3>
-<p>Il residuo <strong>fuori dalla banda</strong> <code>&#91;0, importo&#93;</code>. Non è un terzo criterio
-inventato qui: è la <strong>stessa regola del guard letta a posteriori</strong> — <em>un
-movimento riduce ciò che manca e non lo supera</em> — applicata al risultato invece
-che al singolo movimento.</p>
+<p>Il residuo <strong>fuori dalla banda</strong>: <code>sign(saldo) &lt;&gt; sign(importo) AND saldo &lt;&gt; 0</code>
+(ha attraversato lo zero) oppure <code>abs(saldo) &gt; abs(importo)</code> (supera). Non è un
+terzo criterio inventato qui: è la <strong>stessa regola del guard letta a
+posteriori</strong> — <em>un movimento riduce ciò che manca e non lo supera</em> — applicata
+al risultato invece che al singolo movimento.</p>
+<p>⭐ <strong>I candidati includono i documenti con movimenti senza rata.</strong> Dal 17-09-2026
+il nucleo dei saldi imputa quei movimenti alle rate: una rata può uscire dalla
+banda senza che nessun movimento la nomini (130 senza rata su 30 + 70: la
+seconda va a −30). Il pre-filtro ha un terzo ramo per questo — senza, l'elenco
+tacerebbe proprio dove serve. Il saldo arriva dal nucleo in <strong>una</strong> chiamata
+sull'insieme dei candidati, non più in <code>LATERAL</code> per rata.</p>
+<p>⭐ <strong><code>numero_documento</code></strong> in coda, dalla sede unica <code>fn_numero_documento_fattura</code>:
+la lista mostrava il contatore nudo, ambiguo fra una fattura 1 e una nota di
+credito 1 dello stesso anno.</p>
 <p>⚠️ <strong>Sui fatti, non sulle intenzioni</strong>: contano i <strong>movimenti registrati</strong>, non
 le righe ancora in lavorazione. Una riga dichiarata e non registrata non ha
 ancora fatto danno, e metterla qui vorrebbe dire chiedere a qualcuno di guardare
@@ -5738,14 +5767,16 @@ due incassi legittimi arrivati sullo stesso documento bastano. Per questo
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li>La formula del saldo <strong>non è ricopiata</strong>: la vista chiama
-  <code>pagamenti.fn_get_saldo_rata</code> in <code>LATERAL</code>. Due copie della regola darebbero
-  prima o poi due risposte diverse, e la divergenza si vedrebbe come <em>un elenco
-  che segnala ciò che il guard ha lasciato passare</em>.</li>
-<li>Il costo si limita <strong>prima</strong> della <code>LATERAL</code>: entrano solo le rate che hanno
-  almeno un movimento o una riga forzata. Una rata che nessuno ha toccato ha
-  residuo uguale all'importo, cioè dentro la banda per costruzione — chiederlo a
-  una funzione sarebbe lavoro per una risposta nota.</li>
+<li>La formula del saldo <strong>non è ricopiata</strong>: la vista chiama il nucleo
+  <code>pagamenti.fn_get_saldi_rate</code> in <strong>una</strong> chiamata sull'insieme dei candidati
+  (dal 17-09-2026; prima <code>fn_get_saldo_rata</code> in <code>LATERAL</code> per rata). Due copie
+  della regola darebbero prima o poi due risposte diverse, e la divergenza si
+  vedrebbe come <em>un elenco che segnala ciò che il guard ha lasciato passare</em>.</li>
+<li>Il costo si limita <strong>prima</strong> del nucleo: entrano solo le rate che hanno
+  almeno un movimento, una riga forzata, o un movimento senza rata sul loro
+  documento. Una rata che nessuno ha toccato ha residuo uguale all'importo, cioè
+  dentro la banda per costruzione — chiederlo a una funzione sarebbe lavoro per
+  una risposta nota.</li>
 <li>Espone anche i riferimenti del documento (anno, serie, numero, cliente,
   emittente): l'elenco si guarda per <strong>decidere</strong>, e per decidere serve sapere
   di chi si sta parlando.</li>
@@ -5823,10 +5854,14 @@ hanno già tutte il loro meccanismo.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

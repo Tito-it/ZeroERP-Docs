@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -4111,6 +4111,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Retention configurabile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i-registri-di-dominio-la-scadenza-si-scrive-alla-nascita" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ I registri di dominio: la scadenza si scrive alla nascita
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -6287,6 +6304,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Retention configurabile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i-registri-di-dominio-la-scadenza-si-scrive-alla-nascita" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ⭐ I registri di dominio: la scadenza si scrive alla nascita
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -6766,6 +6800,66 @@ in <a href="../../dbzero/dbops/tabelle/automation_rules_tbl/"><code>dbops.automa
 </table>
 <p>Le altre tabelle con <code>cleanup_at</code> (es. <code>error_log</code>, <code>audit_log</code>,
 <code>idempotency_keys</code>) usano il TTL default di 30 giorni (regola id=11).</p>
+<h4 id="i-registri-di-dominio-la-scadenza-si-scrive-alla-nascita">⭐ I registri di dominio: la scadenza si scrive alla nascita<a class="headerlink" href="#i-registri-di-dominio-la-scadenza-si-scrive-alla-nascita" title="Permanent link">&para;</a></h4>
+<p>Dal 2026-08-22 (<code>event_log</code>) e dal 2026-09-18 (Passo D di
+<code>analisi-osservabilita-log.md</code>) i <strong>registri</strong> di vendite non aspettano il batch:
+<code>cleanup_at</code> lo scrive <strong>all'<code>INSERT</code></strong> il trigger generico
+<a href="../../dbzero/dbops/funzioni/trgfn_cleanup_at_alla_nascita/"><code>dbops.trgfn_cleanup_at_alla_nascita</code></a>
+(<code>trg_&lt;tabella&gt;_m50_cleanup_at_ins</code>), leggendo termine <strong>e colonna base</strong> dalla stessa
+regola che userebbe il job, via
+<a href="../../dbzero/dbops/funzioni/fn_cleanup_at_params/"><code>dbops.fn_cleanup_at_params</code></a>.
+Su un registro l'UPDATE notturno riscriverebbe <code>data_update</code>/<code>user_update</code> di ogni riga
+fresca e passerebbe dai trigger di <code>UPDATE</code>; alla nascita la riga sa già quando scade. Il
+batch resta per il <strong>pregresso</strong> (righe a <code>NULL</code>), una volta.</p>
+<table>
+<thead>
+<tr>
+<th>Tabella</th>
+<th>Retention</th>
+<th>Colonna base</th>
+<th>Regola</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vendite.event_log</code></td>
+<td>750 giorni</td>
+<td><code>event_time</code></td>
+<td>id=15</td>
+</tr>
+<tr>
+<td><code>vendite.fatturazione_lotti_log</code></td>
+<td>750 giorni</td>
+<td><code>data_ora</code></td>
+<td>id=16</td>
+</tr>
+<tr>
+<td><code>vendite.fatture_log</code></td>
+<td>750 giorni</td>
+<td><code>data_ora</code></td>
+<td>id=17</td>
+</tr>
+<tr>
+<td><code>vendite.fatturazione_lotti_task_runs</code></td>
+<td>750 giorni</td>
+<td><code>started_at</code></td>
+<td>id=18</td>
+</tr>
+<tr>
+<td><code>vendite.commesse_push_log</code></td>
+<td>750 giorni</td>
+<td><code>run_at</code></td>
+<td>id=19</td>
+</tr>
+</tbody>
+</table>
+<p>750 e non 30: sono i quattro registri che <code>script.vw_giornale_entita</code> legge insieme (più
+il registro di giro del push, a cui punta il <code>correlation_id</code> di <code>event_log</code>) e la storia
+di un caso non deve perdere un pezzo prima degli altri — due chiusure annuali. I guard
+sul <code>DELETE</code> di quei registri (<code>trgfn_event_log_append_only</code>, <code>trgfn_logs_guard_delete</code>)
+lasciano passare la riga <strong>scaduta</strong> senza GUC: il criterio non è <em>chi</em> cancella ma <em>cosa</em>.
+⚠️ Su <code>fatture_log</code> il purge ricalcola <code>fatture.critical</code>: il critico deriva dal registro e
+ne eredita la scadenza.</p>
 <h3 id="framework-cleanup-automatico">Framework cleanup automatico<a class="headerlink" href="#framework-cleanup-automatico" title="Permanent link">&para;</a></h3>
 <p>La manutenzione è gestita dal framework generico di automazione tramite
 due regole in <a href="../../dbzero/dbops/tabelle/automation_rules_tbl/"><code>dbops.automation_rules_tbl</code></a>:</p>
@@ -6804,7 +6898,14 @@ pgAgent come script shell.</p>
 </li>
 <li>
 <p><strong>API di consultazione</strong>: endpoint <code>GET /api/v1/core/users/{id}/sessioni/</code>
-  e <code>GET /api/v1/core/request-log/</code> per ADMIN, con filtri per data/path/status.</p>
+  e <code>GET /api/v1/core/request-log/</code> per ADMIN, con filtri per data/path/status.
+  ✅ Il registro degli <strong>errori</strong> ha la sua dal 19-09-2026 —
+  <code>GET /api/v1/amm-software/error-log/</code> (+ <code>export/</code>), schermata «Errori
+  tecnici», <a href="../../backend/amm-software/manual/api_error_log/">api_error_log.md</a> —
+  e il giornale degli eventi di dominio la sua, trasversale,
+  <code>GET /api/v1/vendite/giornale/</code> (<a href="../../backend/vendite/manual/api_giornale/">api_giornale.md</a>):
+  il <code>tx_id</code> è il ponte fra i due. <code>request-log</code> e le sessioni restano
+  pianificati.</p>
 </li>
 <li>
 <p><strong>Dashboard anomalie</strong>: vista operativa che segnala pattern inusuali —
@@ -6870,10 +6971,14 @@ pgAgent come script shell.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

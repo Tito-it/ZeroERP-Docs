@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5600,6 +5600,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#storia" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🕘 Storia
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -5656,19 +5667,40 @@
 </p>
 </blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 13-02-2026)<br />
+<p>(latest review 18-09-2026)<br />
 La funzione <strong><code>pagamenti.fn_get_saldo_fattura_contabili()</code></strong> restituisce il
 saldo contabile di una fattura calcolato sulle sole righe in stato
 <code>is_postabile = true</code>.</p>
 <hr />
 <h3 id="regole-principali">Regole principali<a class="headerlink" href="#regole-principali" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>p_fattura_id</code> obbligatorio (<code>&gt; 0</code>).</li>
+<li><code>p_fattura_id</code> obbligatorio (<code>&gt; 0</code>); un valore non positivo è un errore
+  <strong>tecnico</strong> (<code>E_PAGAMENTI_CHIAMATA_NON_VALIDA</code>): non esce da nessuna
+  interfaccia.</li>
+<li>⭐ <code>p_escludi_contabile_riga_id</code> (facoltativo, dal 18-09-2026): la riga
+  indicata <strong>non si conta</strong>. È «quanto era dichiarato <em>prima</em> di me» per chi
+  sta scrivendo o correggendo proprio quella riga — lo stesso parametro, con lo
+  stesso mestiere, di <code>fn_get_saldo_rata</code> e del nucleo <code>fn_get_saldi_rate</code>. La
+  riceve da <a href=".././fn_get_saldo_fattura/"><code>fn_get_saldo_fattura</code></a>,
+  che <strong>delega</strong> il dichiarato a questa funzione invece di riscriverne il
+  predicato. Se è fornito e non positivo: errore tecnico.</li>
 <li>Considera solo:</li>
 <li><code>vendite_contabili_righe.attivo = true</code></li>
 <li><code>vendite_contabili_righe_stati.is_postabile = true</code></li>
-<li>testata contabile con stato non finale (<code>vendite_contabili_stati.is_final = false</code>),
-    con fallback <code>stato_id NULL</code> trattato come non finale.</li>
+<li>testata contabile con stato <strong>non finale</strong> (<code>vendite_contabili_stati.is_final = false</code>).
+    ⚠️ Dal 21-08-2026 lo stato della testata è obbligatorio: il vecchio ripiego
+    «<code>stato_id NULL</code> trattato come non finale» non esiste più.</li>
+</ul>
+<hr />
+<h3 id="storia">🕘 Storia<a class="headerlink" href="#storia" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>18-09-2026</strong> — <code>p_escludi_contabile_riga_id</code> (P-6 di
+  <code>brief-db-distinta-ricerca-rate</code>, <code>20260918-01</code>). Cambia la firma: <code>DROP</code> +
+  <code>CREATE</code>, perché un secondo overload accanto alla vecchia <code>(bigint)</code> sarebbe
+  stato ambiguo per ogni chiamata a un argomento.</li>
+<li><strong>21-08-2026</strong> — cade il ramo «testata senza stato»; guard di chiamata sul
+  codice registrato.</li>
+<li><strong>13-02-2026</strong> — prima stesura.</li>
 </ul>
 <hr />
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
@@ -5746,10 +5778,14 @@ saldo contabile di una fattura calcolato sulle sole righe in stato
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5600,10 +5600,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#le-classi-sono-sette-e-tre-chiedono-attenzione" class="md-nav__link">
+  <a href="#le-classi-sono-otto-e-tre-chiedono-attenzione" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        ⚠️ Le classi sono SETTE, e tre chiedono attenzione
+        ⚠️ Le classi sono OTTO, e tre chiedono attenzione
       </span>
     </span>
   </a>
@@ -5707,11 +5707,12 @@ trigger è montato: la stessa trigger function agganciata a due tabelle va quind
 validabile affatto. Non è un riferimento morto — è codice che nessuno può verificare, ed è
 segnalato come tale.</p>
 <hr />
-<h3 id="le-classi-sono-sette-e-tre-chiedono-attenzione">⚠️ Le classi sono SETTE, e tre chiedono attenzione<a class="headerlink" href="#le-classi-sono-sette-e-tre-chiedono-attenzione" title="Permanent link">&para;</a></h3>
+<h3 id="le-classi-sono-otto-e-tre-chiedono-attenzione">⚠️ Le classi sono OTTO, e tre chiedono attenzione<a class="headerlink" href="#le-classi-sono-otto-e-tre-chiedono-attenzione" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p>⚠️ <strong>Corretto il 2026-09-12</strong>: questa sezione diceva «due su <strong>cinque</strong>» ed elencava cinque
 classi. Ne mancavano <strong>due</strong> — <code>FP_VARIADIC</code> (dal 2026-08-05) e <code>NON_MISURATO</code> (dal
-2026-09-10) — e la seconda è proprio quella che decide se la misura vale qualcosa.</p>
+2026-09-10) — e la seconda è proprio quella che decide se la misura vale qualcosa.
+⭐ <strong>Ottava dal 2026-09-14</strong>: <code>FP_DEFINER_PRIVILEGIO</code> (<code>20260914-02</code>).</p>
 </blockquote>
 <table>
 <thead>
@@ -5757,6 +5758,11 @@ classi. Ne mancavano <strong>due</strong> — <code>FP_VARIADIC</code> (dal 2026
 <td>falso positivo — chiamata <code>VARIADIC</code></td>
 <td>no</td>
 </tr>
+<tr>
+<td><code>FP_DEFINER_PRIVILEGIO</code></td>
+<td>falso positivo — <code>42501</code> dentro una <code>SECURITY DEFINER</code> misurata da chi <strong>non</strong> ne è il proprietario (né membro): il corpo gira coi privilegi del proprietario, la domanda giusta la fanno gli altri occhi (<code>fn_conta_presidio</code> come proprietario, il guardrail in CI da superuser). Chi è proprietario e prende un <code>42501</code> resta <code>REALE</code></td>
+<td>no</td>
+</tr>
 </tbody>
 </table>
 <p>⛔ <strong><code>NON_MISURATO</code> non è un difetto e non è un falso positivo: è l'assenza di una misura</strong>, e
@@ -5774,6 +5780,13 @@ tutto.</p>
 <strong>1 <code>ORFANA</code></strong>, zero <code>REALE</code>.
 Rimisurata il 2026-09-12: 16 · 5 · 1 · <strong>1 <code>ORFANA</code></strong> (coperta dal registro), zero <code>REALE</code> —
 e da entrambi i percorsi di lettura, che prima non era vero (vedi il <code>search_path</code> qui sotto).</p>
+<p>⛔ <strong>E il 2026-09-14 la misura si è rivelata dipendente dal RUOLO</strong>, sulla stessa
+macchina: <code>dbops.fn_get_pgagent_job_stato</code> (<code>SECURITY DEFINER</code>, legge <code>pgagent.*</code>)
+usciva <code>REALE 42501</code> come <code>zeroerp_app</code> e non usciva affatto come <code>titodb</code> — e la
+riga 7 del registro risultava insieme necessaria (app) e di troppo (proprietario,
+cioè il digest). Da lì <code>FP_DEFINER_PRIVILEGIO</code>, e la riga «pgAgent» del registro
+che <strong>segue la macchina</strong> (<code>90_end/20260914-03</code>: c'è solo dove <code>pgagent.pga_job</code>
+manca, cioè in CI). Brief: un destinatario per i presidi §14 (<code>docs/it/dev/work-done/brief-db-un-destinatario-per-i-presidi</code>).</p>
 <hr />
 <h3 id="perimetro">Perimetro<a class="headerlink" href="#perimetro" title="Permanent link">&para;</a></h3>
 <p>Solo funzioni <code>plpgsql</code>, esclusi <code>pg_catalog</code>, <code>information_schema</code>, gli schemi <code>pg_*</code> e
@@ -5915,10 +5928,14 @@ compila senza difetti — quindi la sua voce di registro risulta «rientrata». 
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

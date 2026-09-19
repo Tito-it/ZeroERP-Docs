@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -3212,6 +3212,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#la-data-di-consegna-richiesta" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        La data di consegna richiesta
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#quali-articoli-possono-stare-su-un-preventivo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6246,6 +6257,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#la-data-di-consegna-richiesta" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        La data di consegna richiesta
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#quali-articoli-possono-stare-su-un-preventivo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6763,13 +6785,7 @@
 
 <h1 id="guida-gestione-preventivi-vendita">Guida — Gestione Preventivi vendita<a class="headerlink" href="#guida-gestione-preventivi-vendita" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p><strong>Ultima revisione</strong>: 22 agosto 2026 — nota in §2.1: il <strong>termine di pagamento
-determina quante fatture nascono</strong> (raggruppamento a valle). Revisione
-precedente (12 giugno): modello revisione attiva derivata
-(<code>is_attiva</code> su <code>vw_preventivi</code> + copia componenti BoM in
-<code>fn_crea_revisione_preventivo</code>); <strong>split per natura</strong> all'accettazione (merce →
-ordine via smistamento riga-per-riga, servizio una tantum → commessa), <strong>stato
-terminale EVASO</strong> con gate bi-ramo, <strong>annullamento manuale solo da DRAFT</strong>.</p>
+<p><strong>Ultimo aggiornamento</strong>: 14 settembre 2026</p>
 <p><strong>Destinatari</strong>: analisti funzionali, sviluppatori backend/frontend, DBA.</p>
 <p><strong>Vedi anche</strong> — schemi DB:</p>
 <ul>
@@ -6782,6 +6798,7 @@ terminale EVASO</strong> con gate bi-ramo, <strong>annullamento manuale solo da 
 <p><strong>Vedi anche</strong> — funzioni DB:</p>
 <ul>
 <li><a href="../../dbzero/vendite/funzioni/fn_crea_revisione_preventivo/">vendite.fn_crea_revisione_preventivo</a> — crea nuova revisione da EMESSO</li>
+<li><a href="../../dbzero/vendite/manual/fn_push_preventivo_a_ordine/">vendite.fn_push_preventivo_a_ordine</a> — smistamento delle righe merce verso un ordine; porta avanti la data di consegna richiesta</li>
 <li><a href="../../dbzero/vendite/funzioni/fn_preventivo_riga_componenti_init/">vendite.fn_preventivo_riga_componenti_init</a> — popola componenti BoM su riga padre composito</li>
 <li><a href="../../dbzero/vendite/funzioni/fn_preventivo_riga_componenti_preview/">vendite.fn_preventivo_riga_componenti_preview</a> — read-only, suggerimento prezzi pre-save</li>
 <li><a href="../../dbzero/vendite/funzioni/fn_resolve_prezzo_listino_v2/">vendite.fn_resolve_prezzo_listino_v2</a> — resolver pricing bundle-aware</li>
@@ -6841,12 +6858,12 @@ deriva automaticamente dal billing account; la coerenza utility/istanza è
 validata (errore <code>E_PREV_UTILITY_ISTANZA_INCOERENTE</code>). Anche
 <code>emittente_fiscale_id</code>, se assente, è valorizzato di default dal trigger DB
 sull'utente corrente.</p>
-<p>⚠️ <strong>Il <code>termine_pagamento_id</code> decide anche quante fatture nascono.</strong> Dal
-luglio 2026 le condizioni di pagamento entrano nei criteri con cui il lavoro si
-raggruppa a valle: un preventivo con un termine diverso <strong>apre una commessa
-propria</strong> e produce una <strong>fattura separata</strong> da quelle degli altri documenti
-dello stesso cliente. È l'unico esito corretto — una fattura sola non potrebbe
-portare due scadenzari — ma è un cambio di conseguenze rispetto a prima:
+<p>⚠️ <strong>Il <code>termine_pagamento_id</code> decide anche quante fatture nascono.</strong> Le
+condizioni di pagamento entrano nei criteri con cui il lavoro si raggruppa a
+valle: un preventivo con un termine diverso <strong>apre una commessa propria</strong> e
+produce una <strong>fattura separata</strong> da quelle degli altri documenti dello stesso
+cliente. È l'unico esito corretto — una fattura sola non potrebbe portare due
+scadenzari — ma va saputo quando ci si aspetta un documento solo:
 <a href=".././termini-di-pagamento/">Termini di pagamento §4</a>.</p>
 <p><strong><code>fatturazione_immediata</code> e <code>competenza_mese</code> non sono campi della bozza</strong> ma
 <strong>dati di processo</strong> richiesti al momento dell'<strong>accettazione</strong> (EMESSO →
@@ -6862,6 +6879,8 @@ mantenuti coerenti dal database.</p>
 <li>articolo + UoM operativa + quantità</li>
 <li>prezzo unitario, sconto percentuale, IVA</li>
 <li>ordine di presentazione</li>
+<li><strong>data di consegna richiesta dal cliente</strong> (<code>data_consegna_richiesta_cliente</code>),
+  facoltativa — vedi sotto</li>
 </ul>
 <h4 id="la-quantita-e-lunita-di-misura-operativa">La quantità e l'unità di misura operativa<a class="headerlink" href="#la-quantita-e-lunita-di-misura-operativa" title="Permanent link">&para;</a></h4>
 <p>L'operatore inserisce la quantità <strong>nell'unità di misura che ha scelto</strong> (la "UoM
@@ -6884,6 +6903,18 @@ al cambio articolo/UoM) oppure essere inserito manualmente dall'operatore, con
 controlli L1/L2/L3 di autorizzazione che vedremo in §6.</p>
 <p>Per gli articoli <strong>compositi</strong> (kit, bundle) la riga è solo la "testata" del
 gruppo: i prezzi reali stanno nei componenti BoM (§5).</p>
+<h4 id="la-data-di-consegna-richiesta">La data di consegna richiesta<a class="headerlink" href="#la-data-di-consegna-richiesta" title="Permanent link">&para;</a></h4>
+<p>Sulla riga di preventivo c'è <strong>solo la richiesta</strong> del cliente
+(<code>data_consegna_richiesta_cliente</code>), non una data confermata: su un preventivo
+non c'è ancora niente da confermare. È facoltativa, si scrive con la riga (un
+selettore di data nel form) e compare nella tabella delle righe.</p>
+<p>⭐ <strong>Viaggia con la riga verso l'ordine</strong>: quando la riga merce viene smistata
+(§8), <code>fn_push_preventivo_a_ordine</code> la copia sulla riga d'ordine come richiesta
+del cliente, e lì la promessa (<code>data_consegna_confermata</code>) nasce vuota. Vedi
+<a href=".././gestione-ordini/">Gestione Ordini §3.5</a>.</p>
+<p>⚠️ <strong>Non viene copiata da <code>fn_crea_revisione_preventivo</code></strong>: una nuova revisione
+nasce con le righe senza data richiesta (§4.2). Sul preventivo la data sta sulla
+riga e la riga è <strong>per documento</strong>, quindi in una revisione va reinserita.</p>
 <h4 id="quali-articoli-possono-stare-su-un-preventivo">Quali articoli possono stare su un preventivo<a class="headerlink" href="#quali-articoli-possono-stare-su-un-preventivo" title="Permanent link">&para;</a></h4>
 <p>Sul preventivo puoi mettere <strong>merce</strong> e <strong>servizi una tantum</strong>. <strong>Non</strong> puoi
 inserire articoli a <strong>servizio ricorrente</strong> (canone/abbonamento): se ci provi, il
@@ -6996,8 +7027,8 @@ EMESSO     → RIFIUTATO  (rifiuta)
 </code></pre></div>
 <blockquote>
 <p><strong>L'annullamento manuale è ammesso solo da DRAFT</strong> (le transizioni
-<code>EMESSO → ANNULLATO</code> e <code>ACCETTATO → ANNULLATO</code> sono state disattivate il
-22 maggio 2026). Un preventivo EMESSO si <strong>rifiuta</strong> (è il "no" del cliente) o
+<code>EMESSO → ANNULLATO</code> e <code>ACCETTATO → ANNULLATO</code> esistono in matrice ma sono
+disattivate). Un preventivo EMESSO si <strong>rifiuta</strong> (è il "no" del cliente) o
 <strong>scade</strong>; uno ACCETTATO ha già avviato il downstream.</p>
 </blockquote>
 <p><code>EMESSO → SCADUTO</code> è automatica (job notturno quando supera <code>validita_al</code>).
@@ -7041,13 +7072,25 @@ PRV-0001 rev=1  DRAFT      ← revisione in corso (post-creazione)
 copia in transazione atomica:</p>
 <ul>
 <li>testata (campi commerciali + dati cliente)</li>
-<li>righe attive (<code>preventivi_righe</code> con <code>attivo=TRUE</code> e <code>quantita &gt; 0</code>)</li>
+<li>righe attive (<code>preventivi_righe</code> con <code>attivo=TRUE</code> e <code>quantita &gt; 0</code>) —
+  compresa la <strong>data di consegna richiesta dal cliente</strong>
+  (<code>data_consegna_richiesta_cliente</code>, dal 2026-09-14): è ciò che il cliente
+  ha chiesto, non una promessa nostra, e la rev N+1 la eredita come eredita
+  articolo e quantità. ⚠️ Fino a quel giorno la revisione la perdeva: la copia
+  nomina le colonne una per una, e una colonna non nominata non passa</li>
+<li>…e comprese le <strong>marche di approvazione prezzo</strong> (<code>stato_approvazione_prezzo</code>,
+  <code>pratica_approvazione_prezzo_id</code>, dal 2026-09-14): un prezzo fuori policy
+  approvato o in attesa resta marcato anche sulla rev N+1, e una riga in attesa
+  resta congelata — come già per le offerte. Fino a quel giorno la revisione le
+  perdeva, per la stessa ragione della data</li>
 <li>componenti BoM (<code>preventivi_righe_componenti</code>, con FK rimappata sulle nuove
   righe via <code>ROW_NUMBER</code>)</li>
 <li>indirizzi (<code>preventivi_indirizzi</code>)</li>
 </ul>
 <p>Non viene copiato lo stato (la nuova rev è sempre DRAFT) né il numero documento
-generato per la rev precedente (il nuovo rev mantiene lo stesso <code>numero</code>).</p>
+generato per la rev precedente (il nuovo rev mantiene lo stesso <code>numero</code>).
+⚠️ Non viene copiata nemmeno la <strong>data di consegna richiesta</strong> delle righe
+(§2.2): nella nuova revisione va reinserita.</p>
 <h3 id="43-predicato-is_attiva-derivato">4.3 Predicato <code>is_attiva</code> derivato<a class="headerlink" href="#43-predicato-is_attiva-derivato" title="Permanent link">&para;</a></h3>
 <p>ZeroERP non mantiene un flag persistito "questa è la rev attiva": il predicato
 è <strong>calcolato dalla view <code>vw_preventivi</code></strong> come:</p>
@@ -7055,7 +7098,7 @@ generato per la rev precedente (il nuovo rev mantiene lo stesso <code>numero</co
 <p>"è la rev viva del numero" = "il suo stato <strong>non è abortito</strong> <strong>e</strong> non esiste
 una rev superiore non-abortita per lo stesso numero"</p>
 </blockquote>
-<p>Il termine sul proprio stato (aggiunto 2026-07-08) garantisce che una revisione
+<p>Il termine sul proprio stato garantisce che una revisione
 <strong>annullata in cima</strong> alla catena non si dichiari attiva "guardando solo verso
 l'alto": senza di esso <code>is_attiva</code> non sarebbe univoco (due rev attive per lo
 stesso numero) nel caso "rev0 EMESSO + rev1 ANNULLATO".</p>
@@ -7156,7 +7199,7 @@ revisioni non valide tramite <code>is_attiva</code>, le offerte escludono la SUP
 solleva <code>E_DOC_COMPOSITO_BOM_VUOTA</code> e blocca la creazione della riga (la
 configurazione del catalogo è incoerente per la data scelta).</p>
 <h3 id="52-cosa-puo-modificare-loperatore">5.2 Cosa può modificare l'operatore<a class="headerlink" href="#52-cosa-puo-modificare-loperatore" title="Permanent link">&para;</a></h3>
-<p>Per BoM contratto immutabile (decisione 2026-05-13):</p>
+<p>Per BoM contratto immutabile:</p>
 <ul>
 <li>✅ <strong>prezzi unitari</strong> dei componenti, con controlli di autorizzazione</li>
 <li>✅ <strong>IVA</strong> del componente (deve restare coerente col padre)</li>
@@ -7285,7 +7328,9 @@ Smistamento</em> e governate dalle capability sullo stato e sul residuo righe:</
   destinazione <code>ORDINE</code>) verso un nuovo <strong>ordine</strong> in DRAFT, tramite
   <code>fn_push_preventivo_a_ordine</code>. Lo smistamento è <strong>selettivo</strong> (si scelgono le
   righe) e <strong>idempotente a livello di riga</strong>: ogni riga merce è smistabile una sola
-  volta. Dallo stesso preventivo possono nascere più ordini (consegne parziali).</li>
+  volta. Dallo stesso preventivo possono nascere più ordini (consegne parziali).
+  La riga d'ordine nasce con la <strong>data di consegna richiesta</strong> della riga di
+  preventivo (§2.2) e senza data confermata.</li>
 <li><strong>Push commessa</strong> (<code>can_push_commessa</code>): smista <strong>solo</strong> le righe <strong>servizio una
   tantum</strong> (destinazione <code>COMMESSA</code>) verso una commessa, applicando la politica di
   fatturazione (immediata/differita). Anche questo smistamento può essere selettivo.</li>
@@ -7647,10 +7692,14 @@ componenti BoM e le decisioni di design vedi
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

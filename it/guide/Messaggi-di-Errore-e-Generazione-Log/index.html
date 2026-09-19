@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -7764,7 +7764,7 @@ nell'applicazione.</p>
 <blockquote>
 <p>Questa è la mappa <strong>stabile</strong>. Lo stato di avanzamento — quali strumenti
 mancano ancora, quali registri non sono esposti, il piano per colmarli — vive
-in analisi-osservabilita-log.md (<code>docs/it/dev/work-in-progress/analisi-osservabilita-log</code>),
+in analisi-osservabilita-log.md (<code>docs/it/dev/work-done/analisi-osservabilita-log</code>),
 che si aggiorna con lo sviluppo. Qui si dice <em>cosa esiste e come si usa</em>, non
 <em>cosa manca</em>: è la distinzione che tiene una guida leggibile a distanza di mesi.</p>
 </blockquote>
@@ -7817,6 +7817,11 @@ c'è la risposta dell'altro.</p>
 <td>Warning e critici del singolo documento. I critici <strong>bloccano numerazione e invio</strong> finché non sono disabilitati</td>
 </tr>
 <tr>
+<td>«Questo lotto è fermo? e quali lotti sono fermi adesso?»</td>
+<td><code>vendite.vw_lotti_segnalazioni_summary</code></td>
+<td>La <strong>sede unica</strong> del verdetto «fermo» (dal 19-09-2026): <code>fermo</code>, <code>fermo_motivo</code>, <code>fermo_da</code> su ogni lotto. La legge il backend per il banner e la legge il presidio <code>dbops.vw_lotti_fermi_da_guardare</code> (pre-fiscali fermi da oltre un'ora) per il digest e il pallino — una riga, tre lettori</td>
+</tr>
+<tr>
 <td>«Il lavoro che ho lanciato a che punto è?»</td>
 <td><code>dbops.coda_lavori</code></td>
 <td>Stato, tentativi, <code>ultimo_errore</code>, backoff</td>
@@ -7829,7 +7834,9 @@ c'è la risposta dell'altro.</p>
 </tbody>
 </table>
 <p><strong>Il filo che li lega.</strong> <code>tx_id</code> attraversa i registri scritti nella stessa
-transazione; <code>request_id</code> lega la richiesta HTTP a ciò che ne è seguito;
+transazione (dal 19-09-2026 <code>dbops.error_log</code> ha l'indice su <code>tx_id</code>: dal
+giornale di dominio agli appunti tecnici della stessa transazione si passa
+senza scandire il registro); <code>request_id</code> lega la richiesta HTTP a ciò che ne è seguito;
 <code>run_uuid</code> lega un job al suo dettaglio di dominio; <code>correlation_id</code> lega gli
 eventi di una stessa operazione in <code>event_log</code>. Quando si indaga, si parte da
 uno di questi quattro — non dal timestamp, che con più operazioni in parallelo
@@ -7870,9 +7877,19 @@ non discrimina.</p>
 <td>Riassunto delle esecuzioni per corsia e stato della coda di stampa</td>
 </tr>
 <tr>
+<td><strong>Giornale degli eventi</strong> (dal 19-09-2026)</td>
+<td>Vendite → Giornale eventi</td>
+<td>«Cosa è andato storto, su tutto, nell'ultimo periodo»: la Storia di tutte le entità insieme, filtrata per gravità (default solo <code>ERROR</code>, che include la gravità vuota), registro, tipo di entità, date e <strong>filo</strong> (<code>tx_id</code>/<code>correlation_id</code>). Dal kebab «Apri …» si salta al lotto o al documento, dove la scheda <strong>Storia</strong> ha anche gli appunti forensi che qui non ci sono. Sotto il perimetro emittente della vista: si vede quello che si può vedere, e il totale è quello visto</td>
+</tr>
+<tr>
 <td><strong>Audit delle modifiche</strong></td>
 <td>Amm. Software → Audit log</td>
 <td>Chi ha cambiato cosa (riservato agli amministratori)</td>
+</tr>
+<tr>
+<td><strong>Errori tecnici</strong> (dal 19-09-2026)</td>
+<td>Amm. Software → Errori tecnici</td>
+<td>La consultazione di <code>dbops.error_log</code>: quale funzione ha sollevato quale codice, quando, in quale transazione — con frase, causa, soluzione e <strong>classe</strong> dal catalogo (guasto o rifiuto legittimo) e il <code>context</code> <strong>com'è</strong> nel dettaglio. Filtri per area, funzione (prefisso), codice, <code>tx_id</code>, date; dal kebab «Giornale di questa transazione» si passa al giornale degli eventi con lo stesso <code>tx_id</code> (riservato agli amministratori)</td>
 </tr>
 <tr>
 <td><strong>Log email</strong></td>
@@ -8085,10 +8102,14 @@ Environment=PGPASSFILE=/var/lib/postgresql/.pgpass
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

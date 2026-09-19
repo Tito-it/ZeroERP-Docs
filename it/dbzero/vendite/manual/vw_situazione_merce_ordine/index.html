@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5687,6 +5687,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-09-13-le-due-date-della-riga-e-il-ritardo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-09-13 — le due date della riga e il ritardo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5946,6 +5957,29 @@ spedizione che nessuno ha chiesto.</p>
   visibile in <code>pg_get_viewdef</code> e verrebbe azzerata in silenzio.</li>
 <li>Test: <code>db/pgtap/vendite/test-vw-situazione-merce-ordine-v1.sql</code>.</li>
 </ul>
+<h3 id="rev-2026-09-13-le-due-date-della-riga-e-il-ritardo">🔄 rev 2026-09-13 — le due date della riga e il ritardo<a class="headerlink" href="#rev-2026-09-13-le-due-date-della-riga-e-il-ritardo" title="Permanent link">&para;</a></h3>
+<p>Tre colonne in coda (<code>20260913-18</code>): <code>data_consegna_richiesta_cliente</code>,
+<code>data_consegna_confermata</code> e <strong><code>giorni_ritardo</code></strong>.</p>
+<ul>
+<li><strong>Il ritardo sta qui e non altrove</strong>, perché non è «oggi &gt; data richiesta»:
+  è «oggi &gt; data di riferimento <strong>e resta merce da spedire</strong>». Il residuo e la
+  soglia dell'impegno vivono in questa vista; calcolarlo altrove avrebbe
+  significato ricalcolarli, cioè una seconda verità sul residuo. La formula di
+  <code>da_spedire</code> è la stessa per le due colonne, scritta una volta sola.</li>
+<li><strong>La data di riferimento è la promessa</strong> (<code>data_consegna_confermata</code>) se c'è,
+  altrimenti la richiesta del cliente. Si è in ritardo rispetto a ciò a cui ci
+  si è impegnati: se a una richiesta per il 1° abbiamo risposto «il 15», il 10
+  non siamo in ritardo. Finché non ci si è impegnati, l'unica attesa è quella
+  del cliente.</li>
+<li><strong>Tre valori, e il vuoto non è zero</strong> — la regola di questa vista:
+  <code>NULL</code> = non si applica (niente da spedire, riga non ancora impegnata, o
+  nessuna data dichiarata); <strong><code>0</code></strong> = c'è da spedire e non è tardi; <code>N</code> =
+  giorni di ritardo.</li>
+<li><code>giorni_ritardo</code> conta con la data della <strong>sessione</strong> (<code>CURRENT_DATE</code>), come
+  gli altri contatori di giorni delle viste: è un indicatore, non una data
+  documento.</li>
+</ul>
+<p>Brief: <code>brief-db-modifiche-certe-ciclo-vendita-e-articolo</code>, sezione 5.2.</p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -6003,10 +6037,14 @@ spedizione che nessuno ha chiesto.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

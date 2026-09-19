@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -3691,6 +3691,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#520-i-formati-di-resa-formato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5.2.0 I formati di resa (<code>formato</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#521-vincoli-automatici-applicati-dal-sistema" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -6573,6 +6584,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#520-i-formati-di-resa-formato" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5.2.0 I formati di resa (<code>formato</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#521-vincoli-automatici-applicati-dal-sistema" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -7161,12 +7183,7 @@
 
 <h1 id="guida-configurazione-personalizzazione-e-responsivita-delle-liste">Guida — Configurazione, Personalizzazione e Responsività delle Liste<a class="headerlink" href="#guida-configurazione-personalizzazione-e-responsivita-delle-liste" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p><strong>Ultima revisione</strong>: 3 giugno 2026 — aggiunta la <strong>responsività</strong> (§7): le
-liste configurabili si adattano da sole allo spazio disponibile (ritiro
-dinamico delle colonne). Migrazione della lista contratti + estrazione dei
-building block frontend riusabili.
-Revisione precedente: 10 maggio 2026 — Blocco F Fase 2 (DEF-5b): CRUD
-<code>lista_definizione</code> + <code>lista_colonna</code> via UI per SUPER_ADMIN.</p>
+<p><strong>Ultimo aggiornamento</strong>: 14 settembre 2026</p>
 <p><strong>Destinatari</strong>: amministratori del sistema (SUPER_ADMIN), tenant admin
 con azioni <code>ui_preset_manage</code> / <code>ui_permesso_manage</code>, operatori finali
 che personalizzano la propria vista.</p>
@@ -7431,7 +7448,7 @@ colonne registrate per quella lista, attive e disattivate.</p>
 <li><strong>Nuova colonna</strong>: drawer con 3 sotto-tab:</li>
 <li><strong>Generale</strong>: codice, etichetta visibile, etichetta estesa (tooltip), chiave i18n (per traduzioni), tipo colonna, tipo dato, campo sorgente</li>
 <li><strong>Comportamento</strong>: filtrabile, ordinabile, esportabile, ricercabile full-text, sensibile, attivo</li>
-<li><strong>Layout</strong>: ordine default, larghezza default (px), allineamento (left/right/center), formato (es. <code>date_short</code>, <code>currency_eur</code>), gruppo, ordine gruppo</li>
+<li><strong>Layout</strong>: ordine default, larghezza default (px), allineamento (left/right/center), formato (tabella sotto), gruppo, ordine gruppo</li>
 <li><strong>Modifica colonna</strong>: tutti i campi sono mutabili. Il <code>lista_id</code> è
   immutabile (per "spostare" una colonna da una lista all'altra,
   cancellala e ricreala).</li>
@@ -7443,6 +7460,56 @@ colonne registrate per quella lista, attive e disattivate.</p>
   silenziose). Il messaggio indica il numero di preferenze coinvolte;
   l'alternativa raccomandata è disattivare con <code>attivo=false</code>.</li>
 </ul>
+<h4 id="520-i-formati-di-resa-formato">5.2.0 I formati di resa (<code>formato</code>)<a class="headerlink" href="#520-i-formati-di-resa-formato" title="Permanent link">&para;</a></h4>
+<p>Il valore di <code>formato</code> sceglie il formatter con cui <code>&lt;ListaConfigurabile&gt;</code> rende
+la cella (<code>CellaConfigurabile</code>), a meno che la view non fornisca uno slot
+<code>cell-{codice}</code> suo:</p>
+<table>
+<thead>
+<tr>
+<th><code>formato</code></th>
+<th>Resa</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>date_short</code></td>
+<td>data nel locale dell'utente</td>
+<td>per le colonne <code>tipo_dato = date</code></td>
+</tr>
+<tr>
+<td><code>datetime</code>, <code>datetime_short</code></td>
+<td>data e ora</td>
+<td></td>
+</tr>
+<tr>
+<td><code>currency_eur</code></td>
+<td>importo in euro</td>
+<td></td>
+</tr>
+<tr>
+<td><code>number</code></td>
+<td>numero nel locale</td>
+<td></td>
+</tr>
+<tr>
+<td><code>percent_2</code></td>
+<td>numero a due decimali + <code>%</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>yesno</code></td>
+<td>etichetta <strong>Sì / No</strong> (building block <code>SiNoTag</code>); <code>null</code> resta vuoto</td>
+<td>⭐ <strong>è la resa di un booleano in lista</strong>: una colonna booleana è una riga di <code>ui.lista_colonna</code> con questo formato, non uno slot riscritto nella view. Un <code>tipo_dato = boolean</code> <strong>senza</strong> formato prende la stessa resa, così un booleano dimenticato non esce mai come <code>true</code>/<code>false</code> grezzi</td>
+</tr>
+<tr>
+<td><em>(vuoto)</em></td>
+<td>il valore com'è</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h4 id="521-vincoli-automatici-applicati-dal-sistema">5.2.1 Vincoli automatici applicati dal sistema<a class="headerlink" href="#521-vincoli-automatici-applicati-dal-sistema" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Le colonne di tipo <code>azione</code> non possono essere esportabili (vincolo
@@ -7922,8 +7989,8 @@ nascosta lato UI.</p>
 <hr />
 <h3 id="117-il-bollino-multi-emittente-unetichetta-che-si-guadagna">11.7 Il bollino «multi-emittente» — un'etichetta che si guadagna<a class="headerlink" href="#117-il-bollino-multi-emittente-unetichetta-che-si-guadagna" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p>🔵 Introdotto il <strong>18-08-2026</strong>. Oggi è <strong>spento su tutte le liste</strong>, ed è
-corretto che lo sia: sotto c'è scritto perché.</p>
+<p>🔵 Oggi è <strong>spento su tutte le liste</strong>, ed è corretto che lo sia: sotto c'è
+scritto perché.</p>
 </blockquote>
 <h4 id="il-problema-in-parole-semplici">Il problema, in parole semplici<a class="headerlink" href="#il-problema-in-parole-semplici" title="Permanent link">&para;</a></h4>
 <p>Un'azienda può fatturare sotto <strong>più intestazioni</strong> — chiamiamole <em>emittenti</em>.
@@ -8012,7 +8079,7 @@ qui</strong>: la §12.7 ha detto «4/13 liste migrate» per mesi dopo che l'este
 diventata lo standard del frontend. Uno stato in questa sezione va <strong>verificato
 contro il codice</strong> prima di citarlo — una roadmap che dice «non c'è» di cose che
 ci sono è peggio di una sezione mancante, perché chi legge non ha modo di
-accorgersene. Stati verificati il <strong>2026-09-02</strong>.</p>
+accorgersene.</p>
 </blockquote>
 <h3 id="121-notifica-preset-aggiornato-def-2">12.1 Notifica "Preset aggiornato" (DEF-2)<a class="headerlink" href="#121-notifica-preset-aggiornato-def-2" title="Permanent link">&para;</a></h3>
 <blockquote>
@@ -8029,7 +8096,7 @@ automatico al cambio di preset). Manca: backend espone il flag
 banner.</p>
 <h3 id="122-export-csvexcel-con-metadati-filtri-def-1">12.2 Export CSV/Excel con metadati filtri (DEF-1)<a class="headerlink" href="#122-export-csvexcel-con-metadati-filtri-def-1" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>Stato</strong>: 🟢 Done — atterrata 2026-05-10 sulla lista clienti.</p>
+<p><strong>Stato</strong>: 🟢 Done.</p>
 </blockquote>
 <p>Le liste configurabili migrate al pattern <code>&lt;ListaConfigurabile&gt;</code> espongono
 nella toolbar due azioni utility "Esporta CSV" e "Esporta Excel". Il
@@ -8080,7 +8147,7 @@ modificabile) o lasciare che si aggiorni automaticamente quando
 l'autore la modifica.</p>
 <h3 id="125-layout-mobile-card-list-responsive-def-6">12.5 Layout mobile / card list responsive (DEF-6)<a class="headerlink" href="#125-layout-mobile-card-list-responsive-def-6" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>Stato</strong>: 🟢 In gran parte risolto dalla §7 (ritiro dinamico colonne, 2026-06-03). Card list dedicata: 🔴 non più prioritaria.</p>
+<p><strong>Stato</strong>: 🟢 In gran parte risolto dalla §7 (ritiro dinamico colonne). Card list dedicata: 🔴 non più prioritaria.</p>
 </blockquote>
 <p>Su viewport stretto (mobile/tablet portrait) la lista resta usabile grazie al
 <strong>ritiro dinamico delle colonne</strong> (§7): le colonne meno prioritarie scendono
@@ -8108,9 +8175,8 @@ estetica; oggi non è prioritaria.</p>
 (<code>'calcolata'</code> vs <code>'composta'</code>) o tenerli distinti.</p>
 <h3 id="127-estensione-ad-altre-liste-def-8">12.7 Estensione ad altre liste (DEF-8)<a class="headerlink" href="#127-estensione-ad-altre-liste-def-8" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>Stato</strong>: ✅ <strong>Superata come voce di roadmap</strong> (verificato 2026-09-02) — non è
-più un'estensione da pianificare, è <strong>lo standard</strong>. Resta il debito dichiarato
-qui sotto.</p>
+<p><strong>Stato</strong>: ✅ <strong>Superata come voce di roadmap</strong> — non è più un'estensione da
+pianificare, è <strong>lo standard</strong>. Resta il debito dichiarato qui sotto.</p>
 </blockquote>
 <p>⛔ <strong>Oggi ogni lista si monta con <code>&lt;ListaConfigurabile&gt;</code></strong>: montare una <code>DataTable</code>
 grezza in una view è l'<strong>eccezione</strong>, e va motivata in un commento sopra l'import.
@@ -8124,9 +8190,9 @@ si monta con <code>useDrawerTabLista</code> + <code>&lt;DrawerTabLista&gt;</code
 dal motore erano quattro e l'elenco qui sotto era la coda da smaltire —
 <code>catalogo.articoli</code>, <code>vendite.preventivi</code>, <code>vendite.listini</code>,
 <code>vendite.promo_articoli</code>, <code>vendite.approvazioni_prezzo</code>, <code>anagrafiche.indirizzi</code>,
-<code>catalogo.unita_misura</code>, <code>pratiche</code>. <strong>Sono tutte a catalogo</strong>, e il catalogo
-<code>ui.lista_definizione</code> al 2026-09-02 porta <strong>65</strong> definizioni (il seed è in
-<code>80_data/sql/ui/lista_definizione.csv</code>, quindi si legge lì, non da questa pagina).</p>
+<code>catalogo.unita_misura</code>, <code>pratiche</code>. <strong>Sono tutte a catalogo</strong>, e quante
+definizioni porta <code>ui.lista_definizione</code> si legge dal seed
+(<code>80_data/sql/ui/lista_definizione.csv</code>), non da questa pagina.</p>
 <p>⭐ <strong>La lezione che vale più dell'elenco</strong>: una lista nuova <strong>non richiede un
 brief e non aspetta nessuno</strong>. La sua configurazione è <strong>dato, non DDL</strong> — una
 riga in <code>ui.lista_definizione</code> più N in <code>ui.lista_colonna</code>, create
@@ -8221,10 +8287,14 @@ le offre con autocomplete. Riduce errori di battitura e drift.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

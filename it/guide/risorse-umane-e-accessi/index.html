@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -7440,6 +7440,17 @@ vedi <a href=".././architettura-permessi-e-autorizzazioni/">Architettura Permess
 </ol>
 <p><strong>Perche questo ordine?</strong> Il framework ATTIVO (<code>trgfn_prevent_deactivate_if_children</code>) impedisce di disattivare un genitore che ha figli ancora attivi. Poiche <code>risorse_umane_auth_user</code> e figlio di <code>risorse_umane</code>, bisogna disattivare il ponte (figlio) prima della risorsa (genitore). Tentare l'ordine inverso produce un errore.</p>
 <p>Se la risorsa non ha un collegamento a <code>auth_user</code>, basta il solo passo 2.</p>
+<p>⛔ <strong>Il passo 2 è rifiutato finché la persona governa qualcosa.</strong> Il framework
+ATTIVO monta su <code>risorse_umane</code> un block per ogni tabella che la referenzia
+come persona interna: <code>pratiche.pratiche</code>, <code>pratiche.flussi</code>,
+<code>pratiche.competenze_flussi</code> e <code>vendite.commesse</code>
+(<code>responsabile_risorsa_umana_id</code>). ⚠️ Quest'ultimo conta <strong>tutte</strong> le commesse
+di cui la persona è responsabile — anche chiuse, perché <code>commesse</code> non ha
+<code>attivo</code> — quindi per liberare una persona si cambia il responsabile sulle sue
+commesse, non si spegne la persona. Il picker con cui si sceglie il responsabile
+è <code>GET /anagrafiche/risorse-umane/lookup/</code>
+(<a href="../../backend/anagrafiche/manual/api_risorse_umane_lookup/">scheda</a>), che elenca
+solo le risorse attive.</p>
 <h3 id="rientro">Rientro<a class="headerlink" href="#rientro" title="Permanent link">&para;</a></h3>
 <p>Il vincolo di unicita (<a href="#r5--unicita-per-persona">R5</a>) garantisce un solo record per persona in <code>risorse_umane</code>. Non e possibile creare un secondo record — e non serve: per il rientro di un ex-dipendente si <strong>riattiva il record esistente</strong>.</p>
 <p>La sequenza e l'inversa della cessazione:</p>
@@ -8305,10 +8316,14 @@ il pool.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5745,7 +5745,7 @@
 </blockquote>
 <p><strong>Trigger e funzioni associate (rev 2026-05-01):</strong></p>
 <blockquote>
-<p>• <a href="../../funzioni/trgfn_preventivi_default_emittente/">vendite.trgfn_preventivi_default_emittente</a> — set emittente da operatore<br />
+<p>• <a href="../../../script/funzioni/trgfn_default_emittente_fiscale/">script.trgfn_default_emittente_fiscale</a> — set emittente da operatore (building block unico dal 2026-09-15; prima la copia <code>trgfn_preventivi_default_emittente</code>)<br />
 • <a href="../../funzioni/trgfn_preventivi_guard_utility_istanza_coerenza/">vendite.trgfn_preventivi_guard_utility_istanza_coerenza</a> — guard coerenza coppia istanza/utility<br />
 • <a href="../../../script/funzioni/fn_check_utility_istanza_coerenza/">script.fn_check_utility_istanza_coerenza</a> — pure check riusabile (BA + IDP + clienti)<br />
 • <a href="../../../anagrafiche/funzioni/trgfn_istanze_utilities_require_utility_dichiarata/">anagrafiche.trgfn_istanze_utilities_require_utility_dichiarata</a> — Strategia C su istanze  </p>
@@ -5822,7 +5822,7 @@ esecuzione nel ciclo attivo:</p>
   trasformato in BA) sono ammessi.</li>
 <li><code>emittente_fiscale_id</code> è <strong>obbligatoria</strong> (NOT NULL): snapshot dell'emittente
   fiscale dell'<strong>operatore loggato</strong> che ha creato la riga (modello user-derived).
-  Valorizzata a INSERT-time dal trigger <code>trgfn_preventivi_default_emittente</code>
+  Valorizzata a INSERT-time dal trigger di default (<code>script.trgfn_default_emittente_fiscale</code>, dal 2026-09-15)
   via GUC <code>app.current_user_id</code> (popolata da <code>JwtAuditAuthentication</code>) e
   <code>script.fn_resolve_emittente_for_user</code>. <strong>Immutabile</strong> post-create
   (<code>automation_lock_columns</code> + <code>script.trgfn_lock_columns</code>).</li>
@@ -5848,7 +5848,7 @@ allineata al constraint trigger su <code>istanze_utilities</code>
 <li>FK attive su stato documento, termini, utility, valuta, BA, emittente fiscale.</li>
 <li><strong><code>istanza_utility_id</code> NOT NULL</strong> (allinea preventivi al pattern di <code>commesse_attivita</code>/<code>attivita_fatturabili</code>). Il preventivo deve essere collegato a un'istanza utility, anche per business non-utility (istanza tecnica/contenitore).</li>
 <li><strong>Coerenza utility/istanza</strong>: la coppia <code>(istanza_utility_id, utility_id)</code> deve essere dichiarata in almeno uno dei satelliti <code>billing_account</code> / <code>istanze_dati_precontrattuali</code> / <code>clienti</code> (post Strategia C). Trigger <code>trgfn_preventivi_guard_utility_istanza_coerenza</code> (<code>_a10_</code>) → errore <code>E_PREV_UTILITY_ISTANZA_INCOERENTE</code>.</li>
-<li><strong><code>emittente_fiscale_id</code> user-derived</strong>: valorizzato a INSERT-time dal trigger <code>trgfn_preventivi_default_emittente</code> da GUC <code>app.current_user_id</code> via <code>script.fn_resolve_emittente_for_user</code>. Per admin globale (utente senza emittente assegnato) il payload deve specificare <code>emittente_fiscale_id</code> esplicito altrimenti errore <code>E_PREV_EMITTENTE_NON_RISOLTO</code>.</li>
+<li><strong><code>emittente_fiscale_id</code> user-derived</strong>: valorizzato a INSERT-time dal trigger di default (<code>script.trgfn_default_emittente_fiscale</code>; prima del 2026-09-15 la copia <code>trgfn_preventivi_default_emittente</code>) da GUC <code>app.current_user_id</code> via <code>script.fn_resolve_emittente_for_user</code>. Per admin globale (utente senza emittente assegnato) il payload deve specificare <code>emittente_fiscale_id</code> esplicito altrimenti errore <code>E_PREV_EMITTENTE_NON_RISOLTO</code>.</li>
 <li><strong><code>emittente_fiscale_id</code> immutabile post-create</strong>: pattern <code>automation_lock_columns</code> → errore <code>EMITTENTE_NON_MODIFICABILE</code>. Per cambiare l'emittente serve creare una revisione.</li>
 <li><strong>Istanza obbligatoria</strong> (NOT NULL): regola dominio.</li>
 <li><strong>Emittente fiscale obbligatorio</strong> (NOT NULL): snapshot user-derived,
@@ -5919,10 +5919,14 @@ verso il dominio <code>attivita_fatturabili</code>, inclusi i casi a fatturazion
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5654,6 +5654,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rev-2026-09-13-la-data-di-consegna-richiesta-dal-cliente" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-09-13 — la data di consegna richiesta dal cliente
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rev-2026-09-14-le-marche-di-approvazione-prezzo-sopravvivono-alla-revisione" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        🔄 rev 2026-09-14 — le marche di approvazione prezzo sopravvivono alla revisione
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5769,6 +5791,33 @@ rimossa, resta solo la direzione canonica.</p>
 <p><code>vendite.preventivi_righe</code> rappresenta il livello di granularita` commerciale
 necessario per trasformare il preventivo in elementi fatturabili in modo tracciabile,
 coerente e idempotente lungo la pipeline.</p>
+<h3 id="rev-2026-09-13-la-data-di-consegna-richiesta-dal-cliente">🔄 rev 2026-09-13 — la data di consegna richiesta dal cliente<a class="headerlink" href="#rev-2026-09-13-la-data-di-consegna-richiesta-dal-cliente" title="Permanent link">&para;</a></h3>
+<p>Colonna nuova, facoltativa: <strong><code>data_consegna_richiesta_cliente</code></strong>
+(<code>20260913-07</code>). Solo la richiesta, non la conferma: su un preventivo non c'è
+ancora niente da confermare. Al push verso l'ordine la data passa sulla riga
+d'ordine (<code>fn_push_preventivo_a_ordine</code>, dal <code>20260913-20</code>), attraverso la
+vista <a href="../../views/vw_preventivi_righe_smistabili_ordine/">vw_preventivi_righe_smistabili_ordine</a>.
+⭐ <strong>E sopravvive anche alla revisione</strong> (dal <code>20260914-13</code>): la rev N+1 nasce
+con le righe ricopiate da
+<a href="../../funzioni/fn_crea_revisione_preventivo/">fn_crea_revisione_preventivo</a>,
+che le copia con un elenco esplicito di colonne — fino a quel giorno la data
+non era nominata e la revisione nasceva con la data a <code>NULL</code>, in silenzio
+(segnalazione del BE, 2026-09-14). Sono <strong>due</strong> passaggi in cui la riga si
+ricopia, e vanno tenuti allineati entrambi: il presidio è
+<code>db/pgtap/vendite/test-date-consegna-ordine-v1.sql</code> (test 4 per il push, 11
+per la revisione).
+Brief: <code>brief-db-modifiche-certe-ciclo-vendita-e-articolo</code>, sezioni 2 e 6-quinquies.</p>
+<h3 id="rev-2026-09-14-le-marche-di-approvazione-prezzo-sopravvivono-alla-revisione">🔄 rev 2026-09-14 — le marche di approvazione prezzo sopravvivono alla revisione<a class="headerlink" href="#rev-2026-09-14-le-marche-di-approvazione-prezzo-sopravvivono-alla-revisione" title="Permanent link">&para;</a></h3>
+<p><code>stato_approvazione_prezzo</code> e <code>pratica_approvazione_prezzo_id</code> passano 1:1
+sulla riga della rev N+1 (<code>20260914-14</code>, decisione di Tid): un prezzo fuori
+policy approvato o in attesa resta <strong>marcato</strong> anche dopo una revisione, e la
+riga <code>PENDING</code> copiata resta congelata dal guard. Dal 2026-04-22 a quel giorno
+le due colonne non erano nominate nella copia e la rev N+1 nasceva senza marca.
+⭐ Da quel giorno l'elenco delle colonne copiate è <strong>presidiato</strong>
+(<code>test-fn-crea-revisione-preventivo-riga-completa-v1</code>, test 1): una colonna
+nuova su questa tabella fa rosso finché non viene o copiata o dichiarata
+esclusa con la ragione. Dettaglio in
+<a href="../../funzioni/fn_crea_revisione_preventivo/">fn_crea_revisione_preventivo</a>.</p>
 
 
 
@@ -5820,10 +5869,14 @@ coerente e idempotente lungo la pipeline.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

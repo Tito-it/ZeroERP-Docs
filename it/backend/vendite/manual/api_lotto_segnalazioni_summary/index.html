@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5719,7 +5719,8 @@ il quale delega a <code>LottoSegnalazioniService.evaluate_lotto_status</code>.</
 <span class="w">      </span><span class="nt">"documenti_bloccanti_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">"documenti_presi_in_carico_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">"critiche_giro_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"esiti_stato_esecuzione_errore_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">      </span><span class="nt">"esiti_stato_esecuzione_errore_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"fermo"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="nt">"livello"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C"</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"segnalazioni"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -5781,13 +5782,26 @@ niente. Sulle segnalazioni di LOTTO sono <code>null</code> e il consumer mostra 
 <li><code>critical_count</code> = somma <code>fatture_critical_count</code> + <code>lotto_critical_count</code>.</li>
 <li><code>warning_count</code> = somma <code>fatture_warning_count</code> + <code>lotto_warning_count</code>.</li>
 <li><code>attention_count</code> = <code>lotto_info_count</code> (livello "I" — info operativa).</li>
-<li><code>is_error = true</code> se <strong>uno</strong> dei tre addendi è &gt; 0: <code>critical_count</code>,
-  <code>summary.fatture_stato_esecuzione_errore_count</code>,
-  <code>summary.esiti_stato_esecuzione_errore_count</code> (il terzo dal 2026-09-12, D2 —
-  vedi sotto).</li>
-<li><code>blocks_next_step = true</code> se <code>is_error = true</code> (nessun avanzamento pipeline ammesso).
+<li><code>is_error = blocks_next_step = summary.fermo</code> — ⭐ <strong>dal 2026-09-19 il
+  verdetto nasce a DB</strong> (changeSet <code>20260919-01/-02</code>, decisione D-V1 di Tid
+  «la regola va a DB», brief <code>brief-db-osservabilita-lotto-fermo-r6-indici</code>
+  P-1): <code>fermo</code> è l'<strong>undicesima</strong> colonna di <code>fn_get_lotto_segnalazioni_summary</code>,
+  che dal 19-09 è un lettore di <code>vendite.vw_lotti_segnalazioni_summary</code> — la
+  <strong>sede unica</strong> dei dieci conteggi e del verdetto, letta anche dal presidio
+  <code>dbops.vw_lotti_fermi_da_guardare</code> (digest, pannello «Processi automatici»,
+  pallino della topbar). La formula è la stessa di prima — <code>(fatture_critical +
+  lotto_critical) &gt; 0 OR fatture_stato_esecuzione_errore &gt; 0 OR
+  esiti_stato_esecuzione_errore &gt; 0</code> — ma il backend <strong>la legge e non la
+  ricalcola</strong>: fino a quel giorno <code>LottoSegnalazioniService</code> la sommava in
+  Python, cioè due sedi per un verdetto, e al primo addendo nuovo banner e
+  digest avrebbero detto cose diverse senza che nessun test lo vedesse. Un
+  addendo nuovo si aggiunge <strong>nella vista</strong>, e arriva qui da solo.
   ⚠️ Il <strong>rilancio dello stesso step</strong> resta ammesso: è la via d'uscita, e per
-  il terzo addendo è l'unica (il pull rivede il documento e scrive l'esito nuovo).</li>
+  il terzo addendo è l'unica (il pull rivede il documento e scrive l'esito nuovo).
+  ⚠️ I dieci conteggi restano per la <strong>frase</strong> (banner, <code>detail</code> del rifiuto
+  <code>E_PIPELINE_LOTTO_CRITICAL</code>, payload di <code>PIPELINE_COMPLETED</code>), non per la
+  decisione. Su un lotto fuori perimetro: zeri e <code>fermo = false</code> — ma il
+  cancello è la testata (404), quegli zeri non arrivano a video.</li>
 <li><code>summary.fatture_stato_esecuzione_errore_count</code> — conteggio fatture del lotto con <code>stato_esecuzione = 'ERRORE'</code>; restituito direttamente da <code>fn_get_lotto_segnalazioni_summary</code> (6ª colonna).</li>
 <li><code>summary.documenti_bloccanti_count</code> · <code>documenti_presi_in_carico_count</code> ·
   <code>critiche_giro_count</code> — i tre numeri del <strong>banner</strong> (2026-09-08): contano
@@ -5815,13 +5829,25 @@ niente. Sulle segnalazioni di LOTTO sono <code>null</code> e il consumer mostra 
 </ul>
 <h2 id="dipendenze-db">Dipendenze DB<a class="headerlink" href="#dipendenze-db" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>vendite.fn_get_lotto_segnalazioni_summary</code> (funzione SQL)</li>
+<li><code>vendite.fn_get_lotto_segnalazioni_summary</code> (funzione SQL, lettrice di
+  <code>vendite.vw_lotti_segnalazioni_summary</code> dal <code>20260919-02</code>)</li>
+<li><code>vendite.vw_lotti_segnalazioni_summary</code> (la sede dei conteggi e del verdetto
+  <code>fermo</code>, una riga per lotto, <code>security_invoker</code>)</li>
 <li><code>vendite.fatture_log</code> (sorgente segnalazioni fattura)</li>
 <li><code>apps.vendite.services.lotto_segnalazioni_service.LottoSegnalazioniService</code></li>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Endpoint introdotto per supporto UI nella visualizzazione stato segnalazioni prima di avanzare step pipeline.</li>
+<li>2026-09-19 (pezzo V di <code>piano-be-fe-osservabilita-pallino-e-superfici</code>):
+  <code>summary.fermo</code> in coda e <code>is_error</code>/<code>blocks_next_step</code> letti da lì. Nessun
+  cambio per il client: <code>scegliRamoBanner</code> legge <code>blocks_next_step</code> come prima.
+  Presidi: <code>test_lotto_segnalazioni_service</code> (il service non ricalcola),
+  <code>test_pipeline_repository</code> (la colonna per nome, il tipo booleano),
+  <code>test_discovery_riceve_l_identita_del_giro</code> test 4 (la colonna esiste sulla
+  funzione vera). Il collaudo di parità DB ⇔ vecchia somma Python
+  (<code>test_parita_verdetto_lotto_fermo_transitorio.py</code>) è <strong>transitorio</strong> e si
+  toglie con la PR successiva.</li>
 </ul>
 
 
@@ -5874,10 +5900,14 @@ niente. Sulle segnalazioni di LOTTO sono <code>null</code> e il consumer mostra 
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

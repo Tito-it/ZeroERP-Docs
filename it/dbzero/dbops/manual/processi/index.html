@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5611,10 +5611,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#i-tre-canali" class="md-nav__link">
+  <a href="#i-quattro-canali" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        I tre canali
+        I quattro canali
       </span>
     </span>
   </a>
@@ -5704,7 +5704,7 @@
 </p>
 </blockquote>
 <h3 id="scopo-principale">🎯 Scopo Principale<a class="headerlink" href="#scopo-principale" title="Permanent link">&para;</a></h3>
-<p>(latest review 04-09-2026)</p>
+<p>(latest review 14-09-2026)</p>
 <p><code>dbops.processi</code> è l'<strong>anagrafica di tutto ciò che il sistema fa da solo</strong>: i
 lavori notturni, i comandi lanciati a mano, i job messi in coda. Una riga per
 processo.</p>
@@ -5763,7 +5763,7 @@ fa leggendo in fretta. Un processo di manutenzione tocca eccome i dati: li
 storicizza, li archivia. La differenza è <strong>di chi sono</strong> quei dati. Se una riga
 ha un padrone, il processo è di dominio.</p>
 <hr />
-<h3 id="i-tre-canali">I tre canali<a class="headerlink" href="#i-tre-canali" title="Permanent link">&para;</a></h3>
+<h3 id="i-quattro-canali">I quattro canali<a class="headerlink" href="#i-quattro-canali" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -5782,7 +5782,11 @@ ha un padrone, il processo è di dominio.</p>
 </tr>
 <tr>
 <td><code>CODA</code></td>
-<td>un operatore che accoda un lavoro dall'applicazione</td>
+<td><strong>una persona</strong> che accoda un lavoro dall'applicazione</td>
+</tr>
+<tr>
+<td><code>CODA_AUTOMATICA</code></td>
+<td><strong>una macchina</strong> (un job pgAgent che sveglia e non lavora) che accoda un lavoro eseguito dal drenatore — dal 2026-09-05, correzione R-E</td>
 </tr>
 </tbody>
 </table>
@@ -5791,6 +5795,21 @@ lavoro accodato porta con sé <strong>l'identità di chi l'ha chiesto</strong>. 
 un utente tecnico, e dargliene uno cancellerebbe il nome della persona che ha
 premuto il pulsante. Per questo i presidi che cercano gli utenti tecnici
 <strong>escludono</strong> i processi di coda.</p>
+<p>⚠️ <strong><code>CODA_AUTOMATICA</code> non è un terzo caso: è la correzione del modello.</strong> Un
+lavoro che passa dalla coda ma lo accoda una <strong>sveglia</strong> non ha un nome da
+prestare — vuole l'identità tecnica come i <code>PGAGENT</code> e i <code>COMMAND</code>, e i presidi
+lo contano fra quelli. Fino al 05-09 questa tabella ne elencava tre e
+<code>chiusura_scadenze_daily</code> sarebbe apparso «non ne vuole» mentre ne usava una
+(brief <code>brief-db-processi-automatici-residui-be</code> §1-quater).</p>
+<p>⭐ <strong>Un <code>CODA</code> può essere anche di <code>MANUTENZIONE</code></strong>, e non è una contraddizione:
+<code>avvio_manuale</code> (dal 2026-09-14) è il gesto «Esegui ora» su una sveglia di
+deploy — lo accoda una persona, quindi <code>CODA</code>; non tocca i dati di nessuna
+azienda, quindi <code>MANUTENZIONE</code>. Nel panorama è <code>SU_RICHIESTA</code> come gli altri
+<code>CODA</code>, e sotto di lui <strong>non si scrive nessun run</strong>: l'audit del gesto è la riga
+di <a href=".././coda_lavori/">coda_lavori</a>, l'audit dell'esecuzione è
+il run che il comando lanciato scrive sotto il <strong>proprio</strong> processo (origine
+<code>COMMAND</code>, <code>auth_user_id</code> di chi ha premuto). Il tipo che ospita è
+<code>ESEGUI_PROCESSO</code> — brief <code>brief-db-avvio-manuale-di-un-processo</code> §8.</p>
 <hr />
 <h3 id="campi-chiave">Campi chiave<a class="headerlink" href="#campi-chiave" title="Permanent link">&para;</a></h3>
 <ul>
@@ -5873,8 +5892,9 @@ corsie), <code>listen_cambio_reparto</code> <code>SESSIONE</code>, <code>run_fat
 <li>Se è di <strong>dominio</strong>, una riga in
    <a href=".././processi_bersagli/">processi_bersagli</a> per ogni tabella
    che tocca, con il percorso che porta all'emittente.</li>
-<li>Se è di dominio <strong>e non ha un operatore che lo lancia</strong> (canali <code>PGAGENT</code> e
-   <code>COMMAND</code>), un utente tecnico per ogni emittente che deve servire —
+<li>Se è di dominio <strong>e non ha un operatore che lo lancia</strong> (canali <code>PGAGENT</code>,
+   <code>COMMAND</code> e <code>CODA_AUTOMATICA</code>), un utente tecnico per ogni emittente che deve
+   servire —
    <a href="../../../script/manual/fn_crea_utente_tecnico/">fn_crea_utente_tecnico</a>.</li>
 </ol>
 <p>⇒ I presidi lo dicono da soli se un passo è stato saltato: le viste
@@ -5949,10 +5969,14 @@ restare vuote</strong>.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       

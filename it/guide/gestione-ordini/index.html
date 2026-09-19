@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -30,7 +30,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -3352,6 +3352,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#35-le-date-di-consegna-e-il-ritardo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3.5 Le date di consegna, e il ritardo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6249,6 +6260,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#35-le-date-di-consegna-e-il-ritardo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3.5 Le date di consegna, e il ritardo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6651,15 +6673,7 @@
 
 <h1 id="guida-gestione-ordini-di-vendita">Guida — Gestione Ordini di vendita<a class="headerlink" href="#guida-gestione-ordini-di-vendita" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p><strong>Ultima revisione</strong>: 22 agosto 2026 — nota in §3.1: il <strong>termine di pagamento
-determina quante fatture nascono</strong> (raggruppamento a valle). Revisione
-precedente (14 giugno): modello completo — ordine come documento
-del ciclo attivo (testata + righe + componenti BoM), nascita per <strong>conversione</strong>
-da preventivo (smistamento merce riga-per-riga, 1:N) o da offerta (1:1, in mutua
-esclusività con il contratto) oppure manuale, azioni <strong>data-driven</strong> via
-<code>fn_available_actions_ordine</code> con matrice transizioni in <code>config.transizioni_stati_ordini</code>,
-conferma = emissione documentale (<code>/emetti/</code>), push a commessa per la fatturazione
-(che a esito completato porta l'ordine a <code>EVASO</code>), cliente immutabile dopo la creazione.</p>
+<p><strong>Ultimo aggiornamento</strong>: 14 settembre 2026</p>
 <p><strong>Destinatari</strong>: analisti funzionali, operatori commerciali, sviluppatori
 backend/frontend, DBA.</p>
 <p><strong>Vedi anche</strong> — schemi DB:</p>
@@ -6668,6 +6682,7 @@ backend/frontend, DBA.</p>
 <li><a href="../../dbzero/vendite/tabelle/ordini_righe_fulfillment/">vendite.ordini_righe_fulfillment</a> / <a href="../../dbzero/vendite/tabelle/ordini_indirizzi/">vendite.ordini_indirizzi</a> / <a href="../../dbzero/vendite/tabelle/note_ordini/">vendite.note_ordini</a></li>
 <li><a href="../../dbzero/config/tabelle/stati_doc_ordini/">config.stati_doc_ordini</a> / <a href="../../dbzero/config/tabelle/transizioni_stati_ordini/">config.transizioni_stati_ordini</a></li>
 <li><a href="../../dbzero/vendite/manual/vw_ordini_lista/">vendite.vw_ordini_lista</a> / <a href="../../dbzero/vendite/manual/vw_ordini_riepilogo_iva_dettaglio/">vendite.vw_ordini_riepilogo_iva_dettaglio</a></li>
+<li><a href="../../dbzero/vendite/manual/vw_situazione_merce_ordine/">vendite.vw_situazione_merce_ordine</a> — per riga: ordinato, spedito, reso, fatturato, residuo e <strong>ritardo</strong></li>
 <li><a href="../../dbzero/catalogo/tabelle/articoli_componenti/">catalogo.articoli_componenti</a> — BoM versionata immutabile</li>
 </ul>
 <p><strong>Vedi anche</strong> — funzioni e trigger DB:</p>
@@ -6680,7 +6695,7 @@ backend/frontend, DBA.</p>
 <li><a href="../../dbzero/vendite/funzioni/fn_list_ordini_da_pushare/">vendite.fn_list_ordini_da_pushare</a> — righe eleggibili al push a commessa</li>
 <li><a href="../../dbzero/vendite/funzioni/fn_ricalcola_totali_ordine/">vendite.fn_ricalcola_totali_ordine</a> — totali di testata e riepilogo IVA per aliquota</li>
 <li><a href="../../dbzero/vendite/funzioni/trgfn_ordini_gen_numero/">vendite.trgfn_ordini_gen_numero</a> — numero ordine auto-generato e immutabile</li>
-<li><a href="../../dbzero/vendite/funzioni/trgfn_ordini_default_emittente/">vendite.trgfn_ordini_default_emittente</a> / <a href="../../dbzero/vendite/funzioni/trgfn_ordini_guard_emittente_ba/">vendite.trgfn_ordini_guard_emittente_ba</a> — emittente fiscale di default e coerenza con il cliente</li>
+<li><a href="../../dbzero/script/funzioni/trgfn_default_emittente_fiscale/">script.trgfn_default_emittente_fiscale</a> / <a href="../../dbzero/vendite/funzioni/trgfn_ordini_guard_emittente_ba/">vendite.trgfn_ordini_guard_emittente_ba</a> — emittente fiscale di default (il building block unico, dal 2026-09-15) e coerenza con il cliente</li>
 </ul>
 <p><strong>Vedi anche</strong> — API e service backend:</p>
 <ul>
@@ -6688,6 +6703,7 @@ backend/frontend, DBA.</p>
 <li><a href="../../backend/vendite/manual/api_preventivi/">API Preventivi</a> — conversione preventivo → ordine (§6c smistamento)</li>
 <li><a href="../../backend/vendite/manual/api_offerte/">API Offerte</a> — conversione offerta → ordine</li>
 <li><a href="../../backend/vendite/manual/api_pricing/">API Pricing (resolver + limiti L2)</a></li>
+<li><a href="../../backend/vendite/manual/api_situazione_merce/">API Situazione merce</a> — il pannello «quanto è uscito, tornato, fatturato, cosa resta», con le date di consegna e il ritardo per riga</li>
 </ul>
 <p><strong>Vedi anche</strong> — guide correlate:</p>
 <ul>
@@ -6821,13 +6837,13 @@ In questo caso l'ordine nasce senza riferimento a un documento di origine.</p>
 </ul>
 <blockquote>
 <p>⚠️ <strong>Il termine di pagamento non è solo un dato di testata: decide anche
-quante fatture nascono.</strong> Dal luglio 2026 le condizioni di pagamento fanno
-parte dei criteri con cui il lavoro si raggruppa a valle: un ordine con un
-termine diverso <strong>non riusa la commessa</strong> degli altri documenti dello stesso
-cliente, ne apre una nuova, e a fine mese produce una <strong>fattura separata</strong>.
-Non è un difetto — una fattura sola non potrebbe portare due scadenzari — ma è
-un cambio di conseguenze: se ci si aspettava un documento solo e ne arrivano
-due, la prima cosa da guardare è il termine sui documenti di partenza.
+quante fatture nascono.</strong> Le condizioni di pagamento fanno parte dei criteri
+con cui il lavoro si raggruppa a valle: un ordine con un termine diverso
+<strong>non riusa la commessa</strong> degli altri documenti dello stesso cliente, ne apre
+una nuova, e a fine mese produce una <strong>fattura separata</strong>. Non è un difetto —
+una fattura sola non potrebbe portare due scadenzari — ma va saputo: se ci si
+aspettava un documento solo e ne arrivano due, la prima cosa da guardare è il
+termine sui documenti di partenza.
 Dettaglio in <a href=".././termini-di-pagamento/">Termini di pagamento §4</a>.</p>
 </blockquote>
 <h3 id="32-righe-ordini_righe">3.2 Righe <code>ordini_righe</code><a class="headerlink" href="#32-righe-ordini_righe" title="Permanent link">&para;</a></h3>
@@ -6842,6 +6858,9 @@ Dettaglio in <a href=".././termini-di-pagamento/">Termini di pagamento §4</a>.<
 <li><strong><code>preventivo_riga_id</code></strong> — il legame con la riga del preventivo da cui è nata
   (presente solo per gli ordini da smistamento); è ciò che garantisce
   l'idempotenza di riga.</li>
+<li><strong>le due date di consegna</strong> — <code>data_consegna_richiesta_cliente</code> (quando il
+  cliente la vuole) e <code>data_consegna_confermata</code> (quando <strong>noi</strong> ci impegniamo a
+  darla). Vedi §3.5.</li>
 </ul>
 <p>Vincoli per l'operatore: <strong>quantità &gt; 0</strong> e <strong>prezzo ≥ 0</strong> (un omaggio è quantità
 positiva con prezzo zero).</p>
@@ -6855,10 +6874,92 @@ inserisce a mano. La composizione (quali componenti, in quali proporzioni) è
 <p>L'ordine supporta le <strong>note partizionate</strong> (di testata o di singola riga), con lo
 stesso comportamento di preventivi, offerte e contratti.</p>
 <blockquote>
-<p><strong>Nota sull'ambito attuale.</strong> Entrambe le tabelle sono ora <strong>gestite</strong>:
-<code>ordini_indirizzi</code> alimenta la sezione indirizzi del documento (UX v2), e
+<p><code>ordini_indirizzi</code> alimenta la sezione indirizzi del documento, e
 <code>ordini_righe_fulfillment</code> registra l'<strong>evasione</strong> dell'ordine in uno o più
 <strong>DDT</strong> (residuo per riga, append-only). Vedi <a href=".././gestione-ddt/">Gestione DDT</a>.</p>
+</blockquote>
+<h3 id="35-le-date-di-consegna-e-il-ritardo">3.5 Le date di consegna, e il ritardo<a class="headerlink" href="#35-le-date-di-consegna-e-il-ritardo" title="Permanent link">&para;</a></h3>
+<p>Le date di consegna stanno <strong>sulla riga</strong>, non sulla testata: una riga può
+essere pronta e un'altra no («il pezzo grosso arriva a marzo, il resto subito»).
+Sono due, e la differenza fra loro <em>è</em> la promessa:</p>
+<table>
+<thead>
+<tr>
+<th>Colonna</th>
+<th>Che cosa dice</th>
+<th>Chi la esprime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data_consegna_richiesta_cliente</code></td>
+<td>quando il cliente la vuole</td>
+<td>il cliente</td>
+</tr>
+<tr>
+<td><code>data_consegna_confermata</code></td>
+<td>quando ci impegniamo a darla</td>
+<td><strong>noi</strong></td>
+</tr>
+</tbody>
+</table>
+<p>La convenzione dei nomi è quella di <code>numero</code> / <code>numero_fornitore</code>: <em>non marcato
+= nostro, marcato = della controparte</em>. Sull'ordine d'acquisto vale ribaltata
+(<code>data_consegna_richiesta</code> la chiediamo noi, <code>data_consegna_confermata_fornitore</code>
+la conferma lui).</p>
+<p>Entrambe sono <strong>facoltative</strong> e si scrivono con la riga (in <code>DRAFT</code>); nel form
+di riga sono due selettori di data, e la tabella delle righe mostra la
+<strong>promessa</strong> e, in sua assenza, la richiesta in tono attenuato. Una data
+malformata è un errore di validazione sul campo, non un errore del database.</p>
+<p>⛔ <strong>Nessun vincolo fra le due date, ed è una scelta</strong>: si può confermare
+<em>prima</em> di quanto chiesto, ed è una buona notizia. E nessun vincolo contro la
+data dell'ordine: la retrodatazione è un caso d'uso vivo.</p>
+<p>⛔ <strong>Nessuna colonna di testata.</strong> La data «dell'ordine» è il minimo delle
+richieste sulle righe attive, e una colonna sarebbe una seconda verità che va
+fuori sincrono al primo cambio di riga. Dove serve — la lista ordini — la
+espone la vista (<code>data_consegna_richiesta_cliente_min</code>, §11).</p>
+<p><strong>Da dove arriva.</strong> Se l'ordine nasce dallo smistamento di un preventivo, la
+data richiesta dal cliente <strong>viaggia con la riga</strong> (<code>fn_push_preventivo_a_ordine</code>
+la porta avanti); la confermata nasce vuota, perché sul preventivo non c'era
+niente da confermare.</p>
+<p><strong>Il ritardo.</strong> Lo calcola il pannello <em>Situazione merce</em> dell'ordine
+(<code>vw_situazione_merce_ordine</code>, colonna <code>giorni_ritardo</code>), e sta lì e non altrove
+perché il ritardo non è «oggi &gt; data richiesta»: è «oggi &gt; data di riferimento
+<strong>e</strong> resta merce da spedire», e il residuo con la soglia dell'impegno vive già
+in quella vista. La data di riferimento è la <strong>promessa</strong> se c'è, altrimenti la
+richiesta del cliente. Tre valori, e non si appiattiscono:</p>
+<table>
+<thead>
+<tr>
+<th><code>giorni_ritardo</code></th>
+<th>Significato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vuoto</td>
+<td>il conto non si applica: niente da spedire, oppure nessuna data dichiarata</td>
+</tr>
+<tr>
+<td><code>0</code></td>
+<td>c'è da spedire e <strong>non</strong> è tardi</td>
+</tr>
+<tr>
+<td><code>N &gt; 0</code></td>
+<td>giorni di ritardo</td>
+</tr>
+</tbody>
+</table>
+<p>Nel pannello la colonna «Ritardo» è un'etichetta: verde «In tempo» sullo zero,
+rossa «N gg di ritardo» sopra.</p>
+<blockquote>
+<p>⚠️ <strong>Un fatto di modello dichiarato e non ancora deciso.</strong> Le righe si
+scrivono solo in <code>DRAFT</code>, ma la promessa si decide <strong>alla conferma</strong> e può
+cambiare dopo (il fornitore ritarda). Il database, di proposito, non mette
+nessun guard di stato su <code>data_consegna_confermata</code>; oggi però, con la
+modifica righe limitata alla bozza, la promessa si scrive solo prima di
+confermare. Serve un verbo suo per la data confermata su ordine
+<code>CONFERMATO</code>, o un dialog di conferma che la raccolga: è un cantiere a sé.</p>
 </blockquote>
 <hr />
 <h2 id="4-ciclo-di-vita-e-stati">4. Ciclo di vita e stati<a class="headerlink" href="#4-ciclo-di-vita-e-stati" title="Permanent link">&para;</a></h2>
@@ -7001,8 +7102,8 @@ l'ordine a <code>EVASO</code> in automatico. Se il push è solo parziale o falli
 righe <strong>merce</strong> e lancia lo smistamento. Il sistema:</p>
 <ol>
 <li>crea un ordine in <code>DRAFT</code> copiando il contesto dal preventivo;</li>
-<li>copia <strong>solo</strong> le righe selezionate di natura merce, con i loro prezzi e i
-   componenti BoM;</li>
+<li>copia <strong>solo</strong> le righe selezionate di natura merce, con i loro prezzi, i
+   componenti BoM e la <strong>data di consegna richiesta dal cliente</strong> (§3.5);</li>
 <li>registra su ogni riga il legame con la riga di preventivo di origine
    (idempotenza);</li>
 <li>valorizza l'origine documentale come <code>PREVENTIVO</code>.</li>
@@ -7046,8 +7147,10 @@ cambio è raro e avrebbe pesanti riflessi contabili). Il blocco è applicato sia
 backend sia, in modo autoritativo, dal database.</p>
 <h3 id="72-emittente-fiscale">7.2 Emittente fiscale<a class="headerlink" href="#72-emittente-fiscale" title="Permanent link">&para;</a></h3>
 <p>Se l'operatore <strong>non</strong> indica un emittente fiscale, lo imposta automaticamente il
-trigger <code>trgfn_ordini_default_emittente</code>, in base all'emittente associato
-all'utente che sta operando. Inoltre, se l'ordine ha un cliente, l'emittente deve
+trigger di default dell'emittente (<code>trg_ordini_a10_default_emittente_ins</code>, che dal
+2026-09-15 esegue il meccanismo condiviso <code>script.trgfn_default_emittente_fiscale</code> —
+lo stesso per preventivi, contratti, DDT, offerte, magazzini e altre tabelle), in base
+all'emittente associato all'utente che sta operando. Inoltre, se l'ordine ha un cliente, l'emittente deve
 essere <strong>coerente</strong> con quel cliente: a questo pensa il trigger
 <code>trgfn_ordini_guard_emittente_ba</code>, che rifiuta combinazioni incoerenti. In pratica
 l'operatore raramente deve preoccuparsene, ma se l'utente non ha un emittente
@@ -7134,7 +7237,10 @@ e <a href=".././fatturazione/">Fatturazione</a>.</p>
 <p>La lista ordini è una <strong>lista configurabile</strong> (l'utente può scegliere colonne e
 ordinamento). Mostra di norma numero, data, cliente, utility, totale, stato e
 trigger di fatturazione; sono disponibili in opzione colonne aggiuntive (importi di
-dettaglio, pagamento, emittente, origine documentale, agente, ecc.).</p>
+dettaglio, pagamento, emittente, origine documentale, agente, ecc.) e la <strong>data di
+consegna richiesta</strong> dell'ordine — il minimo sulle righe attive, calcolato dalla
+vista <code>vw_ordini_lista</code> (<code>data_consegna_richiesta_cliente_min</code>): si accende da
+«Personalizza colonne», non è nella vista standard.</p>
 <p>Filtri principali: ricerca testuale (numero, ragione sociale, codice cliente, codice
 fiscale/P.IVA), stato, cliente, utility, intervallo di date. La lista rispetta
 automaticamente lo <strong>scope dell'emittente</strong> dell'utente: ognuno vede solo i propri
@@ -7309,15 +7415,22 @@ database; anche bypassandolo, il database rifiuta comunque le operazioni scorret
 <td><strong>Matrice transizioni</strong></td>
 <td><code>config.transizioni_stati_ordini</code>: fonte unica di verità per UI ed enforcement</td>
 </tr>
+<tr>
+<td><strong>Date di consegna</strong></td>
+<td>Sulla riga: <code>data_consegna_richiesta_cliente</code> (del cliente) e <code>data_consegna_confermata</code> (nostra). Nessun vincolo fra le due; la testata non ne ha una</td>
+</tr>
+<tr>
+<td><strong>Ritardo</strong></td>
+<td><code>giorni_ritardo</code> nel pannello Situazione merce: vuoto = non si applica, <code>0</code> = in tempo, <code>N</code> = giorni oltre la promessa (o la richiesta, se non c'è promessa) con merce ancora da spedire</td>
+</tr>
 </tbody>
 </table>
 <hr />
 <p><em>Per il dettaglio tecnico delle API REST, formati payload e codici errore vedi la
 <a href="../../backend/vendite/manual/api_ordini/">documentazione API Ordini</a>. Le decisioni di
 modello sono raccolte negli addendum di sviluppo (<code>dev/work-done/db-brief-ordini-vendita.md</code>,
-<code>brief-ordini-stampa.md</code>, <code>db-brief-ordini-lock-cliente.md</code>, <code>brief-preventivi-ordini.md</code>).</em>
-</content>
-</invoke></p>
+<code>brief-ordini-stampa.md</code>, <code>db-brief-ordini-lock-cliente.md</code>, <code>brief-preventivi-ordini.md</code>;
+le date di consegna in <code>brief-db-modifiche-certe-ciclo-vendita-e-articolo.md</code>).</em></p>
 <hr />
 <div style="text-align: center; margin-top: 2rem;">
   <img src="/assets/images/zeroerp-logo.png" alt="Zero ERP" width="80">
@@ -7375,10 +7488,14 @@ modello sono raccolte negli addendum di sviluppo (<code>dev/work-done/db-brief-o
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../assets/javascripts/mermaid.min.js"></script>
       

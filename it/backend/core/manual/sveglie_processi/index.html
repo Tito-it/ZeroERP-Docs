@@ -15,7 +15,7 @@
       
       
       <link rel="icon" href="../../../../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.59">
+      <meta name="generator" content="zensical-0.0.62">
     
     
       
@@ -26,7 +26,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.5da3a30f.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/modern/main.ce62732f.min.css">
       
       
 
@@ -5683,9 +5683,11 @@
 
 <h1 id="sveglie-dei-processi-il-dichiarato-di-deploy-appscoreservicessveglie">Sveglie dei processi — il dichiarato di deploy (<code>apps.core.services.sveglie</code>)<a class="headerlink" href="#sveglie-dei-processi-il-dichiarato-di-deploy-appscoreservicessveglie" title="Permanent link">&para;</a></h1>
 <h2 id="scopo">Scopo<a class="headerlink" href="#scopo" title="Permanent link">&para;</a></h2>
-<p>Dire <strong>chi sveglia ogni processo automatico del backend</strong>, con quale cadenza, e
-entro quanto il suo ultimo run vale ancora come segno di vita — da una sede
-sola, leggibile da due programmi.</p>
+<p>Dire <strong>chi sveglia ogni processo automatico del backend</strong>, con quale cadenza e
+<strong>con quale riga di comando</strong> — da una sede sola, leggibile da due programmi.</p>
+<p>⚠️ Fino al 2026-09-11 questa riga diceva anche <em>«entro quanto il suo ultimo run
+vale ancora come segno di vita»</em>: la tolleranza è il <strong>contratto</strong> del processo
+e vive in <code>dbops.processi.tolleranza_minuti</code>, non qui (vedi Regole).</p>
 <h2 id="contesto">Contesto<a class="headerlink" href="#contesto" title="Permanent link">&para;</a></h2>
 <p>I processi su canale <code>COMMAND</code> di <code>dbops.processi</code> li fa partire systemd, non
 pgAgent. ⇒ Il database non può sapere se stiano partendo, e infatti
@@ -5731,6 +5733,11 @@ per processo: <code>run_fatturazione_batch</code> ne ha due, una per corsia.</p>
 <td>un timer ha una cadenza; un servizio è sempre acceso</td>
 </tr>
 <tr>
+<td><code>comando</code></td>
+<td>string[]</td>
+<td><strong>dal 2026-09-14</strong> — l'argv dopo <code>bin/run-command.sh</code> (<code>&#91;"digest_presidi", "--cadenza", "settimanale"&#93;</code>), reso nel template come <code>__COMANDO__</code>. <strong>Obbligatorio per ogni forma</strong>, una lista non vuota, primo token = nome di un management command</td>
+</tr>
+<tr>
 <td><code>oncalendar</code></td>
 <td>string | null</td>
 <td>cadenza default (<code>null</code> per i servizi)</td>
@@ -5741,9 +5748,9 @@ per processo: <code>run_fatturazione_batch</code> ne ha due, una per corsia.</p>
 <td>se l'installer lo accende — <strong>obbligatorio</strong></td>
 </tr>
 <tr>
-<td><code>tolleranza_minuti</code></td>
-<td>int | null</td>
-<td>entro quanto l'ultimo run vale «vivo»; <code>null</code> = non si presidia da qui</td>
+<td><code>avvio_manuale</code></td>
+<td>bool</td>
+<td><strong>dal 2026-09-15</strong> — «Esegui ora» è un gesto sensato su questa sveglia? <strong>Obbligatorio</strong> (anche sui servizi, dove vale <code>false</code> per natura e un <code>true</code> è rifiutato). ⛔ Non è <code>abilita</code>: quella dice se il <em>timer</em> è acceso su questa installazione, questa se il <em>pulsante</em> ha senso — un comando lungo per natura resta <code>false</code> anche il giorno in cui il suo timer si accende</td>
 </tr>
 <tr>
 <td><code>nota</code></td>
@@ -5752,18 +5759,37 @@ per processo: <code>run_fatturazione_batch</code> ne ha due, una per corsia.</p>
 </tr>
 </tbody>
 </table>
+<p>⛔ <strong><code>tolleranza_minuti</code> non è un campo</strong>, e se compare il caricamento
+<strong>fallisce</strong>: dal 2026-09-11 il contratto di liveness vive in
+<code>dbops.processi.tolleranza_minuti</code> (seed <code>80_data/sql/dbops/processi.csv</code>) e lo
+legge <code>ProcessiRepository.contratti_liveness</code>. Fino a quel giorno la riga stava
+in questa tabella.</p>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">apps.core.services.sveglie</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">carica_sveglie</span><span class="p">,</span>        <span class="c1"># tuple\[Sveglia, ...\] — tutto il dichiarato, validato</span>
     <span class="n">sveglie_di_processo</span><span class="p">,</span>   <span class="c1"># (processo_codice) -&gt; tuple\[Sveglia, ...\]</span>
-    <span class="n">tolleranza_minuti</span><span class="p">,</span>     <span class="c1"># (processo_codice) -&gt; int | None</span>
+    <span class="n">DEPLOY_DIR</span><span class="p">,</span>            <span class="c1"># backend/deploy/</span>
     <span class="n">TEMPLATE_DIR</span><span class="p">,</span>          <span class="c1"># backend/deploy/systemd/</span>
+    <span class="n">RUN_COMMAND</span><span class="p">,</span>           <span class="c1"># backend/bin/run-command.sh — il wrapper che systemd</span>
+                           <span class="c1"># esegue e che «Esegui ora» lancia come sottoprocesso</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Consumer: <code>coda_lavori.gestione_service._liveness_worker</code> (la soglia del badge
-code) e — dall'altro lato — <code>backend/bin/install-timers.sh</code>, che dallo stesso
-file prende l'<code>OnCalendar</code> da sostituire nei template e la lista di cosa
-abilitare.</p>
+<p><code>Sveglia</code> porta <code>unit</code>, <code>processo_codice</code>, <code>forma</code>, <strong><code>comando</code></strong>
+(<code>tuple&#91;str, ...&#93;</code>), <code>oncalendar</code>, <code>abilita</code>, <strong><code>avvio_manuale</code></strong>, <code>nota</code> e la
+proprietà <code>e_timer</code>.
+⚠️ <code>tolleranza_minuti(...)</code> <strong>non esiste più</strong> dal 2026-09-11 (sopra).</p>
+<p>Consumer: <code>notifica_digest_muto_handler</code> (le unit del processo muto, per la
+mail), <code>test_contratto_liveness_vs_deploy</code> (la cadenza contro il contratto) e —
+dall'altro lato — <code>backend/bin/install-timers.sh</code>, che dallo stesso file prende
+l'<code>OnCalendar</code> <strong>e il comando</strong> da sostituire nei template e la lista di cosa
+abilitare. ⭐ <strong>Dal 2026-09-15 <code>comando</code> ha il consumer per cui è nato</strong>:
+<code>esegui_processo_handler</code> (il drenatore) lancia <code>&#91;RUN_COMMAND, *comando&#93;</code> come
+sottoprocesso — la stessa riga del timer, per costruzione — e
+<code>avvio_manuale.py</code> legge <code>forma</code>, <code>avvio_manuale</code> e <code>abilita</code> per il predicato
+«si può lanciare a mano?» (capability <code>can_esegui_ora</code> nel dettaglio del
+processo, rifiuto dell'endpoint <code>esegui-ora/</code>, ricontrollo dell'handler).
+Brief brief-db-avvio-manuale-di-un-processo (<code>docs/it/dev/work-done/brief-db-avvio-manuale-di-un-processo.md</code>),
+piano piano-be-fe-avvio-manuale-di-un-processo (<code>docs/it/dev/work-done/piano-be-fe-avvio-manuale-di-un-processo.md</code>).</p>
 <h2 id="regole">Regole<a class="headerlink" href="#regole" title="Permanent link">&para;</a></h2>
 <ul>
 <li>⛔ <strong>La chiave è l'<code>unit</code>, non il processo.</strong> Chiavare sul processo avrebbe
@@ -5775,11 +5801,37 @@ abilitare.</p>
 <li>⛔ <strong><code>abilita</code> si dichiara, non si omette.</strong> Con un default il silenzio
   varrebbe «spento» — cioè un processo che non parte, il guasto-per-assenza per
   cui questo file esiste, reintrodotto dalla porta di servizio.</li>
-<li>⚠️ <strong><code>tolleranza_minuti: null</code> non è zero</strong>: significa «non si presidia la
-  liveness da qui», e il lettore lo distingue con <code>is None</code> (un <code>or</code> li
-  confonderebbe). Per un processo con più sveglie si prende la tolleranza <strong>più
-  larga</strong>: basta che una corsia abbia girato perché il processo sia vivo, e la
-  più stretta darebbe un falso allarme.</li>
+<li>⛔ <strong>La tolleranza NON sta qui</strong> (dal 2026-09-11, brief
+  <code>brief-db-quattro-processi-senza-presidio.md</code> D5). Cadenza e tolleranza sono
+  due fatti: la cadenza è <em>come il deploy onora</em> il processo e resta nel JSON;
+  la tolleranza è il <em>contratto</em> del processo, uguale su ogni installazione, e
+  il lettore che ne ha più bisogno è il database (<code>vw_processi_programmazione</code>,
+  il guardiano pgAgent). <code>carica_sveglie</code> <strong>rifiuta</strong> il campo se ricompare.
+  Il confronto fra la cadenza di qui e quel contratto è
+  <code>test_contratto_liveness_vs_deploy</code>.</li>
+<li>⭐ <strong>La riga di comando sta qui, e il template porta <code>__COMANDO__</code></strong> (dal
+  2026-09-14). Il motivo è «Esegui ora»: il pulsante lancia <strong>lo stesso</strong>
+  comando del timer, meno l'orario, e il backend non può leggerlo da un file
+  <code>.service</code>. Una sede sola: la riga che il timer esegue <em>è</em> quella che il
+  pulsante esegue, e non possono divergere. ⛔ Un <code>comando</code> ricopiato nel JSON
+  <em>accanto</em> a una riga cablata nel template sarebbe la seconda sede — quella
+  che resta indietro, e qui «indietro» vuol dire un pulsante che lancia una
+  cosa diversa dal timer. Lo prova <code>test-install-timers.sh</code> (test 6: nessun
+  <code>ExecStart</code> cablato; test 7: l'unit reso porta l'argv del JSON).</li>
+<li><strong>Una lista di token, mai una stringa</strong>: systemd spezza l'<code>ExecStart</code>
+    sugli spazi, <code>subprocess</code> passa ogni token intero — «come si spezza»
+    sarebbe una regola scritta due volte.</li>
+<li><strong>Whitelist stretta sui token</strong> (<code>_ARGOMENTO_AMMESSO</code>): niente spazi,
+    quote, <code>%</code> (specifier systemd), <code>$</code> (ambiente), <code>|</code>/<code>&amp;</code>/<code>\</code> (il <code>sed</code>
+    dell'installer). Si allarga quando un comando <em>vero</em> ne ha bisogno: un
+    cancello che boccia un carattere di troppo si vede in CI, uno che ne
+    lascia passare uno di meno si vede sull'host.</li>
+<li><strong>Il primo token è un management command che esiste</strong> nel backend
+    (<code>test_sveglie.py</code>, test 13): un refuso non fallirebbe in CI ma sull'host,
+    alla prima corsa, con un <code>Unknown command</code> nel journal che nessuno legge.</li>
+<li><strong>Obbligatorio anche per <code>forma = servizio</code></strong>: ogni <code>.service</code> ha un
+    <code>ExecStart</code>, e una regola con un'eccezione sono due regole. Che «Esegui
+    ora» valga solo per i timer lo decide chi rende il pulsante, sulla <code>forma</code>.</li>
 <li>⚠️ <strong>Il dichiarato è il default di progetto, non lo stato di un host.</strong> Un host
   può avere un <code>OnCalendar</code> diverso o un timer spento a mano: per sapere cosa
   gira davvero c'è <code>maintenance.job_run_log</code>. Il valore sta nel <strong>confronto</strong> —
@@ -5825,12 +5877,32 @@ abilitare.</p>
 <td>che i due sopra passino <strong>a vuoto</strong> se il layout cambia</td>
 </tr>
 <tr>
-<td><code>test_worker_del_badge_hanno_una_tolleranza</code></td>
-<td>che il ripiego da 10 minuti diventi la strada normale in silenzio</td>
+<td><code>test_worker_del_badge_hanno_un_contratto</code></td>
+<td>che il ripiego da 10 minuti diventi la strada normale in silenzio (legge il seed <code>processi.csv</code>)</td>
 </tr>
 <tr>
-<td><code>scripts/tests/test-install-timers.sh</code></td>
+<td><code>test_comando_obbligatorio_lista_non_vuota</code> · <code>test_comando_con_spazi_o_metacaratteri_e_rifiutato</code></td>
+<td>un <code>comando</code> assente, stringa, o con token che systemd e <code>subprocess</code> leggerebbero in due modi</td>
+</tr>
+<tr>
+<td><code>test_il_comando_dichiarato_esiste_nel_backend</code></td>
+<td>⭐ un <code>comando</code> che nomina un management command inesistente: fallirebbe sull'host, non in CI</td>
+</tr>
+<tr>
+<td><code>test_avvio_manuale_obbligatorio_e_bool</code> · <code>test_un_servizio_non_si_avvia_a_mano</code> · <code>test_il_drenatore_non_e_candidato_e_almeno_un_timer_si</code> (<code>test_sveglie.py</code> 14-16)</td>
+<td>«Esegui ora» dal drenatore, o su un servizio, nato da una dimenticanza: <code>avvio_manuale</code> si dichiara, e la unit del drenatore si legge da <code>sveglie_di_processo</code>, non ricopiata</td>
+</tr>
+<tr>
+<td><code>test_avvio_manuale_tetto</code></td>
+<td>un tetto del sottoprocesso più largo della metà della tolleranza del drenatore o della soglia del reaper: <code>MUTO</code> a video, o un lavoro in <code>ERRORE</code> mentre il comando sta finendo</td>
+</tr>
+<tr>
+<td><code>scripts/tests/test-install-timers.sh</code> (test 0-5)</td>
 <td>che si accendano unit diversi da quelli dichiarati (vedi sotto)</td>
+</tr>
+<tr>
+<td><code>scripts/tests/test-install-timers.sh</code> (test 6-7)</td>
+<td>una <strong>seconda sede</strong> del comando: un template con <code>ExecStart</code> cablato, o un unit reso che non porta l'argv del JSON</td>
 </tr>
 <tr>
 <td><code>systemd-analyze verify</code> (CI)</td>
@@ -5864,9 +5936,27 @@ quello che non interessa. Le righe eseguite sono le stesse della produzione.</p>
 </ul>
 <h2 id="note-di-migrazione">Note di migrazione<a class="headerlink" href="#note-di-migrazione" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Aggiungere una sveglia</strong> = una voce in <code>sveglie.json</code> + la coppia di
-  template in <code>deploy/systemd/</code> (solo il <code>.service</code> per un servizio sempre
-  acceso) + <code>sudo backend/bin/install-timers.sh</code>. Niente altro.</li>
+<li><strong>Aggiungere una sveglia</strong> = una voce in <code>sveglie.json</code> (con il suo
+  <code>comando</code>) + la coppia di template in <code>deploy/systemd/</code> (solo il <code>.service</code>
+  per un servizio sempre acceso; l'<code>ExecStart</code> è
+  <code>__APP_DIR__/bin/run-command.sh __COMANDO__</code>, mai la riga scritta a mano) +
+  <code>sudo backend/bin/install-timers.sh</code>. Niente altro.</li>
+<li><strong>2026-09-14 — <code>comando</code> nel JSON, <code>__COMANDO__</code> nei template.</strong> Gli otto
+  <code>ExecStart</code> resi sono <strong>identici</strong> a prima (il campo è nato dalla riga che
+  ogni template eseguiva): sugli host cambia il template, non l'unit
+  installato. Prerequisito di deploy di «Esegui ora» (analisi
+  <code>analisi-riavvio-processi-da-interfaccia.md</code> §9-bis, punto 2); l'handler,
+  <code>registered_job</code> con origine e attore dall'ambiente, l'endpoint e il
+  pulsante sono arrivati il 15-09 (voce sotto).</li>
+<li><strong>2026-09-15 — <code>avvio_manuale</code> nel JSON, <code>RUN_COMMAND</code> nel modulo, e i
+  consumer di <code>comando</code> in servizio.</strong> Otto voci: <code>false</code> su drenatore
+  (<code>zeroerp-coda-lavori</code>: «Esegui ora» lo esegue lui), sui due giri di
+  fatturazione (lunghi per natura: terrebbero fermo il drenatore, decisione 2a
+  di Tid — brief §8.5) e sul listener (servizio); <code>true</code> su digest ×2,
+  <code>send-pending-emails</code>, <code>coda-stampa</code>. <code>install-timers.sh</code> <strong>non</strong> legge il
+  campo — non è un fatto di systemd — e <code>test-install-timers.sh</code> non cambia.
+  Chi lo legge: <code>avvio_manuale.py</code> (predicato), <code>esegui_processo_handler</code>
+  (drenatore), <code>ProcessiService</code> (capability nel dettaglio, verbo).</li>
 <li><code>WORKER_ATTIVO_SOGLIA_MINUTI</code> <strong>non esiste più</strong>: era pubblico nel modulo
   <code>gestione_service</code> e non aveva altri consumatori. Il numero a video non
   cambia — 10 minuti per entrambi i drainer — cambia chi lo dichiara.</li>
@@ -5927,10 +6017,14 @@ quello che non interessa. Le righe eseguite sono le stesse della produzione.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../../../..","features":["navigation.tabs","navigation.sections","navigation.expand","navigation.indexes"],"redirect":null,"search":"../../../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copiato","clipboard.copy":"Copia","search.result.more.one":"1 altro in questa pagina","search.result.more.other":"# altri in questa pagina","search.result.none":"Nessun documento trovato","search.result.one":"1 documento trovato","search.result.other":"# documenti trovati","search.result.placeholder":"Scrivi per iniziare a cercare","search.result.term.missing":"Non presente","select.version":"Seleziona la versione"},"version":null}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.6970bfe9.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.8dcc8e9c.min.js"></script>
       
         <script src="../../../../../assets/javascripts/mermaid.min.js"></script>
       
